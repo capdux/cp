@@ -1,21 +1,13 @@
 // @cap/relative-path — Portable platform-independent relative path manipulation (Clean-room MIT, zero-heap pure CP)
 // Absorbed from crates.io: relative-path (MIT OR Apache-2.0)
 
+import { bytesEq } from "cap:bin";
+
 pub const REL_PATH_CAP: usize = 256;
 const REL_MAX_SEGS: usize = 32;
 
 fn rpIsSep(b: u8): bool {
     return b == '/' || b == '\\';
-}
-
-fn rpEqSlice(a: string, a_start: usize, a_len: usize, b: string, b_start: usize, b_len: usize): bool {
-    if (a_len != b_len) { return false; }
-    let i: usize = 0;
-    while (i < a_len) {
-        if (a[a_start + i] != b[b_start + i]) { return false; }
-        i = i + 1;
-    }
-    return true;
 }
 
 pub struct RelPath {
@@ -65,13 +57,7 @@ pub struct RelPath {
     }
 
     pub fn equals(other: string): bool {
-        if (_.length != other.len) { return false; }
-        let i: usize = 0;
-        while (i < _.length) {
-            if (_.buf[i] != other[i]) { return false; }
-            i = i + 1;
-        }
-        return true;
+        return bytesEq(_.buf[0.._.length], other);
     }
 
     pub fn copyTo(dst: []u8): usize {
@@ -86,9 +72,9 @@ pub struct RelPath {
     }
 
     pub fn normalize(): RelPath {
-        let seg_starts: [32]usize = [0; 32];
-        let seg_lens: [32]usize = [0; 32];
-        let seg_is_parent: [32]bool = [false; 32];
+        let seg_starts: [32]usize = undefined;
+        let seg_lens: [32]usize = undefined;
+        let seg_is_parent: [32]bool = undefined;
         let count: usize = 0;
 
         let i: usize = 0;
@@ -366,8 +352,8 @@ pub fn relativeTo(from_path: string, to_path: string): RelPath {
     let a = RelPath.fromStr(from_path).normalize();
     let b = RelPath.fromStr(to_path).normalize();
 
-    let a_starts: [32]usize = [0; 32];
-    let a_lens: [32]usize = [0; 32];
+    let a_starts: [32]usize = undefined;
+    let a_lens: [32]usize = undefined;
     let a_cnt: usize = 0;
     let i: usize = 0;
     while (i < a.length && a_cnt < REL_MAX_SEGS) {
@@ -380,8 +366,8 @@ pub fn relativeTo(from_path: string, to_path: string): RelPath {
         a_cnt = a_cnt + 1;
     }
 
-    let b_starts: [32]usize = [0; 32];
-    let b_lens: [32]usize = [0; 32];
+    let b_starts: [32]usize = undefined;
+    let b_lens: [32]usize = undefined;
     let b_cnt: usize = 0;
     let j: usize = 0;
     while (j < b.length && b_cnt < REL_MAX_SEGS) {
@@ -397,17 +383,12 @@ pub fn relativeTo(from_path: string, to_path: string): RelPath {
     // Find common prefix segment count
     let common: usize = 0;
     while (common < a_cnt && common < b_cnt) {
-        if (a_lens[common] != b_lens[common]) { break; }
-        let eq = true;
-        let k: usize = 0;
-        while (k < a_lens[common]) {
-            if (a.buf[a_starts[common] + k] != b.buf[b_starts[common] + k]) {
-                eq = false;
-                break;
-            }
-            k = k + 1;
+        if (!bytesEq(
+            a.buf[a_starts[common]..(a_starts[common] + a_lens[common])],
+            b.buf[b_starts[common]..(b_starts[common] + b_lens[common])]
+        )) {
+            break;
         }
-        if (!eq) { break; }
         common = common + 1;
     }
 

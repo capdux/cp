@@ -2,6 +2,8 @@
 
 import { validateRegexSyntax, extractLiteralPrefix, isWordByte } from "../../regex-syntax/src/index.cp";
 import { memmemFind } from "../../memchr/src/index.cp";
+import { hexVal } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class RegexMatch {
     matched: bool,
     start: usize,
@@ -49,7 +51,6 @@ export fn rlCompileQuant(ctx: &mut RlCompileCtx, pat: string, pos: usize): usize
 export fn rlCompileConcat(ctx: &mut RlCompileCtx, pat: string, pos: usize): usize;
 export fn rlCompileAlt(ctx: &mut RlCompileCtx, pat: string, pos: usize): usize;
 export fn rlIsWordAt(text: string, pos: usize): bool;
-export fn rlCopyBytes(dst: []u8, pos: usize, src: &[]u8): usize;
 export class RegexLite {
     insts: [128]RlInst,
     inst_len: usize,

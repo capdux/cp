@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { readU16BE, readU16LE, readU32BE, readU32LE, readU64BE, readU64LE } from "cap:bin";
 export fn rndPackU16Be(v: u16): [2]u8;
 export fn rndPackU16Le(v: u16): [2]u8;
 export fn rndUnpackU16Be(b: [2]u8): u16;

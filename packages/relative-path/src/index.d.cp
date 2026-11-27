@@ -1,7 +1,7 @@
 // Type definitions for CP
 
+import { bytesEq } from "cap:bin";
 export fn rpIsSep(b: u8): bool;
-export fn rpEqSlice(a: string, a_start: usize, a_len: usize, b: string, b_start: usize, b_len: usize): bool;
 export class RelPath {
     buf: [256]u8,
     length: usize,

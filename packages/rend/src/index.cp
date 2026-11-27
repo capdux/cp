@@ -1,15 +1,24 @@
 // @cap/rend — Zero-allocation endian-aware primitive types
 // Inspired by crates.io:rend (https://github.com/rkyv/rend)
 
+import {
+    readU16BE,
+    readU16LE,
+    readU32BE,
+    readU32LE,
+    readU64BE,
+    readU64LE,
+} from "cap:bin";
+
 fn rndPackU16Be(v: u16): [2]u8 {
-    let out: [2]u8 = [0; 2];
+    let out: [2]u8 = undefined;
     out[0] = u8((v >> 8) & 0xFF);
     out[1] = u8(v & 0xFF);
     return out;
 }
 
 fn rndPackU16Le(v: u16): [2]u8 {
-    let out: [2]u8 = [0; 2];
+    let out: [2]u8 = undefined;
     out[0] = u8(v & 0xFF);
     out[1] = u8((v >> 8) & 0xFF);
     return out;
@@ -24,7 +33,7 @@ fn rndUnpackU16Le(b: [2]u8): u16 {
 }
 
 fn rndPackU32Be(v: u32): [4]u8 {
-    let out: [4]u8 = [0; 4];
+    let out: [4]u8 = undefined;
     out[0] = u8((v >> 24) & 0xFF);
     out[1] = u8((v >> 16) & 0xFF);
     out[2] = u8((v >> 8) & 0xFF);
@@ -33,7 +42,7 @@ fn rndPackU32Be(v: u32): [4]u8 {
 }
 
 fn rndPackU32Le(v: u32): [4]u8 {
-    let out: [4]u8 = [0; 4];
+    let out: [4]u8 = undefined;
     out[0] = u8(v & 0xFF);
     out[1] = u8((v >> 8) & 0xFF);
     out[2] = u8((v >> 16) & 0xFF);
@@ -50,7 +59,7 @@ fn rndUnpackU32Le(b: [4]u8): u32 {
 }
 
 fn rndPackU64Be(v: u64): [8]u8 {
-    let out: [8]u8 = [0; 8];
+    let out: [8]u8 = undefined;
     out[0] = u8((v >> 56) & 0xFF);
     out[1] = u8((v >> 48) & 0xFF);
     out[2] = u8((v >> 40) & 0xFF);
@@ -63,7 +72,7 @@ fn rndPackU64Be(v: u64): [8]u8 {
 }
 
 fn rndPackU64Le(v: u64): [8]u8 {
-    let out: [8]u8 = [0; 8];
+    let out: [8]u8 = undefined;
     out[0] = u8(v & 0xFF);
     out[1] = u8((v >> 8) & 0xFF);
     out[2] = u8((v >> 16) & 0xFF);
@@ -319,60 +328,40 @@ pub fn readU16Be(buf: []const u8, offset: usize): u16? {
     if (offset > buf.len || buf.len - offset < 2) {
         return null;
     }
-    return (u16(buf[offset]) << 8) | u16(buf[offset + 1]);
+    return readU16BE(buf, offset);
 }
 
 pub fn readU16Le(buf: []const u8, offset: usize): u16? {
     if (offset > buf.len || buf.len - offset < 2) {
         return null;
     }
-    return u16(buf[offset]) | (u16(buf[offset + 1]) << 8);
+    return readU16LE(buf, offset);
 }
 
 pub fn readU32Be(buf: []const u8, offset: usize): u32? {
     if (offset > buf.len || buf.len - offset < 4) {
         return null;
     }
-    return (u32(buf[offset]) << 24)
-        | (u32(buf[offset + 1]) << 16)
-        | (u32(buf[offset + 2]) << 8)
-        | u32(buf[offset + 3]);
+    return readU32BE(buf, offset);
 }
 
 pub fn readU32Le(buf: []const u8, offset: usize): u32? {
     if (offset > buf.len || buf.len - offset < 4) {
         return null;
     }
-    return u32(buf[offset])
-        | (u32(buf[offset + 1]) << 8)
-        | (u32(buf[offset + 2]) << 16)
-        | (u32(buf[offset + 3]) << 24);
+    return readU32LE(buf, offset);
 }
 
 pub fn readU64Be(buf: []const u8, offset: usize): u64? {
     if (offset > buf.len || buf.len - offset < 8) {
         return null;
     }
-    return (u64(buf[offset]) << 56)
-        | (u64(buf[offset + 1]) << 48)
-        | (u64(buf[offset + 2]) << 40)
-        | (u64(buf[offset + 3]) << 32)
-        | (u64(buf[offset + 4]) << 24)
-        | (u64(buf[offset + 5]) << 16)
-        | (u64(buf[offset + 6]) << 8)
-        | u64(buf[offset + 7]);
+    return readU64BE(buf, offset);
 }
 
 pub fn readU64Le(buf: []const u8, offset: usize): u64? {
     if (offset > buf.len || buf.len - offset < 8) {
         return null;
     }
-    return u64(buf[offset])
-        | (u64(buf[offset + 1]) << 8)
-        | (u64(buf[offset + 2]) << 16)
-        | (u64(buf[offset + 3]) << 24)
-        | (u64(buf[offset + 4]) << 32)
-        | (u64(buf[offset + 5]) << 40)
-        | (u64(buf[offset + 6]) << 48)
-        | (u64(buf[offset + 7]) << 56);
+    return readU64LE(buf, offset);
 }

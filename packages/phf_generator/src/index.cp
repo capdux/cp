@@ -2,6 +2,8 @@
 // Inspired by Rust `phf_generator` / `phf_shared`
 // MIT License
 
+import { strEq } from "cap:ascii";
+
 const MASK32: u64 = 0xFFFFFFFF;
 const MAX_KEYS: usize = 256;
 
@@ -32,20 +34,6 @@ fn mix64(z_in: u64): u64 {
     let z: u64 = mul64(z_in ^ (z_in >> 30), MIX_K1);
     z = mul64(z ^ (z >> 27), MIX_K2);
     return z ^ (z >> 31);
-}
-
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 pub struct PhfHashes {
@@ -128,13 +116,13 @@ pub fn buildPhfWithSeed(
         };
     }
 
-    let bucket_head: [256]i32 = [-1; 256];
-    let bucket_size: [256]u32 = [0; 256];
-    let bucket_order: [256]usize = [0; 256];
-    let key_next: [256]i32 = [-1; 256];
-    let key_f1: [256]u32 = [0; 256];
-    let key_f2: [256]u32 = [0; 256];
-    let trial_slots: [256]usize = [0; 256];
+    let bucket_head: [256]i32 = undefined;
+    let bucket_size: [256]u32 = undefined;
+    let bucket_order: [256]usize = undefined;
+    let key_next: [256]i32 = undefined;
+    let key_f1: [256]u32 = undefined;
+    let key_f2: [256]u32 = undefined;
+    let trial_slots: [256]usize = undefined;
 
     let attempt: u64 = 0;
     while (attempt < 64) {

@@ -1,9 +1,9 @@
 // Type definitions for CP
 
+import { strEq } from "cap:ascii";
 export fn add64(a: u64, b: u64): u64;
 export fn mul64(a: u64, b: u64): u64;
 export fn mix64(z_in: u64): u64;
-export fn strEq(a: string, b: string): bool;
 export class PhfHashes {
     g: u32,
     f1: u32,

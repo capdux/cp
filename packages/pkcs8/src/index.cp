@@ -20,6 +20,7 @@ import {
 } from "../../spki/src/index.cp";
 import { encodePem, decodePem } from "../../pem-rfc7468/src/index.cp";
 import { zeroizeBytes } from "../../subtle/src/index.cp";
+import { bytesEq } from "cap:bin";
 
 pub const PK8_VERSION_V1: u8 = 0;
 pub const PK8_VERSION_V2: u8 = 1;
@@ -123,20 +124,6 @@ fn pk8ReadDerLen(der: []const u8, pos: usize): Pk8LenDecode {
         return Pk8LenDecode { ok: false, val_len: 0, next_pos: pos };
     }
     return Pk8LenDecode { ok: true, val_len: vlen, next_pos: npos };
-}
-
-fn pk8StrEqBytes(s: string, b: []const u8): bool {
-    if (s.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 /// RFC 5958 `PrivateKeyInfo` (v1) / `OneAsymmetricKey` (v2).
@@ -298,7 +285,7 @@ pub fn encodePkcs8Der(info: PrivateKeyInfo, out: []u8): i64 {
     }
 
     // Encode AlgorithmIdentifier via @cap/spki
-    let alg_buf: [192]u8 = [0; 192];
+    let alg_buf: [192]u8 = undefined;
     const alg_res = encodeAlgorithmId(info.algorithm, alg_buf[0..192]);
     if (alg_res < 0) {
         return PK8_ERR_INVALID_ALG;
@@ -510,7 +497,7 @@ pub fn decodePkcs8Der(der: []const u8): Pkcs8DecodeResult {
 /// Encodes a `PrivateKeyInfo` into RFC 7468 PEM (`-----BEGIN PRIVATE KEY-----`) via `@cap/pem-rfc7468`.
 /// Returns number of bytes written on success, or a negative error code.
 pub fn encodePkcs8Pem(info: PrivateKeyInfo, crlf: bool, out: []u8): i64 {
-    let der_buf: [512]u8 = [0; 512];
+    let der_buf: [512]u8 = undefined;
     const dlen = encodePkcs8Der(info, der_buf[0..512]);
     if (dlen < 0) {
         return dlen;
@@ -524,16 +511,16 @@ pub fn encodePkcs8Pem(info: PrivateKeyInfo, crlf: bool, out: []u8): i64 {
 /// Strictly verifies that the PEM label is `"PRIVATE KEY"`.
 pub fn decodePkcs8Pem(pem: string): Pkcs8DecodeResult {
     const empty = PrivateKeyInfo.empty();
-    let label_buf: [64]u8 = [0; 64];
+    let label_buf: [64]u8 = undefined;
     let label_len: usize = 0;
-    let der_buf: [512]u8 = [0; 512];
+    let der_buf: [512]u8 = undefined;
 
     const dlen = decodePem(pem, label_buf[0..64], &label_len, der_buf[0..512]);
     if (dlen < 0) {
         zeroizeBytes(der_buf[0..512]);
         return Pkcs8DecodeResult { ok: false, info: empty, err: PK8_ERR_INVALID_PEM };
     }
-    if (!pk8StrEqBytes(PK8_PEM_LABEL, label_buf[0..label_len])) {
+    if (!bytesEq(PK8_PEM_LABEL, label_buf[0..label_len])) {
         zeroizeBytes(der_buf[0..512]);
         return Pkcs8DecodeResult { ok: false, info: empty, err: PK8_ERR_INVALID_PEM_LABEL };
     }

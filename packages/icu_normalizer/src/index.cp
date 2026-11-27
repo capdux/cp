@@ -2,6 +2,9 @@
 // Zero-allocation UAX #15 Unicode NFC / NFD / NFKC / NFKD normalizer in pure CP.
 // Clean-room MIT implementation (ICU4X icu_normalizer parity).
 
+import { isAscii } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+
 pub const HANGUL_SBASE: u32 = 0xAC00;
 pub const HANGUL_LBASE: u32 = 0x1100;
 pub const HANGUL_VBASE: u32 = 0x1161;
@@ -15,17 +18,6 @@ pub const HANGUL_SCOUNT: u32 = 11172;
 struct InormUtf8Dec {
     cp: u32,
     next: usize,
-}
-
-fn inormIsPureAscii(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] >= (0x80 as u8)) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 fn inormDecodeUtf8(s: string, pos: usize): InormUtf8Dec {
@@ -109,20 +101,6 @@ fn inormEncodeUtf8(cp: u32, out: []u8, pos: usize): usize {
     out[pos + 2] = (0x80 as u8) | (((cp >> (6 as u5)) & (0x3F as u32)) as u8);
     out[pos + 3] = (0x80 as u8) | ((cp & (0x3F as u32)) as u8);
     return 4;
-}
-
-fn inormBytesEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
 }
 
 /// Returns the Unicode Canonical Combining Class (CCC) for code point `cp`
@@ -633,7 +611,7 @@ fn inormNormalizeCore(input: string, compat: bool, compose: bool, out: []u8): us
         return 0;
     }
     // Fast path for pure ASCII strings (invariant under NFC, NFD, NFKC, NFKD)
-    if (inormIsPureAscii(input)) {
+    if (isAscii(input)) {
         let take = input.len;
         if (out.len < take) {
             take = out.len;
@@ -646,9 +624,9 @@ fn inormNormalizeCore(input: string, compat: bool, compose: bool, out: []u8): us
         return take;
     }
 
-    let cps: [512]u32 = [0; 512];
+    let cps: [512]u32 = undefined;
     let cp_len: usize = 0;
-    let tmp: [4]u32 = [0; 4];
+    let tmp: [4]u32 = undefined;
 
     let pos: usize = 0;
     while (pos < input.len && cp_len < 512) {
@@ -719,32 +697,32 @@ pub fn normalizeNfkc(input: string, out: []u8): usize {
 
 /// Returns true if UTF-8 `input` is already in Unicode NFC form.
 pub fn isNfc(input: string): bool {
-    if (inormIsPureAscii(input)) {
+    if (isAscii(input)) {
         return true;
     }
-    let buf: [1024]u8 = [0; 1024];
+    let buf: [1024]u8 = undefined;
     const n = normalizeNfc(input, buf[0..1024]);
-    return inormBytesEq(input, buf[0..n]);
+    return bytesEq(input, buf[0..n]);
 }
 
 /// Returns true if UTF-8 `input` is already in Unicode NFD form.
 pub fn isNfd(input: string): bool {
-    if (inormIsPureAscii(input)) {
+    if (isAscii(input)) {
         return true;
     }
-    let buf: [1024]u8 = [0; 1024];
+    let buf: [1024]u8 = undefined;
     const n = normalizeNfd(input, buf[0..1024]);
-    return inormBytesEq(input, buf[0..n]);
+    return bytesEq(input, buf[0..n]);
 }
 
 /// Returns true if `a` and `b` are canonically equivalent under Unicode NFC.
 pub fn eqNfc(a: string, b: string): bool {
-    if (inormIsPureAscii(a) && inormIsPureAscii(b)) {
-        return inormBytesEq(a, b);
+    if (isAscii(a) && isAscii(b)) {
+        return bytesEq(a, b);
     }
-    let buf_a: [1024]u8 = [0; 1024];
-    let buf_b: [1024]u8 = [0; 1024];
+    let buf_a: [1024]u8 = undefined;
+    let buf_b: [1024]u8 = undefined;
     const na = normalizeNfc(a, buf_a[0..1024]);
     const nb = normalizeNfc(b, buf_b[0..1024]);
-    return inormBytesEq(buf_a[0..na], buf_b[0..nb]);
+    return bytesEq(buf_a[0..na], buf_b[0..nb]);
 }

@@ -1,9 +1,8 @@
 // Type definitions for CP
 
-export fn macHexVal(ch: u8): u8?;
+import { hexVal } from "cap:ascii";
+import { writeHexByte } from "cap:fmt";
 export fn macParseHexByte(hi_ch: u8, lo_ch: u8): u8?;
-export fn macHexDigit(n: u8): u8;
-export fn macWriteHexByte(b: u8, out: []u8, pos: usize): usize;
 export class MacAddr6 {
     bytes: [6]u8,
     fn new(b0: u8, b1: u8, b2: u8, b3: u8, b4: u8, b5: u8): MacAddr6;

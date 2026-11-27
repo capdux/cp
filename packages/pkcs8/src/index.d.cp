@@ -3,7 +3,8 @@
 import { OID_ED25519, OID_EC_PUBLIC_KEY, OID_PRIME256V1, ObjectIdentifier } from "../../const-oid/src/index.cp";
 import { AlgorithmIdentifier, encodeAlgorithmId, decodeAlgorithmId } from "../../spki/src/index.cp";
 import { encodePem, decodePem } from "../../pem-rfc7468/src/index.cp";
-import { zeroizeBytes } from "../../subtle-ct/src/index.cp";
+import { zeroizeBytes } from "../../subtle/src/index.cp";
+import { bytesEq } from "cap:bin";
 export class Pk8LenDecode {
     ok: bool,
     val_len: usize,
@@ -15,7 +16,6 @@ export fn pk8ZeroPubBuf(): [64]u8;
 export fn pk8DerLenSize(n: usize): usize;
 export fn pk8WriteDerLen(out: []u8, pos: usize, n: usize): usize;
 export fn pk8ReadDerLen(der: &[]u8, pos: usize): Pk8LenDecode;
-export fn pk8StrEqBytes(s: string, b: &[]u8): bool;
 export class PrivateKeyInfo {
     version: u8,
     algorithm: AlgorithmIdentifier,

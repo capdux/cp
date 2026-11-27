@@ -10,6 +10,8 @@ import {
     isWordByte
 } from "../../regex-syntax/src/index.cp";
 import { memmemFind } from "../../memchr/src/index.cp";
+import { hexVal } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 pub const RL_MAX_INSTS: usize = 128;
 const RL_MAX_CLASSES: usize = 16;
@@ -147,16 +149,7 @@ fn rlClassAddShorthand(c: *RlClass, esc: u8) {
 }
 
 fn rlHexVal(b: u8): usize {
-    if (b >= 48 && b <= 57) {
-        return (b - 48) as usize;
-    }
-    if (b >= 65 && b <= 70) {
-        return (b - 55) as usize;
-    }
-    if (b >= 97 && b <= 102) {
-        return (b - 87) as usize;
-    }
-    return 0;
+    return (hexVal(b) ?? 0) as usize;
 }
 
 fn rlEmit(ctx: *RlCompileCtx, op: u8, arg1: usize, arg2: usize): usize {
@@ -618,17 +611,6 @@ fn rlIsWordAt(text: string, pos: usize): bool {
     return isWordByte(text[pos]);
 }
 
-fn rlCopyBytes(dst: []u8, pos: usize, src: []const u8): usize {
-    let cur = pos;
-    let i: usize = 0;
-    while (i < src.len && cur < dst.len) {
-        dst[cur] = src[i];
-        cur = cur + 1;
-        i = i + 1;
-    }
-    return cur;
-}
-
 // ============================================================================
 // Public Struct — RegexLite (Thompson NFA VM, max 128 instructions)
 // ============================================================================
@@ -655,7 +637,7 @@ pub struct RegexLite {
             inst_len: 0,
             classes: [rlEmptyClass(); 16],
             class_len: 0,
-            prefix: [0; 64],
+            prefix: undefined,
             prefix_len: 0,
             anchored_start: false,
             valid: false,
@@ -684,7 +666,7 @@ pub struct RegexLite {
             inst_len: ctx.inst_len,
             classes: ctx.classes,
             class_len: ctx.class_len,
-            prefix: [0; 64],
+            prefix: undefined,
             prefix_len: 0,
             anchored_start: false,
             valid: true,
@@ -707,10 +689,10 @@ pub struct RegexLite {
 
     /// Runs an anchored PikeVM Thompson NFA search starting strictly at `start_pos`.
     fn matchAnchored(text: string, start_pos: usize): RegexMatch {
-        let cur_list: [128]usize = [0; 128];
-        let next_list: [128]usize = [0; 128];
+        let cur_list: [128]usize = undefined;
+        let next_list: [128]usize = undefined;
         let visited: [128]usize = [0; 128];
-        let stack: [128]usize = [0; 128];
+        let stack: [128]usize = undefined;
         let cur_len: usize = 0;
         let gen: usize = 1;
 
@@ -935,7 +917,7 @@ pub struct RegexLite {
             return 0;
         }
         if (!_.valid) {
-            return rlCopyBytes(out, 0, text);
+            return writeStr(text, out, 0);
         }
         let written: usize = 0;
         let last_end: usize = 0;
@@ -943,14 +925,14 @@ pub struct RegexLite {
         while (search_pos <= text.len && written < out.len) {
             let m = _.findAt(text, search_pos);
             if (!m.matched) {
-                written = rlCopyBytes(out, written, text[last_end..text.len]);
+                written = writeStr(text[last_end..text.len], out, written);
                 break;
             }
             if (m.start > last_end) {
-                written = rlCopyBytes(out, written, text[last_end..m.start]);
+                written = writeStr(text[last_end..m.start], out, written);
             }
             if (replacement.len > 0 && written < out.len) {
-                written = rlCopyBytes(out, written, replacement);
+                written = writeStr(replacement, out, written);
             }
             last_end = m.end;
             if (m.end > m.start) {

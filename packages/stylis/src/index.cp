@@ -1,15 +1,10 @@
 // @cap/stylis — Zero-heap CSS minifier & nested selector preprocessor
 
+import { findByte, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 fn stylIsWs(c: u8): bool {
     return c == 32 || c == 9 || c == 10 || c == 13 || c == 12;
-}
-
-fn stylTrimSlice(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && stylIsWs(s[start])) : (start += 1) {}
-    while (end > start && stylIsWs(s[end - 1])) : (end -= 1) {}
-    return s[start..end];
 }
 
 fn stylPushByte(out: []u8, pos: usize, b: u8): usize {
@@ -18,16 +13,6 @@ fn stylPushByte(out: []u8, pos: usize, b: u8): usize {
         return pos + 1;
     }
     return pos;
-}
-
-fn stylPushSlice(out: []u8, pos: usize, s: string): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
-    }
-    return p;
 }
 
 fn stylIsStripAfter(c: u8): bool {
@@ -128,49 +113,39 @@ pub fn minifyCss(css: string, out: []u8): usize {
     return pos;
 }
 
-fn stylContainsAmp(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        if (s[i] == 38) {
-            return true;
-        }
-    }
-    return false;
-}
-
 fn stylExpandSingle(parent: string, child: string, out: []u8, start_pos: usize): usize {
     let pos: usize = start_pos;
     if (parent.len == 0) {
-        return stylPushSlice(out, pos, child);
+        return writeStr(child, out, pos);
     }
     if (child.len == 0) {
-        return stylPushSlice(out, pos, parent);
+        return writeStr(parent, out, pos);
     }
-    if (stylContainsAmp(child)) {
+    if (findByte(child, 38, 0) != null) {
         let i: usize = 0;
         while (i < child.len) : (i += 1) {
             if (child[i] == 38) {
-                pos = stylPushSlice(out, pos, parent);
+                pos = writeStr(parent, out, pos);
             } else {
                 pos = stylPushByte(out, pos, child[i]);
             }
         }
         return pos;
     }
-    pos = stylPushSlice(out, pos, parent);
+    pos = writeStr(parent, out, pos);
     pos = stylPushByte(out, pos, 32);
-    pos = stylPushSlice(out, pos, child);
+    pos = writeStr(child, out, pos);
     return pos;
 }
 
 pub fn expandNestedSelector(parent: string, child: string, out: []u8): usize {
-    const p_trim: string = stylTrimSlice(parent);
-    const c_trim: string = stylTrimSlice(child);
+    const p_trim: string = trim(parent);
+    const c_trim: string = trim(child);
     if (p_trim.len == 0) {
-        return stylPushSlice(out, 0, c_trim);
+        return writeStr(c_trim, out, 0);
     }
     if (c_trim.len == 0) {
-        return stylPushSlice(out, 0, p_trim);
+        return writeStr(p_trim, out, 0);
     }
 
     let pos: usize = 0;
@@ -180,13 +155,13 @@ pub fn expandNestedSelector(parent: string, child: string, out: []u8): usize {
     let pi: usize = 0;
     while (pi <= p_trim.len) : (pi += 1) {
         if (pi == p_trim.len || p_trim[pi] == 44) {
-            const p_part: string = stylTrimSlice(p_trim[p_start..pi]);
+            const p_part: string = trim(p_trim[p_start..pi]);
             if (p_part.len > 0) {
                 let c_start: usize = 0;
                 let ci: usize = 0;
                 while (ci <= c_trim.len) : (ci += 1) {
                     if (ci == c_trim.len || c_trim[ci] == 44) {
-                        const c_part: string = stylTrimSlice(c_trim[c_start..ci]);
+                        const c_part: string = trim(c_trim[c_start..ci]);
                         if (c_part.len > 0) {
                             if (!first_out) {
                                 pos = stylPushByte(out, pos, 44);
@@ -241,7 +216,7 @@ fn stylSkipCommentOrQuote(s: string, idx: usize): usize {
 }
 
 pub fn compileNestedCss(parent_sel: string, body_css: string, out: []u8): usize {
-    const p_sel: string = stylTrimSlice(parent_sel);
+    const p_sel: string = trim(parent_sel);
     const n: usize = body_css.len;
     let pos: usize = 0;
 
@@ -257,15 +232,15 @@ pub fn compileNestedCss(parent_sel: string, body_css: string, out: []u8): usize 
         }
         if (c == 59) {
             // Base declaration ending with ';'
-            let tmp: [512]u8 = [0; 512];
+            let tmp: [512]u8 = undefined;
             const dlen: usize = minifyCss(body_css[seg_start..i + 1], tmp[0..512]);
             if (dlen > 1) {
                 if (!base_opened) {
-                    pos = stylPushSlice(out, pos, p_sel);
+                    pos = writeStr(p_sel, out, pos);
                     pos = stylPushByte(out, pos, 123);
                     base_opened = true;
                 }
-                pos = stylPushSlice(out, pos, tmp[0..dlen] as string);
+                pos = writeStr(tmp[0..dlen] as string, out, pos);
             }
             seg_start = i + 1;
             i += 1;
@@ -295,15 +270,15 @@ pub fn compileNestedCss(parent_sel: string, body_css: string, out: []u8): usize 
     }
     // Trailing base declaration without semicolon
     if (seg_start < n) {
-        let tmp: [512]u8 = [0; 512];
+        let tmp: [512]u8 = undefined;
         const dlen: usize = minifyCss(body_css[seg_start..n], tmp[0..512]);
         if (dlen > 0) {
             if (!base_opened) {
-                pos = stylPushSlice(out, pos, p_sel);
+                pos = writeStr(p_sel, out, pos);
                 pos = stylPushByte(out, pos, 123);
                 base_opened = true;
             }
-            pos = stylPushSlice(out, pos, tmp[0..dlen] as string);
+            pos = writeStr(tmp[0..dlen] as string, out, pos);
         }
     }
     if (base_opened) {
@@ -344,17 +319,17 @@ pub fn compileNestedCss(parent_sel: string, body_css: string, out: []u8): usize 
             }
             const block_end: usize = if (j > block_start) j - 1 else block_start;
 
-            let clean_child: [256]u8 = [0; 256];
+            let clean_child: [256]u8 = undefined;
             const clen: usize = minifyCss(raw_child_sel, clean_child[0..256]);
-            let expanded: [512]u8 = [0; 512];
+            let expanded: [512]u8 = undefined;
             const elen: usize = expandNestedSelector(p_sel, clean_child[0..clen] as string, expanded[0..512]);
-            let inner: [1024]u8 = [0; 1024];
+            let inner: [1024]u8 = undefined;
             const ilen: usize = minifyCss(body_css[block_start..block_end], inner[0..1024]);
 
             if (elen > 0 && ilen > 0) {
-                pos = stylPushSlice(out, pos, expanded[0..elen] as string);
+                pos = writeStr(expanded[0..elen] as string, out, pos);
                 pos = stylPushByte(out, pos, 123);
-                pos = stylPushSlice(out, pos, inner[0..ilen] as string);
+                pos = writeStr(inner[0..ilen] as string, out, pos);
                 pos = stylPushByte(out, pos, 125);
             }
             seg2 = j;

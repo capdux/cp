@@ -1,52 +1,21 @@
 // @cap/macaddr — Zero-heap pure-CP IEEE 802 MAC-48/EUI-48 & EUI-64 address engine
 // Clean-room MIT equivalent of crates.io `macaddr`.
 
-fn macHexVal(ch: u8): u8? {
-    if (ch >= 48 && ch <= 57) {
-        return ch - 48;
-    }
-    if (ch >= 97 && ch <= 102) {
-        return ch - 87; // 'a' (97) -> 10
-    }
-    if (ch >= 65 && ch <= 70) {
-        return ch - 55; // 'A' (65) -> 10
-    }
-    return null;
-}
+import { hexVal } from "cap:ascii";
+import { writeHexByte } from "cap:fmt";
 
 fn macParseHexByte(hi_ch: u8, lo_ch: u8): u8? {
-    let hi_opt = macHexVal(hi_ch);
+    let hi_opt = hexVal(hi_ch);
     if (hi_opt == null) {
         return null;
     }
-    let lo_opt = macHexVal(lo_ch);
+    let lo_opt = hexVal(lo_ch);
     if (lo_opt == null) {
         return null;
     }
     let hi: u8 = hi_opt ?? 0;
     let lo: u8 = lo_opt ?? 0;
     return (hi << 4) | lo;
-}
-
-fn macHexDigit(n: u8): u8 {
-    let v: u8 = n & 15;
-    if (v < 10) {
-        return 48 + v;
-    }
-    return 87 + v; // 10 -> 'a' (97)
-}
-
-fn macWriteHexByte(b: u8, out: []u8, pos: usize): usize {
-    let p: usize = pos;
-    if (p < out.len) {
-        out[p] = macHexDigit(b >> 4);
-        p = p + 1;
-    }
-    if (p < out.len) {
-        out[p] = macHexDigit(b & 15);
-        p = p + 1;
-    }
-    return p;
 }
 
 pub struct MacAddr6 {
@@ -72,7 +41,7 @@ pub struct MacAddr6 {
     }
 
     pub static fn parse(s: string): MacAddr6? {
-        let out: [6]u8 = [0; 6];
+        let out: [6]u8 = undefined;
         if (s.len == 17) {
             let sep: u8 = s[2];
             if (sep != 58 && sep != 45) { // ':' or '-'
@@ -166,7 +135,7 @@ pub struct MacAddr6 {
                 out[p] = 58; // ':'
                 p = p + 1;
             }
-            p = macWriteHexByte(_.bytes[i], out, p);
+            p = writeHexByte(_.bytes[i], false, out, p);
             i = i + 1;
         }
         return p;
@@ -180,7 +149,7 @@ pub struct MacAddr6 {
                 out[p] = 45; // '-'
                 p = p + 1;
             }
-            p = macWriteHexByte(_.bytes[i], out, p);
+            p = writeHexByte(_.bytes[i], false, out, p);
             i = i + 1;
         }
         return p;
@@ -194,8 +163,8 @@ pub struct MacAddr6 {
                 out[p] = 46; // '.'
                 p = p + 1;
             }
-            p = macWriteHexByte(_.bytes[g * 2], out, p);
-            p = macWriteHexByte(_.bytes[g * 2 + 1], out, p);
+            p = writeHexByte(_.bytes[g * 2], false, out, p);
+            p = writeHexByte(_.bytes[g * 2 + 1], false, out, p);
             g = g + 1;
         }
         return p;
@@ -245,7 +214,7 @@ pub struct MacAddr8 {
     }
 
     pub static fn parse(s: string): MacAddr8? {
-        let out: [8]u8 = [0; 8];
+        let out: [8]u8 = undefined;
         if (s.len == 23) {
             let sep: u8 = s[2];
             if (sep != 58 && sep != 45) { // ':' or '-'
@@ -334,7 +303,7 @@ pub struct MacAddr8 {
                 out[p] = 58; // ':'
                 p = p + 1;
             }
-            p = macWriteHexByte(_.bytes[i], out, p);
+            p = writeHexByte(_.bytes[i], false, out, p);
             i = i + 1;
         }
         return p;
@@ -348,7 +317,7 @@ pub struct MacAddr8 {
                 out[p] = 45; // '-'
                 p = p + 1;
             }
-            p = macWriteHexByte(_.bytes[i], out, p);
+            p = writeHexByte(_.bytes[i], false, out, p);
             i = i + 1;
         }
         return p;
@@ -362,8 +331,8 @@ pub struct MacAddr8 {
                 out[p] = 46; // '.'
                 p = p + 1;
             }
-            p = macWriteHexByte(_.bytes[g * 2], out, p);
-            p = macWriteHexByte(_.bytes[g * 2 + 1], out, p);
+            p = writeHexByte(_.bytes[g * 2], false, out, p);
+            p = writeHexByte(_.bytes[g * 2 + 1], false, out, p);
             g = g + 1;
         }
         return p;

@@ -7,7 +7,7 @@ pub fn pathExistsInEntries(target: string, cwd: string, entries: []FsEntry): boo
     let cands: [1]string = [target];
     let opts = LocateOptions.defaults(cwd);
     opts.entry_type = ENTRY_ANY;
-    let buf: [256]u8 = [0; 256];
+    let buf: [256]u8 = undefined;
     return locatePathInEntries(cands[0..1], entries, opts, buf[0..256]) != null;
 }
 
@@ -15,7 +15,7 @@ pub fn fileExistsInEntries(target: string, cwd: string, entries: []FsEntry): boo
     let cands: [1]string = [target];
     let opts = LocateOptions.defaults(cwd);
     opts.entry_type = ENTRY_FILE;
-    let buf: [256]u8 = [0; 256];
+    let buf: [256]u8 = undefined;
     return locatePathInEntries(cands[0..1], entries, opts, buf[0..256]) != null;
 }
 
@@ -23,7 +23,7 @@ pub fn dirExistsInEntries(target: string, cwd: string, entries: []FsEntry): bool
     let cands: [1]string = [target];
     let opts = LocateOptions.defaults(cwd);
     opts.entry_type = ENTRY_DIR;
-    let buf: [256]u8 = [0; 256];
+    let buf: [256]u8 = undefined;
     return locatePathInEntries(cands[0..1], entries, opts, buf[0..256]) != null;
 }
 
@@ -32,7 +32,7 @@ pub fn realPathExistsInEntries(target: string, cwd: string, entries: []FsEntry):
     let opts = LocateOptions.defaults(cwd);
     opts.allow_symlinks = false;
     opts.entry_type = ENTRY_ANY;
-    let buf: [256]u8 = [0; 256];
+    let buf: [256]u8 = undefined;
     return locatePathInEntries(cands[0..1], entries, opts, buf[0..256]) != null;
 }
 
