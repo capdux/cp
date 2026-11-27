@@ -1,6 +1,7 @@
 // Type definitions for CP
 
-export fn eqBytes(a: string, b: string): bool;
+import { strEq, hexVal, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn appendStr(dst: []u8, pos: usize, src: string): usize;
 export fn needsEscape(input: string): bool;
 export fn escapeHtml(input: string, out: []u8): usize;

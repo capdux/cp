@@ -1,6 +1,9 @@
 // @cap/calver — Zero-allocation Calendar Versioning (CalVer) engine for CP
 // Clean-room MIT implementation inspired by npm `calver` and Rust `calver`.
 
+import { isDigit, isAlpha, toLowerByte, eqIgnoreCase, trim, findByte } from "cap:ascii";
+import { writeStr, writeU64, parseU64 } from "cap:fmt";
+
 pub enum CalverFormat: u8 {
     YyyyMmMicro = 0,
     YyMmMicro = 1,
@@ -35,45 +38,12 @@ pub struct Calver {
 // Internal Helpers
 // ---------------------------------------------------------------------------
 
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn cmpIgnoreCase(a: string, b: string) -> i32 {
     const min_len = if (a.len < b.len) a.len else b.len;
     let i: usize = 0;
     while (i < min_len) {
-        const ca = toLowerAscii(a[i]);
-        const cb = toLowerAscii(b[i]);
+        const ca = toLowerByte(a[i]);
+        const cb = toLowerByte(b[i]);
         if (ca < cb) return -1;
         if (ca > cb) return 1;
         i += 1;
@@ -81,18 +51,6 @@ fn cmpIgnoreCase(a: string, b: string) -> i32 {
     if (a.len < b.len) return -1;
     if (a.len > b.len) return 1;
     return 0;
-}
-
-fn trimWs(s: string) -> string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && isWs(s[a])) {
-        a += 1;
-    }
-    while (b > a && isWs(s[b - 1])) {
-        b -= 1;
-    }
-    return s[a..b];
 }
 
 fn isLeapYear(year: u16) -> bool {
@@ -109,19 +67,14 @@ fn daysInMonth(year: u16, month: u8) -> u8 {
 }
 
 fn parseU32Strict(s: string) -> u32? {
-    if (s.len == 0 || s.len > 9) {
+    if (s.len == 0 || s.len > 9 || s[0] == '+') {
         return null;
     }
-    let val: u32 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        if (!isDigit(s[i])) {
-            return null;
-        }
-        val = val * 10 + ((s[i] - '0') as u32);
-        i += 1;
+    const v = parseU64(s);
+    if (v == null) {
+        return null;
     }
-    return val;
+    return v.? as u32;
 }
 
 struct ModifierParts {
@@ -155,7 +108,7 @@ fn parseModifierTail(s: string) -> ModifierParts {
 }
 
 fn parseCalverCore(raw: string, force_day_on_3: bool) -> Calver {
-    let s = trimWs(raw);
+    let s: string = trim(raw);
     if (s.len == 0) {
         return Calver.invalid();
     }
@@ -171,15 +124,7 @@ fn parseCalverCore(raw: string, force_day_on_3: bool) -> Calver {
     let mod_name: string = "";
     let mod_num: u32 = 0;
 
-    let dash_pos: usize = s.len;
-    let d_i: usize = 0;
-    while (d_i < s.len) {
-        if (s[d_i] == '-') {
-            dash_pos = d_i;
-            break;
-        }
-        d_i += 1;
-    }
+    const dash_pos = findByte(s, '-', 0) ?? s.len;
 
     if (dash_pos < s.len) {
         core = s[0..dash_pos];
@@ -398,38 +343,6 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendU32(out: []u8, pos: usize, val: u32) -> usize {
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    let digits: [12]u8 = undefined;
-    let len: usize = 0;
-    let v = val;
-    while (v > 0) {
-        digits[len] = ('0' as u32 + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let p = pos;
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p, digits[k]);
-    }
-    return p;
-}
-
 fn append2Digits(out: []u8, pos: usize, val: u32) -> usize {
     let p = appendByte(out, pos, ('0' as u32 + ((val / 10) % 10)) as u8);
     p = appendByte(out, p, ('0' as u32 + (val % 10)) as u8);
@@ -444,50 +357,50 @@ pub fn formatCalver(v: Calver, fmt: CalverFormat, out: []u8) -> string {
     let pos: usize = 0;
     switch (fmt) {
         .YyyyMmMicro => {
-            pos = appendU32(out, pos, v.year as u32);
+            pos = writeU64(v.year as u64, out, pos);
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.month as u32);
+            pos = writeU64(v.month as u64, out, pos);
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.micro);
+            pos = writeU64(v.micro as u64, out, pos);
         },
         .YyMmMicro => {
             pos = append2Digits(out, pos, (v.year % 100) as u32);
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.month as u32);
+            pos = writeU64(v.month as u64, out, pos);
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.micro);
+            pos = writeU64(v.micro as u64, out, pos);
         },
         .Yyyy0mMicro => {
-            pos = appendU32(out, pos, v.year as u32);
+            pos = writeU64(v.year as u64, out, pos);
             pos = appendByte(out, pos, '.');
             pos = append2Digits(out, pos, v.month as u32);
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.micro);
+            pos = writeU64(v.micro as u64, out, pos);
         },
         .YyyyMmDd => {
-            pos = appendU32(out, pos, v.year as u32);
+            pos = writeU64(v.year as u64, out, pos);
             pos = appendByte(out, pos, '.');
             pos = append2Digits(out, pos, v.month as u32);
             pos = appendByte(out, pos, '.');
             pos = append2Digits(out, pos, v.day as u32);
         },
         .YyyyMmDdMicro => {
-            pos = appendU32(out, pos, v.year as u32);
+            pos = writeU64(v.year as u64, out, pos);
             pos = appendByte(out, pos, '.');
             pos = append2Digits(out, pos, v.month as u32);
             pos = appendByte(out, pos, '.');
             pos = append2Digits(out, pos, v.day as u32);
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.micro);
+            pos = writeU64(v.micro as u64, out, pos);
         },
     }
 
     if (v.modifier.len > 0) {
         pos = appendByte(out, pos, '-');
-        pos = appendStr(out, pos, v.modifier);
+        pos = writeStr(v.modifier, out, pos);
         if (v.modifier_num > 0) {
             pos = appendByte(out, pos, '.');
-            pos = appendU32(out, pos, v.modifier_num);
+            pos = writeU64(v.modifier_num as u64, out, pos);
         }
     }
 

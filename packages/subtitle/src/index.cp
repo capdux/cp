@@ -1,6 +1,10 @@
 // @cap/subtitle — Zero-heap SRT & WebVTT subtitle parser, time-shifter & converter
 // Clean-room MIT implementation in pure CP (replaces npm `subtitle` / `srt-parser-2`).
 
+import { trim, findByte } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+import { writeStr, writeU64, parseU64 } from "cap:fmt";
+
 pub enum SubtitleFormat {
     Srt,
     WebVtt,
@@ -19,37 +23,16 @@ pub struct CueList {
     pub format: SubtitleFormat,
 }
 
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
 fn parseUint(s: string) -> i64? {
-    if (s.len == 0) { return null; }
-    let val: i64 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        if (!isDigit(s[i])) { return null; }
-        val = val * 10 + ((s[i] - ('0' as u8)) as i64);
-        i += 1;
-    }
-    return val;
-}
-
-fn trimSpaces(s: string) -> string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && (s[start] == ' ' || s[start] == '\t' || s[start] == '\r')) {
-        start += 1;
-    }
-    while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r')) {
-        end -= 1;
-    }
-    return s[start..end];
+    if (s.len == 0 || s[0] == '+') { return null; }
+    const v = parseU64(s);
+    if (v == null) { return null; }
+    return v.? as i64;
 }
 
 /// Parse an SRT (`HH:MM:SS,mmm`) or WebVTT (`HH:MM:SS.mmm` or `MM:SS.mmm`) timestamp into milliseconds.
 pub fn parseTimestampMs(raw: string) -> i64? {
-    const s: string = trimSpaces(raw);
+    const s: string = trim(raw);
     if (s.len < 6) { return null; }
 
     // Find decimal separator ',' or '.'
@@ -161,18 +144,6 @@ pub fn formatTimestampMs(ms_in: i64, fmt: SubtitleFormat, out: []u8) -> string {
     return out[0..pos];
 }
 
-fn findArrow(line: string) -> usize? {
-    if (line.len < 3) { return null; }
-    let i: usize = 0;
-    while (i + 3 <= line.len) {
-        if (line[i] == '-' && line[i + 1] == '-' && line[i + 2] == '>') {
-            return i;
-        }
-        i += 1;
-    }
-    return null;
-}
-
 /// Parse SRT or WebVTT text into a zero-heap CueList (zero-copy cue text slices).
 pub fn parseSubtitles(input: string) -> CueList {
     let cues: [64]Cue = undefined;
@@ -191,19 +162,16 @@ pub fn parseSubtitles(input: string) -> CueList {
     let nextIdx: u32 = 1;
     while (pos < input.len && list.count < 64) {
         // Read one line
-        let lineEnd: usize = pos;
-        while (lineEnd < input.len && input[lineEnd] != '\n') {
-            lineEnd += 1;
-        }
-        const line: string = trimSpaces(input[pos..lineEnd]);
+        const lineEnd: usize = findByte(input, '\n', pos) ?? input.len;
+        const line: string = trim(input[pos..lineEnd]);
         pos = if (lineEnd < input.len) lineEnd + 1 else input.len;
 
-        const arrowOpt = findArrow(line);
+        const arrowOpt = indexOfBytes(line, "-->", 0);
         if (arrowOpt != null) {
             const arrow: usize = arrowOpt ?? (0 as usize);
-            const left: string = trimSpaces(line[0..arrow]);
+            const left: string = trim(line[0..arrow]);
             // Right side may have WebVTT cue settings after space
-            let rightRaw: string = trimSpaces(line[(arrow + 3)..line.len]);
+            let rightRaw: string = trim(line[(arrow + 3)..line.len]);
             let sp: usize = 0;
             while (sp < rightRaw.len && rightRaw[sp] != ' ' && rightRaw[sp] != '\t') {
                 sp += 1;
@@ -217,11 +185,8 @@ pub fn parseSubtitles(input: string) -> CueList {
                 const textStart: usize = pos;
                 let textEnd: usize = pos;
                 while (pos < input.len) {
-                    let le: usize = pos;
-                    while (le < input.len && input[le] != '\n') {
-                        le += 1;
-                    }
-                    const tline: string = trimSpaces(input[pos..le]);
+                    const le: usize = findByte(input, '\n', pos) ?? input.len;
+                    const tline: string = trim(input[pos..le]);
                     if (tline.len == 0) {
                         pos = if (le < input.len) le + 1 else input.len;
                         break;
@@ -262,37 +227,6 @@ pub fn shiftCues(list: *CueList, offset_ms: i64) {
     }
 }
 
-fn writeStr(out: []u8, pos: *usize, s: string) {
-    let i: usize = 0;
-    while (i < s.len && pos.* < out.len) {
-        out[pos.*] = s[i];
-        pos.* += 1;
-        i += 1;
-    }
-}
-
-fn writeU32(out: []u8, pos: *usize, val: u32) {
-    if (val == 0) {
-        writeStr(out, pos, "0");
-        return;
-    }
-    let tmp: [12]u8 = undefined;
-    let n: usize = 0;
-    let v: u32 = val;
-    while (v > 0 && n < 12) {
-        tmp[n] = ('0' as u8) + ((v % 10) as u8);
-        v = v / 10;
-        n += 1;
-    }
-    while (n > 0) {
-        n -= 1;
-        if (pos.* < out.len) {
-            out[pos.*] = tmp[n];
-            pos.* += 1;
-        }
-    }
-}
-
 /// Render a CueList to SRT or WebVTT format into `out`.
 pub fn formatSubtitles(list: CueList, target_fmt: SubtitleFormat, out: []u8) -> string {
     let pos: usize = 0;
@@ -303,7 +237,7 @@ pub fn formatSubtitles(list: CueList, target_fmt: SubtitleFormat, out: []u8) -> 
     }
 
     if (isVtt) {
-        writeStr(out, &pos, "WEBVTT\n\n");
+        pos = writeStr("WEBVTT\n\n", out, pos);
     }
 
     let tsBuf: [16]u8 = undefined;
@@ -311,20 +245,20 @@ pub fn formatSubtitles(list: CueList, target_fmt: SubtitleFormat, out: []u8) -> 
     while (i < list.count) {
         const c: Cue = list.cues[i];
         if (!isVtt) {
-            writeU32(out, &pos, (i + 1) as u32);
-            writeStr(out, &pos, "\n");
+            pos = writeU64((i + 1) as u64, out, pos);
+            pos = writeStr("\n", out, pos);
         }
         const sStr: string = formatTimestampMs(c.start_ms, target_fmt, tsBuf[0..16]);
-        writeStr(out, &pos, sStr);
-        writeStr(out, &pos, " --> ");
+        pos = writeStr(sStr, out, pos);
+        pos = writeStr(" --> ", out, pos);
         const eStr: string = formatTimestampMs(c.end_ms, target_fmt, tsBuf[0..16]);
-        writeStr(out, &pos, eStr);
-        writeStr(out, &pos, "\n");
-        writeStr(out, &pos, c.text);
+        pos = writeStr(eStr, out, pos);
+        pos = writeStr("\n", out, pos);
+        pos = writeStr(c.text, out, pos);
         if (i + 1 < list.count) {
-            writeStr(out, &pos, "\n\n");
+            pos = writeStr("\n\n", out, pos);
         } else {
-            writeStr(out, &pos, "\n");
+            pos = writeStr("\n", out, pos);
         }
         i += 1;
     }

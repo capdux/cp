@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase, isDigit, isSpace } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 export class RequestHeaders {
     if_none_match: &[]u8,
     if_modified_since: &[]u8,
@@ -16,10 +18,7 @@ export class TrimRange {
     end: usize,
 }
 
-export fn isSpace(b: u8): bool;
-export fn toLowerAscii(b: u8): u8;
 export fn trimRange(s: &[]u8, start: usize, end: usize): TrimRange;
-export fn eqIgnoreCase(s: &[]u8, start: usize, end: usize, target_lower: &[]u8): bool;
 export fn hasNoCache(cache_control: &[]u8): bool;
 export class ParsedEtag {
     start: usize,
@@ -29,7 +28,6 @@ export class ParsedEtag {
 }
 
 export fn parseEtagSlice(s: &[]u8, raw_start: usize, raw_end: usize): ParsedEtag;
-export fn slicesEqual(a: &[]u8, a_start: usize, a_end: usize, b: &[]u8, b_start: usize, b_end: usize): bool;
 export fn etagWeakMatch(a: &[]u8, b: &[]u8): bool;
 export fn etagStrongMatch(a: &[]u8, b: &[]u8): bool;
 export fn parse2Digits(s: &[]u8, pos: usize): i32;

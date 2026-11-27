@@ -1,21 +1,12 @@
 // @cap/html-escape — Zero-heap HTML entity escaper & unescaper
 // Clean-room MIT implementation for CP (compatible with npm escape-html, he & Rust html-escape).
 
-fn eqBytes(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i += 1;
-    }
-    return true;
-}
+import { strEq, hexVal, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 fn appendStr(dst: []u8, pos: usize, src: string): usize {
     if (pos + src.len > dst.len) { return 0; }
-    let i: usize = 0;
-    while (i < src.len) { dst[pos + i] = src[i]; i += 1; }
-    return pos + src.len;
+    return writeStr(src, dst, pos);
 }
 
 /// Fast check whether `input` contains any HTML-unsafe character (`&`, `<`, `>`, `"`, `'`).
@@ -95,23 +86,23 @@ fn encodeUtf8(cp: u32, out: []u8, pos: usize): usize {
 }
 
 fn decodeNamedEntity(name: string): u32 {
-    if (eqBytes(name, "amp")) { return 0x26; }
-    if (eqBytes(name, "lt")) { return 0x3c; }
-    if (eqBytes(name, "gt")) { return 0x3e; }
-    if (eqBytes(name, "quot")) { return 0x22; }
-    if (eqBytes(name, "apos")) { return 0x27; }
-    if (eqBytes(name, "nbsp")) { return 0xa0; }
-    if (eqBytes(name, "copy")) { return 0xa9; }
-    if (eqBytes(name, "reg")) { return 0xae; }
-    if (eqBytes(name, "trade")) { return 0x2122; }
-    if (eqBytes(name, "mdash")) { return 0x2014; }
-    if (eqBytes(name, "ndash")) { return 0x2013; }
-    if (eqBytes(name, "hellip")) { return 0x2026; }
-    if (eqBytes(name, "euro")) { return 0x20ac; }
-    if (eqBytes(name, "pound")) { return 0xa3; }
-    if (eqBytes(name, "yen")) { return 0xa5; }
-    if (eqBytes(name, "times")) { return 0xd7; }
-    if (eqBytes(name, "divide")) { return 0xf7; }
+    if (strEq(name, "amp")) { return 0x26; }
+    if (strEq(name, "lt")) { return 0x3c; }
+    if (strEq(name, "gt")) { return 0x3e; }
+    if (strEq(name, "quot")) { return 0x22; }
+    if (strEq(name, "apos")) { return 0x27; }
+    if (strEq(name, "nbsp")) { return 0xa0; }
+    if (strEq(name, "copy")) { return 0xa9; }
+    if (strEq(name, "reg")) { return 0xae; }
+    if (strEq(name, "trade")) { return 0x2122; }
+    if (strEq(name, "mdash")) { return 0x2014; }
+    if (strEq(name, "ndash")) { return 0x2013; }
+    if (strEq(name, "hellip")) { return 0x2026; }
+    if (strEq(name, "euro")) { return 0x20ac; }
+    if (strEq(name, "pound")) { return 0xa3; }
+    if (strEq(name, "yen")) { return 0xa5; }
+    if (strEq(name, "times")) { return 0xd7; }
+    if (strEq(name, "divide")) { return 0xf7; }
     return 0;
 }
 
@@ -122,13 +113,9 @@ fn decodeNumericEntity(body: string): u32 {
         if (body.len < 3 || body.len > 8) { return 0; }
         let i: usize = 2;
         while (i < body.len) {
-            let c: u8 = body[i];
-            let d: u32 = 0;
-            if (c >= '0' && c <= '9') { d = (c - '0') as u32; }
-            else if (c >= 'a' && c <= 'f') { d = (c - 'a' + 10) as u32; }
-            else if (c >= 'A' && c <= 'F') { d = (c - 'A' + 10) as u32; }
-            else { return 0; }
-            cp = (cp << 4) | d;
+            const d_opt = hexVal(body[i]);
+            if (d_opt == null) { return 0; }
+            cp = (cp << 4) | (d_opt.? as u32);
             if (cp > 0x10ffff) { return 0; }
             i += 1;
         }
@@ -137,7 +124,7 @@ fn decodeNumericEntity(body: string): u32 {
         let i: usize = 1;
         while (i < body.len) {
             let c: u8 = body[i];
-            if (c < '0' || c > '9') { return 0; }
+            if (!isDigit(c)) { return 0; }
             cp = cp * 10 + ((c - '0') as u32);
             if (cp > 0x10ffff) { return 0; }
             i += 1;

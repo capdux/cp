@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, parseI64 } from "cap:fmt";
 export class IniEntry {
     section_start: usize,
     section_len: usize,
@@ -10,9 +13,6 @@ export class IniEntry {
 }
 
 export fn isWs(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn bytesEq(a: &[]u8, b: &[]u8): bool;
-export fn eqIgnoreCase(a: &[]u8, b: &[]u8): bool;
 export class IniDoc {
     entries: [128]IniEntry,
     count: usize,

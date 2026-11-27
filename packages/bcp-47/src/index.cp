@@ -1,6 +1,8 @@
 // @cap/bcp47 — Zero-allocation RFC 5646 / BCP-47 language tag parser, canonicalizer & matcher
 // Clean-room MIT implementation inspired by npm `bcp-47`, `bcp-47-match`, and Rust `unic-langid`.
 
+import { isAlpha, isDigit, isAlnum, toLowerByte, toUpperByte, trim, eqIgnoreCase } from "cap:ascii";
+
 pub struct Bcp47Tag {
     pub valid: bool,
     pub language: string,
@@ -32,70 +34,14 @@ struct SubtagSpan {
 // Internal Character & Comparison Helpers
 // ---------------------------------------------------------------------------
 
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn isAlphaNum(c: u8) -> bool {
-    return isAlpha(c) || isDigit(c);
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn toUpperAscii(c: u8) -> u8 {
-    if (c >= 'a' && c <= 'z') {
-        return c - 32;
-    }
-    return c;
-}
-
-fn trimWs(s: string) -> string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && isWs(s[a])) {
-        a += 1;
-    }
-    while (b > a && isWs(s[b - 1])) {
-        b -= 1;
-    }
-    return s[a..b];
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn eqSubtagNormalized(a: string, b: string) -> bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
     while (i < a.len) {
-        let ca = toLowerAscii(a[i]);
-        let cb = toLowerAscii(b[i]);
+        let ca = toLowerByte(a[i]);
+        let cb = toLowerByte(b[i]);
         if (ca == '_') ca = '-';
         if (cb == '_') cb = '-';
         if (ca != cb) {
@@ -130,7 +76,7 @@ fn isAllAlphaNum(s: string) -> bool {
     if (s.len == 0) return false;
     let i: usize = 0;
     while (i < s.len) {
-        if (!isAlphaNum(s[i])) return false;
+        if (!isAlnum(s[i])) return false;
         i += 1;
     }
     return true;
@@ -145,9 +91,9 @@ fn isVariantSubtag(s: string) -> bool {
 
 fn isSingletonSubtag(s: string) -> bool {
     if (s.len != 1) return false;
-    const c = toLowerAscii(s[0]);
+    const c = toLowerByte(s[0]);
     if (c == 'x') return false;
-    return isAlphaNum(c);
+    return isAlnum(c);
 }
 
 fn isPrivateIntro(s: string) -> bool {
@@ -161,7 +107,7 @@ fn isPrivateIntro(s: string) -> bool {
 /// Parses an RFC 5646 / BCP-47 language tag (accepts both `'-'` and `'_'` separators).
 /// All returned string fields are zero-copy slices into `raw`.
 pub fn parseBcp47(raw: string) -> Bcp47Tag {
-    const s = trimWs(raw);
+    const s: string = trim(raw);
     if (s.len == 0) {
         return Bcp47Tag.invalid();
     }
@@ -320,7 +266,7 @@ fn appendLowerHyphen(out: []u8, start_pos: usize, s: string) -> usize {
     let pos = start_pos;
     let i: usize = 0;
     while (i < s.len) {
-        const c = if (s[i] == '_') '-' as u8 else toLowerAscii(s[i]);
+        const c = if (s[i] == '_') '-' as u8 else toLowerByte(s[i]);
         pos = appendByte(out, pos, c);
         i += 1;
     }
@@ -331,7 +277,7 @@ fn appendUpper(out: []u8, start_pos: usize, s: string) -> usize {
     let pos = start_pos;
     let i: usize = 0;
     while (i < s.len) {
-        pos = appendByte(out, pos, toUpperAscii(s[i]));
+        pos = appendByte(out, pos, toUpperByte(s[i]));
         i += 1;
     }
     return pos;
@@ -341,7 +287,7 @@ fn appendTitle(out: []u8, start_pos: usize, s: string) -> usize {
     let pos = start_pos;
     let i: usize = 0;
     while (i < s.len) {
-        const c = if (i == 0) toUpperAscii(s[i]) else toLowerAscii(s[i]);
+        const c = if (i == 0) toUpperByte(s[i]) else toLowerByte(s[i]);
         pos = appendByte(out, pos, c);
         i += 1;
     }

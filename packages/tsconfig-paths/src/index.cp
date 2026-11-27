@@ -1,6 +1,9 @@
 // @cap/tsconfig-paths — Zero-allocation tsconfig.json baseUrl + paths resolver for CP
 // Clean-room MIT implementation inspired by npm `tsconfig-paths`.
 
+import { strEq, startsWith, endsWith, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const MAX_TARGETS: usize = 4;
 pub const MAX_RULES: usize = 32;
 
@@ -53,16 +56,6 @@ pub struct CandidateList {
     }
 }
 
-fn eqStr(a: string, b: string) -> bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
 pub struct PathsMatcher {
     pub base_url: string,
     pub rules: [32]PathRule,
@@ -89,7 +82,7 @@ pub struct PathsMatcher {
         // Append to existing rule if pattern already registered
         let i: usize = 0;
         while (i < _.rule_count) {
-            if (eqStr(_.rules[i].pattern, pattern)) {
+            if (strEq(_.rules[i].pattern, pattern)) {
                 if (_.rules[i].target_count < MAX_TARGETS) {
                     _.rules[i].targets[_.rules[i].target_count] = target;
                     _.rules[i].target_count += 1;
@@ -118,46 +111,14 @@ pub struct PathsMatcher {
 // Pattern Matching (TypeScript `paths` Specification)
 // ---------------------------------------------------------------------------
 
-fn startsWith(s: string, prefix: string) -> bool {
-    if (s.len < prefix.len) return false;
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn endsWith(s: string, suffix: string) -> bool {
-    if (s.len < suffix.len) return false;
-    const offset = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (s[offset + i] != suffix[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn findStar(s: string) -> usize? {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == '*') {
-            return i;
-        }
-        i += 1;
-    }
-    return null;
-}
-
 /// Matches a module `specifier` against a tsconfig `paths` `pattern` (exact or single `*` wildcard).
 pub fn matchesPattern(pattern: string, specifier: string) -> PatternMatch {
     if (pattern.len == 0 || specifier.len == 0) {
         return PatternMatch.none();
     }
-    const star_opt = findStar(pattern);
+    const star_opt = findByte(pattern, '*', 0);
     if (star_opt == null) {
-        if (eqStr(pattern, specifier)) {
+        if (strEq(pattern, specifier)) {
             return PatternMatch{
                 matched: true,
                 is_exact: true,
@@ -198,17 +159,6 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 struct SegSpan {
     start: usize,
     end: usize,
@@ -238,13 +188,13 @@ fn writeNormalizedPath(raw: string, out: []u8, start_pos: usize) -> usize {
             break;
         }
         const seg = raw[s_start..i];
-        if (eqStr(seg, ".")) {
+        if (strEq(seg, ".")) {
             continue;
         }
-        if (eqStr(seg, "..")) {
+        if (strEq(seg, "..")) {
             if (seg_count > 0) {
                 const prev = raw[segs[seg_count - 1].start..segs[seg_count - 1].end];
-                if (!eqStr(prev, "..")) {
+                if (!strEq(prev, "..")) {
                     seg_count -= 1;
                     continue;
                 }
@@ -270,7 +220,7 @@ fn writeNormalizedPath(raw: string, out: []u8, start_pos: usize) -> usize {
         if (k > 0) {
             pos = appendByte(out, pos, '/');
         }
-        pos = appendStr(out, pos, raw[segs[k].start..segs[k].end]);
+        pos = writeStr(raw[segs[k].start..segs[k].end], out, pos);
         k += 1;
     }
     if (pos == start_pos) {
@@ -291,19 +241,19 @@ fn expandTargetInto(
     let sp: usize = 0;
 
     const target_is_abs = (target.len > 0 && target[0] == '/');
-    if (!target_is_abs && base_url.len > 0 && !eqStr(base_url, ".") && !eqStr(base_url, "./")) {
-        sp = appendStr(scratch[0..512], sp, base_url);
+    if (!target_is_abs && base_url.len > 0 && !strEq(base_url, ".") && !strEq(base_url, "./")) {
+        sp = writeStr(base_url, scratch[0..512], sp);
         sp = appendByte(scratch[0..512], sp, '/');
     }
 
-    const star_opt = findStar(target);
+    const star_opt = findByte(target, '*', 0);
     if (star_opt != null) {
         const star = star_opt.?;
-        sp = appendStr(scratch[0..512], sp, target[0..star]);
-        sp = appendStr(scratch[0..512], sp, captured);
-        sp = appendStr(scratch[0..512], sp, target[(star + 1)..target.len]);
+        sp = writeStr(target[0..star], scratch[0..512], sp);
+        sp = writeStr(captured, scratch[0..512], sp);
+        sp = writeStr(target[(star + 1)..target.len], scratch[0..512], sp);
     } else {
-        sp = appendStr(scratch[0..512], sp, target);
+        sp = writeStr(target, scratch[0..512], sp);
     }
 
     // Stage 2: normalize into caller's `out[start_pos..]`

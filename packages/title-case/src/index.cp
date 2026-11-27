@@ -1,6 +1,8 @@
 // @cap/title-case — Zero-allocation AP/Chicago Style Title Case & Sentence Case Engine
 // Clean-room MIT implementation in pure CP.
 
+import { isAlpha, isDigit, toLowerByte, toUpperByte, eqIgnoreCase } from "cap:ascii";
+
 fn isUpper(b: u8) -> bool {
     return b >= 65 && b <= 90;
 }
@@ -9,71 +11,35 @@ fn isLower(b: u8) -> bool {
     return b >= 97 && b <= 122;
 }
 
-fn isAlpha(b: u8) -> bool {
-    return isUpper(b) || isLower(b);
-}
-
-fn isDigit(b: u8) -> bool {
-    return b >= 48 && b <= 57;
-}
-
-fn toLower(b: u8) -> u8 {
-    if (isUpper(b)) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn toUpper(b: u8) -> u8 {
-    if (isLower(b)) {
-        return b - 32;
-    }
-    return b;
-}
-
-fn eqLower(a: string, lower_target: string) -> bool {
-    if (a.len != lower_target.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLower(a[i]) != lower_target[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 /// Returns true if `word` (case-insensitive) is a standard AP/Chicago English title small word:
 /// `a, an, and, as, at, but, by, for, if, in, nor, of, on, or, per, so, the, to, up, via, yet`.
 pub fn isSmallWord(word: string) -> bool {
     if (word.len == 1) {
-        return eqLower(word, "a");
+        return eqIgnoreCase(word, "a");
     }
     if (word.len == 2) {
-        return eqLower(word, "an")
-            || eqLower(word, "as")
-            || eqLower(word, "at")
-            || eqLower(word, "by")
-            || eqLower(word, "if")
-            || eqLower(word, "in")
-            || eqLower(word, "of")
-            || eqLower(word, "on")
-            || eqLower(word, "or")
-            || eqLower(word, "so")
-            || eqLower(word, "to")
-            || eqLower(word, "up");
+        return eqIgnoreCase(word, "an")
+            || eqIgnoreCase(word, "as")
+            || eqIgnoreCase(word, "at")
+            || eqIgnoreCase(word, "by")
+            || eqIgnoreCase(word, "if")
+            || eqIgnoreCase(word, "in")
+            || eqIgnoreCase(word, "of")
+            || eqIgnoreCase(word, "on")
+            || eqIgnoreCase(word, "or")
+            || eqIgnoreCase(word, "so")
+            || eqIgnoreCase(word, "to")
+            || eqIgnoreCase(word, "up");
     }
     if (word.len == 3) {
-        return eqLower(word, "and")
-            || eqLower(word, "but")
-            || eqLower(word, "for")
-            || eqLower(word, "nor")
-            || eqLower(word, "per")
-            || eqLower(word, "the")
-            || eqLower(word, "via")
-            || eqLower(word, "yet");
+        return eqIgnoreCase(word, "and")
+            || eqIgnoreCase(word, "but")
+            || eqIgnoreCase(word, "for")
+            || eqIgnoreCase(word, "nor")
+            || eqIgnoreCase(word, "per")
+            || eqIgnoreCase(word, "the")
+            || eqIgnoreCase(word, "via")
+            || eqIgnoreCase(word, "yet");
     }
     return false;
 }
@@ -161,10 +127,10 @@ pub fn toTitleCase(input: string, out: []u8) -> usize {
                 const ch = input[k];
                 if (isAlpha(ch)) {
                     if (force_cap && !capped) {
-                        out[k] = toUpper(ch);
+                        out[k] = toUpperByte(ch);
                         capped = true;
                     } else {
-                        out[k] = toLower(ch);
+                        out[k] = toLowerByte(ch);
                     }
                 } else {
                     out[k] = ch;
@@ -195,10 +161,10 @@ pub fn toSentenceCase(input: string, out: []u8) -> usize {
         const ch = input[i];
         if (isAlpha(ch)) {
             if (cap_next) {
-                out[i] = toUpper(ch);
+                out[i] = toUpperByte(ch);
                 cap_next = false;
             } else {
-                out[i] = toLower(ch);
+                out[i] = toLowerByte(ch);
             }
         } else {
             out[i] = ch;
@@ -225,7 +191,7 @@ pub fn capitalizeFirst(input: string, out: []u8) -> usize {
     while (i < n) {
         const ch = input[i];
         if (!done && isAlpha(ch)) {
-            out[i] = toUpper(ch);
+            out[i] = toUpperByte(ch);
             done = true;
         } else {
             out[i] = ch;

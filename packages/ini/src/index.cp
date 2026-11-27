@@ -1,6 +1,10 @@
 // @cap/ini — Zero-heap INI / .gitconfig / .npmrc / .editorconfig parser & writer
 // MIT License (clean-room CP implementation)
 
+import { eqIgnoreCase } from "cap:ascii";
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, parseI64 } from "cap:fmt";
+
 pub const MAX_ENTRIES: usize = 128;
 
 pub struct IniEntry {
@@ -14,41 +18,6 @@ pub struct IniEntry {
 
 fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn bytesEq(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn eqIgnoreCase(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub struct IniDoc {
@@ -66,10 +35,7 @@ pub struct IniDoc {
 
         let pos: usize = 0;
         while (pos < src.len) {
-            let line_end: usize = pos;
-            while (line_end < src.len && src[line_end] != '\n' as u8) {
-                line_end += 1;
-            }
+            const line_end: usize = findByteInBytes(src, '\n' as u8, pos) ?? src.len;
             let raw_end: usize = line_end;
             if (raw_end > pos && src[raw_end - 1] == '\r' as u8) {
                 raw_end -= 1;
@@ -238,50 +204,7 @@ pub struct IniDoc {
         }
         const e: IniEntry = _.entries[idx as usize];
         const v: []const u8 = src[e.val_start..(e.val_start + e.val_len)];
-        if (v.len == 0) {
-            return default_val;
-        }
-
-        let i: usize = 0;
-        let is_neg: bool = false;
-        if (v[0] == '-' as u8) {
-            is_neg = true;
-            i = 1;
-        } else if (v[0] == '+' as u8) {
-            i = 1;
-        }
-        if (i >= v.len) {
-            return default_val;
-        }
-
-        const max_pos: u64 = ((0x7FFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
-        const max_neg: u64 = (0x80000000 as u64) << 32;
-        let max_mag: u64 = max_pos;
-        if (is_neg) {
-            max_mag = max_neg;
-        }
-
-        let acc: u64 = 0;
-        while (i < v.len) {
-            const c: u8 = v[i];
-            if (c < '0' as u8 || c > '9' as u8) {
-                return default_val;
-            }
-            const d: u64 = (c - ('0' as u8)) as u64;
-            if (acc > (max_mag - d) / 10) {
-                return default_val;
-            }
-            acc = acc * 10 + d;
-            i += 1;
-        }
-
-        if (is_neg) {
-            if (acc == max_neg) {
-                return -(max_pos as i64) - 1;
-            }
-            return -(acc as i64);
-        }
-        return acc as i64;
+        return parseI64(v) ?? default_val;
     }
 }
 
@@ -313,12 +236,7 @@ pub struct IniWriter {
             _.overflow = true;
             return false;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.buf[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
-        }
+        _.pos = writeStr(s, _.buf, _.pos);
         return true;
     }
 

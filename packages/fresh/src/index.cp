@@ -3,6 +3,9 @@
 // Supports If-None-Match (strong/weak ETag list & `*`), If-Modified-Since vs Last-Modified,
 // IMF-fixdate parsing, and Cache-Control: no-cache invalidation.
 
+import { eqIgnoreCase, isDigit, isSpace } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+
 pub struct RequestHeaders {
     pub if_none_match: []const u8,
     pub if_modified_since: []const u8,
@@ -19,17 +22,6 @@ struct TrimRange {
     end: usize,
 }
 
-fn isSpace(b: u8) -> bool {
-    return b == 32 || b == 9;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn trimRange(s: []const u8, start: usize, end: usize) -> TrimRange {
     let a = start;
     let b = end;
@@ -40,20 +32,6 @@ fn trimRange(s: []const u8, start: usize, end: usize) -> TrimRange {
         b -= 1;
     }
     return TrimRange { start: a, end: b };
-}
-
-fn eqIgnoreCase(s: []const u8, start: usize, end: usize, target_lower: []const u8) -> bool {
-    if (end - start != target_lower.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < target_lower.len) {
-        if (toLowerAscii(s[start + i]) != target_lower[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Checks if a `Cache-Control` header contains the `no-cache` directive (case-insensitive).
@@ -81,7 +59,7 @@ pub fn hasNoCache(cache_control: []const u8) -> bool {
         while (name_end < tr.end && cache_control[name_end] != 61 && !isSpace(cache_control[name_end])) {
             name_end += 1;
         }
-        if (eqIgnoreCase(cache_control, tr.start, name_end, "no-cache")) {
+        if (eqIgnoreCase(cache_control[tr.start..name_end], "no-cache")) {
             return true;
         }
 
@@ -115,21 +93,6 @@ fn parseEtagSlice(s: []const u8, raw_start: usize, raw_end: usize) -> ParsedEtag
     return ParsedEtag { start: a, end: b, weak: weak, valid: true };
 }
 
-fn slicesEqual(a: []const u8, a_start: usize, a_end: usize, b: []const u8, b_start: usize, b_end: usize) -> bool {
-    const alen = a_end - a_start;
-    if (alen != b_end - b_start) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < alen) {
-        if (a[a_start + i] != b[b_start + i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 /// RFC 9110 weak ETag comparison: strips optional `W/` prefix and compares quoted opaque-tags.
 pub fn etagWeakMatch(a: []const u8, b: []const u8) -> bool {
     const pa = parseEtagSlice(a, 0, a.len);
@@ -137,7 +100,7 @@ pub fn etagWeakMatch(a: []const u8, b: []const u8) -> bool {
     if (!pa.valid || !pb.valid) {
         return false;
     }
-    return slicesEqual(a, pa.start, pa.end, b, pb.start, pb.end);
+    return bytesEq(a[pa.start..pa.end], b[pb.start..pb.end]);
 }
 
 /// RFC 9110 strong ETag comparison: returns false if either ETag is weak (`W/`).
@@ -147,13 +110,13 @@ pub fn etagStrongMatch(a: []const u8, b: []const u8) -> bool {
     if (!pa.valid || !pb.valid || pa.weak || pb.weak) {
         return false;
     }
-    return slicesEqual(a, pa.start, pa.end, b, pb.start, pb.end);
+    return bytesEq(a[pa.start..pa.end], b[pb.start..pb.end]);
 }
 
 fn parse2Digits(s: []const u8, pos: usize) -> i32 {
     const c0 = s[pos];
     const c1 = s[pos + 1];
-    if (c0 < 48 || c0 > 57 || c1 < 48 || c1 > 57) {
+    if (!isDigit(c0) || !isDigit(c1)) {
         return -1;
     }
     return ((c0 - 48) as i32) * 10 + ((c1 - 48) as i32);
@@ -308,7 +271,7 @@ fn matchIfNoneMatch(inm: []const u8, res_etag: []const u8) -> bool {
         }
         const item_end = pos;
         const item_parsed = parseEtagSlice(inm, item_start, item_end);
-        if (item_parsed.valid && slicesEqual(inm, item_parsed.start, item_parsed.end, res_etag, res_parsed.start, res_parsed.end)) {
+        if (item_parsed.valid && bytesEq(inm[item_parsed.start..item_parsed.end], res_etag[res_parsed.start..res_parsed.end])) {
             return true;
         }
         if (pos < tr.end && inm[pos] == 44) {

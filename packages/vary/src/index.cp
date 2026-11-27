@@ -1,35 +1,16 @@
 // @cap/vary — Zero-heap RFC 9110 HTTP Vary response header manipulation
 // MIT License (clean-room CP implementation)
 
+import { isAlnum, eqIgnoreCase } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
 }
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: []const u8, b: []const u8) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn isTchar(c: u8) -> bool {
-    if ((c >= 'a' as u8 && c <= 'z' as u8)
-        || (c >= 'A' as u8 && c <= 'Z' as u8)
-        || (c >= '0' as u8 && c <= '9' as u8)) {
+    if (isAlnum(c)) {
         return true;
     }
     return c == '!' as u8 || c == '#' as u8 || c == '$' as u8 || c == '%' as u8
@@ -72,10 +53,7 @@ pub fn hasField(header: []const u8, field: []const u8) -> bool {
 
     let pos: usize = 0;
     while (pos < header.len) {
-        let seg_end: usize = pos;
-        while (seg_end < header.len && header[seg_end] != ',' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByteInBytes(header, ',' as u8, pos) ?? header.len;
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(header[s])) {
@@ -101,10 +79,7 @@ pub fn hasField(header: []const u8, field: []const u8) -> bool {
 fn headerHasWildcard(src: []const u8) -> bool {
     let pos: usize = 0;
     while (pos < src.len) {
-        let seg_end: usize = pos;
-        while (seg_end < src.len && src[seg_end] != ',' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByteInBytes(src, ',' as u8, pos) ?? src.len;
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(src[s])) {
@@ -129,10 +104,7 @@ fn validateFieldList(field_list: []const u8) -> bool {
     let count: usize = 0;
     let pos: usize = 0;
     while (pos < field_list.len) {
-        let seg_end: usize = pos;
-        while (seg_end < field_list.len && field_list[seg_end] != ',' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByteInBytes(field_list, ',' as u8, pos) ?? field_list.len;
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(field_list[s])) {
@@ -158,10 +130,7 @@ fn validateFieldList(field_list: []const u8) -> bool {
 fn dstContainsToken(dst: []const u8, written: usize, tok: []const u8) -> bool {
     let pos: usize = 0;
     while (pos < written) {
-        let seg_end: usize = pos;
-        while (seg_end < written && dst[seg_end] != ',' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByteInBytes(dst[0..written], ',' as u8, pos) ?? written;
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(dst[s])) {
@@ -185,10 +154,7 @@ fn appendTokens(src: []const u8, dst: []u8, start_pos: usize) -> i64 {
     let cur: usize = start_pos;
     let pos: usize = 0;
     while (pos < src.len) {
-        let seg_end: usize = pos;
-        while (seg_end < src.len && src[seg_end] != ',' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByteInBytes(src, ',' as u8, pos) ?? src.len;
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(src[s])) {
@@ -211,12 +177,7 @@ fn appendTokens(src: []const u8, dst: []u8, start_pos: usize) -> i64 {
                 if (tok.len > dst.len - cur) {
                     return -1;
                 }
-                let k: usize = 0;
-                while (k < tok.len) {
-                    dst[cur] = tok[k];
-                    cur += 1;
-                    k += 1;
-                }
+                cur = writeStr(tok, dst, cur);
             }
         }
         pos = seg_end;

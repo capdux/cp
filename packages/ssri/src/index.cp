@@ -1,6 +1,10 @@
 // @cap/ssri — Zero-allocation W3C Subresource Integrity (SRI) parser, validator & matcher for CP
 // Clean-room MIT implementation inspired by npm `ssri` (85M/wk).
 
+import { isSpace, isAlnum, eqIgnoreCase, findByte } from "cap:ascii";
+import { ctEqual } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 const MAX_HASHES: usize = 16;
 
 pub enum SriAlgo {
@@ -45,35 +49,6 @@ fn emptyHash() -> SriHash {
     };
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn strEqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn isAlnum(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
-}
-
 fn isValidAlgoName(name: string) -> bool {
     if (name.len == 0) {
         return false;
@@ -89,10 +64,10 @@ fn isValidAlgoName(name: string) -> bool {
 }
 
 fn parseAlgo(name: string) -> SriAlgo {
-    if (strEqIgnoreCase(name, "sha512")) { return SriAlgo.Sha512; }
-    if (strEqIgnoreCase(name, "sha384")) { return SriAlgo.Sha384; }
-    if (strEqIgnoreCase(name, "blake3")) { return SriAlgo.Blake3; }
-    if (strEqIgnoreCase(name, "sha256")) { return SriAlgo.Sha256; }
+    if (eqIgnoreCase(name, "sha512")) { return SriAlgo.Sha512; }
+    if (eqIgnoreCase(name, "sha384")) { return SriAlgo.Sha384; }
+    if (eqIgnoreCase(name, "blake3")) { return SriAlgo.Blake3; }
+    if (eqIgnoreCase(name, "sha256")) { return SriAlgo.Sha256; }
     return SriAlgo.Unknown;
 }
 
@@ -117,10 +92,7 @@ pub fn algoStrength(algo: SriAlgo) -> u8 {
 }
 
 fn isBase64DataChar(c: u8) -> bool {
-    if (c >= 'A' && c <= 'Z') { return true; }
-    if (c >= 'a' && c <= 'z') { return true; }
-    if (c >= '0' && c <= '9') { return true; }
-    return c == '+' || c == '/' || c == '-' || c == '_';
+    return isAlnum(c) || c == '+' || c == '/' || c == '-' || c == '_';
 }
 
 fn isValidBase64(s: string) -> bool {
@@ -166,34 +138,12 @@ fn isValidOptions(opts: string) -> bool {
     return true;
 }
 
-fn constantTimeEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < a.len) {
-        diff = diff | (a[i] ^ b[i]);
-        i += 1;
-    }
-    return diff == (0 as u8);
-}
-
 fn parseSingleToken(tok: string) -> SriHash {
-    let dashIdx: usize = 0;
-    let foundDash = false;
-    let i: usize = 0;
-    while (i < tok.len) {
-        if (tok[i] == '-') {
-            dashIdx = i;
-            foundDash = true;
-            break;
-        }
-        i += 1;
-    }
-    if (!foundDash || dashIdx == 0 || dashIdx + 1 >= tok.len) {
+    const dash_opt = findByte(tok, '-', 0);
+    if (dash_opt == null || dash_opt.? == 0 || dash_opt.? + 1 >= tok.len) {
         return emptyHash();
     }
+    const dashIdx = dash_opt.?;
 
     const rawAlgo = tok[0..dashIdx];
     if (!isValidAlgoName(rawAlgo)) {
@@ -201,17 +151,9 @@ fn parseSingleToken(tok: string) -> SriHash {
     }
 
     const rest = tok[(dashIdx + 1)..tok.len];
-    let qIdx: usize = rest.len;
-    let hasQ = false;
-    let j: usize = 0;
-    while (j < rest.len) {
-        if (rest[j] == '?') {
-            qIdx = j;
-            hasQ = true;
-            break;
-        }
-        j += 1;
-    }
+    const q_opt = findByte(rest, '?', 0);
+    const hasQ = q_opt != null;
+    const qIdx = q_opt ?? rest.len;
 
     const digest = rest[0..qIdx];
     const opts = if (hasQ) { rest[(qIdx + 1)..rest.len] } else { "" };
@@ -315,7 +257,7 @@ pub fn matchesIntegrity(expected: SriIntegrity, actual: SriIntegrity) -> bool {
             let j: usize = 0;
             while (j < actual.count) {
                 const a = actual.hashes[j];
-                if (a.valid && a.algo == e.algo && constantTimeEq(e.digest, a.digest)) {
+                if (a.valid && a.algo == e.algo && ctEqual(e.digest, a.digest)) {
                     return true;
                 }
                 j += 1;
@@ -324,17 +266,6 @@ pub fn matchesIntegrity(expected: SriIntegrity, actual: SriIntegrity) -> bool {
         i += 1;
     }
     return false;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
 }
 
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
@@ -350,9 +281,9 @@ pub fn formatHash(algo: SriAlgo, base64_digest: string, out: []u8) -> string {
         return out[0..0];
     }
     let pos: usize = 0;
-    pos = appendStr(out, pos, algoName(algo));
+    pos = writeStr(algoName(algo), out, pos);
     pos = appendByte(out, pos, '-');
-    pos = appendStr(out, pos, base64_digest);
+    pos = writeStr(base64_digest, out, pos);
     return out[0..pos];
 }
 
@@ -366,12 +297,12 @@ pub fn formatIntegrity(sri: SriIntegrity, out: []u8) -> string {
             if (written > 0) {
                 pos = appendByte(out, pos, ' ');
             }
-            pos = appendStr(out, pos, h.algo_name);
+            pos = writeStr(h.algo_name, out, pos);
             pos = appendByte(out, pos, '-');
-            pos = appendStr(out, pos, h.digest);
+            pos = writeStr(h.digest, out, pos);
             if (h.options.len > 0) {
                 pos = appendByte(out, pos, '?');
-                pos = appendStr(out, pos, h.options);
+                pos = writeStr(h.options, out, pos);
             }
             written += 1;
         }

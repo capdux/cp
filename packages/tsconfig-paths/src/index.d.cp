@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq, startsWith, endsWith, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class PathRule {
     pattern: string,
     targets: [4]string,
@@ -22,7 +24,6 @@ export class CandidateList {
     fn itemAt(i: usize): string?;
 }
 
-export fn eqStr(a: string, b: string): bool;
 export class PathsMatcher {
     base_url: string,
     rules: [32]PathRule,
@@ -32,12 +33,8 @@ export class PathsMatcher {
     fn addRuleMulti(_: auto, pattern: string, t1: string, t2: string);
 }
 
-export fn startsWith(s: string, prefix: string): bool;
-export fn endsWith(s: string, suffix: string): bool;
-export fn findStar(s: string): usize?;
 export fn matchesPattern(pattern: string, specifier: string): PatternMatch;
 export fn appendByte(out: []u8, pos: usize, c: u8): usize;
-export fn appendStr(out: []u8, pos: usize, s: string): usize;
 export class SegSpan {
     start: usize,
     end: usize,
