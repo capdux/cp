@@ -3,6 +3,7 @@
   "version": "0.34.0",
   "description": "Zero-heap CSS Syntax Level 3 tokenizer and lexer in pure CP",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

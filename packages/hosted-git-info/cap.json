@@ -4,6 +4,7 @@
   "description": "Zero-heap parser & URL formatter for GitHub, GitLab, and Bitbucket shorthands, SSH, and HTTPS git URLs (npm hosted-git-info equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

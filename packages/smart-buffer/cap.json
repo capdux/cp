@@ -3,6 +3,7 @@
   "version": "4.2.0",
   "description": "Zero-heap cursor-based binary reader/writer buffer with big/little-endian integer and string operations",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
   "author": "CP Official Team",

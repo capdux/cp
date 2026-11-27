@@ -4,6 +4,7 @@
   "description": "Zero-heap pure-CP O(1)-clone small string optimization (24-byte inline SSO + read-only slice fallback, crates.io smol_str equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

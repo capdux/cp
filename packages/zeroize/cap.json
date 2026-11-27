@@ -4,6 +4,7 @@
   "description": "Zero-heap secure secret memory wiping and ZeroizingBuf32/ZeroizingBuf64 key containers (crates.io zeroize equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

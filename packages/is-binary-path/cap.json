@@ -3,6 +3,7 @@
   "version": "3.0.0",
   "description": "Zero-allocation check if a file path has a known binary file extension (covers binary-extensions)",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

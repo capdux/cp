@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Zero-heap column-width text word wrapper with indentation, soft/hard modes, and newline preservation in pure CP",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

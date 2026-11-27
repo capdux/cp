@@ -1,7 +1,7 @@
 {
   "name": "normalize-url",
   "ver": "1.0.0",
-  "description": "Zero-allocation URL normalization utility (npm normalize-url parity) composing @cap/prepend-http for CP",
+  "description": "Zero-allocation URL normalization utility (npm normalize-url parity) composing prepend-http for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "zero-alloc"
   ],
   "dep": {
-    "@cap/prepend-http": "1.0.0"
+    "prepend-http": "1.0.0"
   },
   "source": {
     "registry": "npm",

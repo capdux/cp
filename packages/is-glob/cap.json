@@ -1,7 +1,7 @@
 {
   "name": "is-glob",
   "version": "1.0.0",
-  "description": "Zero-allocation glob pattern detector reusing @cap/is-extglob for CP",
+  "description": "Zero-allocation glob pattern detector reusing is-extglob for CP",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

@@ -1,7 +1,7 @@
 {
   "name": "indicatif",
   "ver": "1.0.0",
-  "desc": "Zero-heap terminal progress bar, throughput, and ETA renderer composing @cap/pretty-bytes and @cap/pretty-ms in pure CP",
+  "desc": "Zero-heap terminal progress bar, throughput, and ETA renderer composing pretty-bytes and pretty-ms in pure CP",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

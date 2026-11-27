@@ -13,7 +13,7 @@
     "nlp",
     "name-matching"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/soundex",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/soundex-code",
   "source": {
     "registry": "npm",
     "name": "soundex-code",

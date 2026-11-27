@@ -3,6 +3,7 @@
   "version": "4.0.2",
   "description": "Zero-allocation structured lint/AST diagnostic message with unist Point/Position formatting",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

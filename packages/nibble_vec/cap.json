@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Zero-heap 4-bit nibble vector for radix trees and prefix compression",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

@@ -1,7 +1,7 @@
 {
   "name": "redent",
   "ver": "1.0.0",
-  "description": "Zero-allocation strip-and-reindent multiline string utility (npm redent parity) composing @cap/strip-indent and @cap/indent-string for CP",
+  "description": "Zero-allocation strip-and-reindent multiline string utility (npm redent parity) composing strip-indent and indent-string for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
@@ -15,8 +15,8 @@
     "zero-alloc"
   ],
   "dep": {
-    "@cap/strip-indent": "1.0.0",
-    "@cap/indent-string": "1.0.0"
+    "strip-indent": "1.0.0",
+    "indent-string": "1.0.0"
   },
   "source": {
     "registry": "npm",

@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "Zero-heap computation of the deepest common parent directory across a list of file paths",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

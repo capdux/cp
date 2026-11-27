@@ -13,7 +13,7 @@
     "coordinates",
     "encoding"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/polyline",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/polyline",
   "source": {
     "registry": "crates.io",
     "name": "polyline",

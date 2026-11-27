@@ -3,6 +3,7 @@
   "version": "4.3.0",
   "description": "Zero-heap configuration option schema validator in pure CP",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

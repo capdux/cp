@@ -1,7 +1,7 @@
 {
   "name": "der",
   "ver": "1.0.0",
-  "description": "Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder reusing @cap/const-oid for OID TLV handling (RustCrypto der parity) in pure CP.",
+  "description": "Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder reusing const-oid for OID TLV handling (RustCrypto der parity) in pure CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

@@ -1,7 +1,7 @@
 {
   "name": "querystring",
   "ver": "1.0.0",
-  "description": "Zero-allocation URL query string parser, stringifier & parameter extractor (Node.js querystring & npm query-string v9 parity) composing @cap/percent-encoding for CP",
+  "description": "Zero-allocation URL query string parser, stringifier & parameter extractor (Node.js querystring & npm query-string v9 parity) composing percent-encoding for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

@@ -1,9 +1,10 @@
 {
   "name": "listr2",
   "ver": "1.0.0",
-  "description": "Zero-heap CLI task list state machine with pending/running/completed/skipped/failed lifecycle, retries, and ANSI rendering (npm listr2 equivalent, reuses @cap/picocolors)",
+  "description": "Zero-heap CLI task list state machine with pending/running/completed/skipped/failed lifecycle, retries, and ANSI rendering (npm listr2 equivalent, reuses picocolors)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
     "picocolors": "1.0.0"

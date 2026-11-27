@@ -1,7 +1,7 @@
 {
   "name": "mathjs",
   "ver": "1.0.0",
-  "description": "Zero-allocation mathematical expression parser & evaluator (npm mathjs parity) composing @cap/libm with scoped variables, constants, 14 built-in functions, and strict error reporting for CP",
+  "description": "Zero-allocation mathematical expression parser & evaluator (npm mathjs parity) composing libm with scoped variables, constants, 14 built-in functions, and strict error reporting for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

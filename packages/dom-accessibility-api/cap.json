@@ -3,6 +3,7 @@
   "version": "0.6.3",
   "description": "Zero-heap W3C Accessible Name and Description computation (AccName) in pure CP",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

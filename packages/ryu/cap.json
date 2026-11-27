@@ -2,7 +2,7 @@
   "name": "ryu",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses @cap/itoa)",
+  "description": "Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses itoa)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {

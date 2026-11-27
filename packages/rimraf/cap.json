@@ -1,7 +1,7 @@
 {
   "name": "rimraf",
   "ver": "1.0.0",
-  "description": "Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing @cap/fast-glob.",
+  "description": "Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing fast-glob.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

@@ -13,7 +13,7 @@
     "bits",
     "rust-bitflags"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/bitflags",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/bitflags",
   "source": {
     "registry": "crates.io",
     "name": "bitflags",

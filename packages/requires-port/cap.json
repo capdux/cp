@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Zero-heap checker determining whether a port number is non-default for a given URL protocol",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

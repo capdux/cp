@@ -15,7 +15,7 @@
     "iec",
     "si"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/bytes",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/bytes",
   "source": {
     "registry": "npm",
     "name": "bytes",

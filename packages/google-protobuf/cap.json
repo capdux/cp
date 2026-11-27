@@ -1,7 +1,7 @@
 {
   "name": "google-protobuf",
   "version": "1.0.0",
-  "description": "Zero-allocation Protocol Buffers Wire Format encoder/decoder reusing @cap/varint (ULEB128 + ZigZag) for CP",
+  "description": "Zero-allocation Protocol Buffers Wire Format encoder/decoder reusing unsigned-varint (ULEB128 + ZigZag) for CP",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

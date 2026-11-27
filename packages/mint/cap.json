@@ -4,6 +4,7 @@
   "description": "Zero-heap Math Interoperability Standard Types: Point2/3, Vector2/3/4, Quaternion, RowMatrix2/3/4, ColumnMatrix4, EulerAngles (crates.io mint equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

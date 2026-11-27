@@ -3,6 +3,7 @@
   "version": "0.7.3",
   "description": "Zero-heap insertion-ordered multimap supporting multiple values per key",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

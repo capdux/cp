@@ -1,7 +1,7 @@
 {
   "name": "yargs",
   "ver": "1.0.0",
-  "description": "Zero-allocation CLI application framework (npm yargs v17 parity) composing @cap/yargs-parser, @cap/cliui, and @cap/y18n for CP",
+  "description": "Zero-allocation CLI application framework (npm yargs v17 parity) composing yargs-parser, cliui, and y18n for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

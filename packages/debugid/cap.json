@@ -3,6 +3,7 @@
   "version": "0.8.0",
   "description": "Zero-heap Sentry/Breakpad/PDB DebugId (128-bit UUID + appendix age) parser and formatter",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "Apache-2.0",
   "author": "CP Official Team",
   "source": {

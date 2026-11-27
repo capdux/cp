@@ -1,7 +1,7 @@
 {
   "name": "string-width",
   "ver": "1.0.0",
-  "description": "Zero-allocation visual terminal column width calculator (npm string-width v7 parity) composing @cap/ansi-strip and @cap/unicode-width for CP",
+  "description": "Zero-allocation visual terminal column width calculator (npm string-width v7 parity) composing strip-ansi and unicode-width for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

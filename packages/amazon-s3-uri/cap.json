@@ -14,7 +14,7 @@
     "uri",
     "cloud"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/s3-uri",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/amazon-s3-uri",
   "source": {
     "registry": "npm",
     "name": "amazon-s3-uri",

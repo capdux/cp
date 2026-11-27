@@ -1,9 +1,10 @@
 {
   "name": "zerocopy",
   "ver": "1.0.0",
-  "description": "Zero-heap zero-copy prefix/suffix byte slice cursor readers & writers with layout validation (crates.io zerocopy equivalent, reuses @cap/bytemuck-crate)",
+  "description": "Zero-heap zero-copy prefix/suffix byte slice cursor readers & writers with layout validation (crates.io zerocopy equivalent, reuses bytemuck)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
     "bytemuck": "1.0.0"

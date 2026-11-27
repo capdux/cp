@@ -3,6 +3,7 @@
   "version": "1.0.8",
   "description": "Zero-heap Damerau-Levenshtein (Optimal String Alignment) edit distance and similarity ratio",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

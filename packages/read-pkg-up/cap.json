@@ -1,7 +1,7 @@
 {
   "name": "read-pkg-up",
   "ver": "1.0.0",
-  "description": "Zero-allocation upward package.json finder, parser, and normalizer for CP, reusing @cap/find-up and @cap/read-pkg.",
+  "description": "Zero-allocation upward package.json finder, parser, and normalizer for CP, reusing find-up and read-pkg.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

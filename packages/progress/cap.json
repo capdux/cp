@@ -3,6 +3,7 @@
   "version": "2.0.3",
   "description": "Zero-heap terminal progress bar renderer supporting :bar, :percent, :current, :total, :eta, and :rate tokens",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

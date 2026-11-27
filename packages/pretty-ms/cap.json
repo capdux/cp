@@ -1,7 +1,7 @@
 {
   "name": "pretty-ms",
   "ver": "1.0.0",
-  "description": "Zero-allocation millisecond decomposer and human-readable duration formatter composing @cap/parse-ms for CP",
+  "description": "Zero-allocation millisecond decomposer and human-readable duration formatter composing parse-ms for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

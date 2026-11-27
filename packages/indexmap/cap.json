@@ -2,7 +2,7 @@
   "name": "indexmap",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Pure CP zero-allocation insertion-order-preserving hash map (Rust indexmap v2 parity, reuses @cap/fnv-hash)",
+  "description": "Pure CP zero-allocation insertion-order-preserving hash map (Rust indexmap v2 parity, reuses @sindresorhus/fnv1a)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {

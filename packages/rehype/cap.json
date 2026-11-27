@@ -1,7 +1,7 @@
 {
   "name": "rehype",
   "ver": "1.0.0",
-  "description": "Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer (npm rehype/hast parity) composing @cap/escape-html for CP",
+  "description": "Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer (npm rehype/hast parity) composing escape-html for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

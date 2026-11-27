@@ -1,7 +1,7 @@
 {
   "name": "anymatch",
   "ver": "1.0.0",
-  "desc": "Zero-heap file path & glob matcher with negation support, composing @cap/normalize-path and @cap/is-glob in pure CP",
+  "desc": "Zero-heap file path & glob matcher with negation support, composing normalize-path and is-glob in pure CP",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

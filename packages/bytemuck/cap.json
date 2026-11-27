@@ -4,6 +4,7 @@
   "description": "Zero-heap safe POD byte reinterpretation, LE/BE integer/float byte casting, and alignment/size guard checks (crates.io bytemuck equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

@@ -4,6 +4,7 @@
   "description": "Zero-heap HTTP Cookie header parser with HMAC-SHA256 signed cookie verification (s:), key rotation, and JSON cookie (j:) extraction (npm cookie-parser equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
     "tough-cookie": "1.0.0",

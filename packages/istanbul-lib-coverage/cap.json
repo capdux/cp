@@ -3,6 +3,7 @@
   "version": "3.2.2",
   "description": "Zero-heap code coverage metrics, summary aggregation, and LCOV codec",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "BSD-3-Clause",
   "author": "CP Official Team",
   "source": {

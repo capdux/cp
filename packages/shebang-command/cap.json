@@ -1,7 +1,7 @@
 {
   "name": "shebang-command",
   "version": "1.0.0",
-  "description": "Zero-allocation shebang executable command extractor reusing @cap/shebang-regex for CP",
+  "description": "Zero-allocation shebang executable command extractor reusing shebang-regex for CP",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

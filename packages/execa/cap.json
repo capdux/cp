@@ -1,9 +1,10 @@
 {
   "name": "execa",
   "ver": "1.0.0",
-  "description": "Zero-heap subprocess command builder, POSIX/Windows argument escaper, preferLocal PATH resolver, and ExecaResult inspector (npm execa equivalent, reuses @cap/npm-run-path)",
+  "description": "Zero-heap subprocess command builder, POSIX/Windows argument escaper, preferLocal PATH resolver, and ExecaResult inspector (npm execa equivalent, reuses npm-run-path)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
     "npm-run-path": "1.0.0"

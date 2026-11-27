@@ -13,7 +13,7 @@
     "security",
     "wildcard"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/cors-match",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/tower-http",
   "source": {
     "registry": "crates.io",
     "name": "tower-http",

@@ -2,7 +2,7 @@
   "name": "decamelize-keys",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-heap object key decamelizer with custom separator, exclude list, and fixed key buffer pool, composing @cap/map-obj and @cap/decamelize (clean-room port of npm decamelize-keys)",
+  "description": "Zero-heap object key decamelizer with custom separator, exclude list, and fixed key buffer pool, composing map-obj and decamelize (clean-room port of npm decamelize-keys)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {

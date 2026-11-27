@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "description": "Zero-overhead identity integer hasher and Fibonacci/SplitMix64 integer key mixers for hash maps",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "Apache-2.0",
   "author": "CP Official Team",
   "source": {

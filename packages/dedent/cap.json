@@ -13,7 +13,7 @@
     "multiline",
     "string"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/indent-strip",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/dedent",
   "source": {
     "registry": "npm",
     "name": "dedent",

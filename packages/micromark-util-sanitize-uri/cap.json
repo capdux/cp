@@ -3,6 +3,7 @@
   "version": "2.0.1",
   "description": "Zero-allocation safe URI sanitizer and RFC 3986 percent-encoder blocking unsafe schemes",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

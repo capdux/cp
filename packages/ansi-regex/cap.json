@@ -1,7 +1,7 @@
 {
   "name": "ansi-regex",
   "version": "1.0.0",
-  "description": "Zero-heap ANSI escape sequence matcher & locator reusing @cap/anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP",
+  "description": "Zero-heap ANSI escape sequence matcher & locator reusing anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

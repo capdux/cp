@@ -1,7 +1,7 @@
 {
   "name": "webpki-roots",
   "ver": "1.0.0",
-  "description": "Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing @cap/x509-cert and @cap/spki (webpki-roots parity) in pure CP.",
+  "description": "Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing x509-cert and spki (webpki-roots parity) in pure CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

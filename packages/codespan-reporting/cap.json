@@ -3,6 +3,7 @@
   "version": "0.11.1",
   "description": "Zero-heap Rustc-style multi-line source code diagnostic renderer with line numbers, gutter, and caret underlines",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "Apache-2.0",
   "author": "CP Official Team",
   "source": {

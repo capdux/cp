@@ -13,7 +13,7 @@
     "database",
     "connection-string"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/mysql-dsn",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/mysql2",
   "source": {
     "registry": "npm",
     "name": "mysql2",

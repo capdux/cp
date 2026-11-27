@@ -3,6 +3,7 @@
   "version": "3.4.0",
   "description": "Zero-heap human-readable validation error aggregator and formatter (npm zod-validation-error equivalent)",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
   "author": "CP Official Team",

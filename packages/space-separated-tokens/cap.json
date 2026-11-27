@@ -3,6 +3,7 @@
   "version": "2.0.2",
   "description": "Zero-allocation HTML/SVG space-separated and comma-separated token list parser and serializer",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

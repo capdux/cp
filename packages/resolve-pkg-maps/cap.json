@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Zero-heap package.json exports subpath wildcard and condition resolver",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

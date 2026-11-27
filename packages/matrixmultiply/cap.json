@@ -3,6 +3,7 @@
   "version": "0.3.10",
   "description": "Zero-heap general dense matrix multiplication (sgemm / dgemm / matmulF64) with arbitrary row and column strides",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
   "author": "CP Official Team",

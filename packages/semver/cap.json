@@ -13,7 +13,7 @@
     "node-semver",
     "versionreq"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/semver",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/semver",
   "dependencies": {},
   "source": {
     "registry": "npm",

@@ -1,9 +1,10 @@
 {
   "name": "destroy",
   "ver": "1.0.0",
-  "description": "Zero-heap safe idempotent stream and file-descriptor destroyer with lifecycle completion guard (npm destroy equivalent, reuses @cap/on-finished)",
+  "description": "Zero-heap safe idempotent stream and file-descriptor destroyer with lifecycle completion guard (npm destroy equivalent, reuses on-finished)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
     "on-finished": "1.0.0"

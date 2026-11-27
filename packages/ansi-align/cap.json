@@ -1,7 +1,7 @@
 {
   "name": "ansi-align",
   "ver": "1.0.0",
-  "description": "Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing @cap/string-width and @cap/widest-line for CP",
+  "description": "Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing string-width and widest-line for CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "ISC",
@@ -17,8 +17,8 @@
     "zero-alloc"
   ],
   "dep": {
-    "@cap/string-width": "1.0.0",
-    "@cap/widest-line": "1.0.0"
+    "string-width": "1.0.0",
+    "widest-line": "1.0.0"
   },
   "source": {
     "registry": "npm",

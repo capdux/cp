@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "description": "Zero-heap middleware pipeline engine and tag router in pure CP (covers unified & zwitch)",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

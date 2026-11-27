@@ -3,6 +3,7 @@
   "version": "0.3.0",
   "description": "Zero-heap line ending detector and normalizer (CRLF/CR <-> LF)",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "Apache-2.0",
   "author": "CP Official Team",
   "source": {

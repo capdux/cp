@@ -13,7 +13,7 @@
     "non-cryptographic",
     "fast-hash"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/fnv-hash",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@sindresorhus/fnv1a",
   "source": {
     "registry": "npm",
     "name": "@sindresorhus/fnv1a",

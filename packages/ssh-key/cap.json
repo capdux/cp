@@ -14,7 +14,7 @@
     "sshpk",
     "security"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ssh-key",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/ssh-key",
   "source": {
     "registry": "crates.io",
     "name": "ssh-key",

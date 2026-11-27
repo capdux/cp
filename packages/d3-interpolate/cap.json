@@ -3,6 +3,7 @@
   "version": "3.0.1",
   "description": "Zero-allocation numeric, integer, RGB/HSL color, gamma-corrected, and uniform B-spline interpolators",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "ISC",
   "author": "CP Official Team",
   "source": {

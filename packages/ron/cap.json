@@ -3,6 +3,7 @@
   "version": "0.8.1",
   "description": "Zero-heap Rusty Object Notation (RON) lexer and top-level field extractor in pure CP",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

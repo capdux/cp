@@ -3,6 +3,7 @@
   "version": "0.2.9",
   "description": "Zero-heap RFC 5321/5322 email address parser and validator",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

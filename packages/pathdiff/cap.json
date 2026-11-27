@@ -4,6 +4,7 @@
   "description": "Zero-heap relative path difference calculator computing path relative to a base directory (crates.io pathdiff equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

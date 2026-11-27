@@ -2,7 +2,7 @@
   "name": "supports-color",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation terminal color capability detection (supports-color v9 parity) powered by @cap/has-flag in pure CP",
+  "description": "Zero-allocation terminal color capability detection (supports-color v9 parity) powered by has-flag in pure CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "keywords": [

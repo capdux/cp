@@ -13,7 +13,7 @@
     "tungstenite",
     "network"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/ws-frame",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/ws",
   "source": {
     "registry": "npm",
     "name": "ws",

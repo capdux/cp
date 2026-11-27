@@ -2,7 +2,7 @@
   "name": "regex-lite",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation linear-time Thompson NFA regex engine (Rust regex-lite v0.1 parity) composing @cap/regex-syntax and @cap/memchr",
+  "description": "Zero-allocation linear-time Thompson NFA regex engine (Rust regex-lite v0.1 parity) composing regex-syntax and memchr",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {

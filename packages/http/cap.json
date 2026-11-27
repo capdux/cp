@@ -1,7 +1,7 @@
 {
   "name": "http",
   "ver": "1.0.0",
-  "description": "Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types (crates.io http v1 parity) composing @cap/unicase for CP.",
+  "description": "Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types (crates.io http v1 parity) composing unicase for CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

@@ -3,6 +3,7 @@
   "version": "0.7.0",
   "description": "Zero-heap POSIX /etc/resolv.conf DNS resolver configuration parser",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

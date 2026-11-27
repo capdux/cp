@@ -3,6 +3,7 @@
   "version": "1.0.4",
   "description": "Zero-heap node_modules and cap_modules path parser extracting package name, basedir, and subpath",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",
   "author": "CP Official Team",

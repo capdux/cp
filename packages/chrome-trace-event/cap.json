@@ -3,6 +3,7 @@
   "version": "1.0.4",
   "description": "Zero-heap Chrome DevTools / Perfetto Trace Event JSON serializer",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

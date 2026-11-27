@@ -3,6 +3,7 @@
   "version": "3.24.1",
   "description": "Zero-heap JSON Schema (Draft-07 / 2020-12) builder and serializer for structured AI tool definitions",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

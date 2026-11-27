@@ -3,6 +3,7 @@
   "version": "4.24.4",
   "description": "Zero-heap Browserslist query clause parser and browser version matcher",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

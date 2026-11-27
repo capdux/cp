@@ -3,6 +3,7 @@
   "version": "1.3.2",
   "description": "Zero-heap O(1) ring-buffer FIFO queue for i64 and string items",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

@@ -3,6 +3,7 @@
   "version": "0.7.1",
   "description": "Zero-heap RFC 9535 JSONPath expression parser and canonical serializer in pure CP",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

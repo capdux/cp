@@ -3,6 +3,7 @@
   "version": "2.0.1",
   "description": "Zero-allocation character/substring occurrence counter and longest consecutive streak finder",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

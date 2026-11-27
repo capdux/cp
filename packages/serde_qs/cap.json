@@ -1,7 +1,7 @@
 {
   "name": "serde_qs",
   "ver": "1.0.0",
-  "description": "Zero-allocation nested bracket query string parser & serializer (crates.io serde_qs v0.13 parity) composing @cap/percent-encoding for CP.",
+  "description": "Zero-allocation nested bracket query string parser & serializer (crates.io serde_qs v0.13 parity) composing percent-encoding for CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

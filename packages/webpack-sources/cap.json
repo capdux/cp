@@ -3,6 +3,7 @@
   "version": "3.2.3",
   "description": "Zero-heap source concatenation and range replacement engine",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

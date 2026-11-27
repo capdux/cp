@@ -13,7 +13,7 @@
     "p2p",
     "uri"
   ],
-  "repository": "https://github.com/cp-lang/cp/tree/main/packages/@cap/magnet-uri",
+  "repository": "https://github.com/cp-lang/cp/tree/main/packages/magnet-url",
   "source": {
     "registry": "crates.io",
     "name": "magnet-url",

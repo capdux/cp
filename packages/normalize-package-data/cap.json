@@ -1,7 +1,7 @@
 {
   "name": "normalize-package-data",
   "ver": "1.0.0",
-  "description": "Zero-allocation package metadata normalizer and validator for CP, reusing @cap/validate-npm-package-name and @cap/validate-npm-package-license.",
+  "description": "Zero-allocation package metadata normalizer and validator for CP, reusing validate-npm-package-name and validate-npm-package-license.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

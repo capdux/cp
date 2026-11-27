@@ -3,6 +3,7 @@
   "version": "5.0.0",
   "description": "Zero-heap unist AST tree pre-order/post-order visitor and node matcher (covers unist-util-visit-parents and unist-util-is)",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

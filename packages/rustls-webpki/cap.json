@@ -2,7 +2,7 @@
   "name": "rustls-webpki",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Pure CP zero-allocation WebPKI X.509 certificate verification engine (RFC 6125 DNS hostname matching, RFC 5280 validity & chain verification; reuses @cap/x509-cert)",
+  "description": "Pure CP zero-allocation WebPKI X.509 certificate verification engine (RFC 6125 DNS hostname matching, RFC 5280 validity & chain verification; reuses x509-cert)",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {

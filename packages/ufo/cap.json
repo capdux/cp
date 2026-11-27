@@ -3,6 +3,7 @@
   "version": "1.5.4",
   "description": "Zero-heap URL protocol detection, slash normalization, and safe URL joining utilities",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

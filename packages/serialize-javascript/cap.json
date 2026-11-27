@@ -3,6 +3,7 @@
   "version": "6.0.2",
   "description": "Zero-heap XSS-safe JSON/JavaScript literal serializer escaping HTML script breakouts and line separators",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "BSD-3-Clause",
   "author": "CP Official Team",
   "source": {

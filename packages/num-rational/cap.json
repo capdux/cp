@@ -1,7 +1,7 @@
 {
   "name": "num-rational",
   "ver": "1.0.0",
-  "description": "Zero-allocation exact rational number (Ratio64) arithmetic library with canonical reduction via @cap/num-integer for CP.",
+  "description": "Zero-allocation exact rational number (Ratio64) arithmetic library with canonical reduction via num-integer for CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

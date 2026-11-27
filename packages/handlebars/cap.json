@@ -1,7 +1,7 @@
 {
   "name": "handlebars",
   "ver": "1.0.0",
-  "description": "Zero-allocation Handlebars template engine (npm handlebars v4 parity) composing @cap/escape-html for XSS-safe rendering in CP",
+  "description": "Zero-allocation Handlebars template engine (npm handlebars v4 parity) composing escape-html for XSS-safe rendering in CP",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "license": "MIT",

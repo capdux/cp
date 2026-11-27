@@ -1,7 +1,7 @@
 {
   "name": "idna",
   "ver": "1.0.0",
-  "description": "Zero-allocation UTS #46 Internationalized Domain Names (IDNA domainToAscii / domainToUnicode) reusing @cap/icu-normalizer for NFC and @cap/punycode for RFC 3492 Punycode (idna crate parity) in pure CP.",
+  "description": "Zero-allocation UTS #46 Internationalized Domain Names (IDNA domainToAscii / domainToUnicode) reusing icu_normalizer for NFC and punycode for RFC 3492 Punycode (idna crate parity) in pure CP.",
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",

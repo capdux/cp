@@ -3,6 +3,7 @@
   "version": "0.5.2",
   "description": "Zero-heap Vec-backed doubly linked list with stable u32 handles and O(1) slot reuse",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {

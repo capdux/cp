@@ -2,7 +2,7 @@
   "name": "globset",
   "ver": "1.0.0",
   "license": "MIT",
-  "description": "Zero-allocation multi-glob set matcher and override engine (Rust globset v0.4 parity) composing @cap/picomatch and @cap/normalize-path",
+  "description": "Zero-allocation multi-glob set matcher and override engine (Rust globset v0.4 parity) composing picomatch and normalize-path",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {

@@ -4,6 +4,7 @@
   "description": "Zero-heap pure-CP Public Suffix List (PSL) parser for eTLD and registrable domain extraction with custom wildcard/exception rules (crates.io publicsuffix equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {},
   "source": {

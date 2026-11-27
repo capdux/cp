@@ -4,6 +4,7 @@
   "description": "Zero-heap strictly validated UTF-8 path engine Utf8PathBuf (crates.io camino equivalent)",
   "license": "MIT",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "types": "src/index.d.cp",
   "dependencies": {
     "utf8parse": "^1.0.0"

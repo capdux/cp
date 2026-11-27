@@ -3,6 +3,7 @@
   "version": "10.0.0",
   "description": "Zero-heap incremental build and lint file metadata cache in pure CP (covers flat-cache)",
   "entry": "src/index.cp",
+  "main": "src/index.cp",
   "license": "MIT",
   "author": "CP Official Team",
   "source": {
