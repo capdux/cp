@@ -1,70 +1,101 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `cli-table3` — Zero-Dependency CLI Table Renderer
+# `cli-table3`
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:cli-table3` ([https://github.com/cli-table/cli-table3](https://github.com/cli-table/cli-table3))（原库名 `cli-table3` → CP 包名 `cli-table3`）
+Zero-dependency CLI table renderer for CP — a clean-room MIT counterpart to npm [`cli-table3`](https://github.com/cli-table/cli-table3) (v0.6 parity), featuring 5 border styles (`Unicode`, `Rounded`, `Ascii`, `Markdown`, `Compact`), ANSI escape-aware & CJK wide-character width calculation, ellipsis truncation, and per-column alignment.
 
-> Clean-room pure-CP CLI table rendering library modeled after npm `cli-table3` / `table` and Rust `comfy-table` / `tabled` | MIT License
->
-> 零外部依赖的纯 CP 终端表格渲染库，对标 npm `cli-table3` / `table` 与 Rust `comfy-table` / `tabled`（MIT 协议）。
-
-## Installation / 安装
+## Installation & Import
 
 ```bash
 cap add cli-table3
 ```
 
-## Features / 核心特性
+```cp
+import {
+    BorderStyle,
+    Align,
+    displayWidth,
+    truncateDisplay,
+    padCell,
+    Table,
+} from "cli-table3";
+```
 
-- **5 Border Presets / 5 种边框预设**: `Unicode`, `Rounded`, `Ascii`, `Markdown` (GFM alignment markers), `Compact`
-- **Column Alignment / 列对齐**: `Left`, `Center`, `Right`
-- **ANSI & CJK Display Width / ANSI 与 CJK 宽字符宽度**: `displayWidth` skips ANSI CSI/OSC escape sequences (`\x1b[...m`) and measures UTF-8 CJK / fullwidth / emoji characters as 2 terminal columns
-- **Truncation & Padding / 截断与填充**: `truncateDisplay` (with `"…"` ellipsis and automatic `\x1b[0m` reset) and `padCell`
-- **Dynamic Multi-Column Builder / 动态多列构建器**: `Table` handles jagged rows, empty tables, headers, per-column alignment, and `setMaxColWidth`
+## Core API
 
-## Exported API / 导出 API
+### Enums & Display Helpers
 
-| Symbol / Signature | Description / 说明 |
-| :--- | :--- |
-| `BorderStyle` | `Unicode` / `Rounded` / `Ascii` / `Markdown` / `Compact` |
-| `Align` | `Left` / `Center` / `Right` |
-| `displayWidth(s: string): usize` | Visual terminal column width (ignores ANSI escapes, CJK = 2) |
-| `truncateDisplay(alloc, s, max_width)` | Truncates to `max_width` columns with `"…"` ellipsis |
-| `padCell(alloc, s, width, alignment)` | Pads cell text with spaces according to `Align` |
-| `Table.init(alloc)` / `table.deinit()` | Creates / frees a `Table` builder |
-| `table.setHeaders(headers)` | Sets table header cells |
-| `table.addRow(row)` | Appends a data row (supports jagged column counts) |
-| `table.setAlign(col, alignment)` | Sets 0-based column alignment |
-| `table.setStyle(style)` | Sets border style preset |
-| `table.setMaxColWidth(max_width)` | Caps column width (`0` = unlimited) |
-| `table.render(alloc)` | Renders the table into an owned UTF-8 byte slice |
+| Symbol | Signature / Variants | Description |
+| :--- | :--- | :--- |
+| `BorderStyle` | `Unicode = 0`, `Rounded = 1`, `Ascii = 2`, `Markdown = 3`, `Compact = 4` | Box-drawing & GFM border presets |
+| `Align` | `Left = 0`, `Center = 1`, `Right = 2` | Horizontal cell alignment (emits `:---`, `:---:`, `---:` in Markdown mode) |
+| `displayWidth` | `(s: string): usize` | Compute terminal column width (ignores ANSI CSI/OSC sequences; CJK wide chars count as `2`) |
+| `truncateDisplay` | `(alloc: std.mem.Allocator, s: string, max_width: usize): []u8 ! std.mem.Allocator.Error` | Truncate text to `max_width` columns with ellipsis while keeping ANSI reset safety |
+| `padCell` | `(alloc: std.mem.Allocator, s: string, width: usize, alignment: Align): []u8 ! std.mem.Allocator.Error` | Pad cell text to exact terminal column width |
 
-## Usage Example / 使用示例
+### `Table` Builder
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `Table.init` | `(alloc: std.mem.Allocator): Table` | Initialize table bound to caller's allocator |
+| `deinit` | `(*_)` | Release internal header/row/alignment lists (pair with `defer table.deinit()`) |
+| `setHeaders` | `(*_, headers: []const string): void ! std.mem.Allocator.Error` | Set header row cells |
+| `addRow` | `(*_, row: []const string): void ! std.mem.Allocator.Error` | Append a data row (handles jagged rows automatically) |
+| `setAlign` | `(*_, col: usize, alignment: Align): void ! std.mem.Allocator.Error` | Set alignment for column `col` |
+| `setStyle` | `(*_, style: BorderStyle)` | Choose border preset (`Unicode` default) |
+| `setMaxColWidth` | `(*_, max_width: usize)` | Cap column width (`0` = unlimited) with automatic ellipsis truncation |
+| `render` | `(alloc: std.mem.Allocator): []u8 ! std.mem.Allocator.Error` | Render full table into newly allocated `[]u8` (caller frees with `alloc.free(out)`) |
+
+## Examples
+
+### 1. Rendering a Rounded Unicode Table with Alignment & CJK Support
 
 ```cp
 const std = @import("std");
+import { print } from "cap:io";
 import { Table, BorderStyle, Align } from "cli-table3";
 
-fn main() {
-    const alloc: std.mem.Allocator = std.heap.page_allocator;
+fn renderReport(alloc: std.mem.Allocator): void ! std.mem.Allocator.Error {
     let tbl = Table.init(alloc);
     defer tbl.deinit();
 
-    const headers: [3]string = [ "Service", "Status", "Latency" ];
-    tbl.setHeaders(headers[0..]) catch unreachable;
+    tbl.setStyle(.Rounded);
+    tbl.setAlign(1, .Right)?;
+    tbl.setAlign(2, .Center)?;
 
-    const r1: [3]string = [ "gateway", "\x1b[32mOK\x1b[0m", "12ms" ];
-    const r2: [3]string = [ "支付中心", "\x1b[33mWARN\x1b[0m", "145ms" ];
-    tbl.addRow(r1[0..]) catch unreachable;
-    tbl.addRow(r2[0..]) catch unreachable;
+    const headers: [3]string = ["Package", "Downloads", "Status"];
+    tbl.setHeaders(&headers)?;
 
-    tbl.setStyle(BorderStyle.Rounded);
-    tbl.setAlign(1, Align.Center) catch unreachable;
-    tbl.setAlign(2, Align.Right) catch unreachable;
+    const row1: [3]string = ["zod", "150M/wk", "OK"];
+    const row2: [3]string = ["中文表头测试", "42M/wk", "OK"];
+    tbl.addRow(&row1)?;
+    tbl.addRow(&row2)?;
 
-    const out = tbl.render(alloc) catch unreachable;
-    defer alloc.free(out);
-    std.debug.print("{s}\n", .{out});
+    const rendered = tbl.render(alloc)?;
+    defer alloc.free(rendered);
+    print(rendered);
 }
 ```
+
+### 2. ANSI-Safe Display Width & Ellipsis Truncation
+
+```cp
+const std = @import("std");
+import { print } from "cap:io";
+import { displayWidth, truncateDisplay } from "cli-table3";
+
+fn demoWidth(alloc: std.mem.Allocator): void ! std.mem.Allocator.Error {
+    const colored = "\x1b[32mHello 世界\x1b[0m";
+    print("columns:", displayWidth(colored)); // 10 (ANSI codes excluded, CJK = 2 each)
+
+    const short = truncateDisplay(alloc, colored, 8)?;
+    defer alloc.free(short);
+    print(short);
+}
+```
+
+## Differences from Upstream & Performance Highlights
+
+- **Explicit Allocator Control (RAII)**: Every heap allocation flows through `std.mem.Allocator` with error propagation `?`, allowing arena allocators (`ArenaAllocator`) for one-shot CLI rendering and deterministic `defer` cleanup.
+- **Built-in Markdown (GFM) & Compact Presets**: Beyond npm `cli-table3`'s box styles, includes native `BorderStyle.Markdown` (with alignment colons) and `BorderStyle.Compact`.
+- **Accurate CJK & ANSI Width Engine**: Decodes UTF-8 codepoints and skips ANSI CSI/OSC sequences natively with zero external dependencies.

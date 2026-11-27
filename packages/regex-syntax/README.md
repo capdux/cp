@@ -1,112 +1,104 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# regex-syntax
+# `regex-syntax`
 
-Zero-allocation regular expression syntax validator, metacharacter escaper, and static literal prefix extractor for CP (Rust `regex-syntax` v0.8 parity).
+Zero-allocation regular expression syntax validator, metacharacter escaper, and literal prefix extractor in pure CP — a clean-room MIT counterpart to Rust [`regex-syntax`](https://github.com/rust-lang/regex) (v0.8 parity).
 
-Validates regex patterns on the stack (balanced groups, character classes, escapes, `{m,n}` quantifiers, nesting limits), computes capture counts, anchor/backreference flags, minimum match length, and extracts static literal prefixes for SIMD prefiltering.
-
-## Provenance & Zero-Cost Migration
-
-| Attribute | Value |
-| --- | --- |
-| Source Platform | **crates.io** |
-| Original Crate | `regex-syntax` v0.8 (CP `v1.0.0`) |
-| Upstream Repo | `https://github.com/rust-lang/regex` |
-| License | MIT (upstream: MIT OR Apache-2.0) |
-
-Keep the exact crate name when migrating from Rust to CP:
-
-```rust
-// Rust (crates.io: regex-syntax)
-let escaped = regex_syntax::escape("a.b+c?");
-let is_meta = regex_syntax::is_meta_character(b'*');
-let hir = regex_syntax::parse(pattern)?;
-```
-
-```cp
-// CP (cap: regex-syntax) — zero-allocation stack validator & escaper
-import { escapeRegex, isMetaCharacter, validateRegexSyntax, extractLiteralPrefix } from "regex-syntax";
-const n = escapeRegex("a.b+c?", outBuf);
-const info = validateRegexSyntax(pattern);
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add regex-syntax
 ```
 
-## Usage
-
-### Basic Usage: Validation, Metacharacter Escaping & Literal Prefix Extraction
-
 ```cp
 import {
+    RSX_OK,
+    RSX_ERR_UNCLOSED_GROUP,
+    RSX_ERR_UNOPENED_GROUP,
+    RSX_ERR_UNCLOSED_CLASS,
+    RSX_ERR_INVALID_CLASS_RANGE,
+    RSX_ERR_EMPTY_CLASS,
+    RSX_ERR_DANGLING_QUANTIFIER,
+    RSX_ERR_DOUBLE_QUANTIFIER,
+    RSX_ERR_INVALID_QUANTIFIER,
+    RSX_ERR_TRAILING_BACKSLASH,
+    RSX_ERR_INVALID_ESCAPE,
+    RSX_ERR_INVALID_GROUP_HEADER,
+    RSX_ERR_NESTING_LIMIT,
+    RegexSyntaxInfo,
     isMetaCharacter,
     escapeRegex,
     isWordByte,
+    extractLiteralPrefix,
     validateRegexSyntax,
-    extractLiteralPrefix
 } from "regex-syntax";
-
-// 1. Validate a regex pattern and inspect static properties
-const info = validateRegexSyntax("^GET\\s+(/api/[a-z]+)");
-if (info.isOk()) {
-    // info.capture_count == 1
-    // info.has_anchors == true
-    // info.has_backref == false
-    // info.min_len >= 9
-}
-
-// 2. Escape user input safely into a stack buffer before embedding in a regex
-let escBuf: [64]u8 = undefined;
-const escLen = escapeRegex("price=$9.99 (USD)", escBuf[0..64]);
-// escBuf[0..escLen] == "price=\\$9\\.99 \\(USD\\)"
-
-// 3. Extract static literal prefix (useful for memchr/memmem prefiltering)
-let pfxBuf: [64]u8 = undefined;
-const pfxLen = extractLiteralPrefix("https://api\\.example\\.com/[0-9]+", pfxBuf[0..64]);
-// pfxBuf[0..pfxLen] == "https://api.example.com/"
-
-const meta = isMetaCharacter('*' as u8); // true
-const word = isWordByte('_' as u8);      // true
 ```
 
-### Security & Edge Cases: Malformed Pattern Diagnostics & Nesting Limit Guard
+## Core API
+
+### Error Code Constants (`i32`)
+
+| Constant | Value | Meaning |
+| :--- | :--- | :--- |
+| `RSX_OK` | `0` | Valid regular expression syntax |
+| `RSX_ERR_UNCLOSED_GROUP` / `RSX_ERR_UNOPENED_GROUP` | `1` / `2` | Unmatched `(` or `)` |
+| `RSX_ERR_UNCLOSED_CLASS` / `RSX_ERR_INVALID_CLASS_RANGE` / `RSX_ERR_EMPTY_CLASS` | `3` / `4` / `5` | Unclosed `[...]`, inverted range (`z-a`), or empty `[]` |
+| `RSX_ERR_DANGLING_QUANTIFIER` / `RSX_ERR_DOUBLE_QUANTIFIER` / `RSX_ERR_INVALID_QUANTIFIER` | `6` / `7` / `8` | Nothing to repeat, stacked quantifiers (`a**`), or malformed `{m,n}` |
+| `RSX_ERR_TRAILING_BACKSLASH` / `RSX_ERR_INVALID_ESCAPE` | `9` / `10` | Dangling `\` at EOF or invalid escape sequence |
+| `RSX_ERR_INVALID_GROUP_HEADER` / `RSX_ERR_NESTING_LIMIT` | `11` / `12` | Unsupported `(?...)` syntax or exceeded group nesting depth |
+
+### Types & Functions
+
+| Symbol | Signature / Fields | Description |
+| :--- | :--- | :--- |
+| `RegexSyntaxInfo` | `valid: bool`, `err_code: i32`, `err_pos: usize`, `capture_count: usize`, `has_anchors: bool`, `has_backref: bool`, `min_len: usize`, `literal_prefix_len: usize`; `isOk(): bool` | Complete syntax validation & static pattern analysis summary |
+| `validateRegexSyntax` | `(pattern: string): RegexSyntaxInfo` | Validate pattern syntax, count capture groups, compute `min_len` & literal prefix length |
+| `isMetaCharacter` | `(c: u8): bool` | Exact parity with `regex_syntax::is_meta_character` (`\ . + * ? ( ) \| [ ] { } ^ $ # & - ~`) |
+| `escapeRegex` | `(input: string, out: []u8): usize` | Escape all regex metacharacters into `out`; returns bytes written |
+| `isWordByte` | `(b: u8): bool` | Return `true` for ASCII word characters (`[A-Za-z0-9_]`) |
+| `extractLiteralPrefix` | `(pattern: string, out: []u8): usize` | Extract mandatory leading literal bytes (for fast prefilter search) into `out` |
+
+## Examples
+
+### 1. Validating User-Supplied Patterns & Inspecting Metadata
 
 ```cp
-import { validateRegexSyntax } from "regex-syntax";
+import { print } from "cap:io";
+import { validateRegexSyntax, RSX_ERR_UNCLOSED_GROUP } from "regex-syntax";
 
-// 1. Detect unclosed group / dangling quantifier with exact byte position `err_pos`
-const bad1 = validateRegexSyntax("(abc");
-// bad1.isOk() == false, bad1.err_code == 1 (UNCLOSED_GROUP), bad1.err_pos == 4
+fn main() {
+    const info = validateRegexSyntax("^user_([0-9]{2,4})@example\\.com$");
+    if (info.isOk()) {
+        print("captures:", info.capture_count, "anchors:", info.has_anchors);
+        print("min_len:", info.min_len, "prefix_len:", info.literal_prefix_len);
+    }
 
-const bad2 = validateRegexSyntax("*abc");
-// bad2.isOk() == false, bad2.err_code == 6 (DANGLING_QUANTIFIER), bad2.err_pos == 0
-
-// 2. Reject invalid character class ranges (e.g. [z-a]) or empty classes ([])
-const bad3 = validateRegexSyntax("[z-a]");
-// bad3.isOk() == false, bad3.err_code == 4 (INVALID_CLASS_RANGE)
-
-// 3. Built-in nesting limit protection (err_code == 12) prevents stack exhaustion on deeply nested "((((...))))"
+    const bad = validateRegexSyntax("(abc[0-9]+");
+    if (!bad.isOk() && bad.err_code == RSX_ERR_UNCLOSED_GROUP) {
+        print("unclosed group at byte:", bad.err_pos);
+    }
+}
 ```
 
-## API Reference
+### 2. Escaping Literals & Extracting Prefilter Prefixes
 
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `RegexSyntaxInfo` | `class { valid, err_code, err_pos, capture_count, has_anchors, has_backref, min_len, literal_prefix_len, fn isOk(): bool }` | Full static analysis & diagnostic result. |
-| `validateRegexSyntax` | `fn(pattern: string): RegexSyntaxInfo` | Validates regex syntax and computes captures, anchors, backrefs, min length, and prefix length. |
-| `isMetaCharacter` | `fn(c: u8): bool` | Returns `true` for the 18 regex metacharacters (`\.+*?()\|[]{}^$#&-~`). |
-| `escapeRegex` | `fn(input: string, out: []u8): usize` | Escapes metacharacters with `\` into `out`; returns bytes written. |
-| `isWordByte` | `fn(b: u8): bool` | Returns `true` for ASCII word bytes `[A-Za-z0-9_]`. |
-| `extractLiteralPrefix` | `fn(pattern: string, out: []u8): usize` | Extracts leading literal bytes (handling escapes) into `out`; returns bytes written. |
+```cp
+import { print } from "cap:io";
+import { escapeRegex, extractLiteralPrefix } from "regex-syntax";
 
-## Error Codes (`RegexSyntaxInfo.err_code`)
+fn main() {
+    let esc: [128]u8 = undefined;
+    const n1 = escapeRegex("v1.2+beta (test)", esc[0..128]);
+    print("escaped:", esc[0..n1]); // "v1\\.2\\+beta \\(test\\)"
 
-`0`: OK · `1`: Unclosed group · `2`: Unopened group · `3`: Unclosed class · `4`: Invalid class range · `5`: Empty class · `6`: Dangling quantifier · `7`: Double quantifier · `8`: Invalid quantifier · `9`: Trailing backslash · `10`: Invalid escape · `11`: Invalid group header · `12`: Nesting limit exceeded.
+    let pre: [64]u8 = undefined;
+    const n2 = extractLiteralPrefix("https://[a-z]+\\.org", pre[0..64]);
+    print("literal prefix:", pre[0..n2]); // "https://"
+}
+```
 
-## License
+## Differences from Upstream & Performance Highlights
 
-MIT — Clean-room CP implementation with Rust `regex-syntax` v0.8 parity.
+- **Zero Heap Allocation**: Unlike Rust `regex-syntax` (which constructs heap-allocated `Ast`/`Hir` trees), CP `regex-syntax` validates and analyzes patterns in a single stack-only pass with bounded nesting depth (`RSX_ERR_NESTING_LIMIT`).
+- **Prefilter-Ready**: `extractLiteralPrefix` unescapes leading literals directly into caller buffers so search engines can run SIMD `memmem` prefilters before invoking regex matching.
+- **Structured Error Diagnostics**: Returns exact byte offset `err_pos` and typed `RSX_ERR_*` code without exceptions.
