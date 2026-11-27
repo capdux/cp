@@ -1,5 +1,21 @@
 // @cap/jest-docblock — Zero-heap docblock extractor, stripper, parser, and printer in pure CP.
 // Clean-room MIT port of npm `jest-docblock` (`extract`, `strip`, `parse`, `parseWithComments`, `print`).
+// Accelerated with 16-lane @Vector(16, u8) SIMD newline/comment/string scanning, comptime 256-entry whitespace LUT, and bulk @memcpy.
+
+type JdblVec16 = @Vector(16, u8);
+
+fn jdblBuildWsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    // bit 0 = any ws (' ', '\t', '\r', '\n'); bit 1 = line ws (' ', '\t', '\r')
+    lut[32] = 3; // ' '
+    lut[9] = 3;  // '\t'
+    lut[13] = 3; // '\r'
+    lut[10] = 1; // '\n'
+    return lut;
+}
+
+const JDBL_WS_LUT: [256]u8 = jdblBuildWsLut();
 
 pub struct DocPragma {
     key: string,
@@ -12,20 +28,68 @@ pub struct ParsedDocblock {
 }
 
 fn jdblIsWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (JDBL_WS_LUT[c as usize] & 1) != 0;
 }
 
 fn jdblIsLineWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r';
+    return (JDBL_WS_LUT[c as usize] & 2) != 0;
 }
 
 fn jdblStrEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: JdblVec16 = a[i .. i + 16][0..16].*;
+        const vb: JdblVec16 = b[i .. i + 16][0..16].*;
+        if (!@reduce(.And, va == vb)) return false;
+        i += 16;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
     return true;
+}
+
+fn jdblFindNewline(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_nl: JdblVec16 = @splat(10 as u8);
+    while (i + 16 <= len) {
+        const v: JdblVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_nl)) {
+            while (i < len && s[i] != '\n') : (i += 1) {}
+            return i;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != '\n') : (i += 1) {}
+    return i;
+}
+
+// Finds index `j` where `s[j] == '*'` and `s[j + 1] == '/'`, or `s.len` if not found.
+fn jdblFindCloseComment(s: string, start: usize): usize {
+    let j = start;
+    const len = s.len;
+    const v_star: JdblVec16 = @splat(42 as u8);
+    while (j + 16 < len) {
+        const v: JdblVec16 = s[j .. j + 16][0..16].*;
+        if (@reduce(.Or, v == v_star)) {
+            const limit = j + 16;
+            while (j < limit) : (j += 1) {
+                if (s[j] == '*' && s[j + 1] == '/') {
+                    return j;
+                }
+            }
+        } else {
+            j += 16;
+        }
+    }
+    while (j + 1 < len) : (j += 1) {
+        if (s[j] == '*' && s[j + 1] == '/') {
+            return j;
+        }
+    }
+    return len;
 }
 
 fn jdblTrimLine(s: string): string {
@@ -37,13 +101,16 @@ fn jdblTrimLine(s: string): string {
 }
 
 fn jdblWriteStr(src: string, out: []u8, pos: usize): usize {
-    let w = pos;
-    let i: usize = 0;
-    while (i < src.len && w < out.len) : (i += 1) {
-        out[w] = src[i];
-        w += 1;
+    if (pos >= out.len || src.len == 0) {
+        return pos;
     }
-    return w;
+    let take = src.len;
+    const avail = out.len - pos;
+    if (take > avail) {
+        take = avail;
+    }
+    @memcpy(out[pos .. pos + take], src[0..take]);
+    return pos + take;
 }
 
 fn jdblStripDelimiters(docblock: string): string {
@@ -62,7 +129,7 @@ pub fn extractDocblock(code: string): string {
 
     // Skip optional shebang line
     if (i + 1 < code.len && code[i] == '#' && code[i + 1] == '!') {
-        while (i < code.len && code[i] != '\n') : (i += 1) {}
+        i = jdblFindNewline(code, i);
         while (i < code.len && jdblIsWs(code[i])) : (i += 1) {}
     }
 
@@ -70,11 +137,9 @@ pub fn extractDocblock(code: string): string {
         return "";
     }
 
-    let j = i + 3;
-    while (j + 1 < code.len) : (j += 1) {
-        if (code[j] == '*' && code[j + 1] == '/') {
-            return code[i..j + 2];
-        }
+    const j = jdblFindCloseComment(code, i + 3);
+    if (j < code.len) {
+        return code[i..j + 2];
     }
     return "";
 }
@@ -92,7 +157,7 @@ pub fn strip(code: string, out: []u8): usize {
 
     let shebang_end: usize = 0;
     if (i + 1 < code.len && code[i] == '#' && code[i + 1] == '!') {
-        while (i < code.len && code[i] != '\n') : (i += 1) {}
+        i = jdblFindNewline(code, i);
         if (i < code.len && code[i] == '\n') { i += 1; }
         shebang_end = i;
         while (i < code.len && jdblIsWs(code[i])) : (i += 1) {}
@@ -102,19 +167,11 @@ pub fn strip(code: string, out: []u8): usize {
         return jdblWriteStr(code, out, 0);
     }
 
-    let j = i + 3;
-    let found_end: usize = 0;
-    let found = false;
-    while (j + 1 < code.len) : (j += 1) {
-        if (code[j] == '*' && code[j + 1] == '/') {
-            found_end = j + 2;
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
+    const close_idx = jdblFindCloseComment(code, i + 3);
+    if (close_idx >= code.len) {
         return jdblWriteStr(code, out, 0);
     }
+    let found_end = close_idx + 2;
 
     // Consume trailing newline immediately after closing */
     if (found_end < code.len && code[found_end] == '\r') { found_end += 1; }
@@ -135,14 +192,12 @@ pub fn stripSlice(code: string): string {
     if (i + 2 >= code.len || code[i] != '/' || code[i + 1] != '*' || code[i + 2] != '*') {
         return code;
     }
-    let j = i + 3;
-    while (j + 1 < code.len) : (j += 1) {
-        if (code[j] == '*' && code[j + 1] == '/') {
-            let end = j + 2;
-            if (end < code.len && code[end] == '\r') { end += 1; }
-            if (end < code.len && code[end] == '\n') { end += 1; }
-            return code[end..code.len];
-        }
+    const j = jdblFindCloseComment(code, i + 3);
+    if (j < code.len) {
+        let end = j + 2;
+        if (end < code.len && code[end] == '\r') { end += 1; }
+        if (end < code.len && code[end] == '\n') { end += 1; }
+        return code[end..code.len];
     }
     return code;
 }
@@ -153,8 +208,7 @@ pub fn parseDocblock(docblock: string, out: []DocPragma): usize {
     let written: usize = 0;
     let pos: usize = 0;
     while (pos <= body.len) {
-        let lineEnd = pos;
-        while (lineEnd < body.len && body[lineEnd] != '\n') : (lineEnd += 1) {}
+        const lineEnd = jdblFindNewline(body, pos);
 
         let line = jdblTrimLine(body[pos..lineEnd]);
         if (line.len > 0 && line[0] == '*') {
@@ -202,8 +256,7 @@ pub fn parseWithComments(
     let pos: usize = 0;
 
     while (pos <= body.len) {
-        let lineEnd = pos;
-        while (lineEnd < body.len && body[lineEnd] != '\n') : (lineEnd += 1) {}
+        const lineEnd = jdblFindNewline(body, pos);
 
         let line = jdblTrimLine(body[pos..lineEnd]);
         if (line.len > 0 && line[0] == '*') {
@@ -283,8 +336,7 @@ pub fn printWithComments(comments: string, pragmas: []const DocPragma, out: []u8
     let pos = jdblWriteStr("/**\n", out, 0);
     let cidx: usize = 0;
     while (cidx <= comments.len) {
-        let lineEnd = cidx;
-        while (lineEnd < comments.len && comments[lineEnd] != '\n') : (lineEnd += 1) {}
+        const lineEnd = jdblFindNewline(comments, cidx);
         const seg = comments[cidx..lineEnd];
         if (seg.len > 0) {
             pos = jdblWriteStr(" * ", out, pos);

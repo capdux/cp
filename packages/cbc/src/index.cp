@@ -1,33 +1,25 @@
 // @cap/cbc — Zero-allocation pure CP AES-128-CBC & AES-256-CBC with PKCS#7 padding
 // Parity with RustCrypto crates.io:cbc (MIT)
+// Accelerated with 16-lane @Vector(16, u8) SIMD block XOR and bulk @memcpy / @memset.
 
 import { Aes128, Aes256 } from "../../aes/src/index.cp";
 
+type CbcVec16 = @Vector(16, u8);
+
 fn cbcmReadBlock(src: []const u8, offset: usize): [16]u8 {
     let blk: [16]u8 = undefined;
-    let i: usize = 0;
-    while (i < 16) {
-        blk[i] = src[offset + i];
-        i += 1;
-    }
+    @memcpy(blk[0..16], src[offset .. offset + 16]);
     return blk;
 }
 
 fn cbcmWriteBlock(dst: []u8, offset: usize, blk: [16]u8) {
-    let i: usize = 0;
-    while (i < 16) {
-        dst[offset + i] = blk[i];
-        i += 1;
-    }
+    @memcpy(dst[offset .. offset + 16], blk[0..16]);
 }
 
 fn cbcmXorBlock(a: [16]u8, b: [16]u8): [16]u8 {
-    let out: [16]u8 = undefined;
-    let i: usize = 0;
-    while (i < 16) {
-        out[i] = a[i] ^ b[i];
-        i += 1;
-    }
+    const va: CbcVec16 = a;
+    const vb: CbcVec16 = b;
+    const out: [16]u8 = va ^ vb;
     return out;
 }
 
@@ -113,15 +105,10 @@ pub fn aes128CbcEncryptPkcs7(key: [16]u8, iv: [16]u8, plaintext: []const u8, out
     }
     let lastBlk: [16]u8 = undefined;
     const padByte: u8 = padLen as u8;
-    let i: usize = 0;
-    while (i < rem) {
-        lastBlk[i] = plaintext[fullBytes + i];
-        i += 1;
+    if (rem > 0) {
+        @memcpy(lastBlk[0..rem], plaintext[fullBytes .. fullBytes + rem]);
     }
-    while (i < 16) {
-        lastBlk[i] = padByte;
-        i += 1;
-    }
+    @memset(lastBlk[rem..16], padByte);
     const xoredLast = cbcmXorBlock(lastBlk, prev);
     const ctLast = cipher.encryptBlock(xoredLast);
     cbcmWriteBlock(out, fullBytes, ctLast);
@@ -163,10 +150,8 @@ pub fn aes128CbcDecryptPkcs7(key: [16]u8, iv: [16]u8, ciphertext: []const u8, ou
         offset += 16;
     }
     const rem: usize = 16 - padLen;
-    let i: usize = 0;
-    while (i < rem) {
-        out[lastOffset + i] = lastPt[i];
-        i += 1;
+    if (rem > 0) {
+        @memcpy(out[lastOffset .. lastOffset + rem], lastPt[0..rem]);
     }
     return plainLen as i64;
 }
@@ -234,15 +219,10 @@ pub fn aes256CbcEncryptPkcs7(key: [32]u8, iv: [16]u8, plaintext: []const u8, out
     }
     let lastBlk: [16]u8 = undefined;
     const padByte: u8 = padLen as u8;
-    let i: usize = 0;
-    while (i < rem) {
-        lastBlk[i] = plaintext[fullBytes + i];
-        i += 1;
+    if (rem > 0) {
+        @memcpy(lastBlk[0..rem], plaintext[fullBytes .. fullBytes + rem]);
     }
-    while (i < 16) {
-        lastBlk[i] = padByte;
-        i += 1;
-    }
+    @memset(lastBlk[rem..16], padByte);
     const xoredLast = cbcmXorBlock(lastBlk, prev);
     const ctLast = cipher.encryptBlock(xoredLast);
     cbcmWriteBlock(out, fullBytes, ctLast);
@@ -284,10 +264,8 @@ pub fn aes256CbcDecryptPkcs7(key: [32]u8, iv: [16]u8, ciphertext: []const u8, ou
         offset += 16;
     }
     const rem: usize = 16 - padLen;
-    let i: usize = 0;
-    while (i < rem) {
-        out[lastOffset + i] = lastPt[i];
-        i += 1;
+    if (rem > 0) {
+        @memcpy(out[lastOffset .. lastOffset + rem], lastPt[0..rem]);
     }
     return plainLen as i64;
 }

@@ -1,9 +1,10 @@
 // @cap/formidable — Pure CP zero-allocation multipart/form-data form & file upload parser.
 // Clean-room MIT implementation inspired by npm `formidable` v3.
+// Accelerated with 16-lane @Vector(16, u8) SIMD boundary/CRLF scanning and comptime 256-entry HTTP token/OWS LUT.
 // Reuses `@cap/mediatype` for Content-Type/boundary parsing and `@cap/content-disposition`
 // for Content-Disposition header parsing.
 
-import { isAlnum, strEq, eqIgnoreCase, startsWith, findByte } from "cap:ascii";
+import { strEq, eqIgnoreCase, startsWith, findByte } from "cap:ascii";
 import { ParsedMediaType } from "../../mediatype/src/index.cp";
 import { ContentDisposition, parseContentDisposition } from "../../content-disposition/src/index.cp";
 
@@ -18,18 +19,77 @@ pub const ERR_MAX_FILES_EXCEEDED: u8 = 4;
 pub const ERR_MAX_FILE_SIZE_EXCEEDED: u8 = 5;
 pub const ERR_EMPTY_FILE_NOT_ALLOWED: u8 = 6;
 
+type FrmVec16 = @Vector(16, u8);
+
+fn frmBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    // bit 0 = OWS (' ', '\t'), bit 1 = HTTP token char
+    lut[32] = 1;
+    lut[9] = 1;
+    let c: usize = 48;
+    while (c <= 57) { lut[c] = lut[c] | 2; c += 1; }
+    c = 65;
+    while (c <= 90) { lut[c] = lut[c] | 2; c += 1; }
+    c = 97;
+    while (c <= 122) { lut[c] = lut[c] | 2; c += 1; }
+    lut[33] = lut[33] | 2;
+    lut[35] = lut[35] | 2;
+    lut[36] = lut[36] | 2;
+    lut[37] = lut[37] | 2;
+    lut[38] = lut[38] | 2;
+    lut[39] = lut[39] | 2;
+    lut[42] = lut[42] | 2;
+    lut[43] = lut[43] | 2;
+    lut[45] = lut[45] | 2;
+    lut[46] = lut[46] | 2;
+    lut[94] = lut[94] | 2;
+    lut[95] = lut[95] | 2;
+    lut[96] = lut[96] | 2;
+    lut[124] = lut[124] | 2;
+    lut[126] = lut[126] | 2;
+    return lut;
+}
+
+const FRM_CHAR_LUT: [256]u8 = frmBuildCharLut();
+
 fn frmIsOws(b: u8): bool {
-    return b == 32 || b == 9;
+    return (FRM_CHAR_LUT[b as usize] & 1) != 0;
 }
 
 fn frmIsTokenChar(b: u8): bool {
-    if (isAlnum(b)) { return true; }
-    if (b == 33 || b == 35 || b == 36 || b == 37 || b == 38 ||
-        b == 39 || b == 42 || b == 43 || b == 45 || b == 46 ||
-        b == 94 || b == 95 || b == 96 || b == 124 || b == 126) {
-        return true;
+    return (FRM_CHAR_LUT[b as usize] & 2) != 0;
+}
+
+fn frmFindLfSimd(s: string, start: usize, end: usize): usize {
+    let i = start;
+    const v_lf: FrmVec16 = @splat(10 as u8);
+    while (i + 16 <= end) {
+        const v: FrmVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_lf)) {
+            while (i < end && s[i] != 10) { i = i + 1; }
+            return i;
+        }
+        i = i + 16;
     }
-    return false;
+    while (i < end && s[i] != 10) { i = i + 1; }
+    return i;
+}
+
+fn frmFindCrOrLfSimd(s: string, start: usize, end: usize): usize {
+    let i = start;
+    const v_cr: FrmVec16 = @splat(13 as u8);
+    const v_lf: FrmVec16 = @splat(10 as u8);
+    while (i + 16 <= end) {
+        const v: FrmVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_cr) | (v == v_lf))) {
+            while (i < end && s[i] != 13 && s[i] != 10) { i = i + 1; }
+            return i;
+        }
+        i = i + 16;
+    }
+    while (i < end && s[i] != 13 && s[i] != 10) { i = i + 1; }
+    return i;
 }
 
 fn frmTrimOws(s: string): string {
@@ -71,15 +131,18 @@ fn frmIsBoundaryTerminator(body: string, after_pos: usize): bool {
 fn frmFindFirstBoundary(body: string, boundary: string): usize {
     let i: usize = 0;
     while (i + 2 + boundary.len <= body.len) {
-        let at_line_start = (i == 0) || (body[i - 1] == 10);
-        if (at_line_start && body[i] == 45 && body[i + 1] == 45) {
+        if (body[i] == 45 && body[i + 1] == 45) {
             if (startsWith(body[(i + 2)..body.len], boundary)) {
                 if (frmIsBoundaryTerminator(body, i + 2 + boundary.len)) {
                     return i;
                 }
             }
         }
-        i = i + 1;
+        const lf = frmFindLfSimd(body, i, body.len);
+        if (lf >= body.len) {
+            break;
+        }
+        i = lf + 1;
     }
     return body.len;
 }
@@ -88,10 +151,10 @@ fn frmFindFirstBoundary(body: string, boundary: string): usize {
 // Returns the index where the preceding CRLF/LF begins (i.e. part content end),
 // or `body.len` if not found.
 fn frmFindNextBoundary(body: string, start: usize, boundary: string): usize {
-    let i = start;
+    let i = frmFindCrOrLfSimd(body, start, body.len);
     while (i < body.len) {
         if (body[i] == 13 && i + 1 < body.len && body[i + 1] == 10) {
-            let dash = i + 2;
+            const dash = i + 2;
             if (dash + 2 + boundary.len <= body.len && body[dash] == 45 && body[dash + 1] == 45) {
                 if (startsWith(body[(dash + 2)..body.len], boundary)) {
                     if (frmIsBoundaryTerminator(body, dash + 2 + boundary.len)) {
@@ -100,7 +163,7 @@ fn frmFindNextBoundary(body: string, start: usize, boundary: string): usize {
                 }
             }
         } else if (body[i] == 10) {
-            let dash = i + 1;
+            const dash = i + 1;
             if (dash + 2 + boundary.len <= body.len && body[dash] == 45 && body[dash + 1] == 45) {
                 if (startsWith(body[(dash + 2)..body.len], boundary)) {
                     if (frmIsBoundaryTerminator(body, dash + 2 + boundary.len)) {
@@ -109,7 +172,7 @@ fn frmFindNextBoundary(body: string, start: usize, boundary: string): usize {
                 }
             }
         }
-        i = i + 1;
+        i = frmFindCrOrLfSimd(body, i + 1, body.len);
     }
     return body.len;
 }
@@ -366,7 +429,7 @@ pub fn parseMultipartForm(content_type: string, body: string, opts: FormidableOp
         // Locate header/body separator (`\r\n\r\n` or `\n\n`) within `pos..part_end`.
         let hdr_end: usize = part_end;
         let part_body_start: usize = part_end;
-        let scan = pos;
+        let scan = frmFindCrOrLfSimd(body, pos, part_end);
         let found_sep = false;
         while (scan < part_end) {
             if (body[scan] == 13 && scan + 3 < part_end &&
@@ -382,7 +445,7 @@ pub fn parseMultipartForm(content_type: string, body: string, opts: FormidableOp
                 found_sep = true;
                 break;
             }
-            scan = scan + 1;
+            scan = frmFindCrOrLfSimd(body, scan + 1, part_end);
         }
         if (!found_sep) {
             return ParsedForm.fail(ERR_MALFORMED_MULTIPART);
@@ -397,11 +460,8 @@ pub fn parseMultipartForm(content_type: string, body: string, opts: FormidableOp
 
         let hpos = pos;
         while (hpos < hdr_end) {
-            let line_end = hpos;
-            while (line_end < hdr_end && body[line_end] != 10 && body[line_end] != 13) {
-                line_end = line_end + 1;
-            }
-            let line = body[hpos..line_end];
+            const line_end = frmFindCrOrLfSimd(body, hpos, hdr_end);
+            const line = body[hpos..line_end];
 
             // Advance hpos past line break.
             hpos = line_end;

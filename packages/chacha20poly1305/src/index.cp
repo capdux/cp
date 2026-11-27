@@ -1,5 +1,6 @@
 // @cap/chacha20-poly1305 — Pure CP zero-allocation RFC 8439 ChaCha20-Poly1305 & XChaCha20-Poly1305 AEAD
 // Clean-room MIT implementation with parity to RustCrypto `chacha20poly1305`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD keystream XOR and bulk @memcpy.
 // Reuses:
 //   - `Poly1305` from `@cap/poly1305` (RFC 8439 MAC)
 //   - `chachaBlock` from `@cap/chacha-rng` (RFC 8439 ChaCha20 core block)
@@ -8,6 +9,8 @@
 import { Poly1305 } from "../../poly1305/src/index.cp";
 import { chachaBlock } from "../../rand_chacha/src/index.cp";
 import { ctEqBytes, zeroizeBytes } from "../../subtle/src/index.cp";
+
+type Cp20Vec16 = @Vector(16, u8);
 
 pub const CHACHA20_KEY_LEN: usize = 32;
 pub const CHACHA20_NONCE_LEN: usize = 12;
@@ -104,11 +107,7 @@ fn cp20ComputeAeadTag(otk32: []u8, aad: []const u8, ciphertext: []const u8, tag_
         if (take > 64) {
             take = 64;
         }
-        let i: usize = 0;
-        while (i < take) {
-            chunk[i] = aad[pos + i];
-            i = i + 1;
-        }
+        @memcpy(chunk[0..take], aad[pos .. pos + take]);
         st.update(chunk[0..take]);
         pos = pos + take;
     }
@@ -127,11 +126,7 @@ fn cp20ComputeAeadTag(otk32: []u8, aad: []const u8, ciphertext: []const u8, tag_
         if (take > 64) {
             take = 64;
         }
-        let i: usize = 0;
-        while (i < take) {
-            chunk[i] = ciphertext[pos + i];
-            i = i + 1;
-        }
+        @memcpy(chunk[0..take], ciphertext[pos .. pos + take]);
         st.update(chunk[0..take]);
         pos = pos + take;
     }
@@ -190,6 +185,13 @@ pub fn chacha20Xor(key: []const u8, counter: u32, nonce: []const u8, input: []co
             take = 64;
         }
         let i: usize = 0;
+        while (i + 16 <= take) {
+            const va: Cp20Vec16 = input[off + i .. off + i + 16][0..16].*;
+            const vb: Cp20Vec16 = block[i .. i + 16][0..16].*;
+            const vx: [16]u8 = va ^ vb;
+            @memcpy(out[off + i .. off + i + 16], vx[0..16]);
+            i = i + 16;
+        }
         while (i < take) {
             out[off + i] = input[off + i] ^ block[i];
             i = i + 1;
@@ -211,11 +213,7 @@ pub fn poly1305KeyGen(key: []const u8, nonce: []const u8, out: []u8): bool {
     if (!chacha20Block(key, 0 as u32, nonce, block[0..64])) {
         return false;
     }
-    let i: usize = 0;
-    while (i < 32) {
-        out[i] = block[i];
-        i = i + 1;
-    }
+    @memcpy(out[0..32], block[0..32]);
     zeroizeBytes(block[0..64]);
     return true;
 }
@@ -360,11 +358,7 @@ pub fn xchacha20Poly1305Encrypt(
     chacha_nonce[1] = 0;
     chacha_nonce[2] = 0;
     chacha_nonce[3] = 0;
-    let i: usize = 0;
-    while (i < 8) {
-        chacha_nonce[4 + i] = nonce24[16 + i];
-        i = i + 1;
-    }
+    @memcpy(chacha_nonce[4..12], nonce24[16..24]);
 
     const ok = aeadEncrypt(subkey[0..32], chacha_nonce[0..12], aad, plaintext, ciphertext, tag);
     zeroizeBytes(subkey[0..32]);
@@ -395,11 +389,7 @@ pub fn xchacha20Poly1305Decrypt(
     chacha_nonce[1] = 0;
     chacha_nonce[2] = 0;
     chacha_nonce[3] = 0;
-    let i: usize = 0;
-    while (i < 8) {
-        chacha_nonce[4 + i] = nonce24[16 + i];
-        i = i + 1;
-    }
+    @memcpy(chacha_nonce[4..12], nonce24[16..24]);
 
     const ok = aeadDecrypt(subkey[0..32], chacha_nonce[0..12], aad, ciphertext, tag, plaintext);
     zeroizeBytes(subkey[0..32]);
