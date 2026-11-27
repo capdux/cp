@@ -84,7 +84,7 @@ export struct CsvReader {
     }
 
     /// 还原字段中转义的 `""` 为 `"`；未转义字段零拷贝返回
-    fn unescapeField(field: CsvField, out: []u8): ([]const u8)? {
+    static fn unescapeField(field: CsvField, out: []u8): ([]const u8)? {
         return unescapeFieldImpl(field, out);
     }
 

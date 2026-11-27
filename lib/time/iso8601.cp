@@ -183,7 +183,7 @@ pub struct CivilDateTime {
     }
 
     fn formatRfc3339(out: []u8): ([]const u8)! {
-        return Iso8601.formatRfc3339(_, out);
+        return Iso8601.formatRfc3339(_.*, out);
     }
 }
 

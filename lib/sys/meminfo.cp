@@ -107,7 +107,7 @@ export struct MemInfo {
     dirty: u64,
     shmem: u64,
 
-    pub fn parse(content: []const u8): MemInfo {
+    pub static fn parse(content: []const u8): MemInfo {
         let info = MemInfo {
             mem_total: 0,
             mem_free: 0,

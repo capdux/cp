@@ -176,7 +176,7 @@ export struct AnsiStyle {
     }
 
     /// 24-bit TrueColor 前景色格式化：`\x1b[38;2;<r>;<g>;<b>m<text>\x1b[0m`
-    fn formatRgb(r: u8, g: u8, b: u8, text: []const u8, out: []u8): ([]const u8)? {
+    static fn formatRgb(r: u8, g: u8, b: u8, text: []const u8, out: []u8): ([]const u8)? {
         let w = BufWriter{ out: out, pos: 0 };
         if (!w.writeSlice("\x1b[38;2;")) return null;
         if (!w.writeU8Dec(r)) return null;

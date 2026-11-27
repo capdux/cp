@@ -70,7 +70,7 @@ export struct LoadAvg {
     last_pid: u64,
 
     /// Parse Linux `/proc/loadavg` (e.g. `"0.52 0.58 0.59 2/412 12345\n"`).
-    pub fn parse(content: []const u8): LoadAvg? {
+    pub static fn parse(content: []const u8): LoadAvg? {
         let pos: usize = 0;
         const t1 = nextTok(content, &pos) ?? return null;
         const t5 = nextTok(content, &pos) ?? return null;
@@ -118,7 +118,7 @@ export struct SystemUptime {
     idle_ms: u64,
 
     /// Parse Linux `/proc/uptime` (e.g. `"12345.67 98765.43\n"` -> milliseconds).
-    pub fn parse(content: []const u8): SystemUptime? {
+    pub static fn parse(content: []const u8): SystemUptime? {
         let pos: usize = 0;
         const t_up = nextTok(content, &pos) ?? return null;
         const t_idle = nextTok(content, &pos) ?? return null;
