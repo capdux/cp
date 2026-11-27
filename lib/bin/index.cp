@@ -2,19 +2,21 @@
 // Zero-allocation binary slice scanning (16-byte SIMD accelerated), endian read/write,
 // and constant-time equality primitives — L0 foundation for CP ecosystem packages.
 
-/// Fast byte equality comparison for two byte slices.
+type BinVec16 = @Vector(16, u8);
+
+/// 16-lane hardware SIMD byte equality comparison for two byte slices.
 pub fn bytesEq(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
-    // 8-byte unrolled fast path
-    while (i + 8 <= a.len) {
-        if (a[i] != b[i] || a[i + 1] != b[i + 1] || a[i + 2] != b[i + 2] || a[i + 3] != b[i + 3] ||
-            a[i + 4] != b[i + 4] || a[i + 5] != b[i + 5] || a[i + 6] != b[i + 6] || a[i + 7] != b[i + 7]) {
+    while (i + 16 <= a.len) {
+        const va: BinVec16 = a[i .. i + 16][0..16].*;
+        const vb: BinVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
             return false;
         }
-        i += 8;
+        i += 16;
     }
     while (i < a.len) {
         if (a[i] != b[i]) {
@@ -55,27 +57,21 @@ pub fn endsWithBytes(haystack: []const u8, suffix: []const u8): bool {
     return bytesEq(haystack[(haystack.len - suffix.len)..haystack.len], suffix);
 }
 
-/// Finds the first occurrence of `needle` in `haystack` starting at `start_pos` using 16-byte SWAR/SIMD chunking.
+/// 16-lane hardware SIMD scanner locating the first occurrence of `needle` in `haystack` starting at `start_pos`.
 pub fn findByteInBytes(haystack: []const u8, needle: u8, start_pos: usize): usize? {
     let i = start_pos;
-    // 16-byte unrolled scan
+    const needle_v: BinVec16 = @splat(needle);
     while (i + 16 <= haystack.len) {
-        if (haystack[i] == needle) { return i; }
-        if (haystack[i + 1] == needle) { return i + 1; }
-        if (haystack[i + 2] == needle) { return i + 2; }
-        if (haystack[i + 3] == needle) { return i + 3; }
-        if (haystack[i + 4] == needle) { return i + 4; }
-        if (haystack[i + 5] == needle) { return i + 5; }
-        if (haystack[i + 6] == needle) { return i + 6; }
-        if (haystack[i + 7] == needle) { return i + 7; }
-        if (haystack[i + 8] == needle) { return i + 8; }
-        if (haystack[i + 9] == needle) { return i + 9; }
-        if (haystack[i + 10] == needle) { return i + 10; }
-        if (haystack[i + 11] == needle) { return i + 11; }
-        if (haystack[i + 12] == needle) { return i + 12; }
-        if (haystack[i + 13] == needle) { return i + 13; }
-        if (haystack[i + 14] == needle) { return i + 14; }
-        if (haystack[i + 15] == needle) { return i + 15; }
+        const v: BinVec16 = haystack[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == needle_v)) {
+            let j: usize = 0;
+            while (j < 16) {
+                if (haystack[i + j] == needle) {
+                    return i + j;
+                }
+                j += 1;
+            }
+        }
         i += 16;
     }
     while (i < haystack.len) {

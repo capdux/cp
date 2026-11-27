@@ -15,12 +15,15 @@ fn lascMinUsize(a: usize, b: usize): usize {
     return if (a < b) a else b;
 }
 
-/// Returns true if every byte in `data` is a 7-bit ASCII byte (`0x00..=0x7F`).
+type LascVec16 = @Vector(16, u8);
+
+/// 16-lane hardware SIMD: returns true if every byte in `data` is 7-bit ASCII (`0x00..=0x7F`).
 pub fn isAscii(data: []const u8): bool {
     let i: usize = 0;
-    while (i + 8 <= data.len) : (i += 8) {
-        const acc: u8 = data[i] | data[i + 1] | data[i + 2] | data[i + 3] | data[i + 4] | data[i + 5] | data[i + 6] | data[i + 7];
-        if ((acc & 0x80) != 0) return false;
+    const hi_mask: LascVec16 = @splat(0x80 as u8);
+    while (i + 16 <= data.len) : (i += 16) {
+        const v: LascVec16 = data[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v & hi_mask) != 0) return false;
     }
     while (i < data.len) : (i += 1) {
         if ((data[i] & 0x80) != 0) return false;
@@ -113,20 +116,37 @@ pub fn toUpperByte(b: u8): u8 {
     return b;
 }
 
-/// Returns true if two byte strings have identical length and contents.
+/// 16-lane hardware SIMD: returns true if two byte strings have identical length and contents.
 pub fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: LascVec16 = a[i .. i + 16][0..16].*;
+        const vb: LascVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
     return true;
 }
 
-/// Returns true if two byte strings are equal ignoring ASCII letter case.
+/// 16-lane hardware SIMD: returns true if two byte strings are equal ignoring ASCII letter case.
 pub fn eqIgnoreCase(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    const lo_A: LascVec16 = @splat(65 as u8);
+    const hi_Z: LascVec16 = @splat(90 as u8);
+    const case_bit: LascVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: LascVec16 = a[i .. i + 16][0..16].*;
+        const vb: LascVec16 = b[i .. i + 16][0..16].*;
+        const mask_a = (va >= lo_A) & (va <= hi_Z);
+        const mask_b = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, mask_a, va | case_bit, va);
+        const lb = @select(u8, mask_b, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (toLowerByte(a[i]) != toLowerByte(b[i])) return false;
     }
@@ -154,10 +174,20 @@ pub fn endsWith(s: string, suffix: string): bool {
     return true;
 }
 
-/// Finds the first index `>= start_pos` where `s[i] == ch`, or `null` if not found.
+/// 16-lane hardware SIMD: finds the first index `>= start_pos` where `s[i] == ch`, or `null` if not found.
 pub fn findByte(s: string, ch: u8, start_pos: usize): usize? {
     if (start_pos >= s.len) return null;
     let i: usize = start_pos;
+    const ch_v: LascVec16 = @splat(ch);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: LascVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == ch_v)) {
+            let j: usize = 0;
+            while (j < 16) : (j += 1) {
+                if (s[i + j] == ch) return i + j;
+            }
+        }
+    }
     while (i < s.len) : (i += 1) {
         if (s[i] == ch) return i;
     }
