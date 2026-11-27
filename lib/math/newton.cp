@@ -20,7 +20,7 @@ pub struct NewtonConfig {
     max_iter: usize,
     max_backtrack: usize,
 
-    fn default(): NewtonConfig {
+    static fn default(): NewtonConfig {
         return {
             tol_f: 1.0e-12,
             tol_x: 1.0e-12,
@@ -58,7 +58,7 @@ pub struct LmConfig {
     lambda_init: f64,
     max_iter: usize,
 
-    fn default(): LmConfig {
+    static fn default(): LmConfig {
         return {
             tol_r: 1.0e-12,
             tol_x: 1.0e-12,

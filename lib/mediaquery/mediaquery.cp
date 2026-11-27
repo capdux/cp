@@ -19,7 +19,7 @@ pub enum MediaType: u8 {
         };
     }
 
-    fn parse(raw: []const u8): MediaType {
+    static fn parse(raw: []const u8): MediaType {
         if (eqlIgnoreCase(raw, "all")) return MediaType.all;
         if (eqlIgnoreCase(raw, "screen")) return MediaType.screen;
         if (eqlIgnoreCase(raw, "print")) return MediaType.print;
@@ -130,7 +130,7 @@ pub struct MediaEnv {
         };
     }
 
-    fn mobile(): MediaEnv {
+    static fn mobile(): MediaEnv {
         return {
             media_type: MediaType.screen,
             width_px: 390.0,

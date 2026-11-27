@@ -25,14 +25,14 @@ pub struct McpStreamFramer {
         _.buf.deinit(_.alloc);
     }
 
-    pub fn freeFrames(alloc: std.mem.Allocator, frames: [][]u8) {
+    pub static fn freeFrames(alloc: std.mem.Allocator, frames: [][]u8) {
         for (f of frames) {
             alloc.free(f);
         }
         alloc.free(frames);
     }
 
-    pub fn encodeFrame(alloc: std.mem.Allocator, mode: FrameMode, payload: []const u8): ![]u8 {
+    pub static fn encodeFrame(alloc: std.mem.Allocator, mode: FrameMode, payload: []const u8): ![]u8 {
         let out = std.ArrayList(u8).empty;
         errdefer out.deinit(alloc);
 
@@ -62,7 +62,7 @@ pub struct McpStreamFramer {
         _.buf.items.len = remaining;
     }
 
-    fn asciiLowerEql(a: []const u8, b: []const u8): bool {
+    static fn asciiLowerEql(a: []const u8, b: []const u8): bool {
         if (a.len != b.len) {
             return false;
         }
@@ -78,7 +78,7 @@ pub struct McpStreamFramer {
         return true;
     }
 
-    fn parseContentLengthHeader(headers: []const u8): !usize {
+    static fn parseContentLengthHeader(headers: []const u8): !usize {
         let i: usize = 0;
         let found_len: usize? = null;
         while (i < headers.len) {

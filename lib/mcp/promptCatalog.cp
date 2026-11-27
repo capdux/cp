@@ -87,7 +87,7 @@ pub struct McpPromptArgSpec {
     choice_count: usize = 0;
 
     /// Convenience constructor for a free-text argument without enum choices.
-    fn plain(name: []const u8, required: bool): McpPromptArgSpec {
+    static fn plain(name: []const u8, required: bool): McpPromptArgSpec {
         return McpPromptArgSpec {
             name: name,
             required: required,
@@ -95,7 +95,7 @@ pub struct McpPromptArgSpec {
     }
 
     /// Convenience constructor for an argument with completion/enum choices.
-    fn withChoices(
+    static fn withChoices(
         name: []const u8,
         required: bool,
         enforce_enum: bool,

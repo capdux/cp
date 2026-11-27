@@ -32,7 +32,7 @@ export struct MacAddr {
     /// - Hyphen: `AA-BB-CC-DD-EE-FF` (17 chars)
     /// - Cisco dot: `aabb.ccdd.eeff` (14 chars)
     /// - Bare hex: `aabbccddeeff` (12 chars)
-    pub fn parse(raw: []const u8): MacAddr? {
+    pub static fn parse(raw: []const u8): MacAddr? {
         let out: [6]u8 = [0; 6];
         if (raw.len == 17) {
             const sep = raw[2];

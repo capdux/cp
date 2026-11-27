@@ -14,7 +14,7 @@ pub struct NmfConfig {
     eps: f64,
     seed: u64,
 
-    fn default(): NmfConfig {
+    static fn default(): NmfConfig {
         return {
             loss: NmfLoss.Frobenius,
             max_iter: 1000,

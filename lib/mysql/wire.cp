@@ -297,7 +297,7 @@ pub struct HandshakeV10 {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8): !HandshakeV10 {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8): !HandshakeV10 {
         let offset: usize = 0;
         if (offset >= payload.len) {
             return error.UnexpectedEof;
@@ -626,7 +626,7 @@ pub struct ErrPacket {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8): !ErrPacket {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8): !ErrPacket {
         if (payload.len < 3 or payload[0] != ERR_HEADER) {
             return error.InvalidPacketType;
         }
@@ -665,7 +665,7 @@ pub struct EofPacket {
         return out;
     }
 
-    pub fn decode(payload: []const u8): !EofPacket {
+    pub static fn decode(payload: []const u8): !EofPacket {
         if (payload.len < 5 or payload[0] != EOF_HEADER) {
             return error.InvalidPacketType;
         }
@@ -684,7 +684,7 @@ pub struct ComPacket {
         alloc.free(_.argument);
     }
 
-    pub fn encodeComQuery(alloc: std.mem.Allocator, sql: []const u8): !([]u8) {
+    pub static fn encodeComQuery(alloc: std.mem.Allocator, sql: []const u8): !([]u8) {
         let out = try alloc.alloc(u8, 1 + sql.len);
         out[0] = COM_QUERY;
         if (sql.len > 0) {
@@ -693,19 +693,19 @@ pub struct ComPacket {
         return out;
     }
 
-    pub fn encodeComPing(alloc: std.mem.Allocator): !([]u8) {
+    pub static fn encodeComPing(alloc: std.mem.Allocator): !([]u8) {
         let out = try alloc.alloc(u8, 1);
         out[0] = COM_PING;
         return out;
     }
 
-    pub fn encodeComQuit(alloc: std.mem.Allocator): !([]u8) {
+    pub static fn encodeComQuit(alloc: std.mem.Allocator): !([]u8) {
         let out = try alloc.alloc(u8, 1);
         out[0] = COM_QUIT;
         return out;
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8): !ComPacket {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8): !ComPacket {
         if (payload.len < 1) {
             return error.UnexpectedEof;
         }
@@ -858,7 +858,7 @@ pub struct TextResultRow {
         return try out.toOwnedSlice(alloc);
     }
 
-    pub fn decode(alloc: std.mem.Allocator, payload: []const u8, col_count: usize): !TextResultRow {
+    pub static fn decode(alloc: std.mem.Allocator, payload: []const u8, col_count: usize): !TextResultRow {
         let vals = try alloc.alloc(CellValue, col_count);
         let filled: usize = 0;
         errdefer {

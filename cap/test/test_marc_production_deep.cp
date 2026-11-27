@@ -33,7 +33,7 @@ struct MarcBuilder {
     out_buf: [2048]u8 = [0; 2048],
     out_len: usize = 0,
 
-    fn writeDec(dst: []u8, off: usize, width: usize, val: usize) {
+    static fn writeDec(dst: []u8, off: usize, width: usize, val: usize) {
         let v = val;
         let i = width;
         while (i > 0) {

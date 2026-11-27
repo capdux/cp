@@ -18,7 +18,7 @@ pub struct NelderConfig {
     init_step: f64,
 
     /// Standard Nelder-Mead parameters (`alpha=1.0, gamma=2.0, rho=0.5, sigma=0.5`).
-    fn default(): NelderConfig {
+    static fn default(): NelderConfig {
         return NelderConfig {
             alpha: 1.0,
             gamma: 2.0,

@@ -46,7 +46,7 @@ pub struct McpContent {
     text: []const u8,
     mime_type: ([]const u8)? = null,
 
-    pub fn makeText(msg: []const u8): McpContent {
+    pub static fn makeText(msg: []const u8): McpContent {
         return McpContent{
             .content_type = "text",
             .text = msg,
@@ -59,14 +59,14 @@ pub struct McpToolResult {
     content: []const McpContent,
     is_error: bool = false,
 
-    pub fn ok(items: []const McpContent): McpToolResult {
+    pub static fn ok(items: []const McpContent): McpToolResult {
         return McpToolResult{
             .content = items,
             .is_error = false,
         };
     }
 
-    pub fn fail(items: []const McpContent): McpToolResult {
+    pub static fn fail(items: []const McpContent): McpToolResult {
         return McpToolResult{
             .content = items,
             .is_error = true,
