@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP with XSS-safe HTML escaping via @cap/escape-html (clean-room MIT counterpart to npm marked v14).
+Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP with XSS-safe HTML escaping via escape-html (clean-room MIT counterpart to npm marked v14).
 
 ## 安装与导入
 

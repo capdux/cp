@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation upward package.json finder, parser, and normalizer for CP, reusing @cap/find-up and @cap/read-pkg.
+Zero-allocation upward package.json finder, parser, and normalizer for CP, reusing find-up and read-pkg.
 
 ## 安装与导入
 

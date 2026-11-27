@@ -1,6 +1,6 @@
 # accepts@1.0.0 (Agent Quickref)
 
-> Zero-allocation RFC 9110 HTTP content negotiation engine for Accept, Accept-Encoding, and Accept-Language headers, composing @cap/negotiator for CP | License: MIT
+> Zero-allocation RFC 9110 HTTP content negotiation engine for Accept, Accept-Encoding, and Accept-Language headers, composing negotiator for CP | License: MIT
 > Import: `import { ... } from "accepts";` | Full types: `src/index.d.cp`
 > Deps: `negotiator`
 

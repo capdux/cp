@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:semver-diff` ([https://github.com/sindresorhus/semver-diff](https://github.com/sindresorhus/semver-diff))
 
-Zero-allocation, Clean-room MIT implementation of `semver-diff` v5 for CP, reusing `@cap/semver-range`.
+Zero-allocation, Clean-room MIT implementation of `semver-diff` v5 for CP, reusing `semver`.
 
 ## Features
 
@@ -16,7 +16,7 @@ Zero-allocation, Clean-room MIT implementation of `semver-diff` v5 for CP, reusi
 
 ## Dependencies
 
-- `@cap/semver-range` (`1.0.0`)
+- `semver` (`1.0.0`)
 
 ## License
 

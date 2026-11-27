@@ -1,6 +1,6 @@
 # normalize-package-data@1.0.0 (Agent Quickref)
 
-> Zero-allocation package metadata normalizer and validator for CP, reusing @cap/validate-npm-package-name and @cap/validate-npm-package-license. | License: MIT
+> Zero-allocation package metadata normalizer and validator for CP, reusing validate-npm-package-name and validate-npm-package-license. | License: MIT
 > Import: `import { ... } from "normalize-package-data";` | Full types: `src/index.d.cp`
 > Deps: `validate-npm-package-license`, `validate-npm-package-name`
 

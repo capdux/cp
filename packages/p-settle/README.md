@@ -7,7 +7,7 @@
 
 Zero-heap-allocation bounded-concurrency `Promise.allSettled` task planner in pure CP (clean-room MIT implementation inspired by npm `p-settle` v5).
 
-Reuses [`@cap/p-limit`](../p-limit) (`PLimit`) for bounded concurrency and FIFO task dispatch without ever short-circuiting on errors.
+Reuses [`p-limit`](../p-limit) (`PLimit`) for bounded concurrency and FIFO task dispatch without ever short-circuiting on errors.
 
 ## Features
 

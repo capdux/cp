@@ -7,7 +7,7 @@
 
 Pure CP, zero-allocation RFC 6979 deterministic ECDSA nonce generator (HMAC-SHA256 DRBG, parity with RustCrypto `rfc6979`).
 
-Reuses `hmacSha256` from `@cap/cookie-signature`.
+Reuses `hmacSha256` from `cookie-signature`.
 
 ## Features
 

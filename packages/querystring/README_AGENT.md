@@ -1,6 +1,6 @@
 # querystring@1.0.0 (Agent Quickref)
 
-> Zero-allocation URL query string parser, stringifier & parameter extractor (Node.js querystring & npm query-string v9 parity) composing @cap/percent-encoding for CP | License: MIT
+> Zero-allocation URL query string parser, stringifier & parameter extractor (Node.js querystring & npm query-string v9 parity) composing percent-encoding for CP | License: MIT
 > Import: `import { ... } from "querystring";` | Full types: `src/index.d.cp`
 > Deps: `percent-encoding`
 

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation CLI command framework (npm commander v12 parity) composing @cap/yargs-parser and @cap/cliui for CP
+Zero-allocation CLI command framework (npm commander v12 parity) composing yargs-parser and cliui for CP
 
 ## 安装与导入
 

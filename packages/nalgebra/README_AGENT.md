@@ -1,6 +1,6 @@
 # nalgebra@1.0.0 (Agent Quickref)
 
-> Zero-heap 2D/3D/4D linear algebra: Mat2/Mat3/Mat4 multiply, determinant, inverse, affine transforms & vector ops (crates.io nalgebra equivalent, reuses @cap/mint) | License: MIT
+> Zero-heap 2D/3D/4D linear algebra: Mat2/Mat3/Mat4 multiply, determinant, inverse, affine transforms & vector ops (crates.io nalgebra equivalent, reuses mint) | License: MIT
 > Import: `import { ... } from "nalgebra";` | Full types: `src/index.d.cp`
 > Deps: `mint`
 

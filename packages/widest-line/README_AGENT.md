@@ -1,6 +1,6 @@
 # widest-line@1.0.0 (Agent Quickref)
 
-> Zero-allocation widest visual terminal line width calculator (npm widest-line parity) composing @cap/string-width for CP | License: MIT
+> Zero-allocation widest visual terminal line width calculator (npm widest-line parity) composing string-width for CP | License: MIT
 > Import: `import { ... } from "widest-line";` | Full types: `src/index.d.cp`
 
 ## Functions

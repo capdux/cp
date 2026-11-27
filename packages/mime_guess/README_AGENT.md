@@ -1,6 +1,6 @@
 # mime_guess@1.0.0 (Agent Quickref)
 
-> Zero-allocation file path and extension MIME type guesser for CP (clean-room MIT, inspired by Rust mime_guess v2, powered by @cap/mime-types). | License: MIT
+> Zero-allocation file path and extension MIME type guesser for CP (clean-room MIT, inspired by Rust mime_guess v2, powered by mime-types). | License: MIT
 > Import: `import { ... } from "mime_guess";` | Full types: `src/index.d.cp`
 > Deps: `mime-types`
 

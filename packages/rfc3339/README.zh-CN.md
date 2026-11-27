@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter (reuses @cap/iso8601)
+Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter (reuses iso8601)
 
 ## 安装与导入
 

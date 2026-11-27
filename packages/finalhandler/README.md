@@ -8,9 +8,9 @@
 Clean-room MIT, zero-heap HTTP final response & error handler for CP — modeled on npm's `finalhandler` v2 (140M+/week).
 
 ## Dependencies
-- `@cap/escape-html` (`1.0.0`) — XSS-safe HTML escaping for error messages
-- `@cap/http-types` (`1.0.0`) — canonical HTTP status reason phrases
-- `@cap/itoa` (`1.0.0`) — fast zero-heap status code & Content-Length formatting
+- `escape-html` (`1.0.0`) — XSS-safe HTML escaping for error messages
+- `http` (`1.0.0`) — canonical HTTP status reason phrases
+- `itoa` (`1.0.0`) — fast zero-heap status code & Content-Length formatting
 
 ## API
 - `normalizeErrorStatus(code): u16`

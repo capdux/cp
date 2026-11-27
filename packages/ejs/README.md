@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap Embedded Template Engine for CP — modeled on npm's `ejs` v3.
 
 ## Dependencies
-- `@cap/escape-html` (`1.0.0`) — reused for XSS-safe `<%= ... %>` HTML escaping.
+- `escape-html` (`1.0.0`) — reused for XSS-safe `<%= ... %>` HTML escaping.
 
 ## Supported Tags
 - `<%= key %>` — HTML-escaped value interpolation

@@ -1,6 +1,6 @@
 # block-padding@1.0.0 (Agent Quickref)
 
-> Zero-allocation PKCS#7 (constant-time padding-oracle-resistant unpad), ISO 7816-4, ANSI X9.23, ZeroPadding, 128-bit BE/LE CTR counter increment, and XOR block primitives reusing @cap/subtle-ct in pure CP. | License: MIT
+> Zero-allocation PKCS#7 (constant-time padding-oracle-resistant unpad), ISO 7816-4, ANSI X9.23, ZeroPadding, 128-bit BE/LE CTR counter increment, and XOR block primitives reusing subtle in pure CP. | License: MIT
 > Import: `import { ... } from "block-padding";` | Full types: `src/index.d.cp`
 > Deps: `subtle`
 

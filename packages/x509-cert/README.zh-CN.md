@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Pure CP zero-allocation RFC 5280 X.509 v1/v2/v3 certificate DER & PEM codec (reuses @cap/der-asn1, @cap/const-oid, @cap/spki, and @cap/pem-rfc7468)
+Pure CP zero-allocation RFC 5280 X.509 v1/v2/v3 certificate DER & PEM codec (reuses der, const-oid, spki, and pem-rfc7468)
 
 ## 安装与导入
 

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation glob pattern detector reusing @cap/is-extglob for CP
+Zero-allocation glob pattern detector reusing is-extglob for CP
 
 ## 安装与导入
 

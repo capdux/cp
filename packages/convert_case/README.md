@@ -7,7 +7,7 @@
 
 Zero-allocation 14-style string case conversion engine for CP — clean-room MIT parity with crates.io `convert_case` v0.6.
 
-Composes [`@cap/heck-case`](../heck-case) for Unicode-aware word boundary detection and the 8 core styles with zero code duplication, adding `flatcase`, `UPPERFLATCASE`, `lower words`, `UPPER WORDS`, `aLtErNaTiNg cAsE`, and `COBOL-CASE`.
+Composes [`heck`](../heck) for Unicode-aware word boundary detection and the 8 core styles with zero code duplication, adding `flatcase`, `UPPERFLATCASE`, `lower words`, `UPPER WORDS`, `aLtErNaTiNg cAsE`, and `COBOL-CASE`.
 
 ## Installation
 

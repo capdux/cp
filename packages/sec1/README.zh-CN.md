@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Pure CP zero-allocation SEC1 v2.0 elliptic curve point encoding & RFC 5915 ECPrivateKey DER/PEM codec (reuses @cap/const-oid, @cap/pem-rfc7468, and @cap/subtle-ct)
+Pure CP zero-allocation SEC1 v2.0 elliptic curve point encoding & RFC 5915 ECPrivateKey DER/PEM codec (reuses const-oid, pem-rfc7468, and subtle)
 
 ## 安装与导入
 

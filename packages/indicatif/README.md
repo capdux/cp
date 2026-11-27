@@ -5,11 +5,11 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:indicatif` ([https://github.com/console-rs/indicatif](https://github.com/console-rs/indicatif))
 
-Zero-heap terminal progress bar, throughput, and ETA renderer in pure CP (clean-room counterpart to Rust `indicatif`). Directly composes `@cap/pretty-bytes` and `@cap/pretty-ms`.
+Zero-heap terminal progress bar, throughput, and ETA renderer in pure CP (clean-room counterpart to Rust `indicatif`). Directly composes `pretty-bytes` and `pretty-ms`.
 
 ## Features
 
-- **Real Cross-Package Composition**: Reuses `@cap/pretty-bytes` (`prettyBytes`) and `@cap/pretty-ms` (`prettyMs`) with zero duplicated formatting logic.
+- **Real Cross-Package Composition**: Reuses `pretty-bytes` (`prettyBytes`) and `pretty-ms` (`prettyMs`) with zero duplicated formatting logic.
 - **100% Zero Heap Allocation**: Renders bars and full progress lines directly into caller-provided `out: []u8`.
 - **Complete Progress Metrics**: `percent`, `etaMs`, `bytesPerSec`, `renderBar`, and `renderLine`.
 

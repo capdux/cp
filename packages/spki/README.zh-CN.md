@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Pure CP zero-allocation RFC 5280 SubjectPublicKeyInfo (SPKI) & AlgorithmIdentifier DER/PEM codec (reuses @cap/const-oid and @cap/pem-rfc7468)
+Pure CP zero-allocation RFC 5280 SubjectPublicKeyInfo (SPKI) & AlgorithmIdentifier DER/PEM codec (reuses const-oid and pem-rfc7468)
 
 ## 安装与导入
 

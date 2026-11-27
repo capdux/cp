@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation SemVer upgrade diff classifier (major, minor, patch, pre*, build) and breaking-upgrade detector for CP, reusing @cap/semver-range.
+Zero-allocation SemVer upgrade diff classifier (major, minor, patch, pre*, build) and breaking-upgrade detector for CP, reusing semver.
 
 ## 安装与导入
 

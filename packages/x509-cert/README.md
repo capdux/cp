@@ -8,10 +8,10 @@
 Pure CP, zero-allocation RFC 5280 X.509 v1/v2/v3 Certificate DER & PEM parser and encoder (parity with RustCrypto `x509-cert`).
 
 Composes 4 official CP PKI packages with zero code duplication:
-- `@cap/der-asn1` for strict ITU-T X.690 DER reading/writing
-- `@cap/const-oid` for DN attribute OIDs (`CN`, `O`, `C`)
-- `@cap/spki` for `AlgorithmIdentifier` & `SubjectPublicKeyInfo`
-- `@cap/pem-rfc7468` for `CERTIFICATE` PEM encoding/decoding
+- `der` for strict ITU-T X.690 DER reading/writing
+- `const-oid` for DN attribute OIDs (`CN`, `O`, `C`)
+- `spki` for `AlgorithmIdentifier` & `SubjectPublicKeyInfo`
+- `pem-rfc7468` for `CERTIFICATE` PEM encoding/decoding
 
 ## API
 

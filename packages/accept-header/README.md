@@ -5,13 +5,13 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:accept-header` ([https://github.com/djc/accept-header](https://github.com/djc/accept-header))
 
-Clean-room MIT, zero-heap RFC 7231 HTTP `Accept` header parser and media-type negotiator for CP — modeled on crates.io `accept-header`, reusing `@cap/negotiator` and `@cap/unicase`.
+Clean-room MIT, zero-heap RFC 7231 HTTP `Accept` header parser and media-type negotiator for CP — modeled on crates.io `accept-header`, reusing `negotiator` and `unicase`.
 
 ## Features
 
 - **Zero heap allocation**: fixed 16-slot `AcceptHeader` value type with zero dynamic allocations.
-- **RFC 7231 quality & specificity ranking**: parses `;q=0.x` weights via `@cap/negotiator`, filters `q=0`, and stably sorts by descending `quality_milli` then descending `specificity` (`3` = `type/sub`, `2` = `type/*`, `1` = `*/*`).
-- **Case-insensitive MIME matching**: uses `@cap/unicase` `eqAscii` for RFC-compliant case-insensitive type/subtype matching.
+- **RFC 7231 quality & specificity ranking**: parses `;q=0.x` weights via `negotiator`, filters `q=0`, and stably sorts by descending `quality_milli` then descending `specificity` (`3` = `type/sub`, `2` = `type/*`, `1` = `*/*`).
+- **Case-insensitive MIME matching**: uses `unicase` `eqAscii` for RFC-compliant case-insensitive type/subtype matching.
 
 ## API
 

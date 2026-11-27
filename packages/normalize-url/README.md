@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:normalize-url` ([https://github.com/sindresorhus/normalize-url](https://github.com/sindresorhus/normalize-url))
 
-Zero-allocation URL normalization utility for CP — clean-room MIT parity with npm `normalize-url`. Composes `@cap/prepend-http` with zero duplication.
+Zero-allocation URL normalization utility for CP — clean-room MIT parity with npm `normalize-url`. Composes `prepend-http` with zero duplication.
 
-纯 CP 零堆分配 URL 规范化库（对标 npm `normalize-url`），跨包复用 `@cap/prepend-http`，支持自动补全协议、协议与主机名小写化、去除默认端口（`http:80` / `https:443` / `ftp:21`）、去除 `www.`、折叠路径重复 `//`、解析 `.`/`..`、按需去除尾部 `/` 与 `#hash`。
+纯 CP 零堆分配 URL 规范化库（对标 npm `normalize-url`），跨包复用 `prepend-http`，支持自动补全协议、协议与主机名小写化、去除默认端口（`http:80` / `https:443` / `ftp:21`）、去除 `www.`、折叠路径重复 `//`、解析 `.`/`..`、按需去除尾部 `/` 与 `#hash`。
 
 ## Install / 安装
 
@@ -17,7 +17,7 @@ cap add normalize-url
 
 ## Dependencies / 跨包复用
 
-- `@cap/prepend-http`: 自动补全协议与协议相对 URL 检测
+- `prepend-http`: 自动补全协议与协议相对 URL 检测
 
 ## API
 

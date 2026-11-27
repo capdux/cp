@@ -1,6 +1,6 @@
 # http@1.0.0 (Agent Quickref)
 
-> Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types (crates.io http v1 parity) composing @cap/unicase for CP. | License: MIT
+> Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types (crates.io http v1 parity) composing unicase for CP. | License: MIT
 > Import: `import { ... } from "http";` | Full types: `src/index.d.cp`
 > Deps: `unicase`
 

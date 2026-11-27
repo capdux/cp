@@ -1,6 +1,6 @@
 # convert_case@1.0.0 (Agent Quickref)
 
-> Zero-allocation 14-style string case converter (crates.io convert_case v0.6 parity) composing @cap/heck-case for CP. | License: MIT
+> Zero-allocation 14-style string case converter (crates.io convert_case v0.6 parity) composing heck for CP. | License: MIT
 > Import: `import { ... } from "convert_case";` | Full types: `src/index.d.cp`
 > Deps: `heck`
 

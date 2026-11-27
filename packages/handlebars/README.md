@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:handlebars` ([https://github.com/handlebars-lang/handlebars.js](https://github.com/handlebars-lang/handlebars.js))（原库名 `handlebars` → CP 包名 `handlebars`）
 
-Zero-allocation Handlebars template engine for CP — clean-room MIT parity with npm `handlebars` v4. Composes `@cap/escape-html` for XSS-safe `{{var}}` escaping with zero duplication.
+Zero-allocation Handlebars template engine for CP — clean-room MIT parity with npm `handlebars` v4. Composes `escape-html` for XSS-safe `{{var}}` escaping with zero duplication.
 
-纯 CP 零堆分配 Handlebars 模板引擎（对标 npm `handlebars` v4），跨包复用 `@cap/escape-html` 实现 `{{var}}` 自动 HTML 转义防 XSS。
+纯 CP 零堆分配 Handlebars 模板引擎（对标 npm `handlebars` v4），跨包复用 `escape-html` 实现 `{{var}}` 自动 HTML 转义防 XSS。
 
 ## Install / 安装
 
@@ -17,13 +17,13 @@ cap add handlebars
 
 ## Dependencies / 跨包复用
 
-- `@cap/escape-html`: 零堆分配单遍 HTML 实体转义（`&`, `<`, `>`, `"`, `'`）
+- `escape-html`: 零堆分配单遍 HTML 实体转义（`&`, `<`, `>`, `"`, `'`）
 
 ## Supported Syntax / 支持语法
 
 | Feature | Syntax | Description |
 | --- | --- | --- |
-| Escaped interpolation | `{{ key }}` | HTML-escaped variable output via `@cap/escape-html` |
+| Escaped interpolation | `{{ key }}` | HTML-escaped variable output via `escape-html` |
 | Raw interpolation | `{{{ key }}}` | Unescaped raw variable output |
 | Comments | `{{! note }}`, `{{!-- block --}}` | Stripped from rendered output |
 | Conditional blocks | `{{#if key}}...{{else}}...{{/if}}` | Truthy branch (non-empty string, `true`, count `> 0`) |

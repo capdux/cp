@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap ANSI escape sequence matcher & locator reusing @cap/anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP
+Zero-heap ANSI escape sequence matcher & locator reusing anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP
 
 ## 安装与导入
 

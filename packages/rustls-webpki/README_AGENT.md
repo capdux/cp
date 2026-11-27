@@ -1,6 +1,6 @@
 # rustls-webpki@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation WebPKI X.509 certificate verification engine (RFC 6125 DNS hostname matching, RFC 5280 validity & chain verification; reuses @cap/x509-cert) | License: MIT
+> Pure CP zero-allocation WebPKI X.509 certificate verification engine (RFC 6125 DNS hostname matching, RFC 5280 validity & chain verification; reuses x509-cert) | License: MIT
 > Import: `import { ... } from "rustls-webpki";` | Full types: `src/index.d.cp`
 > Deps: `x509-cert`
 

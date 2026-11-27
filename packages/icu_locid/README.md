@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:icu_locid` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))（原库名 `icu_locid` → CP 包名 `icu_locid`）
 
-Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer in pure CP (ICU4X `icu_locid` / `icu_locale_core` parity). Reuses `@cap/tinystr` (`TinyAsciiStr4`, `TinyAsciiStr8`) for stack-inline ASCII subtags and case normalization.
+Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer in pure CP (ICU4X `icu_locid` / `icu_locale_core` parity). Reuses `tinystr` (`TinyAsciiStr4`, `TinyAsciiStr8`) for stack-inline ASCII subtags and case normalization.
 
 ## API
 

@@ -9,7 +9,7 @@ Pure CP, zero-allocation insertion-order-preserving hash map (clean-room MIT par
 
 ## Dependencies
 
-- `@cap/fnv-hash` — Reuses `fnv1a64` for open-addressing hash indexing with zero duplication.
+- `@sindresorhus/fnv1a` — Reuses `fnv1a64` for open-addressing hash indexing with zero duplication.
 
 ## Architecture
 

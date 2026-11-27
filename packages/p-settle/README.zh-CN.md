@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation bounded-concurrency Promise.allSettled task planner (npm p-settle v5 parity) powered by @cap/p-limit in pure CP
+Zero-allocation bounded-concurrency Promise.allSettled task planner (npm p-settle v5 parity) powered by p-limit in pure CP
 
 ## 安装与导入
 

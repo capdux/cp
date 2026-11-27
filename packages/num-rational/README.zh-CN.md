@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation exact rational number (Ratio64) arithmetic library with canonical reduction via @cap/num-integer for CP.
+Zero-allocation exact rational number (Ratio64) arithmetic library with canonical reduction via num-integer for CP.
 
 ## 安装与导入
 

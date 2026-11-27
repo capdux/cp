@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation concurrency limiter and FIFO task slot scheduler (p-limit parity) powered by @cap/yocto-queue in pure CP
+Zero-allocation concurrency limiter and FIFO task slot scheduler (p-limit parity) powered by yocto-queue in pure CP
 
 ## 安装与导入
 

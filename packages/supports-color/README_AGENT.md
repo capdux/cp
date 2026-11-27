@@ -1,6 +1,6 @@
 # supports-color@1.0.0 (Agent Quickref)
 
-> Zero-allocation terminal color capability detection (supports-color v9 parity) powered by @cap/has-flag in pure CP | License: MIT
+> Zero-allocation terminal color capability detection (supports-color v9 parity) powered by has-flag in pure CP | License: MIT
 > Import: `import { ... } from "supports-color";` | Full types: `src/index.d.cp`
 > Deps: `has-flag`
 

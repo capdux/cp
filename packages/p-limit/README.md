@@ -7,7 +7,7 @@
 
 Zero-heap-allocation concurrency limiter and FIFO task slot scheduler in pure CP (clean-room MIT implementation inspired by npm `p-limit`).
 
-Reuses [`@cap/yocto-queue`](../yocto-queue) (`YoctoQueueU64`) for O(1) fixed-capacity FIFO task queuing.
+Reuses [`yocto-queue`](../yocto-queue) (`YoctoQueueU64`) for O(1) fixed-capacity FIFO task queuing.
 
 ## Features
 

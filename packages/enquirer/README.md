@@ -10,7 +10,7 @@ Zero-heap, pure CP interactive CLI prompt state machines for `ConfirmPrompt`, `S
 ## Features
 
 - **Zero heap allocation**: Fixed 16-choice tables with caller-owned render buffers.
-- **Composable**: Reuses `@cap/picocolors` (`PicoFormatter`) for ANSI prompt symbol and active choice styling.
+- **Composable**: Reuses `picocolors` (`PicoFormatter`) for ANSI prompt symbol and active choice styling.
 - **Complete prompt state machines**: `ConfirmPrompt` answer parsing, `SelectPrompt` wrap-around navigation skipping disabled items, and `MultiSelectPrompt` toggling.
 
 ## Usage

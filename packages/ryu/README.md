@@ -9,7 +9,7 @@ Pure CP, zero-allocation fast floating-point-to-string formatter (clean-room MIT
 
 ## Dependencies
 
-- `@cap/itoa` — Reuses `formatU64` for all decimal mantissa and exponent rendering with zero duplication.
+- `itoa` — Reuses `formatU64` for all decimal mantissa and exponent rendering with zero duplication.
 
 ## Features
 

@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:commander` ([https://github.com/tj/commander.js](https://github.com/tj/commander.js))
 
-Zero-allocation CLI command framework for CP — clean-room MIT parity with npm `commander` v12. Composes `@cap/yargs-parser` and `@cap/cliui` with zero duplication.
+Zero-allocation CLI command framework for CP — clean-room MIT parity with npm `commander` v12. Composes `yargs-parser` and `cliui` with zero duplication.
 
-纯 CP 零堆分配命令行框架（对标 npm `commander` v12），复用 `@cap/yargs-parser`（参数解析与短/长标志映射）与 `@cap/cliui`（多列帮助文档排版引擎）。
+纯 CP 零堆分配命令行框架（对标 npm `commander` v12），复用 `yargs-parser`（参数解析与短/长标志映射）与 `cliui`（多列帮助文档排版引擎）。
 
 ## Install / 安装
 
@@ -17,8 +17,8 @@ cap add commander
 
 ## Dependencies / 跨包复用
 
-- `@cap/yargs-parser`: 命令行参数解析、短/长选项、`--no-*` 否定开关与位置参数提取
-- `@cap/cliui`: 多列自动换行终端排版，用于渲染标准 `Usage / Arguments / Options / Commands` 帮助菜单
+- `yargs-parser`: 命令行参数解析、短/长选项、`--no-*` 否定开关与位置参数提取
+- `cliui`: 多列自动换行终端排版，用于渲染标准 `Usage / Arguments / Options / Commands` 帮助菜单
 
 ## API
 

@@ -7,4 +7,4 @@
 
 Zero-heap Node.js/CP module specifier resolver from a base directory supporting relative (`./`/`../`), absolute, bare, and `@scope/pkg` resolution across ancestor `node_modules` / `cap_modules` — clean-room CP equivalent of npm `resolve-from`.
 
-Reuses `@cap/find-up` and `@cap/npm-run-path` as independent packages.
+Reuses `find-up` and `npm-run-path` as independent packages.

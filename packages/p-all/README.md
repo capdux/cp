@@ -7,7 +7,7 @@
 
 Zero-heap-allocation bounded-concurrency batch task planner in pure CP (clean-room MIT implementation inspired by npm `p-all` v5).
 
-Reuses [`@cap/p-limit`](../p-limit) (`PLimit`) for bounded concurrency and FIFO task dispatch.
+Reuses [`p-limit`](../p-limit) (`PLimit`) for bounded concurrency and FIFO task dispatch.
 
 ## Features
 

@@ -1,6 +1,6 @@
 # normalize-url@1.0.0 (Agent Quickref)
 
-> Zero-allocation URL normalization utility (npm normalize-url parity) composing @cap/prepend-http for CP | License: MIT
+> Zero-allocation URL normalization utility (npm normalize-url parity) composing prepend-http for CP | License: MIT
 > Import: `import { ... } from "normalize-url";` | Full types: `src/index.d.cp`
 
 ## Functions

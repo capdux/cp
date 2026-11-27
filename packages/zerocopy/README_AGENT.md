@@ -1,6 +1,6 @@
 # zerocopy@1.0.0 (Agent Quickref)
 
-> Zero-heap zero-copy prefix/suffix byte slice cursor readers & writers with layout validation (crates.io zerocopy equivalent, reuses @cap/bytemuck-crate) | License: MIT
+> Zero-heap zero-copy prefix/suffix byte slice cursor readers & writers with layout validation (crates.io zerocopy equivalent, reuses bytemuck) | License: MIT
 > Import: `import { ... } from "zerocopy";` | Full types: `src/index.d.cp`
 > Deps: `bytemuck`
 

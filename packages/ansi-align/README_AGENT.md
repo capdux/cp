@@ -1,6 +1,6 @@
 # ansi-align@1.0.0 (Agent Quickref)
 
-> Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing @cap/string-width and @cap/widest-line for CP | License: ISC
+> Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing string-width and widest-line for CP | License: ISC
 > Import: `import { ... } from "ansi-align";` | Full types: `src/index.d.cp`
 
 ## Types & Constants

@@ -10,7 +10,7 @@ Zero-allocation streaming parser combinator primitives for CP (clean-room MIT im
 ## Features
 
 - **Zero Heap Allocation**: All combinators return lightweight slice views (`ParseRes { ok, rest, matched }`, `IntRes`, `UintRes`).
-- **Cross-Package Reuse**: `tagNoCase` delegates directly to `@cap/unicase` (`eqAscii`).
+- **Cross-Package Reuse**: `tagNoCase` delegates directly to `unicase` (`eqAscii`).
 - **Byte & Tag Combinators**: `tag`, `tagNoCase`, `take`, `takeUntil`, `isNot`, `isA`.
 - **Character Class Combinators**: `digit0`/`digit1`, `hexDigit1`, `alpha0`/`alpha1`, `alphanumeric0`/`alphanumeric1`, `space0`/`space1`, `multispace0`/`multispace1`, `lineEnding`, `notLineEnding`.
 - **Sequence Combinators**: `delimitedTag`, `precededTag`, `terminatedTag`, `separatedPairTag`.

@@ -7,7 +7,7 @@
 
 Zero-allocation nested bracket query string parser & serializer for CP — clean-room MIT parity with crates.io `serde_qs` v0.13.
 
-Composes [`@cap/percent-encoding`](../percent-encoding) for WHATWG/RFC percent-encoding and form-style (`+` -> space) decoding with zero code duplication.
+Composes [`percent-encoding`](../percent-encoding) for WHATWG/RFC percent-encoding and form-style (`+` -> space) decoding with zero code duplication.
 
 ## Installation
 
@@ -62,11 +62,11 @@ Automatically skips a leading `?`, splits on `&`, and writes raw `QsPair` entrie
 
 ### `getQsValueDecoded(query: string, target_key: string, out: []u8): usize?`
 
-Finds the first entry matching `target_key` (matching both raw and percent-decoded keys) and writes the decoded value (with `+` converted to space and `%XX` decoded via `@cap/percent-encoding`) into `out`. Returns `null` if the key is not found.
+Finds the first entry matching `target_key` (matching both raw and percent-decoded keys) and writes the decoded value (with `+` converted to space and `%XX` decoded via `percent-encoding`) into `out`. Returns `null` if the key is not found.
 
 ### `serializeQs(pairs: []const QsPair, out: []u8): usize`
 
-Percent-encodes keys and values via `@cap/percent-encoding` and joins entries with `&`. Preserves structural `[` and `]` brackets in keys for clean `serde_qs` round-tripping.
+Percent-encodes keys and values via `percent-encoding` and joins entries with `&`. Preserves structural `[` and `]` brackets in keys for clean `serde_qs` round-tripping.
 
 ## License
 

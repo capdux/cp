@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation shebang executable command extractor reusing @cap/shebang-regex for CP
+Zero-allocation shebang executable command extractor reusing shebang-regex for CP
 
 ## 安装与导入
 

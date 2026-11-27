@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation Unicode terminal symbols with automatic ASCII/Windows fallbacks composing @cap/is-unicode-supported in pure CP
+Zero-allocation Unicode terminal symbols with automatic ASCII/Windows fallbacks composing is-unicode-supported in pure CP
 
 ## 安装与导入
 

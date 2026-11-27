@@ -8,9 +8,9 @@
 Zero-heap-allocation multi-column CLI layout engine in pure CP (clean-room MIT implementation inspired by npm `cliui`).
 
 Reuses:
-- [`@cap/wrap-ansi`](../wrap-ansi) — ANSI-preserving text wrapping
-- [`@cap/ansi-strip`](../ansi-strip) — ANSI escape sequence detection & stripping
-- [`@cap/unicode-width`](../unicode-width) — Terminal display column width calculation
+- [`wrap-ansi`](../wrap-ansi) — ANSI-preserving text wrapping
+- [`strip-ansi`](../strip-ansi) — ANSI escape sequence detection & stripping
+- [`unicode-width`](../unicode-width) — Terminal display column width calculation
 
 ## Features
 

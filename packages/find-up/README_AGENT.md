@@ -1,6 +1,6 @@
 # find-up@1.0.0 (Agent Quickref)
 
-> Zero-heap upward ancestor directory file/directory search walker with stopAt boundary and multi-name candidate generation (npm find-up equivalent, reuses @cap/npm-run-path) | License: MIT
+> Zero-heap upward ancestor directory file/directory search walker with stopAt boundary and multi-name candidate generation (npm find-up equivalent, reuses npm-run-path) | License: MIT
 > Import: `import { ... } from "find-up";` | Full types: `src/index.d.cp`
 > Deps: `npm-run-path`
 

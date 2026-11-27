@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation strip-and-reindent multiline string utility (npm redent parity) composing @cap/strip-indent and @cap/indent-string for CP
+Zero-allocation strip-and-reindent multiline string utility (npm redent parity) composing strip-indent and indent-string for CP
 
 ## 安装与导入
 

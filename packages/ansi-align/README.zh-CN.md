@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`ISC` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing @cap/string-width and @cap/widest-line for CP
+Zero-allocation ANSI-aware multiline text alignment (npm ansi-align parity) composing string-width and widest-line for CP
 
 ## 安装与导入
 

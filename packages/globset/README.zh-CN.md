@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation multi-glob set matcher and override engine (Rust globset v0.4 parity) composing @cap/picomatch and @cap/normalize-path
+Zero-allocation multi-glob set matcher and override engine (Rust globset v0.4 parity) composing picomatch and normalize-path
 
 ## 安装与导入
 

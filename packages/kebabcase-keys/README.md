@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:kebabcase-keys` ([https://github.com/sindresorhus/kebabcase-keys](https://github.com/sindresorhus/kebabcase-keys))
 
-Clean-room MIT, zero-heap object key `kebab-case` converter for CP — modeled on npm's `kebabcase-keys` v1 and directly composing `@cap/decamelize-keys` and `@cap/map-obj`.
+Clean-room MIT, zero-heap object key `kebab-case` converter for CP — modeled on npm's `kebabcase-keys` v1 and directly composing `decamelize-keys` and `map-obj`.
 
 ## API
 - `kebabcaseKeys(src: MapObjResult, exclude: []string): DecamelizeKeysResult`

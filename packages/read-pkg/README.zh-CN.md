@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation package.json / cap.json parser and normalizer for CP, reusing @cap/normalize-package-data.
+Zero-allocation package.json / cap.json parser and normalizer for CP, reusing normalize-package-data.
 
 ## 安装与导入
 

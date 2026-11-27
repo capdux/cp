@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation Handlebars template engine (npm handlebars v4 parity) composing @cap/escape-html for XSS-safe rendering in CP
+Zero-allocation Handlebars template engine (npm handlebars v4 parity) composing escape-html for XSS-safe rendering in CP
 
 ## 安装与导入
 

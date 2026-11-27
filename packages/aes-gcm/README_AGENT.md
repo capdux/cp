@@ -1,6 +1,6 @@
 # aes-gcm@1.0.0 (Agent Quickref)
 
-> Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM AEAD authenticated encryption composing @cap/aes and @cap/ghash-gf128 (RustCrypto aes-gcm parity) for CP | License: Apache-2.0 OR MIT
+> Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM AEAD authenticated encryption composing aes and universal-hash (RustCrypto aes-gcm parity) for CP | License: Apache-2.0 OR MIT
 > Import: `import { ... } from "aes-gcm";` | Full types: `src/index.d.cp`
 
 ## Functions

@@ -1,6 +1,6 @@
 # webpki-roots@1.0.0 (Agent Quickref)
 
-> Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing @cap/x509-cert and @cap/spki (webpki-roots parity) in pure CP. | License: MIT
+> Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing x509-cert and spki (webpki-roots parity) in pure CP. | License: MIT
 > Import: `import { ... } from "webpki-roots";` | Full types: `src/index.d.cp`
 > Deps: `spki`, `x509-cert`
 

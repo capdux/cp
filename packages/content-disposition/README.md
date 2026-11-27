@@ -10,8 +10,8 @@ Zero-allocation RFC 6266 / RFC 5987 HTTP `Content-Disposition` response header p
 ## Features
 
 - **Zero heap allocation**: Parses directly into zero-copy slices (`ContentDisposition`) and formats/decodes into caller-provided `[]u8` buffers.
-- **RFC 6266 & RFC 5987 compliant**: Case-insensitive matching of `attachment`, `inline`, `filename`, and `filename*` via `@cap/unicase`.
-- **Automatic UTF-8 `filename*` encoding & decoding**: Reuses `@cap/percent-encoding` (`componentSet`, `percentEncode`, `percentDecode`) with automatic ASCII fallback (`?`) and RFC 5987 `UTF-8''...` emission for non-ASCII filenames.
+- **RFC 6266 & RFC 5987 compliant**: Case-insensitive matching of `attachment`, `inline`, `filename`, and `filename*` via `unicase`.
+- **Automatic UTF-8 `filename*` encoding & decoding**: Reuses `percent-encoding` (`componentSet`, `percentEncode`, `percentDecode`) with automatic ASCII fallback (`?`) and RFC 5987 `UTF-8''...` emission for non-ASCII filenames.
 - **Path-traversal & header-injection protection**: Built-in `sanitizeFilename` strips `/` and `\` directory prefixes, control characters (`0x00..0x1F`, `0x7F`), and relative `.` / `..` names.
 
 ## API

@@ -25,9 +25,9 @@ cap add archy
 import { TreeBuilder, TreeStyle, renderTree } from "archy";
 
 let t = TreeBuilder.init("my-agent@1.0.0");
-const deps = t.addChild(0, "@cap/lru@1.0.0") ?? 0;
-* = t.addChild(deps, "@cap/validator@1.0.0");
-* = t.addChild(0, "@cap/redact@1.0.0");
+const deps = t.addChild(0, "lru-cache@1.0.0") ?? 0;
+* = t.addChild(deps, "validator@1.0.0");
+* = t.addChild(0, "fast-redact@1.0.0");
 
 let out: [1024]u8 = undefined;
 const text = renderTree(&t, out[0..1024]);

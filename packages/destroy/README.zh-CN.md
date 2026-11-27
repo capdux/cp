@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap safe idempotent stream and file-descriptor destroyer with lifecycle completion guard (npm destroy equivalent, reuses @cap/on-finished)
+Zero-heap safe idempotent stream and file-descriptor destroyer with lifecycle completion guard (npm destroy equivalent, reuses on-finished)
 
 ## 安装与导入
 

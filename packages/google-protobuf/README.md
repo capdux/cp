@@ -5,11 +5,11 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:google-protobuf` ([https://github.com/protocolbuffers/protobuf-javascript](https://github.com/protocolbuffers/protobuf-javascript)) / `crates.io:prost` ([https://github.com/tokio-rs/prost](https://github.com/tokio-rs/prost)) / `npm:pbf` ([https://github.com/mapbox/pbf](https://github.com/mapbox/pbf))（原库名 `google-protobuf` → CP 包名 `google-protobuf`）
 
-Zero-heap-allocation Protocol Buffers Wire Format encoder/decoder in pure CP (inspired by Rust `prost`), directly reusing `@cap/varint` (ULEB128 + ZigZag).
+Zero-heap-allocation Protocol Buffers Wire Format encoder/decoder in pure CP (inspired by Rust `prost`), directly reusing `unsigned-varint` (ULEB128 + ZigZag).
 
 ## Dependencies
 
-- `@cap/varint` (`^1.0.0`)
+- `unsigned-varint` (`^1.0.0`)
 
 ## Features
 

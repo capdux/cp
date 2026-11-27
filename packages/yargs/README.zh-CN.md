@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation CLI application framework (npm yargs v17 parity) composing @cap/yargs-parser, @cap/cliui, and @cap/y18n for CP
+Zero-allocation CLI application framework (npm yargs v17 parity) composing yargs-parser, cliui, and y18n for CP
 
 ## 安装与导入
 

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses @cap/itoa)
+Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses itoa)
 
 ## 安装与导入
 

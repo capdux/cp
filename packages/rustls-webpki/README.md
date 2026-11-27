@@ -7,7 +7,7 @@
 
 Pure CP, zero-allocation WebPKI X.509 certificate verification engine (clean-room MIT parity with `rustls-webpki`, strictly following RFC 6125 & RFC 5280).
 
-Composes `@cap/x509-cert` with zero code duplication for X.509 DER parsing, Distinguished Name comparison, validity structures, and self-signed detection.
+Composes `x509-cert` with zero code duplication for X.509 DER parsing, Distinguished Name comparison, validity structures, and self-signed detection.
 
 ## API
 

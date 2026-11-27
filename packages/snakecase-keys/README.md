@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:snakecase-keys` ([https://github.com/bendrucker/snakecase-keys](https://github.com/bendrucker/snakecase-keys))
 
-Clean-room MIT, zero-heap object key `snake_case` converter for CP — modeled on npm's `snakecase-keys` v9 and directly composing `@cap/map-obj` and `@cap/heck-case`.
+Clean-room MIT, zero-heap object key `snake_case` converter for CP — modeled on npm's `snakecase-keys` v9 and directly composing `map-obj` and `heck`.
 
 ## API
 - `SnakecaseKeysResult` (`empty`, `len`, `get`, `pushRaw`, `pushSnake`)

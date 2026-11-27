@@ -5,11 +5,11 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:camelcase-keys` ([https://github.com/sindresorhus/camelcase-keys](https://github.com/sindresorhus/camelcase-keys)) / `npm:decamelize-keys` ([https://github.com/sindresorhus/decamelize-keys](https://github.com/sindresorhus/decamelize-keys))
 
-Zero-heap streaming JSON object key case converter (`camelCase`, `snake_case`, `PascalCase`) in pure CP (clean-room counterpart to npm `camelcase-keys` & `decamelize-keys`). Directly composes `@cap/camelcase`.
+Zero-heap streaming JSON object key case converter (`camelCase`, `snake_case`, `PascalCase`) in pure CP (clean-room counterpart to npm `camelcase-keys` & `decamelize-keys`). Directly composes `ident_case`.
 
 ## Features
 
-- **Real Cross-Package Composition**: Delegates identifier conversion directly to `@cap/camelcase` (`toCamelCase`, `toSnakeCase`, `toPascalCase`).
+- **Real Cross-Package Composition**: Delegates identifier conversion directly to `ident_case` (`toCamelCase`, `toSnakeCase`, `toPascalCase`).
 - **100% Zero Heap Allocation**: Single-pass RFC 8259 JSON key scanner writing directly into caller-provided `out: []u8`.
 - **Values Strictly Preserved**: Converts only object keys (including inside deeply nested objects and arrays); leaves string values, escaped quotes, numbers, and booleans untouched.
 

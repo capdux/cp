@@ -9,8 +9,8 @@ Zero-allocation Rust-style `CookieBuilder`, percent-encoded `Set-Cookie` parser/
 
 ## Dependencies (Zero Duplication)
 
-- `@cap/cookie-jar`: reuses `Cookie`, `parseSetCookie`, `serializeSetCookie`, and `SAMESITE_*` constants.
-- `@cap/percent-encoding`: reuses `componentSet`, `percentEncode`, and `percentDecode`.
+- `tough-cookie`: reuses `Cookie`, `parseSetCookie`, `serializeSetCookie`, and `SAMESITE_*` constants.
+- `percent-encoding`: reuses `componentSet`, `percentEncode`, and `percentDecode`.
 
 ## API
 

@@ -1,6 +1,6 @@
 # string-width@1.0.0 (Agent Quickref)
 
-> Zero-allocation visual terminal column width calculator (npm string-width v7 parity) composing @cap/ansi-strip and @cap/unicode-width for CP | License: MIT
+> Zero-allocation visual terminal column width calculator (npm string-width v7 parity) composing strip-ansi and unicode-width for CP | License: MIT
 > Import: `import { ... } from "string-width";` | Full types: `src/index.d.cp`
 > Deps: `strip-ansi`, `unicode-width`
 

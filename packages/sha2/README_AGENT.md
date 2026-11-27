@@ -1,6 +1,6 @@
 # sha2@1.0.0 (Agent Quickref)
 
-> Zero-heap FIPS 180-4 SHA-256 & SHA-224 streaming hashers with hex output (crates.io sha2 equivalent, reuses @cap/cookie-signature) | License: MIT
+> Zero-heap FIPS 180-4 SHA-256 & SHA-224 streaming hashers with hex output (crates.io sha2 equivalent, reuses cookie-signature) | License: MIT
 > Import: `import { ... } from "sha2";` | Full types: `src/index.d.cp`
 > Deps: `cookie-signature`
 

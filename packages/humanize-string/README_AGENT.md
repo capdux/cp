@@ -1,6 +1,6 @@
 # humanize-string@1.0.0 (Agent Quickref)
 
-> Zero-allocation camelCase/snake_case/kebab-case to humanized sentence converter (npm humanize-string v3 parity) composing @cap/decamelize for CP | License: MIT
+> Zero-allocation camelCase/snake_case/kebab-case to humanized sentence converter (npm humanize-string v3 parity) composing decamelize for CP | License: MIT
 > Import: `import { ... } from "humanize-string";` | Full types: `src/index.d.cp`
 
 ## Functions

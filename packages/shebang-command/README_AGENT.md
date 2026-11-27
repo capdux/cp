@@ -1,6 +1,6 @@
 # shebang-command@1.0.0 (Agent Quickref)
 
-> Zero-allocation shebang executable command extractor reusing @cap/shebang-regex for CP | License: MIT
+> Zero-allocation shebang executable command extractor reusing shebang-regex for CP | License: MIT
 > Import: `import { ... } from "shebang-command";` | Full types: `src/index.d.cp`
 > Deps: `shebang-regex`
 

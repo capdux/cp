@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation URL normalization utility (npm normalize-url parity) composing @cap/prepend-http for CP
+Zero-allocation URL normalization utility (npm normalize-url parity) composing prepend-http for CP
 
 ## 安装与导入
 

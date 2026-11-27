@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:micromatch` ([https://github.com/micromatch/micromatch](https://github.com/micromatch/micromatch))
 
-Zero-allocation glob matching suite for CP — clean-room MIT parity with npm `micromatch` v4. Composes `@cap/picomatch` and `@cap/braces` with zero duplication.
+Zero-allocation glob matching suite for CP — clean-room MIT parity with npm `micromatch` v4. Composes `picomatch` and `braces` with zero duplication.
 
-纯 CP 零堆分配顶级 Glob 匹配套件（对标 npm `micromatch` v4），在 `@cap/picomatch` 通配符引擎与 `@cap/braces` 数值/字母范围展开之上提供全套集合匹配、批量过滤、反向过滤与子路径包含 API。
+纯 CP 零堆分配顶级 Glob 匹配套件（对标 npm `micromatch` v4），在 `picomatch` 通配符引擎与 `braces` 数值/字母范围展开之上提供全套集合匹配、批量过滤、反向过滤与子路径包含 API。
 
 ## Install / 安装
 
@@ -17,8 +17,8 @@ cap add micromatch
 
 ## Dependencies / 跨包复用
 
-- `@cap/picomatch`: 核心 glob 匹配引擎、选项系统与 `scanBase`
-- `@cap/braces`: 数值/字母花括号范围展开（如 `{1..5}`、`{a..z}`）
+- `picomatch`: 核心 glob 匹配引擎、选项系统与 `scanBase`
+- `braces`: 数值/字母花括号范围展开（如 `{1..5}`、`{a..z}`）
 
 ## API
 

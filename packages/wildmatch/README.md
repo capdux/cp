@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap iterative wildcard pattern matcher for CP — modeled on Rust's `wildmatch` crate.
 
 ## Dependencies
-- `@cap/unicase` (`1.0.0`) — reused for ASCII case-insensitive matching.
+- `unicase` (`1.0.0`) — reused for ASCII case-insensitive matching.
 
 ## API
 - `WildMatch` (`new`, `newWithWildcards`, `newIgnoreCase`, `newWithEscape`, `matches`)

@@ -1,6 +1,6 @@
 # pkcs1@1.0.0 (Agent Quickref)
 
-> Zero-allocation RFC 8017 PKCS#1 RSAPublicKey and RSAPrivateKey DER/PEM codec reusing @cap/der-asn1, @cap/pem-rfc7468, and @cap/subtle-ct in pure CP. | License: MIT
+> Zero-allocation RFC 8017 PKCS#1 RSAPublicKey and RSAPrivateKey DER/PEM codec reusing der, pem-rfc7468, and subtle in pure CP. | License: MIT
 > Import: `import { ... } from "pkcs1";` | Full types: `src/index.d.cp`
 > Deps: `der`, `pem-rfc7468`, `subtle`
 

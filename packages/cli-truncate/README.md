@@ -7,7 +7,7 @@
 
 Zero-heap-allocation ANSI-aware CLI string truncator in pure CP, modeled after npm `cli-truncate` v4.
 
-Reuses [`@cap/string-width`](../string-width) for visual terminal column width measurement (ANSI/CJK/Emoji aware) and [`@cap/slice-ansi`](../slice-ansi) for ANSI SGR-preserving column slicing and automatic style resets.
+Reuses [`string-width`](../string-width) for visual terminal column width measurement (ANSI/CJK/Emoji aware) and [`slice-ansi`](../slice-ansi) for ANSI SGR-preserving column slicing and automatic style resets.
 
 ## Features
 

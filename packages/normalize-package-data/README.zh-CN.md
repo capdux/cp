@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation package metadata normalizer and validator for CP, reusing @cap/validate-npm-package-name and @cap/validate-npm-package-license.
+Zero-allocation package metadata normalizer and validator for CP, reusing validate-npm-package-name and validate-npm-package-license.
 
 ## 安装与导入
 

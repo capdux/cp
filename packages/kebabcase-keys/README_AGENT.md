@@ -1,6 +1,6 @@
 # kebabcase-keys@1.0.0 (Agent Quickref)
 
-> Zero-heap object key converter to kebab-case with exclude list, batch conversion, and nested dot-path support, composing @cap/decamelize-keys and @cap/map-obj (clean-room port of npm kebabcase-keys) | License: MIT
+> Zero-heap object key converter to kebab-case with exclude list, batch conversion, and nested dot-path support, composing decamelize-keys and map-obj (clean-room port of npm kebabcase-keys) | License: MIT
 > Import: `import { ... } from "kebabcase-keys";` | Full types: `src/index.d.cp`
 > Deps: `decamelize-keys`, `map-obj`
 

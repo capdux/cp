@@ -5,12 +5,12 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:kleur` ([https://github.com/lukeed/kleur](https://github.com/lukeed/kleur))
 
-Zero-allocation composable chainable ANSI terminal style builder for CP with nested close and reset recovery. Clean-room MIT implementation inspired by npm `kleur` v4, composing `@cap/ansi-styles`.
+Zero-allocation composable chainable ANSI terminal style builder for CP with nested close and reset recovery. Clean-room MIT implementation inspired by npm `kleur` v4, composing `ansi-styles`.
 
 ## Features
 
 - **Fluent immutable chaining**: Compose up to 8 (`KLEUR_MAX_DEPTH`) modifiers, foreground colors, and background colors with zero heap allocation (`KleurChain.new(true).bold().red().bgYellow().format(text, out)`).
-- **Zero ANSI duplication**: Reuses SGR `StylePair` definitions directly from `@cap/ansi-styles`.
+- **Zero ANSI duplication**: Reuses SGR `StylePair` definitions directly from `ansi-styles`.
 - **Reverse-order closing & nested recovery**: Emits open codes in stack order, closes in reverse order, and automatically restores outer styles when embedded close codes or `\x1b[0m` reset sequences appear inside the input text.
 - **Disabled passthrough**: When `enabled == false` (or `depth == 0`), passes text through verbatim without ANSI escape sequences.
 

@@ -1,6 +1,6 @@
 # x509-cert@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation RFC 5280 X.509 v1/v2/v3 certificate DER & PEM codec (reuses @cap/der-asn1, @cap/const-oid, @cap/spki, and @cap/pem-rfc7468) | License: MIT
+> Pure CP zero-allocation RFC 5280 X.509 v1/v2/v3 certificate DER & PEM codec (reuses der, const-oid, spki, and pem-rfc7468) | License: MIT
 > Import: `import { ... } from "x509-cert";` | Full types: `src/index.d.cp`
 > Deps: `const-oid`, `der`, `pem-rfc7468`, `spki`
 

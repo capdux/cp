@@ -1,6 +1,6 @@
 # pkcs8@1.0.0 (Agent Quickref)
 
-> Zero-allocation RFC 5958 PKCS#8 PrivateKeyInfo / OneAsymmetricKey & RFC 8410 Ed25519 DER/PEM codec reusing @cap/spki, @cap/const-oid, @cap/pem-rfc7468, and @cap/subtle-ct in pure CP. | License: MIT
+> Zero-allocation RFC 5958 PKCS#8 PrivateKeyInfo / OneAsymmetricKey & RFC 8410 Ed25519 DER/PEM codec reusing spki, const-oid, pem-rfc7468, and subtle in pure CP. | License: MIT
 > Import: `import { ... } from "pkcs8";` | Full types: `src/index.d.cp`
 > Deps: `const-oid`, `pem-rfc7468`, `spki`, `subtle`
 

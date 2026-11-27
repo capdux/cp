@@ -5,18 +5,18 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:multipart` ([https://github.com/abonander/multipart](https://github.com/abonander/multipart))
 
-Clean-room MIT, zero-heap RFC 7578 `multipart/form-data` streaming reader, writer, and boundary extractor for CP — modeled on crates.io `multipart` / `multer`, built on [`@cap/mediatype`](../mediatype/README.md) and [`@cap/unicase`](../unicase/README.md).
+Clean-room MIT, zero-heap RFC 7578 `multipart/form-data` streaming reader, writer, and boundary extractor for CP — modeled on crates.io `multipart` / `multer`, built on [`mediatype`](../mediatype/README.md) and [`unicase`](../unicase/README.md).
 
 ## Features
 
 - **Zero heap allocation & zero-copy slicing**: `MultipartReader` streams parts directly as slices over the input body without copying payloads.
 - **RFC 7578 Writer**: `MultipartWriter` builds compliant `multipart/form-data` payloads (text fields, file uploads with Content-Type, closing boundary) into a caller-provided `[]u8` buffer.
-- **Case-insensitive Headers & Boundary Extraction**: reuses `@cap/mediatype` for `extractBoundary` and `@cap/unicase` for case-insensitive header and parameter matching.
+- **Case-insensitive Headers & Boundary Extraction**: reuses `mediatype` for `extractBoundary` and `unicase` for case-insensitive header and parameter matching.
 
 ## Dependencies
 
-- `@cap/mediatype` `1.0.0`
-- `@cap/unicase` `1.0.0`
+- `mediatype` `1.0.0`
+- `unicase` `1.0.0`
 
 ## API
 

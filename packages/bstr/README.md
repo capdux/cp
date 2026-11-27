@@ -9,7 +9,7 @@ Pure CP, zero-allocation byte string utilities (clean-room MIT parity with Rust 
 
 ## Design & Reuse
 
-- **Cross-Package Reuse**: Depends on `@cap/memchr` and delegates byte/substring search, line splitting, and single-pass replacement directly to SWAR-accelerated `memchr`, `memrchr`, `memmemFind`, and `memmemRfind`.
+- **Cross-Package Reuse**: Depends on `memchr` and delegates byte/substring search, line splitting, and single-pass replacement directly to SWAR-accelerated `memchr`, `memrchr`, `memmemFind`, and `memmemRfind`.
 - **Zero Heap Allocation**: Trimming and line splitting return zero-copy `SliceRange { start, end }` offsets; transforms write directly into caller-provided `[]u8` buffers.
 - **Strict Lossy UTF-8**: `bstrToUtf8Lossy` enforces RFC 3629 validation (rejecting overlong encodings, UTF-16 surrogates, code points above `U+10FFFF`, and truncated sequences) and emits `U+FFFD` (`0xEF 0xBF 0xBD`) using Unicode maximal-subpart replacement.
 
@@ -18,7 +18,7 @@ Pure CP, zero-allocation byte string utilities (clean-room MIT parity with Rust 
 ### Types
 - `SliceRange { start: usize, end: usize }` with `len(): usize`, `isEmpty(): bool`
 
-### Search & Matching (`@cap/memchr`)
+### Search & Matching (`memchr`)
 - `bstrFind(haystack: []const u8, needle: []const u8): i64`
 - `bstrRfind(haystack: []const u8, needle: []const u8): i64`
 - `bstrFindByte(haystack: []const u8, b: u8): i64`

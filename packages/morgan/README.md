@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap HTTP access log template formatting engine for CP — modeled on npm `morgan` v1.10.
 
 ## Dependencies
-- `@cap/itoa` (`1.0.0`) — reused for zero-heap decimal formatting of HTTP status codes, content lengths, and millisecond response times (`formatU64`).
+- `itoa` (`1.0.0`) — reused for zero-heap decimal formatting of HTTP status codes, content lengths, and millisecond response times (`formatU64`).
 
 ## API
 

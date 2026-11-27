@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`Apache-2.0 OR MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM AEAD authenticated encryption composing @cap/aes and @cap/ghash-gf128 (RustCrypto aes-gcm parity) for CP
+Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM AEAD authenticated encryption composing aes and universal-hash (RustCrypto aes-gcm parity) for CP
 
 ## 安装与导入
 

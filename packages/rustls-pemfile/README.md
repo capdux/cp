@@ -5,7 +5,7 @@
 
 # `rustls-pemfile`
 
-Zero-allocation streaming TLS PEM bundle reader in pure CP (`rustls-pemfile` v2 parity). Reuses `@cap/pem-rfc7468` for RFC 7468 PEM framing, label validation, and Base64 decoding without duplicating any PEM or Base64 logic.
+Zero-allocation streaming TLS PEM bundle reader in pure CP (`rustls-pemfile` v2 parity). Reuses `pem-rfc7468` for RFC 7468 PEM framing, label validation, and Base64 decoding without duplicating any PEM or Base64 logic.
 
 ## Item Kinds
 
@@ -23,10 +23,10 @@ Zero-allocation streaming TLS PEM bundle reader in pure CP (`rustls-pemfile` v2 
 
 - `PemItem` — Decoded item descriptor (`kind: u8`, `der_len: usize`, `ok: bool`, `eof: bool`, plus `isCert()` / `isPrivateKey()`)
 - `PemBundleReader.new(input: string): PemBundleReader` — Creates a zero-allocation cursor over a multi-block PEM bundle
-- `reader.nextItem(der_out: []u8): PemItem` — Skips inter-block comments/whitespace, decodes the next PEM block into `der_out` via `@cap/pem-rfc7468::decodePem`, and classifies its label
+- `reader.nextItem(der_out: []u8): PemItem` — Skips inter-block comments/whitespace, decodes the next PEM block into `der_out` via `pem-rfc7468::decodePem`, and classifies its label
 - `reader.countItems(): usize` — Counts all well-framed PEM blocks from the current cursor without decoding Base64
 - `reader.countCerts(): usize` — Counts `CERTIFICATE` blocks from the current cursor without decoding Base64
-- `reader.peekNextKind(): u8` — Peeks the next PEM item kind via `@cap/pem-rfc7468::decodeLabel` without advancing the cursor
+- `reader.peekNextKind(): u8` — Peeks the next PEM item kind via `pem-rfc7468::decodeLabel` without advancing the cursor
 - `reader.remaining(): usize` / `reader.isEof(): bool` / `reader.reset()` — Cursor state helpers
 - `classifyPemLabel(label: string): u8` — Maps RFC 7468 PEM label strings to `PEM_ITEM_*` constants
 - `isPrivateKeyKind(kind: u8): bool` — Checks whether an item kind is PKCS#8, PKCS#1, or SEC1

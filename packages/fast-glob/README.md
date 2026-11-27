@@ -10,7 +10,7 @@ Zero-heap, pure CP glob pattern set, dynamic pattern detector, and path escaper 
 ## Features
 
 - **Zero heap allocation**: Fixed 16-slot include and 16-slot ignore pattern tables.
-- **Composable**: Reuses `@cap/glob-match` for wildcard and brace alternation matching.
+- **Composable**: Reuses `glob-match` for wildcard and brace alternation matching.
 - **Full `fast-glob` filtering semantics**: Supports `dot`, `deep`, `only_files`, `only_directories`, `case_sensitive`, leading `!` negation patterns, `isDynamicPattern`, `escapePath`, and `convertPathToPattern`.
 
 ## Usage

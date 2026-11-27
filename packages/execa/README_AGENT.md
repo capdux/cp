@@ -1,6 +1,6 @@
 # execa@1.0.0 (Agent Quickref)
 
-> Zero-heap subprocess command builder, POSIX/Windows argument escaper, preferLocal PATH resolver, and ExecaResult inspector (npm execa equivalent, reuses @cap/npm-run-path) | License: MIT
+> Zero-heap subprocess command builder, POSIX/Windows argument escaper, preferLocal PATH resolver, and ExecaResult inspector (npm execa equivalent, reuses npm-run-path) | License: MIT
 > Import: `import { ... } from "execa";` | Full types: `src/index.d.cp`
 > Deps: `npm-run-path`
 

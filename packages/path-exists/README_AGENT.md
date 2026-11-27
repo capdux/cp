@@ -1,6 +1,6 @@
 # path-exists@1.0.0 (Agent Quickref)
 
-> Zero-heap path/file/directory existence checker with symlink awareness and batch filtering (npm path-exists equivalent, reuses @cap/locate-path) | License: MIT
+> Zero-heap path/file/directory existence checker with symlink awareness and batch filtering (npm path-exists equivalent, reuses locate-path) | License: MIT
 > Import: `import { ... } from "path-exists";` | Full types: `src/index.d.cp`
 > Deps: `locate-path`
 

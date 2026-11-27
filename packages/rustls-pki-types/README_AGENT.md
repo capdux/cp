@@ -1,6 +1,6 @@
 # rustls-pki-types@1.0.0 (Agent Quickref)
 
-> Zero-allocation TLS/PKI core types (DnsName, ServerName, UnixTime, PEM object detection & DER decoding via @cap/pem-rfc7468) in pure CP (rustls-pki-types v1 parity). | License: MIT
+> Zero-allocation TLS/PKI core types (DnsName, ServerName, UnixTime, PEM object detection & DER decoding via pem-rfc7468) in pure CP (rustls-pki-types v1 parity). | License: MIT
 > Import: `import { ... } from "rustls-pki-types";` | Full types: `src/index.d.cp`
 > Deps: `pem-rfc7468`
 

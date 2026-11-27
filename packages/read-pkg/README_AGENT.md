@@ -1,6 +1,6 @@
 # read-pkg@1.0.0 (Agent Quickref)
 
-> Zero-allocation package.json / cap.json parser and normalizer for CP, reusing @cap/normalize-package-data. | License: MIT
+> Zero-allocation package.json / cap.json parser and normalizer for CP, reusing normalize-package-data. | License: MIT
 > Import: `import { ... } from "read-pkg";` | Full types: `src/index.d.cp`
 > Deps: `normalize-package-data`
 

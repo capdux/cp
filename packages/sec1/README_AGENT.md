@@ -1,6 +1,6 @@
 # sec1@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation SEC1 v2.0 elliptic curve point encoding & RFC 5915 ECPrivateKey DER/PEM codec (reuses @cap/const-oid, @cap/pem-rfc7468, and @cap/subtle-ct) | License: MIT
+> Pure CP zero-allocation SEC1 v2.0 elliptic curve point encoding & RFC 5915 ECPrivateKey DER/PEM codec (reuses const-oid, pem-rfc7468, and subtle) | License: MIT
 > Import: `import { ... } from "sec1";` | Full types: `src/index.d.cp`
 > Deps: `const-oid`, `pem-rfc7468`, `subtle`
 

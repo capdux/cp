@@ -1,6 +1,6 @@
 # chacha20poly1305@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation RFC 8439 ChaCha20-Poly1305 and XChaCha20-Poly1305 AEAD cipher (reuses @cap/poly1305, @cap/chacha-rng, and @cap/subtle-ct) | License: MIT
+> Pure CP zero-allocation RFC 8439 ChaCha20-Poly1305 and XChaCha20-Poly1305 AEAD cipher (reuses poly1305, rand_chacha, and subtle) | License: MIT
 > Import: `import { ... } from "chacha20poly1305";` | Full types: `src/index.d.cp`
 > Deps: `poly1305`, `rand_chacha`, `subtle`
 

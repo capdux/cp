@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation mathematical expression parser & evaluator (npm mathjs parity) composing @cap/libm with scoped variables, constants, 14 built-in functions, and strict error reporting for CP
+Zero-allocation mathematical expression parser & evaluator (npm mathjs parity) composing libm with scoped variables, constants, 14 built-in functions, and strict error reporting for CP
 
 ## 安装与导入
 

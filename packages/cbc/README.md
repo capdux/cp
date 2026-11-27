@@ -7,7 +7,7 @@
 
 Zero-allocation pure CP implementation of AES-128-CBC and AES-256-CBC block cipher mode of operation with PKCS#7 padding and strict padding validation — clean-room parity with RustCrypto `cbc` (157.0M+ downloads on crates.io, MIT).
 
-纯 CP 零堆分配 AES-128-CBC / AES-256-CBC 块加密模式实现，直接复用 `@cap/aes` 底层分组密码原语，支持整块无填充（通过 NIST SP 800-38A F.2.1 / F.2.5 官方测试向量验证）与标准 PKCS#7 填充及严格去填充校验。
+纯 CP 零堆分配 AES-128-CBC / AES-256-CBC 块加密模式实现，直接复用 `aes` 底层分组密码原语，支持整块无填充（通过 NIST SP 800-38A F.2.1 / F.2.5 官方测试向量验证）与标准 PKCS#7 填充及严格去填充校验。
 
 ## Install / 安装
 

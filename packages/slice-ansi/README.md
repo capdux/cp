@@ -7,7 +7,7 @@
 
 Zero-heap-allocation ANSI-preserving terminal column slicer and truncator in pure CP.
 
-Reuses [`@cap/anstyle-parse`](../anstyle-parse) for VT100/ANSI CSI/OSC/ESC tokenization and SGR parameter parsing, and [`@cap/unicode-width`](../unicode-width) for East Asian / CJK double-width and zero-width column measurement.
+Reuses [`anstyle-parse`](../anstyle-parse) for VT100/ANSI CSI/OSC/ESC tokenization and SGR parameter parsing, and [`unicode-width`](../unicode-width) for East Asian / CJK double-width and zero-width column measurement.
 
 ## Features
 

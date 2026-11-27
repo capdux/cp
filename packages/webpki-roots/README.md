@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:webpki-roots` ([https://github.com/rustls/webpki-roots](https://github.com/rustls/webpki-roots))
 
-Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store in pure CP (`webpki-roots` parity). Reuses `@cap/x509-cert` (`X509Certificate`, `X509Name`) and `@cap/spki` (`encodeSpkiDer`, `fingerprintSpki`).
+Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store in pure CP (`webpki-roots` parity). Reuses `x509-cert` (`X509Certificate`, `X509Name`) and `spki` (`encodeSpkiDer`, `fingerprintSpki`).
 
 ## Constants
 
@@ -24,4 +24,4 @@ Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic tr
 - `store.isTrustedIssuer(cert: X509Certificate): bool` — Checks if an X.509 certificate's issuer matches any trust anchor
 - `store.verifyIssuerTrusted(cert: X509Certificate, current_year: u16): bool` — Verifies trusted issuer and checks anchor + certificate expiration year
 - `mozillaRootAt(idx: usize): TrustAnchorInfo` / `lookupMozillaRootByCn(cn: string): TrustAnchorResult`
-- `certSpkiFingerprint(cert: X509Certificate): u64` — Computes 64-bit SPKI FNV-1a fingerprint via `@cap/spki`
+- `certSpkiFingerprint(cert: X509Certificate): u64` — Computes 64-bit SPKI FNV-1a fingerprint via `spki`

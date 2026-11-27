@@ -1,6 +1,6 @@
 # figures@1.0.0 (Agent Quickref)
 
-> Zero-allocation Unicode terminal symbols with automatic ASCII/Windows fallbacks composing @cap/is-unicode-supported in pure CP | License: MIT
+> Zero-allocation Unicode terminal symbols with automatic ASCII/Windows fallbacks composing is-unicode-supported in pure CP | License: MIT
 > Import: `import { ... } from "figures";` | Full types: `src/index.d.cp`
 
 ## Types & Constants

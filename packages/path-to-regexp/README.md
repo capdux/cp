@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap Express/Router URL path template matching, parameter extraction, and reverse route compilation engine for CP — modeled on npm `path-to-regexp` v8.
 
 ## Dependencies
-- `@cap/unicase` (`1.0.0`) — reused for optional case-insensitive static segment matching (`eqAscii`).
+- `unicase` (`1.0.0`) — reused for optional case-insensitive static segment matching (`eqAscii`).
 
 ## API
 

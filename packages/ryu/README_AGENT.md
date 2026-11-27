@@ -1,6 +1,6 @@
 # ryu@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses @cap/itoa) | License: MIT
+> Pure CP zero-allocation fast float-to-string formatter (Rust ryu v1 parity, reuses itoa) | License: MIT
 > Import: `import { ... } from "ryu";` | Full types: `src/index.d.cp`
 > Deps: `itoa`
 

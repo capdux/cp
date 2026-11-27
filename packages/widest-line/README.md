@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:widest-line` ([https://github.com/sindresorhus/widest-line](https://github.com/sindresorhus/widest-line))
 
-Zero-allocation widest visual terminal line width calculator for CP — clean-room MIT parity with npm `widest-line`. Composes `@cap/string-width` with zero duplication.
+Zero-allocation widest visual terminal line width calculator for CP — clean-room MIT parity with npm `widest-line`. Composes `string-width` with zero duplication.
 
-纯 CP 零堆分配多行文本最大可见列宽计算库（对标 npm `widest-line`），复用 `@cap/string-width` 处理 ANSI 转义序列、CJK 全角宽字符与 Emoji 组合序列，并额外提供逐行宽度采集与制表符对齐宽度计算。
+纯 CP 零堆分配多行文本最大可见列宽计算库（对标 npm `widest-line`），复用 `string-width` 处理 ANSI 转义序列、CJK 全角宽字符与 Emoji 组合序列，并额外提供逐行宽度采集与制表符对齐宽度计算。
 
 ## Install / 安装
 
@@ -17,7 +17,7 @@ cap add widest-line
 
 ## Dependencies / 跨包复用
 
-- `@cap/string-width`: 零堆分配单行终端可见列宽计算（底层组合 `@cap/ansi-strip` 与 `@cap/unicode-width`）
+- `string-width`: 零堆分配单行终端可见列宽计算（底层组合 `strip-ansi` 与 `unicode-width`）
 
 ## API
 

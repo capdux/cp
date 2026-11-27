@@ -1,6 +1,6 @@
 # google-protobuf@1.0.0 (Agent Quickref)
 
-> Zero-allocation Protocol Buffers Wire Format encoder/decoder reusing @cap/varint (ULEB128 + ZigZag) for CP | License: MIT
+> Zero-allocation Protocol Buffers Wire Format encoder/decoder reusing unsigned-varint (ULEB128 + ZigZag) for CP | License: MIT
 > Import: `import { ... } from "google-protobuf";` | Full types: `src/index.d.cp`
 > Deps: `unsigned-varint`
 

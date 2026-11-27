@@ -1,6 +1,6 @@
 # pretty-ms@1.0.0 (Agent Quickref)
 
-> Zero-allocation millisecond decomposer and human-readable duration formatter composing @cap/parse-ms for CP | License: MIT
+> Zero-allocation millisecond decomposer and human-readable duration formatter composing parse-ms for CP | License: MIT
 > Import: `import { ... } from "pretty-ms";` | Full types: `src/index.d.cp`
 > Deps: `parse-ms`
 

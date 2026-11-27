@@ -1,6 +1,6 @@
 # rimraf@1.0.0 (Agent Quickref)
 
-> Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing @cap/fast-glob. | License: MIT
+> Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing fast-glob. | License: MIT
 > Import: `import { ... } from "rimraf";` | Full types: `src/index.d.cp`
 > Deps: `fast-glob`
 

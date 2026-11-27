@@ -1,6 +1,6 @@
 # snakecase-keys@1.0.0 (Agent Quickref)
 
-> Zero-heap object key converter to snake_case with exclude list and fixed key buffer pool, composing @cap/map-obj and @cap/heck-case (clean-room port of npm snakecase-keys) | License: MIT
+> Zero-heap object key converter to snake_case with exclude list and fixed key buffer pool, composing map-obj and heck (clean-room port of npm snakecase-keys) | License: MIT
 > Import: `import { ... } from "snakecase-keys";` | Full types: `src/index.d.cp`
 > Deps: `heck`, `map-obj`
 

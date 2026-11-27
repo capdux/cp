@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap CSS selector parser, W3C Selectors Level 4 specificity calculator, and compound/list element matching engine for CP — modeled on `css-select` + `css-what`.
 
 ## Dependencies
-- `@cap/unicase` (`1.0.0`) — reused for ASCII case-insensitive HTML tag and attribute matching (`eqAscii`).
+- `unicase` (`1.0.0`) — reused for ASCII case-insensitive HTML tag and attribute matching (`eqAscii`).
 
 ## API
 

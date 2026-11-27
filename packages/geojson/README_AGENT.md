@@ -1,6 +1,6 @@
 # geojson@1.0.0 (Agent Quickref)
 
-> Zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop built on @cap/wkt (clean-room port of Rust geojson) | License: MIT
+> Zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop built on wkt (clean-room port of Rust geojson) | License: MIT
 > Import: `import { ... } from "geojson";` | Full types: `src/index.d.cp`
 > Deps: `wkt`
 

@@ -1,6 +1,6 @@
 # icu_locid@1.0.0 (Agent Quickref)
 
-> Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer reusing @cap/tinystr (ICU4X icu_locid parity) in pure CP. | License: MIT
+> Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer reusing tinystr (ICU4X icu_locid parity) in pure CP. | License: MIT
 > Import: `import { ... } from "icu_locid";` | Full types: `src/index.d.cp`
 > Deps: `tinystr`
 

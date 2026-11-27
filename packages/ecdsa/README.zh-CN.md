@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Pure CP zero-allocation ECDSA signature codec (RFC 3279 ASN.1 DER <-> fixed r||s for P-256/P-384, BIP-62 Low-S normalization, constant-time equality via @cap/der-asn1 and @cap/subtle-ct)
+Pure CP zero-allocation ECDSA signature codec (RFC 3279 ASN.1 DER <-> fixed r||s for P-256/P-384, BIP-62 Low-S normalization, constant-time equality via der and subtle)
 
 ## 安装与导入
 

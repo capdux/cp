@@ -1,6 +1,6 @@
 # poly1305@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation RFC 8439 Poly1305 one-time authenticator (Donna 26-bit limbs + constant-time verification via @cap/subtle-ct) | License: MIT
+> Pure CP zero-allocation RFC 8439 Poly1305 one-time authenticator (Donna 26-bit limbs + constant-time verification via subtle) | License: MIT
 > Import: `import { ... } from "poly1305";` | Full types: `src/index.d.cp`
 > Deps: `subtle`
 

@@ -1,6 +1,6 @@
 # is-glob@1.0.0 (Agent Quickref)
 
-> Zero-allocation glob pattern detector reusing @cap/is-extglob for CP | License: MIT
+> Zero-allocation glob pattern detector reusing is-extglob for CP | License: MIT
 > Import: `import { ... } from "is-glob";` | Full types: `src/index.d.cp`
 > Deps: `is-extglob`
 

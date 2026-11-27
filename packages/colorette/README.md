@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:colorette` ([https://github.com/jorgebucaran/colorette](https://github.com/jorgebucaran/colorette))
 
-零堆分配的纯 CP 终端 ANSI 颜色格式化库，Clean-Room MIT 实现对标 npm Top 20 包 `colorette` v2（周下载 1.5 亿+），直接复用 `@cap/ansi-styles` 的 `StylePair` 常量，零重复实现。
+零堆分配的纯 CP 终端 ANSI 颜色格式化库，Clean-Room MIT 实现对标 npm Top 20 包 `colorette` v2（周下载 1.5 亿+），直接复用 `ansi-styles` 的 `StylePair` 常量，零重复实现。
 
 ## 特性
 

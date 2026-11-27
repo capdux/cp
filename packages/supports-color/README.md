@@ -7,7 +7,7 @@
 
 Zero-heap-allocation terminal color capability detection in pure CP (clean-room MIT implementation inspired by npm `supports-color` v9).
 
-Reuses [`@cap/has-flag`](../has-flag) for CLI flag detection (`--no-color`, `--color=16m`, `--color=256`, `--color`, etc., honoring `--`).
+Reuses [`has-flag`](../has-flag) for CLI flag detection (`--no-color`, `--color=16m`, `--color=256`, `--color`, etc., honoring `--`).
 
 ## Precedence Rules
 

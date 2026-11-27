@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:p-locate` ([https://github.com/sindresorhus/p-locate](https://github.com/sindresorhus/p-locate))
 
-Zero-allocation, Clean-room MIT implementation of `p-locate` v7 bounded-concurrency locator planning for CP, reusing `@cap/p-limit`.
+Zero-allocation, Clean-room MIT implementation of `p-locate` v7 bounded-concurrency locator planning for CP, reusing `p-limit`.
 
 ## Features
 
@@ -20,7 +20,7 @@ Zero-allocation, Clean-room MIT implementation of `p-locate` v7 bounded-concurre
 
 ## Dependencies
 
-- `@cap/p-limit` (`1.0.0`)
+- `p-limit` (`1.0.0`)
 
 ## License
 

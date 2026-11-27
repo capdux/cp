@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap RFC 7231 HTTP `Content-Type` header parser and formatter for CP — modeled on npm `content-type` v1.0.
 
 ## Dependencies
-- `@cap/unicase` (`1.0.0`) — reused for ASCII case-insensitive parameter name lookup (`eqAscii`).
+- `unicase` (`1.0.0`) — reused for ASCII case-insensitive parameter name lookup (`eqAscii`).
 
 ## API
 

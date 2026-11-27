@@ -44,9 +44,9 @@ import {
 } from "url-join";
 
 let buf: [512]u8 = undefined;
-let parts: [4]string = ["https://capdux.org/", "/packages/", "@cap/lru", "?v=1"];
+let parts: [4]string = ["https://capdux.org/", "/packages/", "lru-cache", "?v=1"];
 const url = urlJoin(parts[0..4], buf[0..512]);
-// => "https://capdux.org/packages/@cap/lru?v=1"
+// => "https://capdux.org/packages/lru-cache?v=1"
 
 const clean = normalizeUrlPath("/a/b/../c//./d", buf[0..512]);
 // => "/a/c/d"

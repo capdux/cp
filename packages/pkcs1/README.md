@@ -9,9 +9,9 @@ Zero-allocation RFC 8017 Appendix A.1.1 (`RSAPublicKey`) and Appendix A.1.2 (`RS
 
 ## Reused Ecosystem Packages
 
-- `@cap/der-asn1` — `DerReader`, `DerWriter`, `TAG_INTEGER` for strict X.690 DER TLV/SEQUENCE/INTEGER encoding and decoding
-- `@cap/pem-rfc7468` — `encodePem`, `decodePem` for `RSA PUBLIC KEY` and `RSA PRIVATE KEY` PEM blocks
-- `@cap/subtle-ct` — `zeroizeBytes` for secure private key buffer wiping
+- `der` — `DerReader`, `DerWriter`, `TAG_INTEGER` for strict X.690 DER TLV/SEQUENCE/INTEGER encoding and decoding
+- `pem-rfc7468` — `encodePem`, `decodePem` for `RSA PUBLIC KEY` and `RSA PRIVATE KEY` PEM blocks
+- `subtle` — `zeroizeBytes` for secure private key buffer wiping
 
 ## API
 

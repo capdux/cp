@@ -1,6 +1,6 @@
 # bstr@1.0.0 (Agent Quickref)
 
-> Zero-allocation byte string utilities (Rust bstr v1 parity) powered by @cap/memchr SWAR search, line splitting, lossy UTF-8 decoding, and ASCII transforms | License: MIT
+> Zero-allocation byte string utilities (Rust bstr v1 parity) powered by memchr SWAR search, line splitting, lossy UTF-8 decoding, and ASCII transforms | License: MIT
 > Import: `import { ... } from "bstr";` | Full types: `src/index.d.cp`
 > Deps: `memchr`
 

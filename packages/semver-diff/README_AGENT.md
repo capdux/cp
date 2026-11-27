@@ -1,6 +1,6 @@
 # semver-diff@1.0.0 (Agent Quickref)
 
-> Zero-allocation SemVer upgrade diff classifier (major, minor, patch, pre*, build) and breaking-upgrade detector for CP, reusing @cap/semver-range. | License: MIT
+> Zero-allocation SemVer upgrade diff classifier (major, minor, patch, pre*, build) and breaking-upgrade detector for CP, reusing semver. | License: MIT
 > Import: `import { ... } from "semver-diff";` | Full types: `src/index.d.cp`
 > Deps: `semver`
 

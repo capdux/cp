@@ -7,7 +7,7 @@
 
 零堆分配的 CP 原生全能命名风格转换库，Clean-Room MIT 实现完整对标 npm Top 110 顶流包 `change-case` v5（8000 万+/周下载）。
 
-跨包零重复复用 `@cap/camelcase`（`toCamelCase` / `toPascalCase`）与 `@cap/decamelize`（`decamelize`），零堆分配、单遍/原地转换、自动处理缩写词（如 `parseHTTPResponse`、`XMLHttpRequest`）及小缓冲区安全截断。
+跨包零重复复用 `ident_case`（`toCamelCase` / `toPascalCase`）与 `decamelize`（`decamelize`），零堆分配、单遍/原地转换、自动处理缩写词（如 `parseHTTPResponse`、`XMLHttpRequest`）及小缓冲区安全截断。
 
 ## 支持的全部 12 种风格
 
@@ -28,8 +28,8 @@
 
 ## 依赖复用
 
-- `@cap/camelcase`: `1.0.0`
-- `@cap/decamelize`: `1.0.0`
+- `ident_case`: `1.0.0`
+- `decamelize`: `1.0.0`
 
 ## 致谢
 

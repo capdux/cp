@@ -1,6 +1,6 @@
 # bytecount@1.0.0 (Agent Quickref)
 
-> Zero-heap fast byte frequency counting, SWAR 4-byte parallel counter, and UTF-8 char/line counters (crates.io bytecount equivalent, reuses @cap/memchr) | License: MIT
+> Zero-heap fast byte frequency counting, SWAR 4-byte parallel counter, and UTF-8 char/line counters (crates.io bytecount equivalent, reuses memchr) | License: MIT
 > Import: `import { ... } from "bytecount";` | Full types: `src/index.d.cp`
 > Deps: `memchr`
 

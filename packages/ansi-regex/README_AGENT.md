@@ -1,6 +1,6 @@
 # ansi-regex@1.0.0 (Agent Quickref)
 
-> Zero-heap ANSI escape sequence matcher & locator reusing @cap/anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP | License: MIT
+> Zero-heap ANSI escape sequence matcher & locator reusing anstyle-parse, matching npm ansi-regex (400M+/wk) in pure CP | License: MIT
 > Import: `import { ... } from "ansi-regex";` | Full types: `src/index.d.cp`
 > Deps: `anstyle-parse`
 

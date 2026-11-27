@@ -1,6 +1,6 @@
 # spki@1.0.0 (Agent Quickref)
 
-> Pure CP zero-allocation RFC 5280 SubjectPublicKeyInfo (SPKI) & AlgorithmIdentifier DER/PEM codec (reuses @cap/const-oid and @cap/pem-rfc7468) | License: MIT
+> Pure CP zero-allocation RFC 5280 SubjectPublicKeyInfo (SPKI) & AlgorithmIdentifier DER/PEM codec (reuses const-oid and pem-rfc7468) | License: MIT
 > Import: `import { ... } from "spki";` | Full types: `src/index.d.cp`
 > Deps: `const-oid`, `pem-rfc7468`
 

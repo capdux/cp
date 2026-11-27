@@ -7,7 +7,7 @@
 
 Pure CP, zero-allocation RFC 5280 `SubjectPublicKeyInfo` (SPKI) and `AlgorithmIdentifier` DER/PEM codec (parity with RustCrypto `spki`).
 
-Reuses `@cap/const-oid` for ITU-T X.690 OID encoding/decoding and `@cap/pem-rfc7468` for RFC 7468 `PUBLIC KEY` PEM encoding/decoding.
+Reuses `const-oid` for ITU-T X.690 OID encoding/decoding and `pem-rfc7468` for RFC 7468 `PUBLIC KEY` PEM encoding/decoding.
 
 ## API
 

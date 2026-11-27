@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation widest visual terminal line width calculator (npm widest-line parity) composing @cap/string-width for CP
+Zero-allocation widest visual terminal line width calculator (npm widest-line parity) composing string-width for CP
 
 ## 安装与导入
 

@@ -1,6 +1,6 @@
 # rfc3339@1.0.0 (Agent Quickref)
 
-> Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter (reuses @cap/iso8601) | License: MIT
+> Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter (reuses iso8601) | License: MIT
 > Import: `import { ... } from "rfc3339";` | Full types: `src/index.d.cp`
 > Deps: `iso8601`
 

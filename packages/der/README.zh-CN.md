@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder reusing @cap/const-oid for OID TLV handling (RustCrypto der parity) in pure CP.
+Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder reusing const-oid for OID TLV handling (RustCrypto der parity) in pure CP.
 
 ## 安装与导入
 

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop built on @cap/wkt (clean-room port of Rust geojson)
+Zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop built on wkt (clean-room port of Rust geojson)
 
 ## 安装与导入
 

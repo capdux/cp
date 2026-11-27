@@ -1,6 +1,6 @@
 # hkdf@1.0.0 (Agent Quickref)
 
-> Zero-heap RFC 5869 HKDF-SHA256 key derivation function (extract, expand, one-shot) (crates.io hkdf equivalent, reuses @cap/hmac-crate) | License: MIT
+> Zero-heap RFC 5869 HKDF-SHA256 key derivation function (extract, expand, one-shot) (crates.io hkdf equivalent, reuses hmac) | License: MIT
 > Import: `import { ... } from "hkdf";` | Full types: `src/index.d.cp`
 > Deps: `hmac`
 

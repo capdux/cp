@@ -1,6 +1,6 @@
 # read-pkg-up@1.0.0 (Agent Quickref)
 
-> Zero-allocation upward package.json finder, parser, and normalizer for CP, reusing @cap/find-up and @cap/read-pkg. | License: MIT
+> Zero-allocation upward package.json finder, parser, and normalizer for CP, reusing find-up and read-pkg. | License: MIT
 > Import: `import { ... } from "read-pkg-up";` | Full types: `src/index.d.cp`
 > Deps: `find-up`, `read-pkg`
 

@@ -5,11 +5,11 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:anymatch` ([https://github.com/micromatch/anymatch](https://github.com/micromatch/anymatch))
 
-Zero-heap file path & glob matcher with `!pattern` negation support in pure CP (clean-room counterpart to npm `anymatch`). Directly composes `@cap/normalize-path` and `@cap/is-glob`.
+Zero-heap file path & glob matcher with `!pattern` negation support in pure CP (clean-room counterpart to npm `anymatch`). Directly composes `normalize-path` and `is-glob`.
 
 ## Features
 
-- **Real Cross-Package Composition**: Reuses `@cap/normalize-path` (`normalizePathDefault`) and `@cap/is-glob` (`isGlobDefault`) without duplicating logic.
+- **Real Cross-Package Composition**: Reuses `normalize-path` (`normalizePathDefault`) and `is-glob` (`isGlobDefault`) without duplicating logic.
 - **100% Zero Heap Allocation**: Stack-normalized paths and zero-heap `*` / `**` / `?` glob matching.
 - **Full `anymatch` API**: `matchPattern`, `anymatch`, `anymatchIndex`, and `countGlobPatterns`.
 

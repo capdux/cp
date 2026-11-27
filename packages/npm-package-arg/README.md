@@ -18,6 +18,6 @@ Zero-heap npm package name validator and package specifier (`@scope/name@^1.2.3`
 ```cp
 import { parsePackageSpec } from "npm-package-arg";
 
-const s = parsePackageSpec("@cap/http@^1.0.0");
+const s = parsePackageSpec("http@^1.0.0");
 // s.scope => "cap", s.name => "http", s.version_spec => "^1.0.0"
 ```

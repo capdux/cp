@@ -7,7 +7,7 @@
 
 零堆分配的 CP 原生类型安全数据校验框架，Clean-Room MIT 实现对标 npm Top 25 顶流包 `zod` v3（1.5 亿+/周下载）。
 
-跨包零重复复用 `@cap/kind-of`（运行时字面量类型判别）与 `@cap/whatwg-url`（WHATWG 标准 URL 解析校验），单遍扫描顶层 JSON 对象并一次性收集全部字段错误。
+跨包零重复复用 `kind-of`（运行时字面量类型判别）与 `url`（WHATWG 标准 URL 解析校验），单遍扫描顶层 JSON 对象并一次性收集全部字段错误。
 
 ## 核心 API
 
@@ -31,8 +31,8 @@
 
 ## 依赖复用
 
-- `@cap/kind-of`: `1.0.0`
-- `@cap/whatwg-url`: `1.0.0`
+- `kind-of`: `1.0.0`
+- `url`: `1.0.0`
 
 ## 致谢
 

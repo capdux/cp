@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation millisecond decomposer and human-readable duration formatter composing @cap/parse-ms for CP
+Zero-allocation millisecond decomposer and human-readable duration formatter composing parse-ms for CP
 
 ## 安装与导入
 

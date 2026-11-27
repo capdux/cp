@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap RFC 2104 streaming HMAC-SHA256 MAC with constant-time verify and hex output (crates.io hmac equivalent, reuses @cap/cookie-signature)
+Zero-heap RFC 2104 streaming HMAC-SHA256 MAC with constant-time verify and hex output (crates.io hmac equivalent, reuses cookie-signature)
 
 ## 安装与导入
 

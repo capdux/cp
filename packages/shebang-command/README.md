@@ -5,11 +5,11 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:shebang-command` ([https://github.com/kevva/shebang-command](https://github.com/kevva/shebang-command))
 
-Zero-heap-allocation shebang executable command and argument extractor in pure CP (parity with npm `shebang-command`), directly reusing `@cap/shebang-regex`.
+Zero-heap-allocation shebang executable command and argument extractor in pure CP (parity with npm `shebang-command`), directly reusing `shebang-regex`.
 
 ## Dependencies
 
-- `@cap/shebang-regex` (`^1.0.0`)
+- `shebang-regex` (`^1.0.0`)
 
 ## Features
 

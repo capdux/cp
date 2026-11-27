@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:yargs-parser` ([https://github.com/yargs/yargs-parser](https://github.com/yargs/yargs-parser))
 
-Zero-allocation CLI argument parser for CP — clean-room MIT parity with npm `yargs-parser`. Reuses `@cap/camelcase` and `@cap/decamelize` for automatic camelCase & kebab-case option key lookup.
+Zero-allocation CLI argument parser for CP — clean-room MIT parity with npm `yargs-parser`. Reuses `ident_case` and `decamelize` for automatic camelCase & kebab-case option key lookup.
 
-纯 CP 零堆分配命令行参数解析器（对标 npm `yargs-parser`），完整支持 `--key=val` / `--key val` / `--flag` / `--no-flag`、短选项与 `-abc` 组合标志、负数数值防误判、`--` 终止符原样透传、数字/布尔自动类型识别，以及基于 `@cap/camelcase` + `@cap/decamelize` 的双命名风格键查询。
+纯 CP 零堆分配命令行参数解析器（对标 npm `yargs-parser`），完整支持 `--key=val` / `--key val` / `--flag` / `--no-flag`、短选项与 `-abc` 组合标志、负数数值防误判、`--` 终止符原样透传、数字/布尔自动类型识别，以及基于 `ident_case` + `decamelize` 的双命名风格键查询。
 
 ## Install / 安装
 
@@ -17,8 +17,8 @@ cap add yargs-parser
 
 ## Dependencies / 跨包复用
 
-- `@cap/camelcase`: 自动将 `--max-retries` 键名驼峰化为 `maxRetries`
-- `@cap/decamelize`: 自动还原 `--maxRetries` 为规范连字符名 `max-retries`
+- `ident_case`: 自动将 `--max-retries` 键名驼峰化为 `maxRetries`
+- `decamelize`: 自动还原 `--maxRetries` 为规范连字符名 `max-retries`
 
 ## API
 

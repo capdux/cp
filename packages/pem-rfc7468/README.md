@@ -5,14 +5,14 @@
 
 # `pem-rfc7468`
 
-Zero-allocation RFC 7468 PEM encoder and strict decoder in pure CP (RustCrypto `pem-rfc7468` parity). Reuses `@cap/base64ct` for constant-time RFC 4648 Base64 encoding and canonical decoding.
+Zero-allocation RFC 7468 PEM encoder and strict decoder in pure CP (RustCrypto `pem-rfc7468` parity). Reuses `base64ct` for constant-time RFC 4648 Base64 encoding and canonical decoding.
 
 ## API
 
 - `isValidLabel(label: string): bool` — Validates PEM type labels per RFC 7468 §2
-- `pemEncodedLen(label_len: usize, der_len: usize, crlf: bool): usize` — Exact PEM output buffer length pre-calculation (prefixed to avoid Zig flattening collision with `@cap/base64ct::encodedLen`)
+- `pemEncodedLen(label_len: usize, der_len: usize, crlf: bool): usize` — Exact PEM output buffer length pre-calculation (prefixed to avoid Zig flattening collision with `base64ct::encodedLen`)
 - `encodePem(label: string, der: []const u8, line_ending_crlf: bool, out: []u8): i64` — Encodes DER bytes into 64-column wrapped PEM (`-----BEGIN <LABEL>-----` / `-----END <LABEL>-----`)
-- `decodePem(input: string, label_out: []u8, label_len_out: *usize, der_out: []u8): i64` — Skips leading explanatory text, verifies matching BEGIN/END labels, and decodes Base64 payload via `@cap/base64ct`
+- `decodePem(input: string, label_out: []u8, label_len_out: *usize, der_out: []u8): i64` — Skips leading explanatory text, verifies matching BEGIN/END labels, and decodes Base64 payload via `base64ct`
 - `decodeLabel(input: string, label_out: []u8): i64` — Extracts the PEM header label without decoding the body
 - `locatePem(input: string): PemSlice` — Zero-copy PEM block locator
 

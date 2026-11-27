@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation RFC 5958 PKCS#8 PrivateKeyInfo / OneAsymmetricKey & RFC 8410 Ed25519 DER/PEM codec reusing @cap/spki, @cap/const-oid, @cap/pem-rfc7468, and @cap/subtle-ct in pure CP.
+Zero-allocation RFC 5958 PKCS#8 PrivateKeyInfo / OneAsymmetricKey & RFC 8410 Ed25519 DER/PEM codec reusing spki, const-oid, pem-rfc7468, and subtle in pure CP.
 
 ## 安装与导入
 

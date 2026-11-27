@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation 14-style string case converter (crates.io convert_case v0.6 parity) composing @cap/heck-case for CP.
+Zero-allocation 14-style string case converter (crates.io convert_case v0.6 parity) composing heck for CP.
 
 ## 安装与导入
 

@@ -5,18 +5,18 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:geojson` ([https://github.com/georust/geojson](https://github.com/georust/geojson))
 
-Clean-room MIT, zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop for CP — modeled on crates.io `geojson` v0.24 and built directly on [`@cap/wkt`](../wkt/README.md).
+Clean-room MIT, zero-heap RFC 7946 GeoJSON geometry & feature parser, formatter, and WKT interop for CP — modeled on crates.io `geojson` v0.24 and built directly on [`wkt`](../wkt/README.md).
 
 ## Features
 
-- **Zero heap allocation**: reuses `@cap/wkt`'s fixed 32-coordinate `WktGeometry`, `Coord2D`, and `WktBbox` types with caller-provided `[]u8` output buffers.
+- **Zero heap allocation**: reuses `wkt`'s fixed 32-coordinate `WktGeometry`, `Coord2D`, and `WktBbox` types with caller-provided `[]u8` output buffers.
 - **RFC 7946 Geometry Formatting & Parsing**: supports `Point`, `LineString`, and `Polygon` with key-order-independent JSON parsing and strict validation of types and coordinate arrays.
 - **RFC 7946 Feature Formatting**: `formatGeoJsonFeature` emits `"type":"Feature"`, optional escaped `"id"`, optional `"bbox"` (via `bboxWkt`), `"geometry"`, and `"properties":{}`.
 - **One-step GeoJSON ↔ WKT Interop**: `wktToGeoJson` and `geoJsonToWkt` convert seamlessly between WKT and GeoJSON with zero intermediate allocations.
 
 ## Dependencies
 
-- `@cap/wkt` `1.0.0`
+- `wkt` `1.0.0`
 
 ## API
 

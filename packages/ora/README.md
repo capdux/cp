@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap CLI terminal spinner animation and status line renderer for CP — modeled on npm `ora` v8.
 
 ## Dependencies
-- `@cap/ansi-escapes` (`1.0.0`) — reused for `cursorHide`, `cursorShow`, `eraseLine`, and `cursorLeft` terminal escape sequences.
+- `ansi-escapes` (`1.0.0`) — reused for `cursorHide`, `cursorShow`, `eraseLine`, and `cursorLeft` terminal escape sequences.
 
 ## API
 

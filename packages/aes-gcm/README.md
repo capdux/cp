@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:aes-gcm` ([https://github.com/RustCrypto/AEADs](https://github.com/RustCrypto/AEADs))
 
-Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM (96-bit nonce) AEAD authenticated encryption for CP — clean-room parity with RustCrypto `aes-gcm` (229M+ downloads on crates.io), directly composing `@cap/aes` and `@cap/ghash-gf128`.
+Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM (96-bit nonce) AEAD authenticated encryption for CP — clean-room parity with RustCrypto `aes-gcm` (229M+ downloads on crates.io), directly composing `aes` and `universal-hash`.
 
-纯 CP 零堆分配 AES-128-GCM / AES-256-GCM 认证加密库（96-bit Nonce + 128-bit 认证标签 + 恒定时间标签校验），直接复用 `@cap/aes` 与 `@cap/ghash-gf128`，并通过 NIST SP 800-38D 官方测试向量逐字节验证。
+纯 CP 零堆分配 AES-128-GCM / AES-256-GCM 认证加密库（96-bit Nonce + 128-bit 认证标签 + 恒定时间标签校验），直接复用 `aes` 与 `universal-hash`，并通过 NIST SP 800-38D 官方测试向量逐字节验证。
 
 ## Install / 安装
 

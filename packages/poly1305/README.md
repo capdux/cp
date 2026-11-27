@@ -7,7 +7,7 @@
 
 Pure CP, zero-allocation RFC 8439 Poly1305 one-time message authentication code (parity with RustCrypto `poly1305`).
 
-Uses Donna 26-bit limb arithmetic mod `2^130 - 5` with overflow-free constant-time reduction, and reuses `ctEqBytes` from `@cap/subtle-ct` for constant-time tag verification.
+Uses Donna 26-bit limb arithmetic mod `2^130 - 5` with overflow-free constant-time reduction, and reuses `ctEqBytes` from `subtle` for constant-time tag verification.
 
 ## API
 

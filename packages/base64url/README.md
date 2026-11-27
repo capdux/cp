@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap RFC 4648 Section 5 Base64URL (unpadded) encoder, decoder, and standard Base64 converter for CP — modeled on npm's `base64url` v3.
 
 ## Dependencies
-- `@cap/data-encoding` (`1.0.0`) — reused for RFC 4648 Base64URL encoding/decoding.
+- `data-encoding` (`1.0.0`) — reused for RFC 4648 Base64URL encoding/decoding.
 
 ## API
 - `encodeBase64Url(src, out): usize`

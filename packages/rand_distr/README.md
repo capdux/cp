@@ -5,12 +5,12 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rand_distr` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand))（原库名 `rand_distr` → CP 包名 `rand_distr`）
 
-Clean-room MIT, zero-heap probability distribution samplers for CP — modeled on crates.io `rand_distr` v0.4 and built on [`@cap/xoshiro256`](../xoshiro256/README.md).
+Clean-room MIT, zero-heap probability distribution samplers for CP — modeled on crates.io `rand_distr` v0.4 and built on [`rand_xoshiro`](../rand_xoshiro/README.md).
 
 ## Features
 
 - **Zero heap allocation & pure CP**: self-contained `ln`, `sqrt`, and `cos` math helpers with zero external C/Zig math dependencies.
-- **Deterministic PRNG Integration**: directly reuses `@cap/xoshiro256`'s `Xoshiro256` engine and `nextF64`.
+- **Deterministic PRNG Integration**: directly reuses `rand_xoshiro`'s `Xoshiro256` engine and `nextF64`.
 - **Distributions**:
   - `UniformRange`: continuous uniform `[low, high)`
   - `NormalDistr`: Gaussian `N(mean, std_dev^2)` via Box-Muller transform
@@ -20,7 +20,7 @@ Clean-room MIT, zero-heap probability distribution samplers for CP — modeled o
 
 ## Dependencies
 
-- `@cap/xoshiro256` `1.0.0`
+- `rand_xoshiro` `1.0.0`
 
 ## API
 

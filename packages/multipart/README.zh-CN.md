@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap RFC 7578 multipart/form-data streaming reader, writer, and boundary extractor built on @cap/mediatype and @cap/unicase (clean-room port of Rust multipart/multer)
+Zero-heap RFC 7578 multipart/form-data streaming reader, writer, and boundary extractor built on mediatype and unicase (clean-room port of Rust multipart/multer)
 
 ## 安装与导入
 

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Pure CP zero-allocation RFC 8439 ChaCha20-Poly1305 and XChaCha20-Poly1305 AEAD cipher (reuses @cap/poly1305, @cap/chacha-rng, and @cap/subtle-ct)
+Pure CP zero-allocation RFC 8439 ChaCha20-Poly1305 and XChaCha20-Poly1305 AEAD cipher (reuses poly1305, rand_chacha, and subtle)
 
 ## 安装与导入
 

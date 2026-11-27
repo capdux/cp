@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing @cap/x509-cert and @cap/spki (webpki-roots parity) in pure CP.
+Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing x509-cert and spki (webpki-roots parity) in pure CP.
 
 ## 安装与导入
 

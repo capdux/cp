@@ -9,7 +9,7 @@ Zero-allocation exact 64-bit rational number (`Ratio64`) arithmetic library for 
 
 ## Dependencies (Zero Duplication)
 
-- `@cap/num-integer`: reuses `gcdU64`, `divFloor`, and `divCeil` for canonical reduction and rounding.
+- `num-integer`: reuses `gcdU64`, `divFloor`, and `divCeil` for canonical reduction and rounding.
 
 ## Invariants
 

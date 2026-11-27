@@ -1,6 +1,6 @@
 # idna@1.0.0 (Agent Quickref)
 
-> Zero-allocation UTS #46 Internationalized Domain Names (IDNA domainToAscii / domainToUnicode) reusing @cap/icu-normalizer for NFC and @cap/punycode for RFC 3492 Punycode (idna crate parity) in pure CP. | License: MIT
+> Zero-allocation UTS #46 Internationalized Domain Names (IDNA domainToAscii / domainToUnicode) reusing icu_normalizer for NFC and punycode for RFC 3492 Punycode (idna crate parity) in pure CP. | License: MIT
 > Import: `import { ... } from "idna";` | Full types: `src/index.d.cp`
 > Deps: `icu_normalizer`, `punycode`
 

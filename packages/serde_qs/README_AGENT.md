@@ -1,6 +1,6 @@
 # serde_qs@1.0.0 (Agent Quickref)
 
-> Zero-allocation nested bracket query string parser & serializer (crates.io serde_qs v0.13 parity) composing @cap/percent-encoding for CP. | License: MIT
+> Zero-allocation nested bracket query string parser & serializer (crates.io serde_qs v0.13 parity) composing percent-encoding for CP. | License: MIT
 > Import: `import { ... } from "serde_qs";` | Full types: `src/index.d.cp`
 > Deps: `percent-encoding`
 

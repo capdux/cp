@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation streaming TLS PEM bundle reader for X.509 certificates, PKCS#8/PKCS#1/SEC1 private keys, SPKI public keys, CRLs, and CSRs reusing @cap/pem-rfc7468 (rustls-pemfile v2 parity) in pure CP.
+Zero-allocation streaming TLS PEM bundle reader for X.509 certificates, PKCS#8/PKCS#1/SEC1 private keys, SPKI public keys, CRLs, and CSRs reusing pem-rfc7468 (rustls-pemfile v2 parity) in pure CP.
 
 ## 安装与导入
 

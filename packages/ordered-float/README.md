@@ -8,7 +8,7 @@
 Clean-room MIT, zero-heap IEEE-754 total ordering, canonical hashing, `OrderedF64`, `NotNanF64`, and `sortOrderedF64` for CP — modeled on crates.io #85 `ordered-float` (1.2B+ downloads).
 
 ## Dependencies
-- `@cap/fnv-hash` (`1.0.0`) — canonical bit-pattern hashing.
+- `@sindresorhus/fnv1a` (`1.0.0`) — canonical bit-pattern hashing.
 
 ## API
 - `OrderedF64` (`new`, `intoInner`, `isNan`, `isFinite`, `cmp`, `eq`, `hash`, `min`, `max`, `clamp`)

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation byte string utilities (Rust bstr v1 parity) powered by @cap/memchr SWAR search, line splitting, lossy UTF-8 decoding, and ASCII transforms
+Zero-allocation byte string utilities (Rust bstr v1 parity) powered by memchr SWAR search, line splitting, lossy UTF-8 decoding, and ASCII transforms
 
 ## 安装与导入
 

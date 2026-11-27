@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation RFC 8017 PKCS#1 RSAPublicKey and RSAPrivateKey DER/PEM codec reusing @cap/der-asn1, @cap/pem-rfc7468, and @cap/subtle-ct in pure CP.
+Zero-allocation RFC 8017 PKCS#1 RSAPublicKey and RSAPrivateKey DER/PEM codec reusing der, pem-rfc7468, and subtle in pure CP.
 
 ## 安装与导入
 

@@ -1,6 +1,6 @@
 # pem-rfc7468@1.0.0 (Agent Quickref)
 
-> Zero-allocation RFC 7468 PEM encoder and strict decoder reusing @cap/base64ct for constant-time Base64 (RustCrypto pem-rfc7468 parity) in pure CP. | License: MIT
+> Zero-allocation RFC 7468 PEM encoder and strict decoder reusing base64ct for constant-time Base64 (RustCrypto pem-rfc7468 parity) in pure CP. | License: MIT
 > Import: `import { ... } from "pem-rfc7468";` | Full types: `src/index.d.cp`
 > Deps: `base64ct`
 

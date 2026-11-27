@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rfc3339` ([https://github.com/chronotope/chrono](https://github.com/chronotope/chrono))
 
-Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter — clean-room CP package reusing `@cap/iso8601`.
+Zero-heap strict RFC 3339 timestamp parser, Unix epoch converter, and UTC formatter — clean-room CP package reusing `iso8601`.
 
 ## Features
 - `parseRfc3339(s)` — strict RFC 3339 validation (requires `YYYY-MM-DD[T|t| ]HH:MM:SS(.frac)?(Z|±HH:MM)`) + exact `unix_seconds`

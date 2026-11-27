@@ -7,7 +7,7 @@
 
 Pure CP, zero-allocation RFC 8439 ChaCha20-Poly1305 and draft-irtf-cfrg-xchacha XChaCha20-Poly1305 AEAD cipher (parity with RustCrypto `chacha20poly1305`).
 
-Reuses `@cap/poly1305` for Poly1305 authentication, `@cap/chacha-rng` for the RFC 8439 ChaCha20 core block function, and `@cap/subtle-ct` for constant-time tag verification and sensitive buffer zeroization.
+Reuses `poly1305` for Poly1305 authentication, `rand_chacha` for the RFC 8439 ChaCha20 core block function, and `subtle` for constant-time tag verification and sensitive buffer zeroization.
 
 ## API
 

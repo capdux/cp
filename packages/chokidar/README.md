@@ -10,7 +10,7 @@ Zero-heap, pure CP file watcher core state machine, snapshot differ, write-finis
 ## Features
 
 - **Zero heap allocation**: Fixed 32-slot tracked snapshot table and 32-slot FIFO event ring buffer.
-- **Composable**: Reuses `@cap/fast-glob` (`FastGlobOptions`, `GlobPatternSet`) for ignore patterns, dotfile filtering, and depth limiting.
+- **Composable**: Reuses `fast-glob` (`FastGlobOptions`, `GlobPatternSet`) for ignore patterns, dotfile filtering, and depth limiting.
 - **Full watch lifecycle**: Emits `EVT_ADD`, `EVT_CHANGE`, `EVT_UNLINK`, `EVT_ADD_DIR`, and `EVT_UNLINK_DIR` with `ignore_initial` and `await_write_finish_ms` debounce support.
 
 ## Usage

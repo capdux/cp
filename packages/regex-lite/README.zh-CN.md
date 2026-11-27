@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation linear-time Thompson NFA regex engine (Rust regex-lite v0.1 parity) composing @cap/regex-syntax and @cap/memchr
+Zero-allocation linear-time Thompson NFA regex engine (Rust regex-lite v0.1 parity) composing regex-syntax and memchr
 
 ## 安装与导入
 

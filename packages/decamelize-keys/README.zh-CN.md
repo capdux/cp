@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap object key decamelizer with custom separator, exclude list, and fixed key buffer pool, composing @cap/map-obj and @cap/decamelize (clean-room port of npm decamelize-keys)
+Zero-heap object key decamelizer with custom separator, exclude list, and fixed key buffer pool, composing map-obj and decamelize (clean-room port of npm decamelize-keys)
 
 ## 安装与导入
 

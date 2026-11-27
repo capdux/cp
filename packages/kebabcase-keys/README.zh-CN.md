@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap object key converter to kebab-case with exclude list, batch conversion, and nested dot-path support, composing @cap/decamelize-keys and @cap/map-obj (clean-room port of npm kebabcase-keys)
+Zero-heap object key converter to kebab-case with exclude list, batch conversion, and nested dot-path support, composing decamelize-keys and map-obj (clean-room port of npm kebabcase-keys)
 
 ## 安装与导入
 

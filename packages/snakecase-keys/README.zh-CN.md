@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap object key converter to snake_case with exclude list and fixed key buffer pool, composing @cap/map-obj and @cap/heck-case (clean-room port of npm snakecase-keys)
+Zero-heap object key converter to snake_case with exclude list and fixed key buffer pool, composing map-obj and heck (clean-room port of npm snakecase-keys)
 
 ## 安装与导入
 

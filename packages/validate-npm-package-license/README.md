@@ -5,7 +5,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:validate-npm-package-license` ([https://github.com/kemitchell/validate-npm-package-license.js](https://github.com/kemitchell/validate-npm-package-license.js))
 
-Zero-allocation, Clean-room MIT implementation of `validate-npm-package-license` v3 for CP, reusing `isValidSpdxExpression` from `@cap/spdx-expression-parse`.
+Zero-allocation, Clean-room MIT implementation of `validate-npm-package-license` v3 for CP, reusing `isValidSpdxExpression` from `spdx-expression-parse`.
 
 ## Features
 

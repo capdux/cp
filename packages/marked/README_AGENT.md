@@ -1,6 +1,6 @@
 # marked@1.0.0 (Agent Quickref)
 
-> Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP with XSS-safe HTML escaping via @cap/escape-html (clean-room MIT counterpart to npm marked v14). | License: MIT
+> Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP with XSS-safe HTML escaping via escape-html (clean-room MIT counterpart to npm marked v14). | License: MIT
 > Import: `import { ... } from "marked";` | Full types: `src/index.d.cp`
 > Deps: `escape-html`
 

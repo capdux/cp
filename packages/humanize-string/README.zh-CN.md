@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation camelCase/snake_case/kebab-case to humanized sentence converter (npm humanize-string v3 parity) composing @cap/decamelize for CP
+Zero-allocation camelCase/snake_case/kebab-case to humanized sentence converter (npm humanize-string v3 parity) composing decamelize for CP
 
 ## 安装与导入
 

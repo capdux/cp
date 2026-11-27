@@ -7,7 +7,7 @@
 
 Zero-heap 2D/3D/4D linear algebra library with vector operations, matrix multiplication, determinant, inverse, and 3D affine transforms — clean-room CP equivalent of crates.io `nalgebra`.
 
-Reuses `@cap/mint` as an independent package.
+Reuses `mint` as an independent package.
 
 ## Features
 - `vec2Add`/`Sub`/`Scale`/`Norm`, `vec3Add`/`Sub`/`Scale`/`Norm`/`Normalize`/`Lerp`/`Distance`

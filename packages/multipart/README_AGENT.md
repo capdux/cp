@@ -1,6 +1,6 @@
 # multipart@1.0.0 (Agent Quickref)
 
-> Zero-heap RFC 7578 multipart/form-data streaming reader, writer, and boundary extractor built on @cap/mediatype and @cap/unicase (clean-room port of Rust multipart/multer) | License: MIT
+> Zero-heap RFC 7578 multipart/form-data streaming reader, writer, and boundary extractor built on mediatype and unicase (clean-room port of Rust multipart/multer) | License: MIT
 > Import: `import { ... } from "multipart";` | Full types: `src/index.d.cp`
 > Deps: `mediatype`, `unicase`
 

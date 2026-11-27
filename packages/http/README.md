@@ -7,7 +7,7 @@
 
 Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types for CP — clean-room MIT parity with crates.io `http` v1 and RFC 9110.
 
-Composes [`@cap/unicase`](../unicase) (`eqAscii`) for ASCII case-insensitive header name and HTTP version comparison with zero code duplication.
+Composes [`unicase`](../unicase) (`eqAscii`) for ASCII case-insensitive header name and HTTP version comparison with zero code duplication.
 
 ## Installation
 
@@ -59,12 +59,12 @@ const same = headerNameEq("Content-Type", "content-type"); // true
 
 ### HTTP Version
 - Constants: `HTTP_UNKNOWN`, `HTTP_09`, `HTTP_10`, `HTTP_11`, `HTTP_2`, `HTTP_3`
-- `parseHttpVersion(s: string): u8` — ASCII case-insensitive via `@cap/unicase`
+- `parseHttpVersion(s: string): u8` — ASCII case-insensitive via `unicase`
 - `httpVersionAsStr(v: u8): string`
 
 ### HeaderName
 - `isValidHeaderName(name: string): bool` — validates RFC 9110 `1*tchar` token rules
-- `headerNameEq(a: string, b: string): bool` — ASCII case-insensitive equality via `@cap/unicase`
+- `headerNameEq(a: string, b: string): bool` — ASCII case-insensitive equality via `unicase`
 
 ## License
 

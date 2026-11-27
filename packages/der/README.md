@@ -5,7 +5,7 @@
 
 # `der`
 
-Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder in pure CP (RustCrypto `der` parity). Reuses `@cap/const-oid` for canonical OID TLV (`0x06`) handling.
+Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder in pure CP (RustCrypto `der` parity). Reuses `const-oid` for canonical OID TLV (`0x06`) handling.
 
 ## API
 
@@ -22,11 +22,11 @@ Zero-allocation ITU-T X.690 ASN.1 DER encoder and strict decoder in pure CP (Rus
 - `readOctetString(*_): DerSliceResult`
 - `readBitString(*_): DerBitStringResult` — Validates `unused_bits <= 7` and zeroed trailing unused bits
 - `readNull(*_): bool`
-- `readOid(*_): OidParseResult` — Delegates to `@cap/const-oid` (`ObjectIdentifier.fromDer`)
+- `readOid(*_): OidParseResult` — Delegates to `const-oid` (`ObjectIdentifier.fromDer`)
 - `readSequence(*_): DerSequenceResult` — Returns a nested zero-copy `DerReader`
 
 ### `DerWriter` (Fixed-Slice Writer)
 - `DerWriter.new(buf: []u8): DerWriter`
 - `DerWriter.encodedLengthSize(len: usize): usize`
 - `DerWriter.encodeLength(len: usize, out: []u8): usize`
-- `writeTlv`, `writeBool`, `writeU64`, `writeOctetString`, `writeBitString`, `writeNull`, `writeOid` (via `@cap/const-oid` `toDerTlv`), `writeSequence`
+- `writeTlv`, `writeBool`, `writeU64`, `writeOctetString`, `writeBitString`, `writeNull`, `writeOid` (via `const-oid` `toDerTlv`), `writeSequence`

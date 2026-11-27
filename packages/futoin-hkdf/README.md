@@ -7,7 +7,7 @@
 
 Pure CP, zero-allocation RFC 5869 HKDF-SHA256 key derivation function (parity with RustCrypto `hkdf`).
 
-Reuses `hmacSha256` and streaming SHA-256 primitives from `@cap/cookie-signature`.
+Reuses `hmacSha256` and streaming SHA-256 primitives from `cookie-signature`.
 
 ## API
 

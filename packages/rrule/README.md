@@ -5,9 +5,9 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:rrule` ([https://github.com/jkbrzt/rrule](https://github.com/jkbrzt/rrule))（原库名 `rrule` → CP 包名 `rrule`）
 
-Zero-allocation RFC 5545 iCalendar RRULE parser, validator, and canonical formatter for CP — clean-room MIT parity with npm `rrule` v2. Composes `@cap/unicase` for case-insensitive key and enum matching.
+Zero-allocation RFC 5545 iCalendar RRULE parser, validator, and canonical formatter for CP — clean-room MIT parity with npm `rrule` v2. Composes `unicase` for case-insensitive key and enum matching.
 
-纯 CP 零堆分配 RFC 5545 iCalendar 重复规则（RRULE）解析与格式化引擎（对标 npm `rrule` v2），跨包复用 `@cap/unicase` 实现大小写无关的键名与枚举匹配。
+纯 CP 零堆分配 RFC 5545 iCalendar 重复规则（RRULE）解析与格式化引擎（对标 npm `rrule` v2），跨包复用 `unicase` 实现大小写无关的键名与枚举匹配。
 
 ## Install / 安装
 
@@ -17,7 +17,7 @@ cap add rrule
 
 ## Dependencies / 跨包复用
 
-- `@cap/unicase`: 复用 `eqAscii` 进行 RFC 5545 键名（`FREQ`/`INTERVAL`/`BYDAY` 等）与枚举值大小写无关匹配
+- `unicase`: 复用 `eqAscii` 进行 RFC 5545 键名（`FREQ`/`INTERVAL`/`BYDAY` 等）与枚举值大小写无关匹配
 
 ## API
 

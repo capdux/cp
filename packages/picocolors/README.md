@@ -5,12 +5,12 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:picocolors` ([https://github.com/alexeyraspopov/picocolors](https://github.com/alexeyraspopov/picocolors))
 
-Zero-allocation ultra-fast terminal ANSI color & style formatter for CP with nested close-code recovery and `NO_COLOR`/`FORCE_COLOR` environment detection. Clean-room MIT implementation inspired by npm `picocolors` v1, composing `@cap/ansi-styles`.
+Zero-allocation ultra-fast terminal ANSI color & style formatter for CP with nested close-code recovery and `NO_COLOR`/`FORCE_COLOR` environment detection. Clean-room MIT implementation inspired by npm `picocolors` v1, composing `ansi-styles`.
 
 ## Features
 
 - **Zero heap allocation**: Both `PicoFormatter` (writes to caller `[]u8`) and `PicoBuf` (fixed 1024-byte stack accumulator with safe truncation) allocate zero heap memory.
-- **Zero ANSI duplication**: Reuses SGR `StylePair` constants directly from `@cap/ansi-styles`.
+- **Zero ANSI duplication**: Reuses SGR `StylePair` constants directly from `ansi-styles`.
 - **Nested close-code recovery**: Matches `picocolors` `replaceClose` semantics — nesting `blue` inside `red` or `dim` inside `bold` restores the outer style cleanly after the inner close code.
 - **Standard color detection**: `detectColorSupport(no_color, force_color, is_tty)` follows `FORCE_COLOR`, `NO_COLOR`, and TTY precedence. When disabled, text passes through verbatim without ANSI escape sequences.
 

@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-heap path/file/directory existence checker with symlink awareness and batch filtering (npm path-exists equivalent, reuses @cap/locate-path)
+Zero-heap path/file/directory existence checker with symlink awareness and batch filtering (npm path-exists equivalent, reuses locate-path)
 
 ## 安装与导入
 

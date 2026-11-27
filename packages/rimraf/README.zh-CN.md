@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing @cap/fast-glob.
+Zero-allocation recursive deletion safety guard, root-path validator, and bottom-up delete planner for CP, reusing fast-glob.
 
 ## 安装与导入
 

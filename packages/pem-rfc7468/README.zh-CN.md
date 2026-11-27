@@ -4,7 +4,7 @@
 
 > 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-Zero-allocation RFC 7468 PEM encoder and strict decoder reusing @cap/base64ct for constant-time Base64 (RustCrypto pem-rfc7468 parity) in pure CP.
+Zero-allocation RFC 7468 PEM encoder and strict decoder reusing base64ct for constant-time Base64 (RustCrypto pem-rfc7468 parity) in pure CP.
 
 ## 安装与导入
 
