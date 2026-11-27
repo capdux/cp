@@ -37,6 +37,42 @@ pub struct ParsedLink {
     end_pos: usize = 0,
 }
 
+type MdLinkVec16 = @Vector(16, u8);
+
+fn makeMdLinkCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        const is_alpha = (i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z');
+        const is_digit = i >= '0' && i <= '9';
+        const is_alnum = is_alpha || is_digit;
+        if (i == ' ' || i == '\t' || i == '\n' || i == '\r') f |= 1;
+        if (is_digit || (i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) f |= 2;
+        if (is_alnum || i == '+' || i == '-' || i == '.') f |= 4;
+        if (is_alnum || i == '.' || i == '!' || i == '#' || i == '$' || i == '%' ||
+            i == '&' || i == '\'' || i == '*' || i == '+' || i == '/' ||
+            i == '=' || i == '?' || i == '^' || i == '_' || i == '`' ||
+            i == '{' || i == '|' || i == '}' || i == '~' || i == '-') {
+            f |= 8;
+        }
+        if (is_alnum || i == '-' || i == '_' || i == '.' || i == '~' ||
+            i == ':' || i == '/' || i == '?' || i == '#' ||
+            i == '[' || i == ']' || i == '@' || i == '!' ||
+            i == '$' || i == '&' || i == '\'' || i == '(' ||
+            i == ')' || i == '*' || i == '+' || i == ',' ||
+            i == ';' || i == '=') {
+            f |= 16;
+        }
+        if (is_alnum) f |= 32;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const MDLINK_CHAR_LUT: [u8; 256] = makeMdLinkCharLut();
+
 fn isAsciiAlpha(c: u8): bool {
     return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
@@ -46,19 +82,28 @@ fn isAsciiDigit(c: u8): bool {
 }
 
 fn isAsciiAlnum(c: u8): bool {
-    return isAsciiAlpha(c) || isAsciiDigit(c);
+    return (MDLINK_CHAR_LUT[usize(c)] & 32) != 0;
 }
 
 fn isAsciiSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (MDLINK_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return isAsciiDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (MDLINK_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isBlankOnly(s: []const u8): bool {
     let i: usize = 0;
+    const vsp: MdLinkVec16 = @splat(' ' as u8);
+    const vtb: MdLinkVec16 = @splat('\t' as u8);
+    const vnl: MdLinkVec16 = @splat('\n' as u8);
+    const vcr: MdLinkVec16 = @splat('\r' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const v: MdLinkVec16 = s[i .. i + 16][0..16].*;
+        const is_ws = (v == vsp) | (v == vtb) | (v == vnl) | (v == vcr);
+        if (!@reduce(.And, is_ws)) return false;
+    }
     while (i < s.len) {
         if (!isAsciiSpace(s[i])) {
             return false;
@@ -69,15 +114,11 @@ fn isBlankOnly(s: []const u8): bool {
 }
 
 fn isSchemeChar(c: u8): bool {
-    return isAsciiAlnum(c) || c == '+' || c == '-' || c == '.';
+    return (MDLINK_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isEmailLocalChar(c: u8): bool {
-    if (isAsciiAlnum(c)) { return true; }
-    return c == '.' || c == '!' || c == '#' || c == '$' || c == '%' ||
-        c == '&' || c == '\'' || c == '*' || c == '+' || c == '/' ||
-        c == '=' || c == '?' || c == '^' || c == '_' || c == '`' ||
-        c == '{' || c == '|' || c == '}' || c == '~' || c == '-';
+    return (MDLINK_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn isValidEmailDomain(domain: []const u8): bool {
@@ -117,6 +158,14 @@ pub fn parseAutolink(text: []const u8, pos: usize): ParsedLink? {
     }
 
     let end: usize = pos + 1;
+    const vgt: MdLinkVec16 = @splat('>' as u8);
+    const vlt: MdLinkVec16 = @splat('<' as u8);
+    const vsp: MdLinkVec16 = @splat(0x20 as u8);
+    const vdel: MdLinkVec16 = @splat(0x7F as u8);
+    while (end + 16 <= text.len) : (end += 16) {
+        const v: MdLinkVec16 = text[end .. end + 16][0..16].*;
+        if (@reduce(.Or, (v == vgt) | (v == vlt) | (v <= vsp) | (v == vdel))) break;
+    }
     while (end < text.len && text[end] != '>') {
         const c = text[end];
         if (c <= 0x20 || c == 0x7F || c == '<') {
@@ -205,7 +254,13 @@ fn skipCodeSpan(text: []const u8, start: usize): usize? {
         ticks += 1;
     }
     let i = start + ticks;
+    const vtick: MdLinkVec16 = @splat('`' as u8);
     while (i < text.len) {
+        while (i + 16 <= text.len) : (i += 16) {
+            const v: MdLinkVec16 = text[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == vtick)) break;
+        }
+        if (i >= text.len) break;
         if (text[i] == '`') {
             let run: usize = 0;
             while (i + run < text.len && text[i + run] == '`') {
@@ -244,7 +299,18 @@ pub fn parseInlineLinkOrImage(text: []const u8, start_pos: usize): ParsedLink? {
     let pos = bracket_open + 1;
     let depth: usize = 1;
     const scan_limit = if (bracket_open + MD_MAX_LINK_SCAN_BYTES < text.len) (bracket_open + MD_MAX_LINK_SCAN_BYTES) else text.len;
+    const vbs: MdLinkVec16 = @splat('\\' as u8);
+    const vbt: MdLinkVec16 = @splat('`' as u8);
+    const vlb: MdLinkVec16 = @splat('[' as u8);
+    const vrb: MdLinkVec16 = @splat(']' as u8);
     while (pos < scan_limit && depth > 0) {
+        if (pos + 16 <= scan_limit) {
+            const v: MdLinkVec16 = text[pos .. pos + 16][0..16].*;
+            if (!@reduce(.Or, (v == vbs) | (v == vbt) | (v == vlb) | (v == vrb))) {
+                pos += 16;
+                continue;
+            }
+        }
         const c = text[pos];
         if (c == '\\' && pos + 1 < scan_limit) {
             pos += 2;
@@ -438,13 +504,7 @@ pub fn parseInlineLinkOrImage(text: []const u8, start_pos: usize): ParsedLink? {
 }
 
 fn isSafeUrlChar(c: u8): bool {
-    if (isAsciiAlnum(c)) { return true; }
-    return c == '-' || c == '_' || c == '.' || c == '~' ||
-        c == ':' || c == '/' || c == '?' || c == '#' ||
-        c == '[' || c == ']' || c == '@' || c == '!' ||
-        c == '$' || c == '&' || c == '\'' || c == '(' ||
-        c == ')' || c == '*' || c == '+' || c == ',' ||
-        c == ';' || c == '=';
+    return (MDLINK_CHAR_LUT[usize(c)] & 16) != 0;
 }
 
 const HEX_UPPER: string = "0123456789ABCDEF";
@@ -453,7 +513,29 @@ const HEX_UPPER: string = "0123456789ABCDEF";
 pub fn percentEncodeUrl(raw: []const u8, out: []u8): ([]const u8)? {
     let pos: usize = 0;
     let i: usize = 0;
+    const va: MdLinkVec16 = @splat('a' as u8);
+    const vz: MdLinkVec16 = @splat('z' as u8);
+    const vA: MdLinkVec16 = @splat('A' as u8);
+    const vZ: MdLinkVec16 = @splat('Z' as u8);
+    const v0: MdLinkVec16 = @splat('0' as u8);
+    const v9: MdLinkVec16 = @splat('9' as u8);
+    const vdash: MdLinkVec16 = @splat('-' as u8);
+    const vdot: MdLinkVec16 = @splat('.' as u8);
+    const vus: MdLinkVec16 = @splat('_' as u8);
+    const vsl: MdLinkVec16 = @splat('/' as u8);
+    const vcol: MdLinkVec16 = @splat(':' as u8);
     while (i < raw.len) {
+        if (i + 16 <= raw.len && pos + 16 <= out.len) {
+            const v: MdLinkVec16 = raw[i .. i + 16][0..16].*;
+            const safe = ((v >= va) & (v <= vz)) | ((v >= vA) & (v <= vZ)) | ((v >= v0) & (v <= v9)) |
+                (v == vdash) | (v == vdot) | (v == vus) | (v == vsl) | (v == vcol);
+            if (@reduce(.And, safe)) {
+                @memcpy(out[pos .. pos + 16], raw[i .. i + 16]);
+                pos += 16;
+                i += 16;
+                continue;
+            }
+        }
         const c = raw[i];
         if (c == '%' && i + 2 < raw.len && isHexDigit(raw[i + 1]) && isHexDigit(raw[i + 2])) {
             if (pos + 3 > out.len) {

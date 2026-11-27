@@ -29,25 +29,53 @@ pub err CssLayerError {
     RegistryFull,
 }
 
+type CssLayerVec16 = @Vector(16, u8);
+
+fn makeCssLayerCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n') f |= 1;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_' || i >= 0x80) f |= 2 | 4;
+        if ((i >= '0' && i <= '9') || i == '-') f |= 4;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+fn makeCssLayerLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const CSS_LAYER_CHAR_LUT: [u8; 256] = makeCssLayerCharLut();
+const CSS_LAYER_LOWER_LUT: [u8; 256] = makeCssLayerLowerLut();
+
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (CSS_LAYER_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
+    return CSS_LAYER_LOWER_LUT[usize(c)];
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        c == '_' || c >= 0x80;
+    return (CSS_LAYER_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isIdentChar(c: u8): bool {
-    return isIdentStart(c) || (c >= '0' && c <= '9') || c == '-';
+    return (CSS_LAYER_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isValidIdentSegment(seg: []const u8): bool {
@@ -98,6 +126,11 @@ fn bytesEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssLayerVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssLayerVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -112,6 +145,16 @@ fn eqlAsciiIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const vA: CssLayerVec16 = @splat('A' as u8);
+    const vZ: CssLayerVec16 = @splat('Z' as u8);
+    const v20: CssLayerVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssLayerVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssLayerVec16 = b[i .. i + 16][0..16].*;
+        const la = @select(u8, (va >= vA) & (va <= vZ), va | v20, va);
+        const lb = @select(u8, (vb >= vA) & (vb <= vZ), vb | v20, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -125,11 +168,7 @@ fn appendBytes(out: []u8, pos: usize, src: []const u8): usize! {
     if (src.len > out.len - pos) {
         return err.BufferTooSmall;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i += 1;
-    }
+    @memcpy(out[pos .. pos + src.len], src);
     return pos + src.len;
 }
 
@@ -144,6 +183,7 @@ fn appendChar(out: []u8, pos: usize, ch: u8): usize! {
 /// 跳过从 `start_pos` 开始的空白与 `/* ... */` 注释
 fn skipWsAndComments(s: []const u8, start_pos: usize): usize {
     let i = start_pos;
+    const vst: CssLayerVec16 = @splat('*' as u8);
     while (i < s.len) {
         if (isWs(s[i])) {
             i += 1;
@@ -151,6 +191,10 @@ fn skipWsAndComments(s: []const u8, start_pos: usize): usize {
         }
         if (i + 1 < s.len && s[i] == '/' && s[i + 1] == '*') {
             i += 2;
+            while (i + 16 < s.len) : (i += 16) {
+                const v: CssLayerVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == vst)) break;
+            }
             while (i + 1 < s.len && !(s[i] == '*' && s[i + 1] == '/')) {
                 i += 1;
             }
@@ -174,7 +218,29 @@ fn findMatchingDelim(s: []const u8, open_pos: usize, open_ch: u8, close_ch: u8):
     let depth: usize = 0;
     let i = open_pos;
     let in_quote: u8 = 0;
+    const vopen: CssLayerVec16 = @splat(open_ch);
+    const vclose: CssLayerVec16 = @splat(close_ch);
+    const vsl: CssLayerVec16 = @splat('/' as u8);
+    const vst: CssLayerVec16 = @splat('*' as u8);
+    const vdq: CssLayerVec16 = @splat('"' as u8);
+    const vsq: CssLayerVec16 = @splat('\'' as u8);
+    const vbs: CssLayerVec16 = @splat('\\' as u8);
     while (i < s.len) {
+        if (in_quote == 0) {
+            while (i + 16 <= s.len) : (i += 16) {
+                const v: CssLayerVec16 = s[i .. i + 16][0..16].*;
+                const hit = (v == vopen) | (v == vclose) | (v == vsl) | (v == vdq) | (v == vsq);
+                if (@reduce(.Or, hit)) break;
+            }
+            if (i >= s.len) break;
+        } else {
+            const vq: CssLayerVec16 = @splat(in_quote);
+            while (i + 16 <= s.len) : (i += 16) {
+                const v: CssLayerVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, (v == vq) | (v == vbs))) break;
+            }
+            if (i >= s.len) break;
+        }
         const c = s[i];
         if (in_quote != 0) {
             if (c == '\\' && i + 1 < s.len) {
@@ -189,6 +255,10 @@ fn findMatchingDelim(s: []const u8, open_pos: usize, open_ch: u8, close_ch: u8):
         }
         if (c == '/' && i + 1 < s.len && s[i + 1] == '*') {
             i += 2;
+            while (i + 16 < s.len) : (i += 16) {
+                const v: CssLayerVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == vst)) break;
+            }
             while (i + 1 < s.len && !(s[i] == '*' && s[i + 1] == '/')) {
                 i += 1;
             }

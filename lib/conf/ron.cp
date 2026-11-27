@@ -24,24 +24,43 @@ pub struct RonToken {
     lexeme: []const u8 = "",
 }
 
+type RonVec16 = @Vector(16, u8);
+
+fn makeRonCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n') f |= 1;
+        if (i >= '0' && i <= '9') f |= 2 | 4 | 16;
+        if ((i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) f |= 4;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_') f |= 8 | 16;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const RON_CHAR_LUT: [u8; 256] = makeRonCharLut();
+
 fn isAsciiSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (RON_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isAsciiDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (RON_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return isAsciiDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (RON_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return (RON_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn isIdentCont(c: u8): bool {
-    return isIdentStart(c) || isAsciiDigit(c);
+    return (RON_CHAR_LUT[usize(c)] & 16) != 0;
 }
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
@@ -49,6 +68,11 @@ fn eqBytes(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: RonVec16 = a[i .. i + 16][0..16].*;
+        const vb: RonVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -101,6 +125,11 @@ pub struct RonIter {
                 // 行注释 // ...
                 if (n == '/') {
                     _.pos += 2;
+                    const vnl: RonVec16 = @splat('\n' as u8);
+                    while (_.pos + 16 <= _.src.len) : (_.pos += 16) {
+                        const v: RonVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                        if (@reduce(.Or, v == vnl)) break;
+                    }
                     while (_.pos < _.src.len && _.src[_.pos] != '\n') {
                         _.pos += 1;
                     }
@@ -110,7 +139,16 @@ pub struct RonIter {
                 if (n == '*') {
                     _.pos += 2;
                     let depth: usize = 1;
+                    const vsl: RonVec16 = @splat('/' as u8);
+                    const vst: RonVec16 = @splat('*' as u8);
                     while (_.pos < _.src.len && depth > 0) {
+                        if (_.pos + 16 <= _.src.len) {
+                            const v: RonVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                            if (!@reduce(.Or, (v == vsl) | (v == vst))) {
+                                _.pos += 16;
+                                continue;
+                            }
+                        }
                         if (_.src[_.pos] == '/' && _.pos + 1 < _.src.len && _.src[_.pos + 1] == '*') {
                             depth += 1;
                             _.pos += 2;
@@ -144,7 +182,15 @@ pub struct RonIter {
             return null;
         }
         p += 1; // 跳过开引号
+        const vqt: RonVec16 = @splat('"' as u8);
         while (p < _.src.len) {
+            if (p + 16 <= _.src.len) {
+                const v: RonVec16 = _.src[p .. p + 16][0..16].*;
+                if (!@reduce(.Or, v == vqt)) {
+                    p += 16;
+                    continue;
+                }
+            }
             if (_.src[p] == '"') {
                 let matched: usize = 0;
                 while (matched < hashes && p + 1 + matched < _.src.len && _.src[p + 1 + matched] == '#') {
@@ -162,7 +208,16 @@ pub struct RonIter {
 
     fn scanString(*_, start: usize): RonToken {
         let p = start + 1;
+        const vqt: RonVec16 = @splat('"' as u8);
+        const vbs: RonVec16 = @splat('\\' as u8);
         while (p < _.src.len) {
+            if (p + 16 <= _.src.len) {
+                const v: RonVec16 = _.src[p .. p + 16][0..16].*;
+                if (!@reduce(.Or, (v == vqt) | (v == vbs))) {
+                    p += 16;
+                    continue;
+                }
+            }
             const c = _.src[p];
             if (c == '\\') {
                 if (p + 1 >= _.src.len) {

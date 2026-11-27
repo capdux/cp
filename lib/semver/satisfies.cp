@@ -128,19 +128,34 @@ struct SetEvalResult {
     matched: bool;
 }
 
+type SemverVec16 = @Vector(16, u8);
+
+fn makeSemverCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n') f |= 1;
+        if (i >= '0' && i <= '9') f |= 2 | 4;
+        if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || i == '-') f |= 4;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const SEMVER_CHAR_LUT: [u8; 256] = makeSemverCharLut();
+
 fn isSpace(b: u8): bool {
-    return b == ' ' || b == '\t' || b == '\r' || b == '\n';
+    return (SEMVER_CHAR_LUT[usize(b)] & 1) != 0;
 }
 
 fn isDigit(b: u8): bool {
-    return b >= '0' && b <= '9';
+    return (SEMVER_CHAR_LUT[usize(b)] & 2) != 0;
 }
 
 fn isIdentChar(b: u8): bool {
-    return (b >= '0' && b <= '9') ||
-        (b >= 'A' && b <= 'Z') ||
-        (b >= 'a' && b <= 'z') ||
-        b == '-';
+    return (SEMVER_CHAR_LUT[usize(b)] & 4) != 0;
 }
 
 fn isWildcardSegment(seg: []const u8): bool {
@@ -150,6 +165,12 @@ fn isWildcardSegment(seg: []const u8): bool {
 fn isAllDigits(seg: []const u8): bool {
     if (seg.len == 0) return false;
     let i: usize = 0;
+    const v0: SemverVec16 = @splat('0' as u8);
+    const v9: SemverVec16 = @splat('9' as u8);
+    while (i + 16 <= seg.len) : (i += 16) {
+        const v: SemverVec16 = seg[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v < v0) | (v > v9))) return false;
+    }
     while (i < seg.len) {
         if (!isDigit(seg[i])) return false;
         i += 1;
@@ -224,10 +245,19 @@ fn isValidBuildMetadata(build: []const u8): bool {
 fn comparePrerelease(a: []const u8, b: []const u8): i32 {
     let pa: usize = 0;
     let pb: usize = 0;
+    const vdot: SemverVec16 = @splat('.' as u8);
     while (pa < a.len && pb < b.len) {
         let ea = pa;
+        while (ea + 16 <= a.len) : (ea += 16) {
+            const v: SemverVec16 = a[ea .. ea + 16][0..16].*;
+            if (@reduce(.Or, v == vdot)) break;
+        }
         while (ea < a.len && a[ea] != '.') ea += 1;
         let eb = pb;
+        while (eb + 16 <= b.len) : (eb += 16) {
+            const v: SemverVec16 = b[eb .. eb + 16][0..16].*;
+            if (@reduce(.Or, v == vdot)) break;
+        }
         while (eb < b.len && b[eb] != '.') eb += 1;
 
         const sa = a[pa..ea];
@@ -246,6 +276,11 @@ fn comparePrerelease(a: []const u8, b: []const u8): i32 {
             if (ta.len < tb.len) return -1;
             if (ta.len > tb.len) return 1;
             let k: usize = 0;
+            while (k + 16 <= ta.len) : (k += 16) {
+                const va: SemverVec16 = ta[k .. k + 16][0..16].*;
+                const vb: SemverVec16 = tb[k .. k + 16][0..16].*;
+                if (@reduce(.Or, va ^ vb) != 0) break;
+            }
             while (k < ta.len) {
                 if (ta[k] < tb[k]) return -1;
                 if (ta[k] > tb[k]) return 1;
@@ -258,6 +293,11 @@ fn comparePrerelease(a: []const u8, b: []const u8): i32 {
         } else {
             const min_len = if (sa.len < sb.len) sa.len else sb.len;
             let k: usize = 0;
+            while (k + 16 <= min_len) : (k += 16) {
+                const va: SemverVec16 = sa[k .. k + 16][0..16].*;
+                const vb: SemverVec16 = sb[k .. k + 16][0..16].*;
+                if (@reduce(.Or, va ^ vb) != 0) break;
+            }
             while (k < min_len) {
                 if (sa[k] < sb[k]) return -1;
                 if (sa[k] > sb[k]) return 1;
@@ -643,7 +683,15 @@ pub fn satisfiesVersion(ver: SemverVersion, range_str: []const u8): bool {
     let any_matched = false;
     let start: usize = 0;
     let i: usize = 0;
+    const vpipe: SemverVec16 = @splat('|' as u8);
     while (i <= range_str.len) {
+        if (i + 16 <= range_str.len) {
+            const v: SemverVec16 = range_str[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == vpipe)) {
+                i += 16;
+                continue;
+            }
+        }
         const is_or = (i + 1 < range_str.len && range_str[i] == '|' && range_str[i + 1] == '|');
         if (i == range_str.len || is_or) {
             const segment = range_str[start..i];
@@ -674,7 +722,15 @@ pub fn isValidSemverRange(range_str: []const u8): bool {
     const dummy = SemverVersion { major: 0, minor: 0, patch: 0, pre: "" };
     let start: usize = 0;
     let i: usize = 0;
+    const vpipe: SemverVec16 = @splat('|' as u8);
     while (i <= range_str.len) {
+        if (i + 16 <= range_str.len) {
+            const v: SemverVec16 = range_str[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == vpipe)) {
+                i += 16;
+                continue;
+            }
+        }
         const is_or = (i + 1 < range_str.len && range_str[i] == '|' && range_str[i + 1] == '|');
         if (i == range_str.len || is_or) {
             const segment = range_str[start..i];

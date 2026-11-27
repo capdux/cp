@@ -12,16 +12,52 @@ import {
     SyslogMessage,
 } from "./types.cp";
 
+type SyslogVec16 = @Vector(16, u8);
+
+fn makeSyslogCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let flags: u8 = 0;
+        if (i >= '0' && i <= '9') flags |= 1;
+        if (i >= 33 && i <= 126) {
+            flags |= 2;
+            if (i != '=' && i != ']' && i != '"') flags |= 4;
+        }
+        lut[i] = flags;
+    }
+    return lut;
+}
+
+const SYSLOG_CHAR_LUT: [u8; 256] = makeSyslogCharLut();
+
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (SYSLOG_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isPrintableAscii(c: u8): bool {
-    return c >= 33 && c <= 126;
+    return (SYSLOG_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isSdNameChar(c: u8): bool {
-    return isPrintableAscii(c) && c != '=' && c != ']' && c != '"';
+    return (SYSLOG_CHAR_LUT[usize(c)] & 4) != 0;
+}
+
+fn scanSdName(raw: []const u8, start: usize): usize {
+    let p = start;
+    const v33: SyslogVec16 = @splat(33 as u8);
+    const v126: SyslogVec16 = @splat(126 as u8);
+    const veq: SyslogVec16 = @splat('=' as u8);
+    const vrb: SyslogVec16 = @splat(']' as u8);
+    const vqt: SyslogVec16 = @splat('"' as u8);
+    while (p + 16 <= raw.len) : (p += 16) {
+        const v: SyslogVec16 = raw[p .. p + 16][0..16].*;
+        const stop = (v < v33) | (v > v126) | (v == veq) | (v == vrb) | (v == vqt);
+        if (@reduce(.Or, stop)) break;
+    }
+    while (p < raw.len && isSdNameChar(raw[p])) : (p += 1) {}
+    return p;
 }
 
 fn dupSlice(alloc: std.mem.Allocator, s: []const u8): ([]const u8) ! SyslogError {
@@ -69,6 +105,14 @@ fn parsePri(raw: []const u8, out_pos: *usize): u8 ! SyslogError {
 fn readHeaderToken(raw: []const u8, pos: *usize): ([]const u8) ! SyslogError {
     if (pos.* >= raw.len) return SyslogError.MalformedHeader;
     let start = pos.*;
+    let p = start;
+    const v33: SyslogVec16 = @splat(33 as u8);
+    const v126: SyslogVec16 = @splat(126 as u8);
+    while (p + 16 <= raw.len) : (p += 16) {
+        const v: SyslogVec16 = raw[p .. p + 16][0..16].*;
+        if (@reduce(.Or, (v < v33) | (v > v126))) break;
+    }
+    pos.* = p;
     while (pos.* < raw.len && raw[pos.*] != ' ') : (pos.* += 1) {
         if (!isPrintableAscii(raw[pos.*])) {
             return SyslogError.MalformedHeader;
@@ -178,7 +222,7 @@ fn parseSdElement(alloc: std.mem.Allocator, raw: []const u8, pos: *usize): SdEle
     pos.* += 1;
 
     let id_start = pos.*;
-    while (pos.* < raw.len && isSdNameChar(raw[pos.*])) : (pos.* += 1) {}
+    pos.* = scanSdName(raw, pos.*);
     if (pos.* == id_start) {
         return SyslogError.MalformedStructuredData;
     }
@@ -187,6 +231,10 @@ fn parseSdElement(alloc: std.mem.Allocator, raw: []const u8, pos: *usize): SdEle
 
     let params: std.ArrayList(SdParam) = .empty;
     errdefer freeSdParams(alloc, &params);
+
+    const vqt: SyslogVec16 = @splat('"' as u8);
+    const vbs: SyslogVec16 = @splat('\\' as u8);
+    const vrb: SyslogVec16 = @splat(']' as u8);
 
     while (true) {
         if (pos.* >= raw.len) {
@@ -202,7 +250,7 @@ fn parseSdElement(alloc: std.mem.Allocator, raw: []const u8, pos: *usize): SdEle
         pos.* += 1;
 
         let name_start = pos.*;
-        while (pos.* < raw.len && isSdNameChar(raw[pos.*])) : (pos.* += 1) {}
+        pos.* = scanSdName(raw, pos.*);
         if (pos.* == name_start) {
             return SyslogError.MalformedStructuredData;
         }
@@ -217,6 +265,17 @@ fn parseSdElement(alloc: std.mem.Allocator, raw: []const u8, pos: *usize): SdEle
 
         let closed = false;
         while (pos.* < raw.len) {
+            const chunk_start = pos.*;
+            let scan = chunk_start;
+            while (scan + 16 <= raw.len) : (scan += 16) {
+                const v: SyslogVec16 = raw[scan .. scan + 16][0..16].*;
+                if (@reduce(.Or, (v == vqt) | (v == vbs) | (v == vrb))) break;
+            }
+            if (scan > chunk_start) {
+                val_buf.appendSlice(alloc, raw[chunk_start..scan]) catch return SyslogError.OutOfMemory;
+                pos.* = scan;
+                if (pos.* >= raw.len) break;
+            }
             let ch = raw[pos.*];
             if (ch == '"') {
                 pos.* += 1;
@@ -407,6 +466,11 @@ pub fn parseRfc3164(alloc: std.mem.Allocator, raw: []const u8): SyslogMessage ! 
 
     // HOSTNAME
     let host_start = pos;
+    const vsp: SyslogVec16 = @splat(' ' as u8);
+    while (pos + 16 <= raw.len) : (pos += 16) {
+        const v: SyslogVec16 = raw[pos .. pos + 16][0..16].*;
+        if (@reduce(.Or, v == vsp)) break;
+    }
     while (pos < raw.len && raw[pos] != ' ') : (pos += 1) {}
     if (pos == host_start) {
         return SyslogError.MalformedHeader;
@@ -425,6 +489,11 @@ pub fn parseRfc3164(alloc: std.mem.Allocator, raw: []const u8): SyslogMessage ! 
     // Find ':' before any space in tag
     let colon_idx: usize? = null;
     let k: usize = 0;
+    const vcol: SyslogVec16 = @splat(':' as u8);
+    while (k + 16 <= rest.len) : (k += 16) {
+        const v: SyslogVec16 = rest[k .. k + 16][0..16].*;
+        if (@reduce(.Or, (v == vcol) | (v == vsp))) break;
+    }
     while (k < rest.len) : (k += 1) {
         if (rest[k] == ':') {
             colon_idx = k;

@@ -60,16 +60,34 @@ pub struct RisStats {
 // 内部零分配切片与标签识别辅助函数
 // ---------------------------------------------------------------------------
 
+type RisVec16 = @Vector(16, u8);
+
+fn makeRisCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i >= 'A' && i <= 'Z') f |= 1 | 2;
+        if (i >= '0' && i <= '9') f |= 2;
+        if (i == ' ' || i == '\t') f |= 4;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const RIS_CHAR_LUT: [u8; 256] = makeRisCharLut();
+
 fn isUpper(c: u8): bool {
-    return c >= 'A' && c <= 'Z';
+    return (RIS_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isUpperOrDigit(c: u8): bool {
-    return (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+    return (RIS_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isSpaceOrTab(c: u8): bool {
-    return c == ' ' || c == '\t';
+    return (RIS_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -89,6 +107,11 @@ fn eqlBytes(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: RisVec16 = a[i .. i + 16][0..16].*;
+        const vb: RisVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -113,6 +136,11 @@ fn nextLine(data: []const u8, pos: *usize): ([]const u8)? {
         return null;
     }
     let i = start;
+    const vnl: RisVec16 = @splat('\n' as u8);
+    while (i + 16 <= data.len) : (i += 16) {
+        const v: RisVec16 = data[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vnl)) break;
+    }
     while (i < data.len && data[i] != '\n') {
         i += 1;
     }

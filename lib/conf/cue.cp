@@ -32,28 +32,48 @@ pub struct CueToken {
     lexeme: []const u8 = "",
 }
 
+type CueVec16 = @Vector(16, u8);
+
+fn makeCueCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        let f: u8 = 0;
+        if (i == ' ' || i == '\t' || i == '\r' || i == '\n') f |= 1;
+        if (i >= '0' && i <= '9') f |= 2 | 4 | 16;
+        if ((i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) f |= 4;
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_') f |= 8 | 16;
+        if (i == 'K' || i == 'M' || i == 'G' || i == 'T' || i == 'P') f |= 32;
+        lut[i] = f;
+    }
+    return lut;
+}
+
+const CUE_CHAR_LUT: [u8; 256] = makeCueCharLut();
+
 fn isAsciiSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (CUE_CHAR_LUT[usize(c)] & 1) != 0;
 }
 
 fn isAsciiDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (CUE_CHAR_LUT[usize(c)] & 2) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return isAsciiDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (CUE_CHAR_LUT[usize(c)] & 4) != 0;
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return (CUE_CHAR_LUT[usize(c)] & 8) != 0;
 }
 
 fn isIdentCont(c: u8): bool {
-    return isIdentStart(c) || isAsciiDigit(c);
+    return (CUE_CHAR_LUT[usize(c)] & 16) != 0;
 }
 
 fn isCueMultiplier(c: u8): bool {
-    return c == 'K' || c == 'M' || c == 'G' || c == 'T' || c == 'P';
+    return (CUE_CHAR_LUT[usize(c)] & 32) != 0;
 }
 
 fn eqBytes(a: []const u8, b: []const u8): bool {
@@ -61,6 +81,11 @@ fn eqBytes(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CueVec16 = a[i .. i + 16][0..16].*;
+        const vb: CueVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -103,6 +128,11 @@ pub struct CueIter {
             }
             if (c == '/' && _.pos + 1 < _.src.len && _.src[_.pos + 1] == '/') {
                 _.pos += 2;
+                const vnl: CueVec16 = @splat('\n' as u8);
+                while (_.pos + 16 <= _.src.len) : (_.pos += 16) {
+                    const v: CueVec16 = _.src[_.pos .. _.pos + 16][0..16].*;
+                    if (@reduce(.Or, v == vnl)) break;
+                }
                 while (_.pos < _.src.len && _.src[_.pos] != '\n') {
                     _.pos += 1;
                 }
@@ -113,10 +143,19 @@ pub struct CueIter {
     }
 
     fn scanQuoted(*_, start: usize, quote: u8, kind: CueTokenKind): CueToken {
+        const vqt: CueVec16 = @splat(quote);
+        const vbs: CueVec16 = @splat('\\' as u8);
         // 多行三引号 """...""" 或 '''...'''
         if (start + 2 < _.src.len && _.src[start + 1] == quote && _.src[start + 2] == quote) {
             let p = start + 3;
             while (p + 2 < _.src.len) {
+                if (p + 16 <= _.src.len) {
+                    const v: CueVec16 = _.src[p .. p + 16][0..16].*;
+                    if (!@reduce(.Or, (v == vqt) | (v == vbs))) {
+                        p += 16;
+                        continue;
+                    }
+                }
                 if (_.src[p] == '\\') {
                     p += 2;
                     continue;
@@ -131,7 +170,15 @@ pub struct CueIter {
 
         // 单行引号串
         let p = start + 1;
+        const vnl: CueVec16 = @splat('\n' as u8);
         while (p < _.src.len) {
+            if (p + 16 <= _.src.len) {
+                const v: CueVec16 = _.src[p .. p + 16][0..16].*;
+                if (!@reduce(.Or, (v == vqt) | (v == vbs) | (v == vnl))) {
+                    p += 16;
+                    continue;
+                }
+            }
             const c = _.src[p];
             if (c == '\\') {
                 if (p + 1 >= _.src.len) {
