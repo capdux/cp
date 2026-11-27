@@ -153,7 +153,7 @@ pub struct MysqlStreamFramer {
     read_pos: usize,
     max_packet_bytes: usize,
 
-    pub fn init(max_packet_bytes: usize): MysqlStreamFramer {
+    pub static fn init(max_packet_bytes: usize): MysqlStreamFramer {
         return MysqlStreamFramer{
             .buf = std.ArrayList(u8).empty,
             .read_pos = 0,

@@ -104,7 +104,7 @@ pub struct FlvTagIter {
     pos: usize,
     done: bool,
 
-    fn init(data: []const u8): FlvTagIter {
+    static fn init(data: []const u8): FlvTagIter {
         if (hdr := parseFlvHeader(data)) {
             const first_tag_off = (hdr.data_offset as usize) + 4; // skip PreviousTagSize0
             if (first_tag_off <= data.len) {

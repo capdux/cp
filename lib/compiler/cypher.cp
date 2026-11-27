@@ -431,7 +431,7 @@ pub struct CypherIter {
 pub struct CypherParamIter {
     iter: CypherIter,
 
-    fn init(query: []const u8): CypherParamIter {
+    static fn init(query: []const u8): CypherParamIter {
         return CypherParamIter{
             .iter = CypherIter.init(query),
         };

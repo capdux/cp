@@ -13,7 +13,7 @@ pub struct BorshWriter {
     buf: []u8,
     pos: usize,
 
-    fn init(buf: []u8): BorshWriter {
+    static fn init(buf: []u8): BorshWriter {
         return BorshWriter{
             .buf = buf,
             .pos = 0,
@@ -186,7 +186,7 @@ pub struct BorshReader {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): BorshReader {
+    static fn init(data: []const u8): BorshReader {
         return BorshReader{
             .data = data,
             .pos = 0,

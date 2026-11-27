@@ -235,7 +235,7 @@ pub struct PppoeWriter {
     pos: usize,
     valid: bool,
 
-    fn init(buf: []u8, code: u8, session_id: u16): PppoeWriter {
+    static fn init(buf: []u8, code: u8, session_id: u16): PppoeWriter {
         if (buf.len < PPPOE_HEADER_SIZE) {
             return PppoeWriter{
                 .buf = buf,

@@ -57,7 +57,7 @@ pub struct CircuitBreaker {
     rejected_count: u64,
 
     /// Validates `config` and allocates the sliding-window ring buffer.
-    pub fn init(alloc: std.mem.Allocator, config: CircuitConfig): CircuitBreaker ! CircuitError {
+    pub static fn init(alloc: std.mem.Allocator, config: CircuitConfig): CircuitBreaker ! CircuitError {
         if (config.window_size == 0 ||
             config.minimum_calls == 0 ||
             config.minimum_calls > config.window_size ||

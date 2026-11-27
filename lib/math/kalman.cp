@@ -15,7 +15,7 @@ pub struct Kalman1D {
 
     /// Initializes a 1D Kalman filter.
     /// Requires finite inputs, `p0 >= 0`, `q >= 0`, and `r > 0`.
-    pub fn init(x0: f64, p0: f64, q: f64, r: f64): Kalman1D? {
+    pub static fn init(x0: f64, p0: f64, q: f64, r: f64): Kalman1D? {
         if (!isFiniteF64(x0) || !isFiniteF64(p0) || !isFiniteF64(q) || !isFiniteF64(r)) {
             return null;
         }
@@ -71,7 +71,7 @@ pub struct Kalman2D {
 
     /// Initializes a 2D constant-velocity Kalman filter.
     /// Requires finite inputs, `p_pos0 >= 0`, `p_vel0 >= 0`, `accel_var >= 0`, and `meas_var > 0`.
-    pub fn init(pos0: f64, vel0: f64, p_pos0: f64, p_vel0: f64, accel_var: f64, meas_var: f64): Kalman2D? {
+    pub static fn init(pos0: f64, vel0: f64, p_pos0: f64, p_vel0: f64, accel_var: f64, meas_var: f64): Kalman2D? {
         if (!isFiniteF64(pos0) || !isFiniteF64(vel0) || !isFiniteF64(p_pos0) || !isFiniteF64(p_vel0) || !isFiniteF64(accel_var) || !isFiniteF64(meas_var)) {
             return null;
         }
@@ -179,7 +179,7 @@ pub struct AlphaBetaFilter {
 
     /// Initializes an `AlphaBetaFilter`.
     /// Requires finite inputs, `0 < alpha < 1`, and `0 < beta <= 2`.
-    pub fn init(pos0: f64, vel0: f64, alpha: f64, beta: f64): AlphaBetaFilter? {
+    pub static fn init(pos0: f64, vel0: f64, alpha: f64, beta: f64): AlphaBetaFilter? {
         if (!isFiniteF64(pos0) || !isFiniteF64(vel0) || !isFiniteF64(alpha) || !isFiniteF64(beta)) {
             return null;
         }

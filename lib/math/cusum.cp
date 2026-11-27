@@ -115,7 +115,7 @@ pub struct PageHinkleyDetector {
     count: usize,
 
     /// Initializes a Page-Hinkley drift detector (`delta >= 0`, `lambda > 0`).
-    fn init(delta: f64, lambda: f64, min_samples: usize): PageHinkleyDetector? {
+    static fn init(delta: f64, lambda: f64, min_samples: usize): PageHinkleyDetector? {
         if (!isFiniteF64(delta) || delta < 0.0 || !isFiniteF64(lambda) || lambda <= 0.0) {
             return null;
         }
@@ -186,7 +186,7 @@ pub struct EwmaControlChart {
     step: usize,
 
     /// Initializes an EWMA control chart (`sigma > 0`, `0 < lambda <= 1`, `l_factor > 0`).
-    fn init(target_mean: f64, sigma: f64, lambda: f64, l_factor: f64): EwmaControlChart? {
+    static fn init(target_mean: f64, sigma: f64, lambda: f64, l_factor: f64): EwmaControlChart? {
         if (
             !isFiniteF64(target_mean) ||
             !isFiniteF64(sigma) ||
@@ -274,7 +274,7 @@ pub struct StreamingZScore {
     m2: f64,
 
     /// Initializes a streaming Z-Score detector (`min_samples >= 2`, `z_threshold > 0`).
-    fn init(min_samples: usize, z_threshold: f64): StreamingZScore? {
+    static fn init(min_samples: usize, z_threshold: f64): StreamingZScore? {
         if (min_samples < 2 || !isFiniteF64(z_threshold) || z_threshold <= 0.0) {
             return null;
         }

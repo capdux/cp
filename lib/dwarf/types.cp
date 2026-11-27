@@ -84,7 +84,7 @@ pub struct Cursor {
     data: []const u8,
     pos: usize,
 
-    pub fn init(data: []const u8): Cursor {
+    pub static fn init(data: []const u8): Cursor {
         return Cursor{ .data = data, .pos = 0 };
     }
 

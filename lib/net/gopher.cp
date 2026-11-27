@@ -315,7 +315,7 @@ pub struct GopherMenuIter {
     terminated: bool,
     failed: bool,
 
-    fn init(menu: []const u8): GopherMenuIter {
+    static fn init(menu: []const u8): GopherMenuIter {
         return GopherMenuIter{
             .data = menu,
             .offset = 0,

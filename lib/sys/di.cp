@@ -85,7 +85,7 @@ pub struct ServiceContainer {
     owned_singletons: std.ArrayListUnmanaged(OwnedInstance) = .empty;
     last_cycle: []u8 = "";
 
-    pub fn init(alloc: std.mem.Allocator): ServiceContainer {
+    pub static fn init(alloc: std.mem.Allocator): ServiceContainer {
         return ServiceContainer{
             alloc: alloc,
             frozen: false,

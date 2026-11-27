@@ -169,7 +169,7 @@ pub struct A2aServer {
     card: proto.AgentCard,
     tasks: std.ArrayList(A2aTask),
 
-    pub fn init(alloc: std.mem.Allocator, card: proto.AgentCard, config: A2aServerConfig): A2aServer {
+    pub static fn init(alloc: std.mem.Allocator, card: proto.AgentCard, config: A2aServerConfig): A2aServer {
         return .{
             .alloc = alloc,
             .config = config,

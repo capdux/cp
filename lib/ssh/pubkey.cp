@@ -159,7 +159,7 @@ export struct AuthorizedKeysIter {
     src: []const u8,
     pos: usize,
 
-    pub fn init(content: []const u8): AuthorizedKeysIter {
+    pub static fn init(content: []const u8): AuthorizedKeysIter {
         return AuthorizedKeysIter { src: content, pos: 0 };
     }
 

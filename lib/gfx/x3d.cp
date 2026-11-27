@@ -702,7 +702,7 @@ pub struct X3dFloatIter {
     pos: usize,
     malformed: bool,
 
-    pub fn init(attr_val: []const u8): X3dFloatIter {
+    pub static fn init(attr_val: []const u8): X3dFloatIter {
         return X3dFloatIter {
             src: attr_val,
             pos: 0,
@@ -737,7 +737,7 @@ pub struct X3dIntIter {
     pos: usize,
     malformed: bool,
 
-    pub fn init(attr_val: []const u8): X3dIntIter {
+    pub static fn init(attr_val: []const u8): X3dIntIter {
         return X3dIntIter {
             src: attr_val,
             pos: 0,

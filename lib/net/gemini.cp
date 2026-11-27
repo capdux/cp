@@ -278,7 +278,7 @@ pub struct GemtextIter {
     offset: usize,
     in_preformat: bool,
 
-    fn init(doc: []const u8): GemtextIter {
+    static fn init(doc: []const u8): GemtextIter {
         return GemtextIter{
             .data = doc,
             .offset = 0,

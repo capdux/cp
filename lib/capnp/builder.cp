@@ -391,7 +391,7 @@ pub struct MessageBuilder {
     alloc: std.mem.Allocator,
     segments: std.ArrayList(SegBuf),
 
-    pub fn init(alloc: std.mem.Allocator): MessageBuilder {
+    pub static fn init(alloc: std.mem.Allocator): MessageBuilder {
         return MessageBuilder{
             .alloc = alloc,
             .segments = std.ArrayList(SegBuf).empty,

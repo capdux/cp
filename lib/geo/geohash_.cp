@@ -45,7 +45,7 @@ pub struct LatLon {
     pub lon: f64 = 0.0,
 
     /// Constructs a validated `LatLon`, returning `GeohashError.InvalidCoordinate` if out of range or non-finite.
-    pub fn init(lat: f64, lon: f64): LatLon ! GeohashError {
+    pub static fn init(lat: f64, lon: f64): LatLon ! GeohashError {
         if (!isValidCoord(lat, lon)) return GeohashError.InvalidCoordinate;
         return LatLon { lat: lat, lon: lon };
     }

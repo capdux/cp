@@ -334,7 +334,7 @@ pub struct SctpWriter {
     pos: usize,
     valid: bool,
 
-    fn init(buf: []u8, src_port: u16, dst_port: u16, vtag: u32): SctpWriter {
+    static fn init(buf: []u8, src_port: u16, dst_port: u16, vtag: u32): SctpWriter {
         if (buf.len < SCTP_HEADER_SIZE) {
             return SctpWriter{
                 .buf = buf,

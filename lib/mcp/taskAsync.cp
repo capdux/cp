@@ -287,7 +287,7 @@ pub struct McpAsyncTaskManager {
     total_reaped_expired: u64 = 0,
 
     /// Creates a new empty `McpAsyncTaskManager`.
-    pub fn init(): McpAsyncTaskManager {
+    pub static fn init(): McpAsyncTaskManager {
         return McpAsyncTaskManager{};
     }
 

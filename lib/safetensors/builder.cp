@@ -44,7 +44,7 @@ pub struct SafetensorsBuilder {
     metadata: std.ArrayList(MetadataEntry),
     data_buf: std.ArrayList(u8),
 
-    pub fn init(alloc: std.mem.Allocator): SafetensorsBuilder {
+    pub static fn init(alloc: std.mem.Allocator): SafetensorsBuilder {
         return SafetensorsBuilder{
             .alloc = alloc,
             .tensors = .empty,

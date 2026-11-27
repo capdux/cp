@@ -570,7 +570,7 @@ pub struct IrcWriter {
     finished: bool = false,
     failed: bool = false,
 
-    pub fn init(buf: []u8): IrcWriter {
+    pub static fn init(buf: []u8): IrcWriter {
         return IrcWriter {
             buf: buf,
             pos: 0,

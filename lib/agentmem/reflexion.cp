@@ -221,7 +221,7 @@ pub struct ReflexionBank {
     total_failed_feedback: u64 = 0;
 
     /// Initializes a `ReflexionBank` with default scoring and deprecation thresholds.
-    pub fn init(): ReflexionBank {
+    pub static fn init(): ReflexionBank {
         return ReflexionBank{};
     }
 

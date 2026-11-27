@@ -77,7 +77,7 @@ pub struct NbtReader {
     pos: usize,
     endian: NbtEndian,
 
-    fn init(data: []const u8): NbtReader {
+    static fn init(data: []const u8): NbtReader {
         return NbtReader{
             .data = data,
             .pos = 0,

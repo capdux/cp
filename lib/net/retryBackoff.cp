@@ -31,7 +31,7 @@ export struct BackoffState {
     rng_state: u64;
 
     /// 使用给定种子初始化退避状态（相同种子保证确定性可复现）
-    fn init(seed: u64): BackoffState {
+    static fn init(seed: u64): BackoffState {
         return BackoffState{
             attempt: 0,
             rng_state: seed,

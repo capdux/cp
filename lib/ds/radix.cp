@@ -64,7 +64,7 @@ pub struct RadixTree<T> {
     len: usize = 0,
 
     /// Initialize an empty RadixTree. Does not allocate until the first insert.
-    pub fn init(allocator: std.mem.Allocator): RadixTree<T> {
+    pub static fn init(allocator: std.mem.Allocator): RadixTree<T> {
         return RadixTree<T>{
             alloc: allocator,
             root: null,

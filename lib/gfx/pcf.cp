@@ -362,7 +362,7 @@ pub struct PcfPropIter {
     count: u32 = 0,
     done: bool = true,
 
-    fn init(table_payload: []const u8): PcfPropIter {
+    static fn init(table_payload: []const u8): PcfPropIter {
         if (table_payload.len < 12) {
             return PcfPropIter { done: true };
         }

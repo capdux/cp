@@ -66,7 +66,7 @@ pub struct ConsistentRing {
     vnodes: std.ArrayListUnmanaged(VNode),
 
     /// Initialize an empty consistent hash ring with `default_vnodes` virtual nodes per unit weight.
-    pub fn init(allocator: std.mem.Allocator, default_vnodes: usize): ConsistentRing ! RingHashError {
+    pub static fn init(allocator: std.mem.Allocator, default_vnodes: usize): ConsistentRing ! RingHashError {
         if (default_vnodes == 0) {
             return RingHashError.InvalidWeight;
         }
@@ -266,7 +266,7 @@ pub struct RendezvousHasher {
     nodes: std.ArrayListUnmanaged(PhysicalNode),
 
     /// Initialize an empty RendezvousHasher.
-    pub fn init(allocator: std.mem.Allocator): RendezvousHasher {
+    pub static fn init(allocator: std.mem.Allocator): RendezvousHasher {
         return RendezvousHasher{
             alloc: allocator,
             nodes: .empty,

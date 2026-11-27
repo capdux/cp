@@ -76,7 +76,7 @@ pub struct Bm25Index {
     doc_terms: std.AutoHashMapUnmanaged(u64, std.ArrayList([]u8)),
     total_tokens: u64,
 
-    pub fn init(alloc: std.mem.Allocator, config: Bm25Config): !Bm25Index {
+    pub static fn init(alloc: std.mem.Allocator, config: Bm25Config): !Bm25Index {
         if (config.k1 < 0.0 or config.b < 0.0 or config.b > 1.0) {
             return Bm25Error.InvalidConfig;
         }

@@ -73,7 +73,7 @@ pub struct CuckooFilter {
     prng_state: u64,
 
     /// Initialize a CuckooFilter with at least `min_capacity` total slots (rounded up to power-of-two buckets).
-    pub fn init(alloc: std.mem.Allocator, min_capacity: usize): CuckooFilter ! CuckooError {
+    pub static fn init(alloc: std.mem.Allocator, min_capacity: usize): CuckooFilter ! CuckooError {
         if (min_capacity == 0) {
             return CuckooError.InvalidCapacity;
         }

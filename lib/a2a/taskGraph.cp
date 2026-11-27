@@ -99,7 +99,7 @@ pub struct A2aTaskGraph {
     node_count: usize = 0;
     edge_count: usize = 0;
 
-    fn init(): A2aTaskGraph {
+    static fn init(): A2aTaskGraph {
         return A2aTaskGraph {};
     }
 

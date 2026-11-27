@@ -286,7 +286,7 @@ pub struct MdnsTxtIter {
     offset: usize,
     failed: bool,
 
-    fn init(rdata: []const u8): MdnsTxtIter {
+    static fn init(rdata: []const u8): MdnsTxtIter {
         return MdnsTxtIter{
             .data = rdata,
             .offset = 0,

@@ -20,7 +20,7 @@ pub struct Vec3 {
     y: f64,
     z: f64,
 
-    fn init(x: f64, y: f64, z: f64): Vec3 {
+    static fn init(x: f64, y: f64, z: f64): Vec3 {
         return Vec3 { x: x, y: y, z: z };
     }
 
@@ -66,7 +66,7 @@ pub struct Aabb3 {
     max: Vec3,
 
     /// Constructs a validated AABB; returns `null` if any `min` coordinate exceeds `max`.
-    fn init(min: Vec3, max: Vec3): Aabb3? {
+    static fn init(min: Vec3, max: Vec3): Aabb3? {
         if (min.x > max.x || min.y > max.y || min.z > max.z) {
             return null;
         }
@@ -167,7 +167,7 @@ pub struct Ray3 {
     origin: Vec3,
     dir: Vec3,
 
-    fn init(origin: Vec3, dir: Vec3): Ray3 {
+    static fn init(origin: Vec3, dir: Vec3): Ray3 {
         return Ray3 { origin: origin, dir: dir };
     }
 
@@ -279,7 +279,7 @@ pub struct OctreePoint {
     pos: Vec3,
     id: u32,
 
-    fn init(x: f64, y: f64, z: f64, id: u32): OctreePoint {
+    static fn init(x: f64, y: f64, z: f64, id: u32): OctreePoint {
         return OctreePoint {
             pos: Vec3 { x: x, y: y, z: z },
             id: id,

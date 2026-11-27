@@ -98,7 +98,7 @@ pub const AhoCorasick = struct {
     prefilter_len: u8,
 
     /// Backward-compatible constructor (Standard semantics, case-sensitive, ignores empty patterns).
-    pub fn init(alloc: std.mem.Allocator, patterns: []const []const u8): !AhoCorasick {
+    pub static fn init(alloc: std.mem.Allocator, patterns: []const []const u8): !AhoCorasick {
         return AhoCorasick.initWithOptions(alloc, patterns, AhoCorasickOptions{
             match_kind: MatchKind.Standard,
             ascii_case_insensitive: false,

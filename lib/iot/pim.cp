@@ -321,7 +321,7 @@ pub struct PimWriter {
     pos: usize,
     valid: bool,
 
-    fn init(buf: []u8, msg_type: u8): PimWriter {
+    static fn init(buf: []u8, msg_type: u8): PimWriter {
         if (buf.len < PIM_HEADER_SIZE || msg_type > PIM_CANDIDATE_RP_ADV) {
             return PimWriter{
                 .buf = buf,

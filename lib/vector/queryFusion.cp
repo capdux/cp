@@ -198,7 +198,7 @@ pub struct MultiQueryFusion {
     view_count: usize = 0,
 
     /// Initializes a fusion session with `cfg` (non-positive `rrf_k` normalizes to 60.0).
-    pub fn init(cfg: QueryFusionConfig): MultiQueryFusion {
+    pub static fn init(cfg: QueryFusionConfig): MultiQueryFusion {
         const k = if (!isFiniteF32(cfg.rrf_k) || cfg.rrf_k <= 0.0) QFUSION_DEFAULT_RRF_K else cfg.rrf_k;
         return MultiQueryFusion{
             config: QueryFusionConfig{

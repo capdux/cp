@@ -236,7 +236,7 @@ pub struct WTinyLfuCache {
     demotions: u64 = 0;
 
     /// Initializes a W-TinyLFU cache with validated segment capacities and sketch decay threshold.
-    fn init(cfg: TinyLfuConfig): WTinyLfuCache? {
+    static fn init(cfg: TinyLfuConfig): WTinyLfuCache? {
         if (!cfg.isValid()) {
             return null;
         }

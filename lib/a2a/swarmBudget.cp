@@ -135,7 +135,7 @@ pub struct SwarmBudgetLedger {
 
     /// Initializes a swarm budget ledger with a single root agent (`root_id > 0`).
     /// Returns `null` if `root_id == 0`.
-    pub fn init(root_id: u64, root_limits: SwarmBudgetLimits): SwarmBudgetLedger? {
+    pub static fn init(root_id: u64, root_limits: SwarmBudgetLimits): SwarmBudgetLedger? {
         if (root_id == 0) return null;
         let ledger = SwarmBudgetLedger{};
         const clean_limits = SwarmBudgetLimits{

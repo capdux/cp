@@ -29,7 +29,7 @@ pub struct AnalyticsCollector {
     policy: DropPolicy = .DropOldest,
     dropped_count: u64 = 0,
 
-    pub fn init(alloc: std.mem.Allocator, config: CollectorConfig): AnalyticsCollector! {
+    pub static fn init(alloc: std.mem.Allocator, config: CollectorConfig): AnalyticsCollector! {
         if (config.max_events == 0) {
             return AnalyticsError.InvalidConfig;
         }

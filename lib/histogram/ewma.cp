@@ -16,7 +16,7 @@ pub struct Ewma {
 
     /// Create an EWMA with explicit smoothing factor `alpha` in `(0.0, 1.0]`
     /// and tick interval `interval_secs > 0.0`.
-    pub fn init(alpha: f64, interval_secs: f64): Ewma ! HistogramError {
+    pub static fn init(alpha: f64, interval_secs: f64): Ewma ! HistogramError {
         if (alpha <= 0.0 || alpha > 1.0) {
             return HistogramError.InvalidPrecision;
         }

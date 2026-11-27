@@ -95,7 +95,7 @@ pub struct BiTemporalFactLedger {
     record_count: usize = 0;
     next_fact_id: u64 = 1;
 
-    fn init(): BiTemporalFactLedger {
+    static fn init(): BiTemporalFactLedger {
         return BiTemporalFactLedger {};
     }
 

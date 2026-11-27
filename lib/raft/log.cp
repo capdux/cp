@@ -8,7 +8,7 @@ pub struct RaftLog {
     pub snapshot_term: u64,
     pub entries: std.ArrayList(LogEntry),
 
-    pub fn init(allocator: std.mem.Allocator): RaftLog {
+    pub static fn init(allocator: std.mem.Allocator): RaftLog {
         return RaftLog{
             .allocator = allocator,
             .snapshot_index = 0,

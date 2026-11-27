@@ -13,7 +13,7 @@ pub const DisjointSet = struct {
     num_components: usize,
     alloc: std.mem.Allocator,
 
-    pub fn init(alloc: std.mem.Allocator, n: usize): !DisjointSet {
+    pub static fn init(alloc: std.mem.Allocator, n: usize): !DisjointSet {
         let parent = try alloc.alloc(usize, n);
         errdefer alloc.free(parent);
         let rank = try alloc.alloc(u32, n);

@@ -94,7 +94,7 @@ pub struct CountingBloomFilter {
 
     /// Initializes a Counting Bloom Filter with `bucket_count` (power of 2 in `16..=4096`)
     /// and `hash_count` (`1..=8`). Returns `null` on invalid parameters.
-    pub fn init(bucket_count: usize, hash_count: u8): CountingBloomFilter? {
+    pub static fn init(bucket_count: usize, hash_count: u8): CountingBloomFilter? {
         if (bucket_count < CBLOOM_MIN_BUCKETS || bucket_count > CBLOOM_MAX_BUCKETS || !isPowerOfTwo(bucket_count)) {
             return null;
         }

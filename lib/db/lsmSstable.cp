@@ -59,7 +59,7 @@ pub struct SstBuilder {
     pending_handle: BlockHandle,
     entry_count: u64,
 
-    pub fn init(alloc: std.mem.Allocator, opts: SstOptions): SstBuilder {
+    pub static fn init(alloc: std.mem.Allocator, opts: SstOptions): SstBuilder {
         return SstBuilder{
             .alloc = alloc,
             .opts = opts,
@@ -207,7 +207,7 @@ pub struct SstReader {
         return payload;
     }
 
-    pub fn init(alloc: std.mem.Allocator, data: []const u8): SstError!SstReader {
+    pub static fn init(alloc: std.mem.Allocator, data: []const u8): SstError!SstReader {
         if (data.len < SST_FOOTER_SIZE) {
             return SstError.InvalidFooter;
         }
@@ -452,7 +452,7 @@ pub struct SstMergeIter {
     cur_val: std.ArrayList(u8),
     valid: bool,
 
-    pub fn init(alloc: std.mem.Allocator, readers: []const *const SstReader): !SstMergeIter {
+    pub static fn init(alloc: std.mem.Allocator, readers: []const *const SstReader): !SstMergeIter {
         let cursors = try alloc.alloc(ReaderCursor, readers.len);
         let initialized: usize = 0;
         errdefer {

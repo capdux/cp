@@ -160,7 +160,7 @@ pub struct SlidingWindowCounter {
     curr_count: u64,
 
     /// Initializes a `SlidingWindowCounter` with `limit` per `window_ms` starting at `now_ms`.
-    pub fn init(limit: u64, window_ms: i64, now_ms: i64): SlidingWindowCounter ! RateLimitError {
+    pub static fn init(limit: u64, window_ms: i64, now_ms: i64): SlidingWindowCounter ! RateLimitError {
         if (limit == 0) {
             return RateLimitError.InvalidBurst;
         }
@@ -271,7 +271,7 @@ pub struct GcraLimiter {
     initialized: bool,
 
     /// Initializes a `GcraLimiter` with emission interval `T` (`emission_interval_ms`) and `burst_tolerance`.
-    pub fn init(emission_interval_ms: i64, burst_tolerance: u64): GcraLimiter ! RateLimitError {
+    pub static fn init(emission_interval_ms: i64, burst_tolerance: u64): GcraLimiter ! RateLimitError {
         if (emission_interval_ms <= 0) {
             return RateLimitError.InvalidRate;
         }
@@ -348,7 +348,7 @@ pub struct KeyedRateLimiter {
     entries: std.StringHashMapUnmanaged(KeyBucketEntry) = .empty,
 
     /// Initializes a `KeyedRateLimiter` with per-key `capacity` and `refill_per_sec`.
-    pub fn init(alloc: std.mem.Allocator, capacity: u64, refill_per_sec: f64): KeyedRateLimiter ! RateLimitError {
+    pub static fn init(alloc: std.mem.Allocator, capacity: u64, refill_per_sec: f64): KeyedRateLimiter ! RateLimitError {
         if (capacity == 0) {
             return RateLimitError.InvalidBurst;
         }

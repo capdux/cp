@@ -378,7 +378,7 @@ pub struct BacnetTagIter {
     offset: usize,
     failed: bool,
 
-    fn init(buf: []const u8): BacnetTagIter {
+    static fn init(buf: []const u8): BacnetTagIter {
         return BacnetTagIter{
             .data = buf,
             .offset = 0,

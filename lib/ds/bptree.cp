@@ -103,7 +103,7 @@ pub fn BPlusTree(comptime K: type, comptime V: type): type {
         root: (*Node)?,
         count: usize,
 
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 .alloc = alloc,
                 .root = null,

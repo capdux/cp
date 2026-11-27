@@ -189,7 +189,7 @@ pub struct FlameFoldProfiler {
     truncated_samples: u64 = 0;
     dropped_overflow: u64 = 0;
 
-    fn init(): FlameFoldProfiler {
+    static fn init(): FlameFoldProfiler {
         return FlameFoldProfiler {};
     }
 

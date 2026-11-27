@@ -68,7 +68,7 @@ export struct CsvReader {
     had_error: bool;
 
     /// 初始化流式 CSV/TSV 解析器
-    fn init(src: []const u8, delimiter: u8): CsvReader {
+    static fn init(src: []const u8, delimiter: u8): CsvReader {
         return CsvReader{
             src: src,
             pos: 0,

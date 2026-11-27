@@ -231,7 +231,7 @@ pub struct MarcFieldIter {
 
     /// Initializes a field iterator from a single MARC 21 record buffer.
     /// Returns `null` if the 24-byte Leader or Directory header is invalid.
-    pub fn init(data: []const u8): MarcFieldIter? {
+    pub static fn init(data: []const u8): MarcFieldIter? {
         if (ldr := parseMarcLeader(data)) {
             return MarcFieldIter {
                 record: data[0..ldr.record_length],
@@ -323,7 +323,7 @@ pub struct MarcRecordIter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(data: []const u8): MarcRecordIter {
+    pub static fn init(data: []const u8): MarcRecordIter {
         return MarcRecordIter {
             data: data,
             pos: 0,

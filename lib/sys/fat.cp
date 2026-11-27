@@ -337,7 +337,7 @@ pub struct FatDirIter {
     skip_lfn: bool,
     done: bool,
 
-    pub fn init(data: []const u8, skip_lfn: bool): FatDirIter {
+    pub static fn init(data: []const u8, skip_lfn: bool): FatDirIter {
         return FatDirIter {
             data: data,
             offset: 0,

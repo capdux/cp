@@ -18,7 +18,7 @@ pub fn MpmcQueue(comptime T: type, comptime Capacity: usize): type {
         head: std.atomic.Value(usize) = .{ .raw = 0 },
         tail: std.atomic.Value(usize) = .{ .raw = 0 },
 
-        pub fn init(): Self {
+        pub static fn init(): Self {
             let q: Self = .{
                 .head = .{ .raw = 0 },
                 .tail = .{ .raw = 0 },

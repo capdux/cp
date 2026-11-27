@@ -57,7 +57,7 @@ pub struct ClusterTopology {
     slot_table: [16384]i32,
     covered_count: u32,
 
-    pub fn init(alloc: std.mem.Allocator): ClusterTopology {
+    pub static fn init(alloc: std.mem.Allocator): ClusterTopology {
         let table: [16384]i32 = undefined;
         let i: usize = 0;
         while (i < 16384) {

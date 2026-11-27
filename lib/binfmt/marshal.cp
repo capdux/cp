@@ -137,7 +137,7 @@ pub struct MarshalReader {
     pos: usize,
     valid_header: bool,
 
-    fn init(data: []const u8): MarshalReader {
+    static fn init(data: []const u8): MarshalReader {
         if (!isMarshal(data)) {
             return MarshalReader{
                 .data = data,

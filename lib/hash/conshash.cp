@@ -39,7 +39,7 @@ pub const HashRing = struct {
     vnodes_per_node: usize,
     alloc: std.mem.Allocator,
 
-    pub fn init(alloc: std.mem.Allocator, vnodes_per_node: usize): ConsistentHashError!HashRing {
+    pub static fn init(alloc: std.mem.Allocator, vnodes_per_node: usize): ConsistentHashError!HashRing {
         if (vnodes_per_node == 0) { return ConsistentHashError.InvalidVirtualNodes; }
         return HashRing{
             .nodes = std.ArrayList(StrSlice).empty,

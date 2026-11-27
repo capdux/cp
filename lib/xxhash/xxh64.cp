@@ -114,7 +114,7 @@ pub struct Xxh64Stream {
     mem: [32]u8,
     mem_size: usize,
 
-    pub fn init(seed: u64): Xxh64Stream {
+    pub static fn init(seed: u64): Xxh64Stream {
         return Xxh64Stream {
             total_len: 0,
             v1: seed +% PRIME64_1 +% PRIME64_2,

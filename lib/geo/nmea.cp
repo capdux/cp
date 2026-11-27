@@ -480,7 +480,7 @@ pub struct NmeaLineIter {
     src: []const u8 = "",
     pos: usize = 0,
 
-    fn init(buf: []const u8): NmeaLineIter {
+    static fn init(buf: []const u8): NmeaLineIter {
         return NmeaLineIter {
             src: buf,
             pos: 0,

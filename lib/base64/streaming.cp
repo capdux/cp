@@ -21,7 +21,7 @@ pub struct StreamingBase64Encoder {
     finished: bool,
 
     /// Creates a new streaming encoder for `variant`.
-    pub fn init(variant: Base64Variant): StreamingBase64Encoder {
+    pub static fn init(variant: Base64Variant): StreamingBase64Encoder {
         return StreamingBase64Encoder {
             variant: variant,
             buf: [0; 3],
@@ -183,7 +183,7 @@ pub struct StreamingBase64Decoder {
     finished: bool,
 
     /// Creates a new strict streaming decoder for `variant`.
-    pub fn init(variant: Base64Variant): StreamingBase64Decoder {
+    pub static fn init(variant: Base64Variant): StreamingBase64Decoder {
         return StreamingBase64Decoder {
             variant: variant,
             ignore_whitespace: false,

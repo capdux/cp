@@ -32,7 +32,7 @@ pub fn RingBuffer(comptime T: type): type {
         overwritten_count: u64 = 0,
 
         /// Initialize a bounded ring buffer with exact capacity and overflow policy.
-        pub fn init(alloc: std.mem.Allocator, cap_size: usize, policy: OverflowPolicy): Self ! RingError {
+        pub static fn init(alloc: std.mem.Allocator, cap_size: usize, policy: OverflowPolicy): Self ! RingError {
             if (cap_size == 0) return RingError.InvalidCapacity;
             const buf = alloc.alloc(T, cap_size) catch return RingError.OutOfMemory;
             return Self{
@@ -154,7 +154,7 @@ pub struct ByteRing {
     count: usize = 0,
 
     /// Initialize a byte ring with fixed capacity.
-    pub fn init(alloc: std.mem.Allocator, cap_size: usize): ByteRing ! RingError {
+    pub static fn init(alloc: std.mem.Allocator, cap_size: usize): ByteRing ! RingError {
         if (cap_size == 0) return RingError.InvalidCapacity;
         const buf = alloc.alloc(u8, cap_size) catch return RingError.OutOfMemory;
         return ByteRing{
@@ -299,7 +299,7 @@ pub fn MicroBatcher(comptime T: type): type {
         has_first: bool = false,
 
         /// Initialize micro-batcher with max batch count and max wait window in milliseconds.
-        pub fn init(alloc: std.mem.Allocator, max_batch_size: usize, max_wait_ms: i64): Self ! RingError {
+        pub static fn init(alloc: std.mem.Allocator, max_batch_size: usize, max_wait_ms: i64): Self ! RingError {
             if (max_batch_size == 0 || max_wait_ms < 0) {
                 return RingError.InvalidConfig;
             }

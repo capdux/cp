@@ -260,7 +260,7 @@ pub struct BdfPropIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(data: []const u8): BdfPropIter {
+    static fn init(data: []const u8): BdfPropIter {
         let p: usize = 0;
         while (ls := nextLine(data, p)) {
             p = ls.next_pos;

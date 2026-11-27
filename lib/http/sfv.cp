@@ -239,7 +239,7 @@ export struct SfParamIter {
     pos: usize;
     had_error: bool;
 
-    fn init(params_src: []const u8): SfParamIter {
+    static fn init(params_src: []const u8): SfParamIter {
         return SfParamIter{
             src: params_src,
             pos: 0,

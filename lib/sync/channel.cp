@@ -20,7 +20,7 @@ pub fn Channel(comptime T: type): type {
         is_closed: bool = false,
         allocator: std.mem.Allocator = undefined,
 
-        pub fn init(allocator: std.mem.Allocator, capacity: usize): !Self {
+        pub static fn init(allocator: std.mem.Allocator, capacity: usize): !Self {
             const cap = if (capacity == 0) 1 else capacity;
             const buf = try allocator.alloc(T, cap);
             return Self{

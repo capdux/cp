@@ -275,7 +275,7 @@ pub struct CdpWriter {
     pos: usize,
     valid: bool,
 
-    fn init(buf: []u8, version: u8, ttl: u8): CdpWriter {
+    static fn init(buf: []u8, version: u8, ttl: u8): CdpWriter {
         if (buf.len < CDP_HEADER_SIZE || (version != CDP_V1 && version != CDP_V2)) {
             return CdpWriter{
                 .buf = buf,

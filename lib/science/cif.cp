@@ -490,7 +490,7 @@ pub struct CifLoopIter {
     lexer: CifLexer = CifLexer {},
     failed: bool = false,
 
-    pub fn init(data: []const u8): CifLoopIter {
+    pub static fn init(data: []const u8): CifLoopIter {
         return CifLoopIter {
             data: data,
             lexer: CifLexer.init(data),

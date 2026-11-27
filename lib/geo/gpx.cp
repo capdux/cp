@@ -448,7 +448,7 @@ pub struct GpxWaypointIter {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): GpxWaypointIter {
+    static fn init(data: []const u8): GpxWaypointIter {
         return GpxWaypointIter{
             .data = data,
             .pos = skipProlog(data),
@@ -484,7 +484,7 @@ pub struct GpxTrackPointIter {
     track_count: u32,
     segment_count: u32,
 
-    fn init(data: []const u8): GpxTrackPointIter {
+    static fn init(data: []const u8): GpxTrackPointIter {
         return GpxTrackPointIter{
             .data = data,
             .pos = skipProlog(data),

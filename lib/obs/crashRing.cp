@@ -43,7 +43,7 @@ pub fn FixedCrashWriter(comptime N: usize): type {
         pos: usize,
         truncated: bool,
 
-        pub fn init(): Self {
+        pub static fn init(): Self {
             return Self{
                 .buf = std.mem.zeroes([N]u8),
                 .pos = 0,
@@ -234,7 +234,7 @@ pub fn BreadcrumbRing(comptime CAP: usize): type {
         count: usize,
         total_pushed: u64,
 
-        pub fn init(): Self {
+        pub static fn init(): Self {
             return Self{
                 .items = std.mem.zeroes([CAP]Breadcrumb),
                 .head = 0,

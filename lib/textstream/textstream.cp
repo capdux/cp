@@ -135,7 +135,7 @@ pub struct TextEncoderStream {
     pending_lead_surrogate: u16?,
 
     /// Initializes a clean `TextEncoderStream` with no pending surrogate.
-    fn init(): TextEncoderStream {
+    static fn init(): TextEncoderStream {
         return TextEncoderStream {
             pending_lead_surrogate: null,
         };

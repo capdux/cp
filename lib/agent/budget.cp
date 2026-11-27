@@ -44,7 +44,7 @@ pub struct ModelPricing {
     completion_micro_usd_per_1m: u64,
     cached_micro_usd_per_1m: u64,
 
-    fn init(prompt_per_1m: u64, completion_per_1m: u64, cached_per_1m: u64): ModelPricing {
+    static fn init(prompt_per_1m: u64, completion_per_1m: u64, cached_per_1m: u64): ModelPricing {
         return ModelPricing {
             prompt_micro_usd_per_1m: prompt_per_1m,
             completion_micro_usd_per_1m: completion_per_1m,
@@ -106,7 +106,7 @@ pub struct AgentBudget {
     elapsed_ms: u64,
 
     /// Creates a new `AgentBudget`. Returns `null` if `soft_limit_pct > 99`.
-    fn init(limits: BudgetLimits): AgentBudget? {
+    static fn init(limits: BudgetLimits): AgentBudget? {
         if (limits.soft_limit_pct > 99) {
             return null;
         }
@@ -221,7 +221,7 @@ pub struct CallSignature {
     args_hash: u64,
 
     /// Computes a deterministic FNV-1a signature from `tool_name` and serialized `args`.
-    fn fromBytes(tool_name: []const u8, args: []const u8): CallSignature {
+    static fn fromBytes(tool_name: []const u8, args: []const u8): CallSignature {
         return CallSignature {
             tool_hash: fnv1a64(tool_name),
             args_hash: fnv1a64(args),
@@ -244,7 +244,7 @@ pub struct LoopGuard {
     /// Initializes `LoopGuard` over caller-provided `ring_buf`.
     /// Requires `ring_buf.len >= max_consecutive_repeats`, `ring_buf.len >= max_ping_pong_cycles * 2`,
     /// `max_consecutive_repeats >= 2`, and `max_ping_pong_cycles >= 2`.
-    fn init(
+    static fn init(
         ring_buf: *[]CallSignature,
         max_consecutive_repeats: usize,
         max_ping_pong_cycles: usize,
@@ -346,7 +346,7 @@ pub struct ToolCircuitBreaker {
     opened_at_ms: u64,
 
     /// Initializes a circuit breaker (`failure_threshold >= 1`, `success_threshold >= 1`).
-    fn init(failure_threshold: u32, success_threshold: u32, cooldown_ms: u64): ToolCircuitBreaker? {
+    static fn init(failure_threshold: u32, success_threshold: u32, cooldown_ms: u64): ToolCircuitBreaker? {
         if (failure_threshold == 0 || success_threshold == 0) {
             return null;
         }
@@ -452,7 +452,7 @@ pub struct ContextWindowAdvisor {
     must_compact_pct: u8,
 
     /// Initializes the advisor (`max_context_tokens > reserved_output_tokens`, `0 < compact_soon_pct < must_compact_pct <= 100`).
-    fn init(
+    static fn init(
         max_context_tokens: u64,
         reserved_output_tokens: u64,
         compact_soon_pct: u8,

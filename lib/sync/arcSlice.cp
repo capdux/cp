@@ -18,7 +18,7 @@ pub fn ArcSlice(comptime T: type): type {
         items: []T = [],
         header: (*Header)? = null,
 
-        pub fn init(allocator: std.mem.Allocator, data: []const T): !Self {
+        pub static fn init(allocator: std.mem.Allocator, data: []const T): !Self {
             let hdr = try allocator.create(Header);
             errdefer allocator.destroy(hdr);
 

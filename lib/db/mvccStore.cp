@@ -10,7 +10,7 @@ pub struct MvccStore {
     pub versions: std.StringHashMapUnmanaged(std.ArrayList(VersionValue)),
     pub active_txns: std.ArrayList(ActiveTxnInfo),
 
-    pub fn init(alloc: std.mem.Allocator): MvccStore {
+    pub static fn init(alloc: std.mem.Allocator): MvccStore {
         return MvccStore{
             .alloc = alloc,
             .current_ts = 0,

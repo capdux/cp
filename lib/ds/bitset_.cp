@@ -433,7 +433,7 @@ pub fn FixedBitSet(comptime N: usize): type {
         words: [WORD_COUNT]u64 = [0; WORD_COUNT],
 
         /// Initialize a zeroed FixedBitSet on the stack.
-        pub fn init(): Self {
+        pub static fn init(): Self {
             return Self{
                 words: [0; WORD_COUNT],
             };

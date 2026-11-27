@@ -45,7 +45,7 @@ pub struct BitWriter {
     buf: []u8,
     bit_pos: usize,
 
-    fn init(buf: []u8): BitWriter {
+    static fn init(buf: []u8): BitWriter {
         return BitWriter {
             buf: buf,
             bit_pos: 0,
@@ -110,7 +110,7 @@ pub struct BitReader {
     bit_pos: usize,
     bit_len: usize,
 
-    fn init(data: []const u8): BitReader {
+    static fn init(data: []const u8): BitReader {
         return BitReader {
             data: data,
             bit_pos: 0,

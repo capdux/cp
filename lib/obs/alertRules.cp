@@ -212,7 +212,7 @@ pub struct AlertRuleEngine {
     total_suppressed: u64 = 0;
 
     /// Initializes an empty `AlertRuleEngine`.
-    pub fn init(): AlertRuleEngine {
+    pub static fn init(): AlertRuleEngine {
         return AlertRuleEngine{};
     }
 

@@ -209,7 +209,7 @@ pub struct HealthRegistry {
     draining: bool = false;
 
     /// Initialize an empty HealthRegistry.
-    pub fn init(alloc: std.mem.Allocator): HealthRegistry {
+    pub static fn init(alloc: std.mem.Allocator): HealthRegistry {
         return HealthRegistry{
             alloc: alloc,
             checks: [],
@@ -419,7 +419,7 @@ pub struct ShutdownCoordinator {
     next_seq: usize = 0;
 
     /// Initialize an empty ShutdownCoordinator.
-    pub fn init(alloc: std.mem.Allocator): ShutdownCoordinator {
+    pub static fn init(alloc: std.mem.Allocator): ShutdownCoordinator {
         return ShutdownCoordinator{
             alloc: alloc,
             hooks: [],

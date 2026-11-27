@@ -81,7 +81,7 @@ pub const Cuid2Generator = struct {
     counter: std.atomic.Value(u64),
     fingerprint: [16]u8,
 
-    pub fn init(seed_entropy: []const u8): Cuid2Generator {
+    pub static fn init(seed_entropy: []const u8): Cuid2Generator {
         let fp: [16]u8 = undefined;
         let hasher = std.crypto.hash.sha3.Sha3_512.init(.{});
         hasher.update(seed_entropy);

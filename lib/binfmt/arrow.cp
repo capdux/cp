@@ -283,7 +283,7 @@ pub struct ArrowMessageIter {
     pos: usize,
     done: bool,
 
-    fn init(data: []const u8): ArrowMessageIter {
+    static fn init(data: []const u8): ArrowMessageIter {
         return ArrowMessageIter{
             .data = data,
             .pos = 0,

@@ -31,7 +31,7 @@ pub struct H2StreamDecoder {
     max_frame_size: u32,
     buf: std.ArrayList(u8),
 
-    pub fn init(alloc: std.mem.Allocator, max_frame_size: u32): H2Error!H2StreamDecoder {
+    pub static fn init(alloc: std.mem.Allocator, max_frame_size: u32): H2Error!H2StreamDecoder {
         if (max_frame_size < H2_DEFAULT_MAX_FRAME_SIZE or max_frame_size > H2_MAX_FRAME_SIZE_LIMIT) {
             return H2Error.InvalidSettings;
         }

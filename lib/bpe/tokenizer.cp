@@ -6,7 +6,7 @@ import { BpeVocab, makePairKey, loadTiktokenText } from "./vocab.cp";
 pub struct BpeTokenizer {
     pub vocab: BpeVocab,
 
-    pub fn init(alloc: std.mem.Allocator): BpeTokenizer {
+    pub static fn init(alloc: std.mem.Allocator): BpeTokenizer {
         return BpeTokenizer{
             .vocab = BpeVocab.init(alloc),
         };

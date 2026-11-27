@@ -189,7 +189,7 @@ pub struct CacheAwareRouter {
     rejected_routes: u64 = 0;
 
     /// Initializes a router with default affinity/load weights and overload threshold (8500 bps).
-    pub fn init(): CacheAwareRouter {
+    pub static fn init(): CacheAwareRouter {
         return CacheAwareRouter{};
     }
 

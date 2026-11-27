@@ -44,7 +44,7 @@ pub struct EvalContext {
     user_id: []u8;
     attrs: std.StringHashMapUnmanaged([]u8) = .empty;
 
-    pub fn init(alloc: std.mem.Allocator, user_id: string): EvalContext ! FeatureError {
+    pub static fn init(alloc: std.mem.Allocator, user_id: string): EvalContext ! FeatureError {
         const uid_copy = alloc.dupe(u8, user_id) catch return FeatureError.OutOfMemory;
         return EvalContext{
             alloc: alloc,
@@ -265,7 +265,7 @@ pub struct FeatureEngine {
     flags: std.ArrayListUnmanaged(FlagEntry) = .empty;
     index_map: std.StringHashMapUnmanaged(usize) = .empty;
 
-    pub fn init(alloc: std.mem.Allocator): FeatureEngine {
+    pub static fn init(alloc: std.mem.Allocator): FeatureEngine {
         return FeatureEngine{
             alloc: alloc,
             flags: .empty,

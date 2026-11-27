@@ -143,7 +143,7 @@ pub struct KvCacheCompactor {
 
     /// Initializes a compactor with validated three-zone budget configuration.
     /// Returns `null` if budget sum is 0, exceeds `KV_COMPACTOR_MAX_SLOTS`, or `ema_decay` is invalid.
-    fn init(cfg: KvCompactorConfig): KvCacheCompactor? {
+    static fn init(cfg: KvCompactorConfig): KvCacheCompactor? {
         if (!cfg.isValid()) {
             return null;
         }

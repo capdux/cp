@@ -259,7 +259,7 @@ pub struct LldpWriter {
     pos: usize = 0,
     failed: bool = false,
 
-    pub fn init(buf: []u8): LldpWriter {
+    pub static fn init(buf: []u8): LldpWriter {
         return LldpWriter {
             buf: buf,
             pos: 0,

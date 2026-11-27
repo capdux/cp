@@ -420,7 +420,7 @@ pub struct Pop3MultiLineIter {
     done: bool,
     failed: bool,
 
-    fn init(body: []const u8): Pop3MultiLineIter {
+    static fn init(body: []const u8): Pop3MultiLineIter {
         return Pop3MultiLineIter{
             .data = body,
             .offset = 0,

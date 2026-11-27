@@ -8,7 +8,7 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
         alloc: std.mem.Allocator,
         items: std.ArrayList(T),
 
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 alloc: alloc,
                 items: std.ArrayList(T).empty,

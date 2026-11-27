@@ -55,7 +55,7 @@ pub struct XdrReader {
     data: []const u8,
     pos: usize,
 
-    pub fn init(data: []const u8): XdrReader {
+    pub static fn init(data: []const u8): XdrReader {
         return XdrReader {
             data: data,
             pos: 0,
@@ -196,7 +196,7 @@ pub struct XdrWriter {
     buf: []u8,
     pos: usize,
 
-    pub fn init(buf: []u8): XdrWriter {
+    pub static fn init(buf: []u8): XdrWriter {
         return XdrWriter {
             buf: buf,
             pos: 0,

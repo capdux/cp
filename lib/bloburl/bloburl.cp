@@ -184,7 +184,7 @@ pub struct BlobUrlRegistry {
     rng_state: u64,
 
     /// Initializes a zero-alloc registry backed by caller-provided `entries_buf` and deterministic `seed`.
-    fn init(entries_buf: *[]BlobUrlEntry, seed: u64): BlobUrlRegistry? {
+    static fn init(entries_buf: *[]BlobUrlEntry, seed: u64): BlobUrlRegistry? {
         if (entries_buf.*.len == 0) {
             return null;
         }

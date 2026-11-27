@@ -161,7 +161,7 @@ pub struct FbxNodeIter {
     done: bool = true,
 
     /// Initializes an iterator over top-level nodes starting at `FBX_HEADER_SIZE` (27) in `file_data`.
-    fn init(file_data: []const u8, is_64bit: bool): FbxNodeIter {
+    static fn init(file_data: []const u8, is_64bit: bool): FbxNodeIter {
         if (file_data.len <= FBX_HEADER_SIZE) {
             return FbxNodeIter {
                 src: "",

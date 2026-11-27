@@ -57,7 +57,7 @@ pub struct EntityRegistry {
     alive_count: usize = 0;
 
     /// Initialize an empty EntityRegistry backed by the given allocator.
-    pub fn init(alloc: std.mem.Allocator): EntityRegistry {
+    pub static fn init(alloc: std.mem.Allocator): EntityRegistry {
         return EntityRegistry{
             alloc: alloc,
             generations: .empty,
@@ -146,7 +146,7 @@ pub fn ComponentPool(comptime T: type): type {
         dense_data: std.ArrayList(T) = .empty;
 
         /// Initialize an empty ComponentPool<T>.
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 alloc: alloc,
                 sparse: .empty,

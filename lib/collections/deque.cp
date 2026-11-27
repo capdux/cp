@@ -11,7 +11,7 @@ pub fn BoundedDeque(comptime T: type, comptime N: usize): type {
         tail: usize = 0,
         count: usize = 0,
 
-        pub fn init(): Self {
+        pub static fn init(): Self {
             return Self{};
         }
 
@@ -102,7 +102,7 @@ pub fn RingDeque(comptime T: type): type {
         tail: usize,
         count: usize,
 
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 alloc: alloc,
                 buf: [],

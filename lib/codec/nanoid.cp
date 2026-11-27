@@ -29,7 +29,7 @@ pub struct IdRng {
     state: u64,
 
     /// Initializes a deterministic PRNG from a 64-bit `seed`.
-    pub fn init(seed: u64): IdRng {
+    pub static fn init(seed: u64): IdRng {
         return IdRng{ state: seed };
     }
 
@@ -211,7 +211,7 @@ pub struct MonotonicUlidGenerator {
     has_last: bool = false,
 
     /// Creates a fresh `MonotonicUlidGenerator`.
-    pub fn init(): MonotonicUlidGenerator {
+    pub static fn init(): MonotonicUlidGenerator {
         return MonotonicUlidGenerator{
             last_timestamp_ms: 0,
             last_rand80: 0,

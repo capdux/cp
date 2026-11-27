@@ -284,7 +284,7 @@ pub struct S7AnyItemIter {
     remaining: u8,
     failed: bool,
 
-    fn init(items_bytes: []const u8, count: u8): S7AnyItemIter {
+    static fn init(items_bytes: []const u8, count: u8): S7AnyItemIter {
         return S7AnyItemIter{
             .data = items_bytes,
             .offset = 0,

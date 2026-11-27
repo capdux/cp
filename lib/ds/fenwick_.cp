@@ -15,7 +15,7 @@ pub fn FenwickTree(comptime T: type): type {
 
         const Self = @This();
 
-        pub fn init(alloc: std.mem.Allocator, size: usize): !Self {
+        pub static fn init(alloc: std.mem.Allocator, size: usize): !Self {
             const buf = try alloc.alloc(T, size + 1);
             @memset(buf, 0);
             return Self{

@@ -16,7 +16,7 @@ export fn BiMap(comptime L: type, comptime R: type): type {
         left_to_right: zstd.AutoHashMap(L, R),
         right_to_left: zstd.AutoHashMap(R, L),
 
-        pub fn init(alloc: zstd.mem.Allocator): Self {
+        pub static fn init(alloc: zstd.mem.Allocator): Self {
             return Self{
                 alloc: alloc,
                 left_to_right: zstd.AutoHashMap(L, R).init(alloc),
@@ -101,7 +101,7 @@ export class StringBiMap {
     left_to_right: zstd.StringHashMap(StrSlice);
     right_to_left: zstd.StringHashMap(StrSlice);
 
-    pub fn init(alloc: zstd.mem.Allocator): StringBiMap {
+    pub static fn init(alloc: zstd.mem.Allocator): StringBiMap {
         return StringBiMap{
             alloc: alloc,
             left_to_right: zstd.StringHashMap(StrSlice).init(alloc),

@@ -71,7 +71,7 @@ pub struct BlockBuilder {
     last_key: std.ArrayList(u8),
     finished: bool,
 
-    pub fn init(alloc: std.mem.Allocator, restart_interval: u32): BlockBuilder {
+    pub static fn init(alloc: std.mem.Allocator, restart_interval: u32): BlockBuilder {
         const interval: u32 = if (restart_interval == 0) 16 else restart_interval;
         return BlockBuilder{
             .alloc = alloc,
@@ -151,7 +151,7 @@ pub struct BlockReader {
     restart_offset: usize,
     pub num_restarts: u32,
 
-    pub fn init(data: []const u8): SstError!BlockReader {
+    pub static fn init(data: []const u8): SstError!BlockReader {
         if (data.len < 4) {
             return SstError.InvalidBlock;
         }

@@ -18,7 +18,7 @@ pub fn RingBuffer(comptime T: type): type {
 
         const Self = @This();
 
-        pub fn init(alloc: std.mem.Allocator, cap_size: usize): !Self {
+        pub static fn init(alloc: std.mem.Allocator, cap_size: usize): !Self {
             if (cap_size == 0) { return RingError.InvalidCapacity; }
             const buf = try alloc.alloc(T, cap_size);
             return Self{

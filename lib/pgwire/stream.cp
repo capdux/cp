@@ -21,7 +21,7 @@ pub struct PgBackendStreamDecoder {
     buf: std.ArrayList(u8),
     max_packet_bytes: usize,
 
-    pub fn init(alloc: std.mem.Allocator, max_packet_bytes: usize): PgBackendStreamDecoder {
+    pub static fn init(alloc: std.mem.Allocator, max_packet_bytes: usize): PgBackendStreamDecoder {
         return PgBackendStreamDecoder{
             .alloc = alloc,
             .buf = std.ArrayList(u8).empty,
@@ -69,7 +69,7 @@ pub struct PgFrontendStreamDecoder {
     max_packet_bytes: usize,
     expect_startup: bool,
 
-    pub fn init(alloc: std.mem.Allocator, max_packet_bytes: usize, expect_startup: bool): PgFrontendStreamDecoder {
+    pub static fn init(alloc: std.mem.Allocator, max_packet_bytes: usize, expect_startup: bool): PgFrontendStreamDecoder {
         return PgFrontendStreamDecoder{
             .alloc = alloc,
             .buf = std.ArrayList(u8).empty,

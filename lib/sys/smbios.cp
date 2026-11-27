@@ -183,7 +183,7 @@ pub struct SmbiosTableIter {
     done: bool,
     failed: bool,
 
-    fn init(table: []const u8): SmbiosTableIter {
+    static fn init(table: []const u8): SmbiosTableIter {
         return SmbiosTableIter{
             .data = table,
             .offset = 0,

@@ -259,7 +259,7 @@ pub struct DexMapIter {
     remaining: u32,
     is_big_endian: bool,
 
-    fn init(data: []const u8, header: DexHeader): DexMapIter {
+    static fn init(data: []const u8, header: DexHeader): DexMapIter {
         const bound: usize = if ((header.file_size as usize) <= data.len) (header.file_size as usize) else data.len;
         if (header.map_off != 0 && (header.map_off as usize) + 4 <= bound) {
             const count = readU32(data, header.map_off as usize, header.is_big_endian);

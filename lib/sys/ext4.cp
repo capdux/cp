@@ -358,7 +358,7 @@ pub struct Ext4DirIter {
     offset: usize,
     failed: bool,
 
-    fn init(dir_block: []const u8): Ext4DirIter {
+    static fn init(dir_block: []const u8): Ext4DirIter {
         return Ext4DirIter{
             .data = dir_block,
             .offset = 0,

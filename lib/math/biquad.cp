@@ -33,7 +33,7 @@ pub struct BiquadFilter {
     z1: f64,
     z2: f64,
 
-    fn init(coeffs: BiquadCoeffs): BiquadFilter {
+    static fn init(coeffs: BiquadCoeffs): BiquadFilter {
         return {
             coeffs: coeffs,
             z1: 0.0,

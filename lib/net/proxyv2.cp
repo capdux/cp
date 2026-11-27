@@ -63,7 +63,7 @@ export struct ProxyV2TlvIter {
     src: []const u8;
     pos: usize;
 
-    fn init(tlvs_raw: []const u8): ProxyV2TlvIter {
+    static fn init(tlvs_raw: []const u8): ProxyV2TlvIter {
         return ProxyV2TlvIter{
             src: tlvs_raw,
             pos: 0,

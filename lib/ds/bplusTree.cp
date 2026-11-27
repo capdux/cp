@@ -98,7 +98,7 @@ pub struct BPlusTree {
     nodes: std.ArrayList(Node),
     free_nodes: std.ArrayList(u32),
 
-    pub fn init(alloc: std.mem.Allocator, order: usize): BPlusError!BPlusTree {
+    pub static fn init(alloc: std.mem.Allocator, order: usize): BPlusError!BPlusTree {
         if (order < MIN_ORDER) {
             return BPlusError.InvalidOrder;
         }

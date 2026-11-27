@@ -317,7 +317,7 @@ pub struct SamHeaderIter {
     pos: usize = 0,
     done: bool = true,
 
-    fn init(data: []const u8): SamHeaderIter {
+    static fn init(data: []const u8): SamHeaderIter {
         return SamHeaderIter {
             src: data,
             pos: 0,

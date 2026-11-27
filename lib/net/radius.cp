@@ -214,7 +214,7 @@ pub struct RadiusVsaIter {
     vendor_id: u32,
     malformed: bool,
 
-    fn init(vsa_value: []const u8): RadiusVsaIter {
+    static fn init(vsa_value: []const u8): RadiusVsaIter {
         if (vsa_value.len < 4) {
             return RadiusVsaIter{
                 data: vsa_value,
@@ -267,7 +267,7 @@ pub struct RadiusWriter {
     pos: usize,
     overflow: bool,
 
-    fn init(buf: []u8, code: RadiusCode, identifier: u8, authenticator: [16]u8): RadiusWriter {
+    static fn init(buf: []u8, code: RadiusCode, identifier: u8, authenticator: [16]u8): RadiusWriter {
         if (buf.len < RADIUS_HEADER_SIZE) {
             return RadiusWriter{
                 buf: buf,

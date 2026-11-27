@@ -142,7 +142,7 @@ pub struct PairwiseJudgeAggregator {
     first_slot_bias_count: u64 = 0;
     second_slot_bias_count: u64 = 0;
 
-    fn init(policy: InconsistentPolicy): PairwiseJudgeAggregator {
+    static fn init(policy: InconsistentPolicy): PairwiseJudgeAggregator {
         return PairwiseJudgeAggregator {
             policy: policy,
         };
@@ -260,7 +260,7 @@ pub struct RubricScorer {
     pass_threshold: f64 = 0.7;
 
     /// Creates a rubric scorer with normalized `pass_threshold ∈ [0.0, 1.0]`.
-    fn init(pass_threshold: f64): RubricScorer? {
+    static fn init(pass_threshold: f64): RubricScorer? {
         if (!isFiniteF64(pass_threshold) || pass_threshold < 0.0 || pass_threshold > 1.0) {
             return null;
         }
@@ -405,7 +405,7 @@ pub struct ArenaEloTable {
     initial_elo: f64 = EVAL_JUDGE_DEFAULT_ELO;
 
     /// Initializes an Arena Elo table with validated `k_factor ∈ (0.0, 256.0]` and `initial_elo >= 0.0`.
-    fn init(k_factor: f64, initial_elo: f64): ArenaEloTable? {
+    static fn init(k_factor: f64, initial_elo: f64): ArenaEloTable? {
         if (!isFiniteF64(k_factor) || k_factor <= 0.0 || k_factor > 256.0) {
             return null;
         }

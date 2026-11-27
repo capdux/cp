@@ -267,7 +267,7 @@ pub struct SpcXid6Iter {
     done: bool = true,
 
     /// Initializes iteration from a full SPC file buffer (locates `"xid6"` at offset 66048).
-    fn init(file_data: []const u8): SpcXid6Iter {
+    static fn init(file_data: []const u8): SpcXid6Iter {
         if (file_data.len < SPC_MIN_FILE_SIZE + 8) {
             return SpcXid6Iter { done: true };
         }

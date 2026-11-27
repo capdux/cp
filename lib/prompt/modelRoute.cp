@@ -232,7 +232,7 @@ pub struct ModelGatewayRouter {
     total_circuit_trips: u64 = 0,
 
     /// Creates a new router with default circuit-breaker and EWMA settings.
-    pub fn init(): ModelGatewayRouter {
+    pub static fn init(): ModelGatewayRouter {
         return ModelGatewayRouter{};
     }
 

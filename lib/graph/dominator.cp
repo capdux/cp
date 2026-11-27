@@ -218,7 +218,7 @@ pub struct DominatorGraph {
 
     /// Initializes a directed graph with `node_count` vertices (`1..=DOM_MAX_NODES`).
     /// Returns `null` if `node_count == 0` or `node_count > DOM_MAX_NODES`.
-    pub fn init(node_count: usize): DominatorGraph? {
+    pub static fn init(node_count: usize): DominatorGraph? {
         if (node_count == 0 || node_count > DOM_MAX_NODES) return null;
         return DominatorGraph{
             node_count: node_count,

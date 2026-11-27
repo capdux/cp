@@ -55,7 +55,7 @@ pub struct ThriftWriter {
     last_field_stack: [32]i16,
     depth: usize,
 
-    pub fn init(alloc: std.mem.Allocator): ThriftWriter {
+    pub static fn init(alloc: std.mem.Allocator): ThriftWriter {
         return ThriftWriter{
             .alloc = alloc,
             .buf = std.ArrayList(u8).empty,
@@ -190,7 +190,7 @@ pub struct ThriftReader {
     last_field_stack: [32]i16,
     depth: usize,
 
-    pub fn init(data: []const u8): ThriftReader {
+    pub static fn init(data: []const u8): ThriftReader {
         return ThriftReader{
             .data = data,
             .pos = 0,

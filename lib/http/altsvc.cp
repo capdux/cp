@@ -392,7 +392,7 @@ export struct AltSvcIter {
     src: []const u8;
     pos: usize;
 
-    fn init(header: []const u8): AltSvcIter {
+    static fn init(header: []const u8): AltSvcIter {
         if (isAltSvcClear(header)) {
             return AltSvcIter{
                 src: header,

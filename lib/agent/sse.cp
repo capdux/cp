@@ -330,7 +330,7 @@ pub struct StreamTelemetry {
     total_tokens: u32,
 
     /// Starts telemetry recording at timestamp `start_ms`.
-    fn init(start_ms: i64): StreamTelemetry {
+    static fn init(start_ms: i64): StreamTelemetry {
         return StreamTelemetry {
             start_ms: start_ms,
             first_token_ms: start_ms,

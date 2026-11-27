@@ -190,7 +190,7 @@ pub struct HeartbeatWatchdog {
     total_recoveries: u64 = 0;
 
     /// Initializes an empty `HeartbeatWatchdog`.
-    pub fn init(): HeartbeatWatchdog {
+    pub static fn init(): HeartbeatWatchdog {
         return HeartbeatWatchdog{};
     }
 

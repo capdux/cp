@@ -12,7 +12,7 @@ pub struct McpStreamFramer {
     max_frame_bytes: usize,
     buf: std.ArrayList(u8),
 
-    pub fn init(alloc: std.mem.Allocator, mode: FrameMode, max_frame_bytes: usize): McpStreamFramer {
+    pub static fn init(alloc: std.mem.Allocator, mode: FrameMode, max_frame_bytes: usize): McpStreamFramer {
         return McpStreamFramer{
             .alloc = alloc,
             .mode = mode,

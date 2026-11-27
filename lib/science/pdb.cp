@@ -507,7 +507,7 @@ pub struct PdbAtomIter {
     model_num: u32,
     stopped: bool,
 
-    fn init(data: []const u8): PdbAtomIter {
+    static fn init(data: []const u8): PdbAtomIter {
         return PdbAtomIter{
             data: data,
             pos: 0,
@@ -554,7 +554,7 @@ pub struct PdbConectIter {
     pos: usize,
     stopped: bool,
 
-    fn init(data: []const u8): PdbConectIter {
+    static fn init(data: []const u8): PdbConectIter {
         return PdbConectIter{
             data: data,
             pos: 0,

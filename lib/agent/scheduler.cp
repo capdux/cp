@@ -85,7 +85,7 @@ pub struct BatchScheduler {
 
     /// Initializes `BatchScheduler` over caller-provided `requests` buffer.
     /// Returns `null` if any hard capacity limit is zero.
-    fn init(requests: *[]InferRequest, limits: BatchLimits): BatchScheduler? {
+    static fn init(requests: *[]InferRequest, limits: BatchLimits): BatchScheduler? {
         if (
             limits.max_batch_reqs == 0 ||
             limits.max_batch_tokens == 0 ||

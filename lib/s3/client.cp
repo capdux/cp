@@ -41,7 +41,7 @@ const std = @import("std");
 pub struct S3Client {
     pub credentials: S3Credentials = S3Credentials{},
 
-    pub fn init(credentials: S3Credentials): S3Client {
+    pub static fn init(credentials: S3Credentials): S3Client {
         return S3Client{ credentials: credentials };
     }
 

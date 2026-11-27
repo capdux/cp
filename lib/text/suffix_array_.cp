@@ -8,7 +8,7 @@ pub class SuffixArray {
     sa: []usize,
     lcp: []usize,
 
-    pub fn init(alloc: std.mem.Allocator, text: []const u8) -> !SuffixArray {
+    pub static fn init(alloc: std.mem.Allocator, text: []const u8) -> !SuffixArray {
         const n = text.len;
         let sa = try alloc.alloc(usize, n);
         errdefer alloc.free(sa);

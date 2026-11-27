@@ -102,7 +102,7 @@ pub struct Bulkhead {
     rejected_count: u64,
 
     /// Validates and initializes a `Bulkhead` limiter.
-    pub fn init(max_concurrent: usize, max_queue: usize): Bulkhead ! CircuitError {
+    pub static fn init(max_concurrent: usize, max_queue: usize): Bulkhead ! CircuitError {
         if (max_concurrent == 0) {
             return CircuitError.InvalidConfig;
         }

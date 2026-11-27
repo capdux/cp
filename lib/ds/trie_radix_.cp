@@ -88,7 +88,7 @@ export struct RadixTree<V> {
         }
     }
 
-    pub fn init(alloc: std.mem.Allocator) -> !RadixTree<V> {
+    pub static fn init(alloc: std.mem.Allocator) -> !RadixTree<V> {
         const root = try createNode(alloc, "");
         return RadixTree<V>{
             .alloc = alloc,

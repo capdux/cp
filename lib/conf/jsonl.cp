@@ -50,7 +50,7 @@ export struct JsonlIter {
     src: []const u8;
     pos: usize;
 
-    fn init(input: []const u8): JsonlIter {
+    static fn init(input: []const u8): JsonlIter {
         let start: usize = 0;
         if (input.len >= 3 && input[0] == 0xEF && input[1] == 0xBB && input[2] == 0xBF) {
             start = 3;

@@ -116,7 +116,7 @@ pub struct WalCheckpointCoordinator {
     total_bytes_reclaimed: u64 = 0,
 
     /// Creates a new empty `WalCheckpointCoordinator`.
-    pub fn init(): WalCheckpointCoordinator {
+    pub static fn init(): WalCheckpointCoordinator {
         return WalCheckpointCoordinator{};
     }
 

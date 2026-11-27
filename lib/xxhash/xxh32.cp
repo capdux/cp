@@ -88,7 +88,7 @@ pub struct Xxh32Stream {
     mem: [16]u8,
     mem_size: usize,
 
-    pub fn init(seed: u32): Xxh32Stream {
+    pub static fn init(seed: u32): Xxh32Stream {
         return Xxh32Stream {
             total_len: 0,
             large_len: false,

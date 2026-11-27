@@ -72,7 +72,7 @@ pub struct ReplayWindow {
     pub bitmap: [32]u64,
     pub has_packet: bool,
 
-    pub fn init() -> ReplayWindow {
+    pub static fn init() -> ReplayWindow {
         return ReplayWindow {
             .last_counter = 0,
             .bitmap = [0; 32],

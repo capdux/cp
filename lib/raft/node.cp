@@ -48,7 +48,7 @@ pub struct RaftNode {
     pub next_index: std.ArrayList(u64),
     pub match_index: std.ArrayList(u64),
 
-    pub fn init(allocator: std.mem.Allocator, config: RaftConfig): !RaftNode {
+    pub static fn init(allocator: std.mem.Allocator, config: RaftConfig): !RaftNode {
         const peers_copy = try allocator.dupe(u64, config.peers);
         errdefer allocator.free(peers_copy);
 

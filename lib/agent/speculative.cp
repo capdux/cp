@@ -253,7 +253,7 @@ pub struct AdaptiveDraftController {
     total_emitted: u64,
 
     /// Initializes the controller (`1 <= min_k <= init_k <= max_k`, `0 < ema_alpha <= 1`).
-    fn init(min_k: usize, max_k: usize, init_k: usize, ema_alpha: f64): AdaptiveDraftController? {
+    static fn init(min_k: usize, max_k: usize, init_k: usize, ema_alpha: f64): AdaptiveDraftController? {
         if (
             min_k == 0 ||
             max_k < min_k ||

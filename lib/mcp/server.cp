@@ -30,7 +30,7 @@ pub struct McpServer {
     resources: std.ArrayList(RegisteredResource),
     prompts: std.ArrayList(RegisteredPrompt),
 
-    pub fn init(alloc: std.mem.Allocator, name: []const u8, version: []const u8): McpServer {
+    pub static fn init(alloc: std.mem.Allocator, name: []const u8, version: []const u8): McpServer {
         return McpServer{
             .alloc = alloc,
             .name = name,

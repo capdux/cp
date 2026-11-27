@@ -338,7 +338,7 @@ pub struct McpRootsRegistry {
     invalid_path_denials: u64 = 0;
 
     /// Initializes an empty workspace roots registry at revision 0.
-    pub fn init(): McpRootsRegistry {
+    pub static fn init(): McpRootsRegistry {
         return McpRootsRegistry{};
     }
 

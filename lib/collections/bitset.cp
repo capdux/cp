@@ -6,7 +6,7 @@ pub struct BitSet {
     words: []u64,
     bit_len: usize,
 
-    pub fn init(alloc: std.mem.Allocator, bit_len: usize): !BitSet {
+    pub static fn init(alloc: std.mem.Allocator, bit_len: usize): !BitSet {
         const num_words = (bit_len + 63) / 64;
         const words = try alloc.alloc(u64, num_words);
         @memset(words, 0);

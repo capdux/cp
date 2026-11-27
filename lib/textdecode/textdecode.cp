@@ -99,7 +99,7 @@ pub struct TextDecoder {
     lead_surrogate: u16?,
 
     /// Initializes a zero-alloc streaming `TextDecoder`.
-    fn init(encoding: TextEncoding, fatal: bool, ignore_bom: bool): TextDecoder {
+    static fn init(encoding: TextEncoding, fatal: bool, ignore_bom: bool): TextDecoder {
         return TextDecoder {
             encoding: encoding,
             fatal: fatal,

@@ -79,7 +79,7 @@ pub struct PostcardWriter {
     buf: []u8,
     pos: usize,
 
-    fn init(buf: []u8): PostcardWriter {
+    static fn init(buf: []u8): PostcardWriter {
         return PostcardWriter{
             .buf = buf,
             .pos = 0,
@@ -238,7 +238,7 @@ pub struct PostcardReader {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): PostcardReader {
+    static fn init(data: []const u8): PostcardReader {
         return PostcardReader{
             .data = data,
             .pos = 0,

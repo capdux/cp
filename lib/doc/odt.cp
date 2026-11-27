@@ -629,7 +629,7 @@ pub struct OdtManifestIter {
     section: []const u8,
     pos: usize,
 
-    pub fn init(manifest_xml: []const u8): OdtManifestIter {
+    pub static fn init(manifest_xml: []const u8): OdtManifestIter {
         if (man := findElementSpan(manifest_xml, 0, "manifest")) {
             return OdtManifestIter {
                 section: man.inner,

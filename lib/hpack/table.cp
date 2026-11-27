@@ -179,7 +179,7 @@ pub struct DynamicTable {
     size: usize,
     max_size: usize,
 
-    pub fn init(alloc: std.mem.Allocator, max_size: usize): DynamicTable {
+    pub static fn init(alloc: std.mem.Allocator, max_size: usize): DynamicTable {
         return DynamicTable{
             alloc: alloc,
             entries: [],

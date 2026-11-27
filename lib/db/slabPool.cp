@@ -37,7 +37,7 @@ pub fn SlabPool(comptime T: type): type {
         active_count: usize,
         cap_size: usize,
 
-        pub fn init(alloc: std.mem.Allocator, cap_limit: usize): SlabError!Self {
+        pub static fn init(alloc: std.mem.Allocator, cap_limit: usize): SlabError!Self {
             if (cap_limit == 0 || cap_limit >= INVALID_INDEX) {
                 return SlabError.InvalidCapacity;
             }

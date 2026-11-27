@@ -207,7 +207,7 @@ pub struct XdgDirIter {
     src: []const u8;
     pos: usize;
 
-    fn init(dirs_env: ([]const u8)?, default_dirs: []const u8): XdgDirIter {
+    static fn init(dirs_env: ([]const u8)?, default_dirs: []const u8): XdgDirIter {
         let chosen = default_dirs;
         if (raw := dirs_env) {
             if (raw.len > 0 && hasAnyAbsDir(raw)) {

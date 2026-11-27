@@ -14,7 +14,7 @@ pub struct SszWriter {
     buf: []u8,
     pos: usize,
 
-    fn init(buf: []u8): SszWriter {
+    static fn init(buf: []u8): SszWriter {
         return SszWriter{
             .buf = buf,
             .pos = 0,
@@ -185,7 +185,7 @@ pub struct SszReader {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): SszReader {
+    static fn init(data: []const u8): SszReader {
         return SszReader{
             .data = data,
             .pos = 0,
@@ -337,7 +337,7 @@ pub struct SszOffsetListIter {
     index: usize,
     valid: bool,
 
-    fn init(data: []const u8): SszOffsetListIter {
+    static fn init(data: []const u8): SszOffsetListIter {
         if (data.len == 0) {
             return SszOffsetListIter{
                 .data = data,

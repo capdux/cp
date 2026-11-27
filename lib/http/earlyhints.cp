@@ -279,7 +279,7 @@ export struct EarlyHintIter {
     src: []const u8;
     pos: usize;
 
-    fn init(link_header: []const u8): EarlyHintIter {
+    static fn init(link_header: []const u8): EarlyHintIter {
         return EarlyHintIter{
             src: link_header,
             pos: 0,

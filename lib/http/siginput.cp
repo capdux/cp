@@ -268,7 +268,7 @@ export struct ComponentIter {
     src: []const u8;
     pos: usize;
 
-    fn init(components_raw: []const u8): ComponentIter {
+    static fn init(components_raw: []const u8): ComponentIter {
         return ComponentIter{
             src: components_raw,
             pos: 0,

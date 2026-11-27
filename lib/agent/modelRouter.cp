@@ -124,7 +124,7 @@ pub struct ModelRouter {
     count: usize,
 
     /// Initializes an empty `ModelRouter` backed by caller-provided `endpoints`.
-    fn init(endpoints: *[]ModelEndpoint): ModelRouter {
+    static fn init(endpoints: *[]ModelEndpoint): ModelRouter {
         return ModelRouter {
             endpoints: endpoints.*,
             count: 0,

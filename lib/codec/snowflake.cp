@@ -29,7 +29,7 @@ pub const SnowflakeGenerator = struct {
     sequence: u12,
     mutex: std.Thread.Mutex,
 
-    pub fn init(datacenter_id: u16, worker_id: u16, epoch_ms: i64): SnowflakeError!SnowflakeGenerator {
+    pub static fn init(datacenter_id: u16, worker_id: u16, epoch_ms: i64): SnowflakeError!SnowflakeGenerator {
         if (datacenter_id > MAX_DATACENTER_ID or worker_id > MAX_WORKER_ID) {
             return SnowflakeError.InvalidNodeId;
         }

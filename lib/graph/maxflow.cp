@@ -30,7 +30,7 @@ pub struct FlowGraph {
 
     /// Initializes a flow graph with `num_nodes` vertices (`0..num_nodes`).
     /// Returns `null` if `num_nodes == 0` or `head.len < num_nodes`.
-    fn init(num_nodes: usize, head: []i32, edges: []FlowEdge): FlowGraph? {
+    static fn init(num_nodes: usize, head: []i32, edges: []FlowEdge): FlowGraph? {
         if (num_nodes == 0 || head.len < num_nodes) {
             return null;
         }

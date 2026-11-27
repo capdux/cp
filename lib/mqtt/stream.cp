@@ -9,7 +9,7 @@ pub struct MqttStreamDecoder {
     read_pos: usize,
     max_packet_bytes: usize,
 
-    pub fn init(alloc: std.mem.Allocator, max_packet_bytes: usize): MqttStreamDecoder {
+    pub static fn init(alloc: std.mem.Allocator, max_packet_bytes: usize): MqttStreamDecoder {
         return MqttStreamDecoder{
             .alloc = alloc,
             .buf = std.ArrayList(u8).empty,

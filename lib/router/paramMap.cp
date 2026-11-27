@@ -11,7 +11,7 @@ pub const ParamMap = struct {
     entries: [16]Param = undefined,
     len: usize = 0,
 
-    pub fn init(): ParamMap {
+    pub static fn init(): ParamMap {
         return ParamMap{
             .entries = undefined,
             .len = 0,

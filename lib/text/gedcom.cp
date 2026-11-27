@@ -346,7 +346,7 @@ pub struct GedcomIndiIter {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): GedcomIndiIter {
+    static fn init(data: []const u8): GedcomIndiIter {
         return GedcomIndiIter{
             data: data,
             pos: skipBom(data),
@@ -442,7 +442,7 @@ pub struct GedcomFamIter {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): GedcomFamIter {
+    static fn init(data: []const u8): GedcomFamIter {
         return GedcomFamIter{
             data: data,
             pos: skipBom(data),

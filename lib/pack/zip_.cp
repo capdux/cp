@@ -82,7 +82,7 @@ pub class ZipBuilder {
     items: std.ArrayList(BuilderItem),
 
     /// Initializes an empty `ZipBuilder` backed by `allocator`.
-    pub fn init(allocator: std.mem.Allocator): ZipBuilder {
+    pub static fn init(allocator: std.mem.Allocator): ZipBuilder {
         return ZipBuilder{
             allocator: allocator,
             items: .empty,

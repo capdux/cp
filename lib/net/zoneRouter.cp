@@ -120,7 +120,7 @@ pub struct ZoneLocalityRouter {
     rejected_no_endpoint: u64 = 0,
 
     /// Initializes a router with `cfg`. Returns `null` if `panic_threshold_bps == 0 || > 10000`.
-    pub fn init(cfg: ZoneRouterConfig): ZoneLocalityRouter? {
+    pub static fn init(cfg: ZoneRouterConfig): ZoneLocalityRouter? {
         if (cfg.panic_threshold_bps == 0 || cfg.panic_threshold_bps > 10000) return null;
         return ZoneLocalityRouter{
             config: cfg,

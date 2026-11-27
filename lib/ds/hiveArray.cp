@@ -18,7 +18,7 @@ export fn HiveArray(comptime T: type, comptime capacity: u16): type {
         len: u16;
 
         /// 创建一个空的固定容量槽池
-        fn init(): Self {
+        static fn init(): Self {
             return Self{
                 slots: undefined,
                 bitmap: std.mem.zeroes([WORD_COUNT]u64),

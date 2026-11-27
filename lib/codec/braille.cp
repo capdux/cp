@@ -224,7 +224,7 @@ pub struct BrailleCanvas {
 
     /// Initializes a `BrailleCanvas` and zeroes the backing slice `cells[0..cell_cols * cell_rows]`.
     /// Returns `null` if `cell_cols == 0`, `cell_rows == 0`, or `cells.len < cell_cols * cell_rows`.
-    pub fn init(cell_cols: usize, cell_rows: usize, cells: []u8): BrailleCanvas? {
+    pub static fn init(cell_cols: usize, cell_rows: usize, cells: []u8): BrailleCanvas? {
         if (cell_cols == 0 || cell_rows == 0) {
             return null;
         }

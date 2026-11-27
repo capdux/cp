@@ -312,7 +312,7 @@ pub struct FormulaIter {
     at_comp_start: bool,
     malformed: bool,
 
-    fn init(formula: []const u8): FormulaIter {
+    static fn init(formula: []const u8): FormulaIter {
         return FormulaIter{
             data: formula,
             pos: 0,

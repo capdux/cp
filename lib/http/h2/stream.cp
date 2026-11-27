@@ -118,7 +118,7 @@ pub struct H2Stream {
     data_bytes_received: u64,
 
     /// Creates a new `Open` HTTP/2 stream with validated stream ID and non-negative initial windows.
-    fn init(id: u32, initial_send_window: i32, initial_recv_window: i32): H2Stream? {
+    static fn init(id: u32, initial_send_window: i32, initial_recv_window: i32): H2Stream? {
         if (id == 0 || id > 0x7FFFFFFF || initial_send_window < 0 || initial_recv_window < 0) {
             return null;
         }

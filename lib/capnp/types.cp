@@ -58,7 +58,7 @@ pub struct TraversalLimit {
     words_remaining: u64,
     nesting_limit: u32,
 
-    pub fn init(max_words: u64, max_nesting: u32): TraversalLimit {
+    pub static fn init(max_words: u64, max_nesting: u32): TraversalLimit {
         return TraversalLimit{
             .words_remaining = max_words,
             .nesting_limit = max_nesting,

@@ -191,7 +191,7 @@ pub struct CrashReportBuilder {
     breadcrumbs: std.ArrayList(Breadcrumb),
     metadata: std.ArrayList(MetadataEntry),
 
-    pub fn init(reason: CrashReason, fault_addr: usize, thread_id: u64, timestamp_ms: u64): CrashReportBuilder {
+    pub static fn init(reason: CrashReason, fault_addr: usize, thread_id: u64, timestamp_ms: u64): CrashReportBuilder {
         return CrashReportBuilder{
             .reason = reason,
             .signal = reasonSignal(reason),

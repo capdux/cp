@@ -96,7 +96,7 @@ export struct BraceExpandIter {
 
     /// Initialize a zero-allocation iterator for a single-level brace expression (e.g. `"src/{a,b,c}.cp"`, `"img_{01..05}.png"`, `"{a..e}"`).
     /// Patterns without a valid expandable `{...}` group yield the original string once.
-    pub fn init(pattern: []const u8): BraceExpandIter {
+    pub static fn init(pattern: []const u8): BraceExpandIter {
         let open_idx: usize? = null;
         let close_idx: usize? = null;
         let i: usize = 0;

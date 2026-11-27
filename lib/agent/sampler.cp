@@ -82,7 +82,7 @@ pub struct SamplerConfig {
     seed: u64,
 
     /// Deterministic greedy decoding (`temperature = 0.0`).
-    fn greedy(): SamplerConfig {
+    static fn greedy(): SamplerConfig {
         return SamplerConfig {
             temperature: 0.0,
             top_k: 0,
@@ -96,7 +96,7 @@ pub struct SamplerConfig {
     }
 
     /// Balanced default stochastic sampling configuration seeded with `seed`.
-    fn default(seed: u64): SamplerConfig {
+    static fn default(seed: u64): SamplerConfig {
         return SamplerConfig {
             temperature: 0.8,
             top_k: 40,

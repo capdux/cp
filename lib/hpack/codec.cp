@@ -184,7 +184,7 @@ pub struct HpackEncoder {
     pending_size_update: bool = false,
     min_pending_size: usize = 0,
 
-    pub fn init(alloc: std.mem.Allocator, max_table_size: usize): HpackEncoder {
+    pub static fn init(alloc: std.mem.Allocator, max_table_size: usize): HpackEncoder {
         return HpackEncoder{
             alloc: alloc,
             table: DynamicTable.init(alloc, max_table_size),
@@ -317,7 +317,7 @@ pub struct HpackDecoder {
     table: DynamicTable,
     max_allowed_table_size: usize,
 
-    pub fn init(alloc: std.mem.Allocator, max_allowed_table_size: usize): HpackDecoder {
+    pub static fn init(alloc: std.mem.Allocator, max_allowed_table_size: usize): HpackDecoder {
         return HpackDecoder{
             alloc: alloc,
             table: DynamicTable.init(alloc, max_allowed_table_size),

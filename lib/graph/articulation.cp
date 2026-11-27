@@ -126,7 +126,7 @@ pub struct ArticulationGraph {
 
     /// Initializes an undirected graph with `node_count` vertices (`0..=ARTIC_MAX_NODES`).
     /// Returns `null` if `node_count > ARTIC_MAX_NODES`.
-    pub fn init(node_count: usize): ArticulationGraph? {
+    pub static fn init(node_count: usize): ArticulationGraph? {
         if (node_count > ARTIC_MAX_NODES) return null;
         return ArticulationGraph{
             node_count: node_count,

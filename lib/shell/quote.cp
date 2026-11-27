@@ -101,7 +101,7 @@ export struct ShellArgIter {
     had_error: bool;
 
     /// 初始化命令行参数迭代器
-    fn init(cmdline: []const u8): ShellArgIter {
+    static fn init(cmdline: []const u8): ShellArgIter {
         return ShellArgIter{
             src: cmdline,
             pos: 0,

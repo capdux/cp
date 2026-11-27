@@ -9,7 +9,7 @@ pub const EnvPath = struct {
     allocator: std.mem.Allocator,
     buf: std.ArrayListUnmanaged(u8) = .empty,
 
-    pub fn init(allocator: std.mem.Allocator): EnvPath {
+    pub static fn init(allocator: std.mem.Allocator): EnvPath {
         return EnvPath{
             allocator: allocator,
             buf: .empty,
@@ -72,7 +72,7 @@ pub const EnvPathIterator = struct {
     cursor: usize = 0,
     delimiter: u8,
 
-    pub fn init(path_str: []const u8, custom_delimiter: u8?): EnvPathIterator {
+    pub static fn init(path_str: []const u8, custom_delimiter: u8?): EnvPathIterator {
         let delim: u8 = if (@import("builtin").os.tag == .windows) ';' else ':';
         if (d := custom_delimiter) {
             delim = d;

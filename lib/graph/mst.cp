@@ -10,7 +10,7 @@ pub struct WeightedEdge {
     weight: f64,
     id: u32,
 
-    fn init(u: usize, v: usize, weight: f64, id: u32): WeightedEdge {
+    static fn init(u: usize, v: usize, weight: f64, id: u32): WeightedEdge {
         return WeightedEdge {
             u: u,
             v: v,

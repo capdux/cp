@@ -394,7 +394,7 @@ pub struct RegoImportIter {
     iter: RegoIter,
     depth: usize,
 
-    fn init(input: []const u8): RegoImportIter {
+    static fn init(input: []const u8): RegoImportIter {
         return RegoImportIter{
             .iter = RegoIter.init(input),
             .depth = 0,
@@ -434,7 +434,7 @@ pub struct RegoRuleIter {
     depth: usize,
     at_stmt_start: bool,
 
-    fn init(input: []const u8): RegoRuleIter {
+    static fn init(input: []const u8): RegoRuleIter {
         return RegoRuleIter{
             .iter = RegoIter.init(input),
             .depth = 0,

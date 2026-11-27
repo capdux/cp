@@ -104,7 +104,7 @@ pub fn IntervalTree(comptime T: type, comptime V: type): type {
         const Self = @This();
         pub const Entry = Interval(T, V);
 
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 .root = null,
                 .count = 0,

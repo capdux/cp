@@ -367,7 +367,7 @@ pub struct GptEntryIter {
     index: u32,
     skip_unused: bool,
 
-    fn init(entries_bytes: []const u8, num_entries: u32, entry_size: u32, skip_unused: bool): GptEntryIter {
+    static fn init(entries_bytes: []const u8, num_entries: u32, entry_size: u32, skip_unused: bool): GptEntryIter {
         return GptEntryIter{
             .data = entries_bytes,
             .entry_size = entry_size as usize,

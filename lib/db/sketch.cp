@@ -40,7 +40,7 @@ pub struct HyperLogLog {
     registers: []u8,
 
     /// Initialize a HyperLogLog sketch with `precision` in [4, 16].
-    pub fn init(alloc: std.mem.Allocator, precision: u8): HyperLogLog ! SketchError {
+    pub static fn init(alloc: std.mem.Allocator, precision: u8): HyperLogLog ! SketchError {
         if (precision < 4 || precision > 16) {
             return SketchError.InvalidPrecision;
         }
@@ -206,7 +206,7 @@ pub struct QuantileDigest {
     has_data: bool = false,
 
     /// Initialize a QuantileDigest with at most `max_centroids` compressed centroids (`>= 2`).
-    pub fn init(alloc: std.mem.Allocator, max_centroids: usize): QuantileDigest ! SketchError {
+    pub static fn init(alloc: std.mem.Allocator, max_centroids: usize): QuantileDigest ! SketchError {
         if (max_centroids < 2) {
             return SketchError.InvalidCapacity;
         }
@@ -425,7 +425,7 @@ pub fn ReservoirSampler(comptime T: type): type {
         rng_state: u64,
 
         /// Initialize a ReservoirSampler with fixed capacity `capacity >= 1` and PRNG `seed`.
-        pub fn init(alloc: std.mem.Allocator, capacity: usize, seed: u64): Self ! SketchError {
+        pub static fn init(alloc: std.mem.Allocator, capacity: usize, seed: u64): Self ! SketchError {
             if (capacity == 0) {
                 return SketchError.InvalidCapacity;
             }

@@ -22,7 +22,7 @@ pub struct DisjointSet {
     count: usize = 0,
 
     /// Initialize a DisjointSet with `n` isolated elements `[0, n)`.
-    pub fn init(allocator: std.mem.Allocator, n: usize): DisjointSet ! DsuError {
+    pub static fn init(allocator: std.mem.Allocator, n: usize): DisjointSet ! DsuError {
         if (n == 0) {
             return DisjointSet{
                 alloc: allocator,
@@ -204,7 +204,7 @@ pub struct WeightedDsu {
     count: usize = 0,
 
     /// Initialize a WeightedDsu with `n` isolated elements `[0, n)`.
-    pub fn init(allocator: std.mem.Allocator, n: usize): WeightedDsu ! DsuError {
+    pub static fn init(allocator: std.mem.Allocator, n: usize): WeightedDsu ! DsuError {
         if (n == 0) {
             return WeightedDsu{
                 alloc: allocator,
@@ -337,7 +337,7 @@ pub struct RollbackDsu {
     history_len: usize = 0,
 
     /// Initialize a RollbackDsu with `n` isolated elements `[0, n)`.
-    pub fn init(allocator: std.mem.Allocator, n: usize): RollbackDsu ! DsuError {
+    pub static fn init(allocator: std.mem.Allocator, n: usize): RollbackDsu ! DsuError {
         if (n == 0) {
             return RollbackDsu{
                 alloc: allocator,

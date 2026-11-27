@@ -138,7 +138,7 @@ pub struct CatalogMap {
     storage: []CatalogEntry,
     count: usize,
 
-    fn init(storage: []CatalogEntry): CatalogMap {
+    static fn init(storage: []CatalogEntry): CatalogMap {
         return {
             storage: storage,
             count: 0,

@@ -745,7 +745,7 @@ pub struct EpubSpineIter {
     section: []const u8,
     pos: usize,
 
-    pub fn init(opf_xml: []const u8): EpubSpineIter {
+    pub static fn init(opf_xml: []const u8): EpubSpineIter {
         if (pkg := findElementSpan(opf_xml, 0, "package")) {
             if (sp := findElementSpan(pkg.inner, 0, "spine")) {
                 return EpubSpineIter {

@@ -117,7 +117,7 @@ pub struct FirFilter {
     pos: usize;
 
     /// Initializes a `FirFilter`. Requires `coeffs.len >= 1` and `delay.len >= coeffs.len`.
-    pub fn init(coeffs: []const f64, delay: []f64): FirFilter? {
+    pub static fn init(coeffs: []const f64, delay: []f64): FirFilter? {
         if (coeffs.len == 0 || delay.len < coeffs.len) {
             return null;
         }

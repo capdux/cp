@@ -29,7 +29,7 @@ pub struct FenwickTree {
     size: usize = 0,
 
     /// Initialize an empty FenwickTree of length `n` with all elements set to 0.
-    pub fn init(alloc: std.mem.Allocator, n: usize): FenwickTree ! SegTreeError {
+    pub static fn init(alloc: std.mem.Allocator, n: usize): FenwickTree ! SegTreeError {
         if (n == 0) {
             return FenwickTree{
                 alloc: alloc,
@@ -216,7 +216,7 @@ pub struct LazySegmentTree {
     size: usize = 0,
 
     /// Construct a LazySegmentTree from `values` in O(N) time.
-    pub fn init(alloc: std.mem.Allocator, values: []const i64): LazySegmentTree ! SegTreeError {
+    pub static fn init(alloc: std.mem.Allocator, values: []const i64): LazySegmentTree ! SegTreeError {
         const n = values.len;
         if (n == 0) {
             return LazySegmentTree{

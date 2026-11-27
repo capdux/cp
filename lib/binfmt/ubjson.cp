@@ -52,7 +52,7 @@ pub struct UbjsonWriter {
     buf: []u8,
     pos: usize,
 
-    fn init(buf: []u8): UbjsonWriter {
+    static fn init(buf: []u8): UbjsonWriter {
         return UbjsonWriter{
             .buf = buf,
             .pos = 0,
@@ -339,7 +339,7 @@ pub struct UbjsonReader {
     data: []const u8,
     pos: usize,
 
-    fn init(data: []const u8): UbjsonReader {
+    static fn init(data: []const u8): UbjsonReader {
         return UbjsonReader{
             .data = data,
             .pos = 0,

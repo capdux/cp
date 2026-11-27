@@ -44,7 +44,7 @@ pub const SipHashStream = struct {
     buf: [8]u8,
     buf_len: usize,
 
-    pub fn init(key: [16]u8, c_rounds: u8, d_rounds: u8, is_128: bool): SipHashStream {
+    pub static fn init(key: [16]u8, c_rounds: u8, d_rounds: u8, is_128: bool): SipHashStream {
         const k0 = std.mem.readInt(u64, key[0..8], .little);
         const k1 = std.mem.readInt(u64, key[8..16], .little);
         let v2 = V2_INIT ^ k0;

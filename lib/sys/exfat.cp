@@ -348,7 +348,7 @@ pub struct ExfatDirIter {
     pos: usize,
     done: bool,
 
-    pub fn init(data: []const u8): ExfatDirIter {
+    pub static fn init(data: []const u8): ExfatDirIter {
         return ExfatDirIter{
             .data = data,
             .pos = 0,

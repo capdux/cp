@@ -23,7 +23,7 @@ pub fn SegmentTree(comptime T: type): type {
 
         const Self = @This();
 
-        pub fn init(alloc: std.mem.Allocator, values: []const T): !Self {
+        pub static fn init(alloc: std.mem.Allocator, values: []const T): !Self {
             if (values.len == 0) { return SegError.EmptyTree; }
             const nodes = try alloc.alloc(Node, 4 * values.len);
             errdefer alloc.free(nodes);

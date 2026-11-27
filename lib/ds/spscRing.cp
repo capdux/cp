@@ -81,7 +81,7 @@ pub struct SpscRingU64 {
 
     /// Initializes a ring channel with power-of-two `cap_size` (`4..=256`) and default watermarks (800 / 250).
     /// Returns `null` if `cap_size` is not a valid power of two in range.
-    pub fn init(cap_size: usize): SpscRingU64? {
+    pub static fn init(cap_size: usize): SpscRingU64? {
         return SpscRingU64.initWithWatermarks(cap_size, SpscWatermarkConfig{});
     }
 

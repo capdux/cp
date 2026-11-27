@@ -174,7 +174,7 @@ pub struct ReactSession {
     trace_count: usize,
 
     /// Initializes a new `ReactSession` in `Idle` phase backed by `trace_buf`.
-    fn init(session_id: u64, max_steps: u32, trace_buf: *[]TraceEntry): ReactSession {
+    static fn init(session_id: u64, max_steps: u32, trace_buf: *[]TraceEntry): ReactSession {
         return ReactSession {
             session_id: session_id,
             cur_phase: ReactPhase.Idle,

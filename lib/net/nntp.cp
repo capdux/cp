@@ -359,7 +359,7 @@ pub struct NntpMultiLineIter {
     pos: usize,
     terminated: bool,
 
-    pub fn init(data: []const u8): NntpMultiLineIter {
+    pub static fn init(data: []const u8): NntpMultiLineIter {
         return NntpMultiLineIter{
             .data = data,
             .pos = 0,

@@ -28,7 +28,7 @@ pub struct H2ConnectionWindow {
     pub initial_stream_window: i64,
     streams: std.AutoHashMap(u32, H2StreamInfo),
 
-    pub fn init(alloc: std.mem.Allocator, initial_window: i64): H2Error!H2ConnectionWindow {
+    pub static fn init(alloc: std.mem.Allocator, initial_window: i64): H2Error!H2ConnectionWindow {
         if (initial_window < 0 or initial_window > H2_MAX_WINDOW_SIZE) {
             return H2Error.InvalidSettings;
         }

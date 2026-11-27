@@ -47,7 +47,7 @@ export struct MerkleTree {
     levels: [][][32]u8,
     count: usize,
 
-    pub fn init(alloc: std.mem.Allocator, leaves: []const []const u8): !MerkleTree {
+    pub static fn init(alloc: std.mem.Allocator, leaves: []const []const u8): !MerkleTree {
         if (leaves.len == 0) {
             return MerkleTree{
                 .alloc = alloc,

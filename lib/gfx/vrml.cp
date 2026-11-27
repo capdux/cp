@@ -370,7 +370,7 @@ fn consumeBracketBlock(lex: *VrmlLexer, open_end: usize): BlockSpan? {
 pub struct VrmlNodeIter {
     lex: VrmlLexer,
 
-    pub fn init(data: []const u8): VrmlNodeIter {
+    pub static fn init(data: []const u8): VrmlNodeIter {
         let start_pos: usize = 0;
         if (hdr := parseVrmlHeader(data)) {
             start_pos = hdr.body_offset;

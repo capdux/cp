@@ -45,7 +45,7 @@ pub const Murmur3_32Stream = struct {
     buf: [4]u8,
     buf_len: usize,
 
-    pub fn init(seed: u32): Murmur3_32Stream {
+    pub static fn init(seed: u32): Murmur3_32Stream {
         return Murmur3_32Stream{
             .h1 = seed,
             .total_len = 0,
@@ -110,7 +110,7 @@ pub const Murmur3_128Stream = struct {
     buf: [16]u8,
     buf_len: usize,
 
-    pub fn init(seed: u32): Murmur3_128Stream {
+    pub static fn init(seed: u32): Murmur3_128Stream {
         const s: u64 = seed;
         return Murmur3_128Stream{
             .h1 = s,

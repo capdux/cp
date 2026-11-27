@@ -239,7 +239,7 @@ pub struct CuckooFilter {
     item_count: usize,
     rng_state: u64,
 
-    pub fn init(alloc: std.mem.Allocator, capacity: usize): FilterError!CuckooFilter {
+    pub static fn init(alloc: std.mem.Allocator, capacity: usize): FilterError!CuckooFilter {
         if (capacity == 0) {
             return FilterError.InvalidCapacity;
         }

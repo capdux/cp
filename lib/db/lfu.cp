@@ -38,7 +38,7 @@ pub struct TinyLfuSketch {
 
     /// Initializes a `TinyLfuSketch` over caller-owned `counters`.
     /// Requires `counters.len >= 8`, power-of-two `counters.len`, and `reset_threshold > 0`.
-    pub fn init(counters: []u8, reset_threshold: u32): TinyLfuSketch? {
+    pub static fn init(counters: []u8, reset_threshold: u32): TinyLfuSketch? {
         if (counters.len < 8 || !isPow2(counters.len) || reset_threshold == 0) {
             return null;
         }
@@ -153,7 +153,7 @@ pub struct LfuCache {
     clock: u64;
 
     /// Initializes an `LfuCache` backed by caller-owned `slots`. Returns `null` if `slots.len == 0`.
-    pub fn init(slots: []LfuSlot): LfuCache? {
+    pub static fn init(slots: []LfuSlot): LfuCache? {
         if (slots.len == 0) {
             return null;
         }

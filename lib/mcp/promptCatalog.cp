@@ -245,7 +245,7 @@ pub struct McpPromptCatalog {
     entries: [MCP_PROMPT_MAX_ENTRIES]McpPromptEntry = [McpPromptEntry {}; MCP_PROMPT_MAX_ENTRIES];
     entry_count: usize = 0;
 
-    fn init(): McpPromptCatalog {
+    static fn init(): McpPromptCatalog {
         return McpPromptCatalog {};
     }
 

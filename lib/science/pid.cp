@@ -55,7 +55,7 @@ pub struct PidController {
 
     /// Validates `cfg` (`out_min <= out_max`, `tau_d >= 0`, `deadband >= 0`, all finite)
     /// and returns a zero-initialized `PidController`, or `null` on invalid config.
-    fn init(cfg: PidConfig): PidController? {
+    static fn init(cfg: PidConfig): PidController? {
         if (
             !isFiniteF64(cfg.kp) ||
             !isFiniteF64(cfg.ki) ||

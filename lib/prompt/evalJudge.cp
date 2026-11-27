@@ -196,7 +196,7 @@ pub struct JudgeRubric {
     pass_threshold_bps: u32 = 7000;
 
     /// Initializes a rubric with a passing threshold in basis points (`0..=10000`).
-    pub fn init(pass_threshold_bps: u32): JudgeRubric? {
+    pub static fn init(pass_threshold_bps: u32): JudgeRubric? {
         if (pass_threshold_bps > JUDGE_BPS_SCALE) return null;
         return JudgeRubric{
             pass_threshold_bps: pass_threshold_bps,
@@ -372,7 +372,7 @@ pub struct JudgeArena {
     tie_count: u64 = 0;
 
     /// Initializes a new arena with Elo `k_factor` in `(0.0, 256.0]`.
-    pub fn init(k_factor: f64): JudgeArena? {
+    pub static fn init(k_factor: f64): JudgeArena? {
         if (!isFinitePositiveF64(k_factor) || k_factor > 256.0) return null;
         return JudgeArena{
             k_factor: k_factor,

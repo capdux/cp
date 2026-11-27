@@ -57,7 +57,7 @@ pub struct AgentDag {
     validated: bool,
 
     /// Initializes an empty `AgentDag` backed by caller-provided task and edge buffers.
-    fn init(tasks_buf: *[]DagTask, edges_buf: *[]DagEdge): AgentDag {
+    static fn init(tasks_buf: *[]DagTask, edges_buf: *[]DagEdge): AgentDag {
         return AgentDag {
             tasks: tasks_buf.*,
             edges: edges_buf.*,

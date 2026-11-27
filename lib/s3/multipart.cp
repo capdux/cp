@@ -50,7 +50,7 @@ pub struct MultiPartUpload {
     pub options: MultiPartUploadOptions = MultiPartUploadOptions{},
     pub state: MultiPartUploadState = MultiPartUploadState.not_started,
 
-    pub fn init(upload_id: string, key: string, options: MultiPartUploadOptions?): MultiPartUpload {
+    pub static fn init(upload_id: string, key: string, options: MultiPartUploadOptions?): MultiPartUpload {
         let opts = MultiPartUploadOptions{};
         if (o := options) {
             opts = o;

@@ -436,7 +436,7 @@ pub struct SdfAtomIter {
     remaining: u32,
     malformed: bool,
 
-    fn init(mol_slice: []const u8, header: SdfMolHeader): SdfAtomIter {
+    static fn init(mol_slice: []const u8, header: SdfMolHeader): SdfAtomIter {
         return SdfAtomIter{
             data: mol_slice,
             pos: header.atoms_offset,
@@ -469,7 +469,7 @@ pub struct SdfBondIter {
     atom_count: u32,
     malformed: bool,
 
-    fn init(mol_slice: []const u8, header: SdfMolHeader): SdfBondIter {
+    static fn init(mol_slice: []const u8, header: SdfMolHeader): SdfBondIter {
         return SdfBondIter{
             data: mol_slice,
             pos: header.bonds_offset,

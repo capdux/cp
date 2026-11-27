@@ -70,7 +70,7 @@ pub const ReedSolomon = struct {
     // parity_rows: parity_shards * data_shards systematic Cauchy matrix
     parity_rows: []u8,
 
-    pub fn init(alloc: std.mem.Allocator, data_shards: usize, parity_shards: usize): RsError!ReedSolomon {
+    pub static fn init(alloc: std.mem.Allocator, data_shards: usize, parity_shards: usize): RsError!ReedSolomon {
         if (data_shards == 0 or parity_shards == 0 or data_shards + parity_shards > 256) {
             return RsError.InvalidShardCount;
         }

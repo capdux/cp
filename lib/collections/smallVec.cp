@@ -10,7 +10,7 @@ pub fn SmallVec(comptime T: type, comptime INLINE_CAP: usize): type {
         count: usize = 0,
         is_heap: bool = false,
 
-        pub fn init(): Self {
+        pub static fn init(): Self {
             return Self{};
         }
 

@@ -71,7 +71,7 @@ export class MaglevRouter {
     backends: std.ArrayList(Backend),
     table: []usize,
 
-    pub fn init(alloc: std.mem.Allocator, table_size: usize) -> MaglevError!MaglevRouter {
+    pub static fn init(alloc: std.mem.Allocator, table_size: usize) -> MaglevError!MaglevRouter {
         if (!isPrime(table_size)) {
             return MaglevError.InvalidTableSize;
         }

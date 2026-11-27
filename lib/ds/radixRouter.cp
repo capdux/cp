@@ -67,7 +67,7 @@ pub struct RadixRouter<T> {
     len: usize = 0,
 
     /// Initialize an empty RadixRouter.
-    pub fn init(allocator: std.mem.Allocator): RadixRouter<T> {
+    pub static fn init(allocator: std.mem.Allocator): RadixRouter<T> {
         return RadixRouter<T>{
             alloc: allocator,
             root: null,

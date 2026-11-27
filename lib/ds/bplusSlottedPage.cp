@@ -14,7 +14,7 @@ pub const MAX_PAYLOAD_SIZE: usize = PAGE_SIZE - PAGE_HEADER_SIZE - PAGE_FOOTER_S
 pub struct SlottedPage {
     pub data: [PAGE_SIZE]u8,
 
-    pub fn init(): SlottedPage {
+    pub static fn init(): SlottedPage {
         let page = SlottedPage{
             .data = std.mem.zeroes([PAGE_SIZE]u8),
         };

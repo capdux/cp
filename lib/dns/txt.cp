@@ -229,7 +229,7 @@ export struct SpfIter {
     pos: usize;
     valid: bool;
 
-    fn init(record: []const u8): SpfIter {
+    static fn init(record: []const u8): SpfIter {
         let pos: usize = 0;
         while (pos < record.len && isSpace(record[pos])) {
             pos += 1;
