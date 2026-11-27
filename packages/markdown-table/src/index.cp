@@ -19,23 +19,23 @@ fn mdtbWriteByte(out: []u8, pos: usize, ch: u8): usize {
 }
 
 fn mdtbWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos..pos + n], s[0..n]);
+    return pos + n;
 }
 
 fn mdtbWriteRepeat(out: []u8, pos: usize, ch: u8, count: usize): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < count && p < out.len) : (i += 1) {
-        out[p] = ch;
-        p += 1;
+    if (pos >= out.len || count == 0) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const n = if (count < avail) count else avail;
+    @memset(out[pos..pos + n], ch);
+    return pos + n;
 }
 
 fn mdtbGetAlign(aligns: []const TableAlign, col: usize): TableAlign {
@@ -131,7 +131,7 @@ pub fn renderMarkdownTable(
         return 0;
     }
 
-    let widths: [64]usize = [0; 64];
+    let widths: [64]usize = undefined;
     const cached_cols = if (num_cols < MDTB_MAX_COLS) num_cols else MDTB_MAX_COLS;
     let c: usize = 0;
     while (c < cached_cols) : (c += 1) {

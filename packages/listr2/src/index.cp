@@ -32,14 +32,13 @@ pub struct TaskNode {
 }
 
 fn lstrPush(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return p;
+    let avail = out.len - pos;
+    let n = if (s.len < avail) { s.len } else { avail };
+    @memcpy(out[pos..pos + n], s[0..n]);
+    return pos + n;
 }
 
 pub struct ListrRunner {
@@ -49,18 +48,9 @@ pub struct ListrRunner {
     pub halted: bool,
 
     pub static fn new(opts: ListrOptions): ListrRunner {
-        let blank = TaskNode {
-            title: "",
-            state: TASK_PENDING,
-            retries_left: 0,
-            attempts: 0,
-            skip_reason: "",
-            err_msg: "",
-        };
-        let arr: [32]TaskNode = [blank; 32];
         return ListrRunner {
             opts: opts,
-            tasks: arr,
+            tasks: undefined,
             task_count: 0,
             halted: false,
         };
@@ -134,7 +124,7 @@ pub struct ListrRunner {
         if (idx >= _.task_count) { return 0; }
         let t = _.tasks[idx];
         let fmt = PicoFormatter.new(_.opts.use_color);
-        let badge_buf: [64]u8 = [0; 64];
+        let badge_buf: [64]u8 = undefined;
         let p: usize = 0;
         if (t.state == TASK_COMPLETED) {
             let bn = fmt.green("[OK]", badge_buf[0..64]);

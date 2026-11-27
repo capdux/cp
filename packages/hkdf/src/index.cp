@@ -7,8 +7,8 @@ pub struct HkdfSha256 {
     pub prk: [32]u8,
 
     pub static fn extract(salt: []u8, ikm: []u8): HkdfSha256 {
-        let zero_salt: [32]u8 = [0; 32];
         let mac = if (salt.len == 0) {
+            let zero_salt: [32]u8 = [0; 32];
             HmacSha256.newFromSlice(zero_salt[0..32])
         } else {
             HmacSha256.newFromSlice(salt)
@@ -22,11 +22,7 @@ pub struct HkdfSha256 {
     pub static fn fromPrk(prk_in: []u8): HkdfSha256? {
         if (prk_in.len < HKDF_HASH_LEN) { return null; }
         let buf: [32]u8 = undefined;
-        let i: usize = 0;
-        while (i < 32) {
-            buf[i] = prk_in[i];
-            i = i + 1;
-        }
+        @memcpy(buf[0..32], prk_in[0..32]);
         return HkdfSha256 { prk: buf };
     }
 
@@ -52,10 +48,8 @@ pub struct HkdfSha256 {
 
             let rem = okm.len - out_pos;
             let take = if (rem > 32) { 32 } else { rem };
-            let i: usize = 0;
-            while (i < take) {
-                okm[out_pos + i] = prev_t[i];
-                i = i + 1;
+            if (take > 0) {
+                @memcpy(okm[out_pos..out_pos + take], prev_t[0..take]);
             }
             out_pos = out_pos + take;
             ctr = ctr + 1;

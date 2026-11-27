@@ -16,14 +16,13 @@ fn pfmtWriteByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn pfmtWriteSpaces(out: []u8, pos: usize, count: usize): usize {
-    let w: usize = pos;
-    let i: usize = 0;
-    while (i < count && w < out.len) {
-        out[w] = ' ' as u8;
-        w = w + 1;
-        i = i + 1;
+    if (pos >= out.len || count == 0) {
+        return pos;
     }
-    return w;
+    let avail = out.len - pos;
+    let n = if (count < avail) { count } else { avail };
+    @memset(out[pos..pos + n], ' ' as u8);
+    return pos + n;
 }
 
 fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize {
@@ -81,23 +80,29 @@ fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize {
 fn pfmtWriteStringLiteral(out: []u8, pos: usize, s: string, escape_string: bool): usize {
     let w: usize = pos;
     w = pfmtWriteByte(out, w, '"' as u8);
+    if (!escape_string) {
+        if (w < out.len && s.len > 0) {
+            let avail = out.len - w;
+            let n = if (s.len < avail) { s.len } else { avail };
+            @memcpy(out[w..w + n], s[0..n]);
+            w = w + n;
+        }
+        w = pfmtWriteByte(out, w, '"' as u8);
+        return w;
+    }
     let i: usize = 0;
     while (i < s.len && w < out.len) {
         let ch: u8 = s[i];
-        if (escape_string) {
-            if (ch == ('\\' as u8)) {
-                w = writeStr("\\\\", out, w);
-            } else if (ch == ('"' as u8)) {
-                w = writeStr("\\\"", out, w);
-            } else if (ch == ('\n' as u8)) {
-                w = writeStr("\\n", out, w);
-            } else if (ch == ('\r' as u8)) {
-                w = writeStr("\\r", out, w);
-            } else if (ch == ('\t' as u8)) {
-                w = writeStr("\\t", out, w);
-            } else {
-                w = pfmtWriteByte(out, w, ch);
-            }
+        if (ch == ('\\' as u8)) {
+            w = writeStr("\\\\", out, w);
+        } else if (ch == ('"' as u8)) {
+            w = writeStr("\\\"", out, w);
+        } else if (ch == ('\n' as u8)) {
+            w = writeStr("\\n", out, w);
+        } else if (ch == ('\r' as u8)) {
+            w = writeStr("\\r", out, w);
+        } else if (ch == ('\t' as u8)) {
+            w = writeStr("\\t", out, w);
         } else {
             w = pfmtWriteByte(out, w, ch);
         }
@@ -151,7 +156,7 @@ pub struct PrettyWriter {
             buf: undefined,
             len: 0,
             depth: 0,
-            item_counts: [0; 32],
+            item_counts: undefined,
             truncated_depth: 0
         };
     }
@@ -164,11 +169,6 @@ pub struct PrettyWriter {
         _.len = 0;
         _.depth = 0;
         _.truncated_depth = 0;
-        let i: usize = 0;
-        while (i < PRETTY_MAX_NEST) {
-            _.item_counts[i] = 0;
-            i = i + 1;
-        }
     }
 
     pub fn isTruncated(): bool {

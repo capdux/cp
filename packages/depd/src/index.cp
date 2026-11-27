@@ -20,14 +20,13 @@ fn depdHashKey(ns: string, msg: string): u64 {
 }
 
 fn copySlice(dst: []u8, pos: usize, src: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < src.len && p < dst.len) {
-        dst[p] = src[i];
-        p = p + 1;
-        i = i + 1;
+    if (pos >= dst.len || src.len == 0) {
+        return pos;
     }
-    return p;
+    let avail = dst.len - pos;
+    let n = if (src.len < avail) { src.len } else { avail };
+    @memcpy(dst[pos..pos + n], src[0..n]);
+    return pos + n;
 }
 
 pub struct Deprecator {
@@ -41,7 +40,7 @@ pub struct Deprecator {
         return Deprecator {
             namespace: namespace,
             silenced: false,
-            seen_hashes: [0; 64],
+            seen_hashes: undefined,
             seen_count: 0,
             emitted_count: 0,
         };

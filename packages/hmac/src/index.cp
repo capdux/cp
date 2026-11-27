@@ -27,17 +27,9 @@ pub struct HmacSha256 {
         if (key.len > HMAC_BLOCK_SIZE) {
             let hashed: [32]u8 = undefined;
             sha256(key, hashed[0..32]);
-            let i: usize = 0;
-            while (i < 32) {
-                kblock[i] = hashed[i];
-                i = i + 1;
-            }
-        } else {
-            let i: usize = 0;
-            while (i < key.len) {
-                kblock[i] = key[i];
-                i = i + 1;
-            }
+            @memcpy(kblock[0..32], hashed[0..32]);
+        } else if (key.len > 0) {
+            @memcpy(kblock[0..key.len], key[0..key.len]);
         }
 
         let ipad: [64]u8 = undefined;
@@ -60,10 +52,8 @@ pub struct HmacSha256 {
     pub static fn newFromKey(key: string): HmacSha256 {
         let buf: [256]u8 = undefined;
         let n = if (key.len > 256) { 256 } else { key.len };
-        let i: usize = 0;
-        while (i < n) {
-            buf[i] = key[i];
-            i = i + 1;
+        if (n > 0) {
+            @memcpy(buf[0..n], key[0..n]);
         }
         return HmacSha256.newFromSlice(buf[0..n]);
     }
@@ -78,11 +68,7 @@ pub struct HmacSha256 {
         while (pos < msg.len) {
             let rem = msg.len - pos;
             let take = if (rem > 64) { 64 } else { rem };
-            let i: usize = 0;
-            while (i < take) {
-                chunk[i] = msg[pos + i];
-                i = i + 1;
-            }
+            @memcpy(chunk[0..take], msg[pos..pos + take]);
             sha256Update(*_.inner, chunk[0..take]);
             pos = pos + take;
         }

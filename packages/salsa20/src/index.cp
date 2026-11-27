@@ -114,7 +114,7 @@ pub fn salsa20Apply(
     }
     let n = input.len;
     if (n > out.len) { n = out.len; }
-    let block: [64]u8 = [0; 64];
+    let block: [64]u8 = undefined;
     let ctr = initial_counter;
     let pos: usize = 0;
     while (pos < n) {

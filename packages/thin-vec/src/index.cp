@@ -5,17 +5,14 @@ pub struct ThinVecI64 {
     pub data: [64]i64,
 
     pub static fn new(): ThinVecI64 {
-        let buf: [64]i64 = [0; 64];
-        return ThinVecI64 { len_val: 0, data: buf };
+        return ThinVecI64 { len_val: 0, data: undefined };
     }
 
     pub static fn fromSlice(src: []i64): ThinVecI64 {
         let v = ThinVecI64.new();
         let n = if (src.len > THIN_VEC_CAP) { THIN_VEC_CAP } else { src.len };
-        let i: usize = 0;
-        while (i < n) {
-            v.data[i] = src[i];
-            i = i + 1;
+        if (n > 0) {
+            @memcpy(v.data[0..n], src[0..n]);
         }
         v.len_val = n;
         return v;
@@ -124,14 +121,12 @@ pub struct ThinVecI64 {
     }
 
     pub fn extendFromSlice(*_, src: []i64): usize {
-        let added: usize = 0;
-        let i: usize = 0;
-        while (i < src.len && _.len_val < THIN_VEC_CAP) {
-            _.data[_.len_val] = src[i];
-            _.len_val = _.len_val + 1;
-            added = added + 1;
-            i = i + 1;
+        let avail = THIN_VEC_CAP - _.len_val;
+        let take = if (src.len > avail) { avail } else { src.len };
+        if (take > 0) {
+            @memcpy(_.data[_.len_val.._.len_val + take], src[0..take]);
+            _.len_val = _.len_val + take;
         }
-        return added;
+        return take;
     }
 }

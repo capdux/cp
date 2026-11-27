@@ -17,7 +17,7 @@ pub struct FastQueue {
         let c = concurrency;
         if (c == 0) { c = 1; }
         return FastQueue {
-            buf: [0; 64],
+            buf: undefined,
             head: 0,
             tail: 0,
             queued: 0,
