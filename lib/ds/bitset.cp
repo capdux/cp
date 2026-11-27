@@ -33,7 +33,7 @@ export struct BitSet {
         }
     }
 
-    pub fn initEmpty(alloc: std.mem.Allocator, bit_len: usize) -> !BitSet {
+    pub static fn initEmpty(alloc: std.mem.Allocator, bit_len: usize) -> !BitSet {
         const wc: usize = BitSet.wordCount(bit_len);
         let words = alloc.alloc(u64, wc)?;
         @memset(words, 0);
@@ -44,7 +44,7 @@ export struct BitSet {
         };
     }
 
-    pub fn initFull(alloc: std.mem.Allocator, bit_len: usize) -> !BitSet {
+    pub static fn initFull(alloc: std.mem.Allocator, bit_len: usize) -> !BitSet {
         const wc: usize = BitSet.wordCount(bit_len);
         let words = alloc.alloc(u64, wc)?;
         @memset(words, 0xFFFFFFFFFFFFFFFF);

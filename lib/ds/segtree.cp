@@ -52,7 +52,7 @@ pub struct FenwickTree {
     }
 
     /// Construct a FenwickTree from `values` in O(N) time.
-    pub fn fromSlice(alloc: std.mem.Allocator, values: []const i64): FenwickTree ! SegTreeError {
+    pub static fn fromSlice(alloc: std.mem.Allocator, values: []const i64): FenwickTree ! SegTreeError {
         const n = values.len;
         if (n == 0) {
             return FenwickTree{

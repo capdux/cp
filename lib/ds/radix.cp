@@ -427,7 +427,7 @@ pub struct RadixTree<T> {
         return null;
     }
 
-    fn insertChildSorted(alloc: std.mem.Allocator, parent: *RadixNode<T>, child: *RadixNode<T>): void ! RadixError {
+    static fn insertChildSorted(alloc: std.mem.Allocator, parent: *RadixNode<T>, child: *RadixNode<T>): void ! RadixError {
         const items = parent.children.items;
         const target = child.prefix[0];
         let lo: usize = 0;
