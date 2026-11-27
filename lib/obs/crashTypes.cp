@@ -140,7 +140,7 @@ pub struct CrashReport {
     metadata: []const MetadataEntry,
     owned: bool,
 
-    pub fn init(
+    pub static fn init(
         reason: CrashReason,
         fault_addr: usize,
         thread_id: u64,

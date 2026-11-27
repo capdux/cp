@@ -15,7 +15,7 @@ pub struct CssModuleConfig {
     grid: bool,
     custom_idents: bool,
 
-    fn default(): CssModuleConfig {
+    static fn default(): CssModuleConfig {
         return {
             dashed_idents: false,
             animation: true,
@@ -45,7 +45,7 @@ pub struct Pattern {
     len: usize,
 
     /// Default Bun CSS Modules pattern: `[local]_[hash]`.
-    fn default(): Pattern {
+    static fn default(): Pattern {
         let segs: [16]PatternSegment = [{ kind: PatternKind.literal, literal: "" }; 16];
         segs[0] = { kind: PatternKind.local, literal: "" };
         segs[1] = { kind: PatternKind.literal, literal: "_" };
@@ -55,7 +55,7 @@ pub struct Pattern {
 
     /// Parses a template string containing `[name]`, `[local]`, `[hash]` placeholders and literal text.
     /// Returns `null` on empty template, unclosed `[`, unknown placeholder, or more than 16 segments.
-    fn parse(template: []const u8): Pattern? {
+    static fn parse(template: []const u8): Pattern? {
         if (template.len == 0) return null;
         let segs: [16]PatternSegment = [{ kind: PatternKind.literal, literal: "" }; 16];
         let count: usize = 0;

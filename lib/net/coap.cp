@@ -335,7 +335,7 @@ pub struct CoapWriter {
     failed: bool = false,
 
     /// Initializes the 4-byte CoAP header and optional 0..8-byte Token.
-    pub fn init(
+    pub static fn init(
         buf: []u8,
         msg_type: u8,
         code: u8,
