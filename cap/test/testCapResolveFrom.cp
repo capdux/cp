@@ -1,6 +1,16 @@
 import { test, expect_eq } from "cap:test";
 import {
-    isRelativeSpecifier, isScopedSpecifier, resolveFrom
+    isRelativeSpecifier,
+    isScopedSpecifier,
+    isBareSpecifier,
+    resolveFrom,
+    resolveFromSilent,
+    resolveFromWithOptions,
+    ResolveOptions,
+    RESOLVE_OK,
+    RESOLVE_ERR_EMPTY_INPUT,
+    RESOLVE_ERR_NOT_FOUND,
+    RESOLVE_ERR_BUFFER_TOO_SMALL,
 } from "../../packages/resolve-from/src/index.cp";
 
 fn main() {
@@ -49,5 +59,47 @@ fn main() {
         expect_eq(isRelativeSpecifier("../b"), true);
         expect_eq(isRelativeSpecifier("lodash"), false);
         expect_eq(isScopedSpecifier("lodash"), false);
+        expect_eq(isBareSpecifier("lodash"), true);
+        expect_eq(isBareSpecifier("@cap/semver"), true);
+        expect_eq(isBareSpecifier("./local"), false);
+        expect_eq(isBareSpecifier("/abs"), false);
+    });
+
+    test("7. @cap/resolve-from — resolveFromSilent returns null cleanly on miss", () => {
+        let files: [1]string = ["/repo/node_modules/pkg/index.js"];
+        let out: [256]u8 = [0; 256];
+        const hit = resolveFromSilent("/repo/src", "pkg", files[0..1], out[0..256]);
+        expect_eq(hit != null, true);
+        expect_eq(out[0..(hit ?? 0)] as string, "/repo/node_modules/pkg/index.js");
+
+        const miss = resolveFromSilent("/repo/src", "missing-pkg", files[0..1], out[0..256]);
+        expect_eq(miss == null, true);
+    });
+
+    test("8. @cap/resolve-from — resolveFromWithOptions custom extensions, module dirs & error codes", () => {
+        let files: [2]string = ["/repo/cap_modules/foo/data.json", "/repo/node_modules/bar/index.ts"];
+        let out: [256]u8 = [0; 256];
+        let opts = ResolveOptions.defaults();
+        opts.include_node_modules = false;
+
+        const r1 = resolveFromWithOptions("/repo/src", "foo/data", files[0..2], opts, out[0..256]);
+        expect_eq(r1.found, true);
+        expect_eq(r1.err_code, RESOLVE_OK);
+        expect_eq(out[0..r1.len] as string, "/repo/cap_modules/foo/data.json");
+
+        // node_modules disabled -> bar not found
+        const r2 = resolveFromWithOptions("/repo/src", "bar", files[0..2], opts, out[0..256]);
+        expect_eq(r2.found, false);
+        expect_eq(r2.err_code, RESOLVE_ERR_NOT_FOUND);
+
+        // Enable node_modules -> bar found, test small buffer error code
+        opts.include_node_modules = true;
+        let tiny: [4]u8 = [0; 4];
+        const r3 = resolveFromWithOptions("/repo/src", "bar", files[0..2], opts, tiny[0..4]);
+        expect_eq(r3.found, false);
+        expect_eq(r3.err_code, RESOLVE_ERR_BUFFER_TOO_SMALL);
+
+        const r4 = resolveFromWithOptions("", "bar", files[0..2], opts, out[0..256]);
+        expect_eq(r4.err_code, RESOLVE_ERR_EMPTY_INPUT);
     });
 }

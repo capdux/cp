@@ -102,6 +102,92 @@ pub struct TroughPipeline {
     fn clear(*_) {
         _.count = 0;
     }
+
+    fn isEmpty(): bool {
+        return _.count == 0;
+    }
+
+    fn isFull(): bool {
+        return _.count >= TROUGH_CAPACITY;
+    }
+
+    fn clone(): TroughPipeline {
+        let copy = TroughPipeline.new();
+        let i: usize = 0;
+        while (i < _.count) : (i += 1) {
+            copy.stages[i] = _.stages[i];
+        }
+        copy.count = _.count;
+        return copy;
+    }
+
+    fn extend(*_, other: TroughPipeline): bool {
+        if (_.count + other.count > TROUGH_CAPACITY) {
+            return false;
+        }
+        let i: usize = 0;
+        while (i < other.count) : (i += 1) {
+            _.stages[_.count] = other.stages[i];
+            _.count += 1;
+        }
+        return true;
+    }
+
+    fn runWithReport(initial: i64): RunReport {
+        let cur = stageOk(initial);
+        let i: usize = 0;
+        while (i < _.count) : (i += 1) {
+            const f = _.stages[i];
+            cur = f(cur.value);
+            if (!cur.ok || cur.halted) {
+                return RunReport {
+                    outcome: cur,
+                    steps_executed: i + 1,
+                    stopped_index: i as i32,
+                };
+            }
+        }
+        return RunReport {
+            outcome: cur,
+            steps_executed: _.count,
+            stopped_index: -1,
+        };
+    }
+
+    fn runWithErrorHandler(initial: i64, on_error: ErrorHandlerFn): StageOutcome {
+        let cur = stageOk(initial);
+        let i: usize = 0;
+        while (i < _.count) : (i += 1) {
+            const f = _.stages[i];
+            const prev_val = cur.value;
+            cur = f(prev_val);
+            if (!cur.ok) {
+                return on_error(cur.err_code, prev_val);
+            }
+            if (cur.halted) {
+                return cur;
+            }
+        }
+        return cur;
+    }
+}
+
+pub type ErrorHandlerFn = *const fn (i32, i64) StageOutcome;
+
+pub struct RunReport {
+    pub outcome: StageOutcome,
+    pub steps_executed: usize,
+    pub stopped_index: i32,
+}
+
+/// Factory function matching npm `trough()`: creates a new empty `TroughPipeline`.
+pub fn trough(): TroughPipeline {
+    return TroughPipeline.new();
+}
+
+/// Invokes a single middleware stage with `value`, matching npm `trough.wrap` semantics.
+pub fn wrapStage(stage: StageFn, value: i64): StageOutcome {
+    return stage(value);
 }
 
 pub fn dispatchTag(tag: string, routes: []const TagRoute): i32 {

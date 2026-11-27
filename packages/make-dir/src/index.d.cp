@@ -19,3 +19,22 @@ export class MakeDirPlan {
 
 export fn planMakeDir(target: string, existing_dirs: []string, opts: MakeDirOptions): MakeDirPlan;
 export fn applyUmask(mode: u32, umask: u32): u32;
+export class DirPathValidation {
+    valid: bool,
+    err_code: i32,
+    bad_index: usize,
+}
+
+export fn validateDirPath(path: string, is_windows: bool): DirPathValidation;
+export fn mkdIsAlpha(c: u8): bool;
+export fn normalizeDirPath(path: string, is_windows: bool, out: []u8): usize;
+export fn makeDirPlan(target: string, existing_dirs: []string, opts: MakeDirOptions): MakeDirPlan;
+export class ParentDirIter {
+    path: string,
+    cursor: usize,
+    done: bool,
+    fn next(_: auto): string?;
+}
+
+export fn iterParentDirs(path: string): ParentDirIter;
+export fn collectParentDirs(path: string, out: []string): usize;

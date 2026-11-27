@@ -1,6 +1,19 @@
 import { test, expect_eq } from "cap:test";
 import {
-    MAKEDIR_DEFAULT_MODE, MakeDirOptions, isValidDirPath, planMakeDir, applyUmask
+    MAKEDIR_DEFAULT_MODE,
+    MakeDirOptions,
+    isValidDirPath,
+    planMakeDir,
+    makeDirPlan,
+    applyUmask,
+    validateDirPath,
+    normalizeDirPath,
+    iterParentDirs,
+    collectParentDirs,
+    DIR_PATH_OK,
+    DIR_PATH_ERR_EMPTY,
+    DIR_PATH_ERR_INVALID_CHAR,
+    DIR_PATH_ERR_INVALID_COLON,
 } from "../../packages/make-dir/src/index.cp";
 
 fn main() {
@@ -49,5 +62,54 @@ fn main() {
         expect_eq(MAKEDIR_DEFAULT_MODE, 511);
         expect_eq(applyUmask(511, 18), 493); // 0o755 == 493
         expect_eq(applyUmask(448, 18), 448); // 0o700 unchanged
+    });
+
+    test("7. @cap/make-dir — validateDirPath & normalizeDirPath", () => {
+        const ok = validateDirPath("C:/work/proj", true);
+        expect_eq(ok.valid, true);
+        expect_eq(ok.err_code, DIR_PATH_OK);
+
+        const empty = validateDirPath("", false);
+        expect_eq(empty.valid, false);
+        expect_eq(empty.err_code, DIR_PATH_ERR_EMPTY);
+
+        const bad_ch = validateDirPath("C:/a*b", true);
+        expect_eq(bad_ch.valid, false);
+        expect_eq(bad_ch.err_code, DIR_PATH_ERR_INVALID_CHAR);
+        expect_eq(bad_ch.bad_index, 4 as usize);
+
+        const bad_col = validateDirPath("C:/a:b", true);
+        expect_eq(bad_col.valid, false);
+        expect_eq(bad_col.err_code, DIR_PATH_ERR_INVALID_COLON);
+
+        let buf: [64]u8 = undefined;
+        const n1 = normalizeDirPath("C:\\a\\\\b\\c\\", true, buf[0..64]);
+        expect_eq(buf[0..n1] as string, "C:/a/b/c");
+        const n2 = normalizeDirPath("C:\\\\", true, buf[0..64]);
+        expect_eq(buf[0..n2] as string, "C:/");
+        const n3 = normalizeDirPath("///foo//bar/", false, buf[0..64]);
+        expect_eq(buf[0..n3] as string, "/foo/bar");
+    });
+
+    test("8. @cap/make-dir — makeDirPlan alias, iterParentDirs & collectParentDirs", () => {
+        let existing: [1]string = ["/var"];
+        const plan = makeDirPlan("/var/log/app", existing[0..1], MakeDirOptions.defaults());
+        expect_eq(plan.valid, true);
+        expect_eq(plan.count, 2 as usize);
+        expect_eq(plan.dirs[0], "/var/log");
+        expect_eq(plan.dirs[1], "/var/log/app");
+
+        let it = iterParentDirs("/a/b/c/");
+        expect_eq(it.next() ?? "", "/a");
+        expect_eq(it.next() ?? "", "/a/b");
+        expect_eq(it.next() ?? "", "/a/b/c");
+        expect_eq(it.next() == null, true);
+
+        let out: [4]string = [""; 4];
+        const cnt = collectParentDirs("x/y/z", out[0..4]);
+        expect_eq(cnt, 3 as usize);
+        expect_eq(out[0], "x");
+        expect_eq(out[1], "x/y");
+        expect_eq(out[2], "x/y/z");
     });
 }

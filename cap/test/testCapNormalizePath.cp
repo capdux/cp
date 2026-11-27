@@ -2,8 +2,13 @@ import { test, expect_eq } from "cap:test";
 import {
     normalizePath,
     normalizePathDefault,
+    normalizePathWith,
+    NormalizePathOptions,
     hasBackslash,
     isUncPath,
+    isWindowsDrivePath,
+    toPosixPath,
+    stripTrailingSlash,
 } from "../../packages/normalize-path/src/index.cp";
 
 fn strEq(buf: []const u8, expected: string): bool {
@@ -114,5 +119,45 @@ fn main() {
         const n_unc_tiny = normalizePathDefault("\\\\server\\share", &tiny);
         expect_eq(n_unc_tiny, 1);
         expect_eq(tiny[0], 47);
+    });
+
+    test("7. @cap/normalize-path — isWindowsDrivePath, toPosixPath & stripTrailingSlash", () => {
+        expect_eq(isWindowsDrivePath("C:\\Users\\a"), true);
+        expect_eq(isWindowsDrivePath("d:/work"), true);
+        expect_eq(isWindowsDrivePath("C:"), true);
+        expect_eq(isWindowsDrivePath("1:/bad"), false);
+        expect_eq(isWindowsDrivePath("/posix"), false);
+
+        let buf: [64]u8 = undefined;
+        const n = toPosixPath("a\\\\b\\c\\", &buf);
+        expect_eq(strEq(buf[0..n], "a//b/c/"), true);
+
+        expect_eq(stripTrailingSlash("/a/b///"), "/a/b");
+        expect_eq(stripTrailingSlash("/"), "/");
+        expect_eq(stripTrailingSlash("C:/"), "C:/");
+        expect_eq(stripTrailingSlash("//"), "//");
+    });
+
+    test("8. @cap/normalize-path — normalizePathWith resolve_dots & strip_trailing options", () => {
+        let buf: [64]u8 = undefined;
+        let opts = NormalizePathOptions.defaults();
+        opts.resolve_dots = true;
+
+        const n1 = normalizePathWith("/a/b/../c/./d/", opts, &buf);
+        expect_eq(strEq(buf[0..n1], "/a/c/d"), true);
+
+        opts.strip_trailing = false;
+        const n2 = normalizePathWith("a/./b/../c/", opts, &buf);
+        expect_eq(strEq(buf[0..n2], "a/c/"), true);
+
+        opts.strip_trailing = true;
+        const n3 = normalizePathWith("../../a/../b", opts, &buf);
+        expect_eq(strEq(buf[0..n3], "../../b"), true);
+
+        const n4 = normalizePathWith("a/..", opts, &buf);
+        expect_eq(strEq(buf[0..n4], "."), true);
+
+        const n5 = normalizePathWith("C:\\Users\\dev\\..\\app\\", opts, &buf);
+        expect_eq(strEq(buf[0..n5], "C:/Users/app"), true);
     });
 }

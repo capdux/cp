@@ -1,8 +1,15 @@
 import { test, expect_eq } from "cap:test";
 import {
     LicenseValidation,
+    LicenseDetails,
     validateLicense,
     isValidNewLicense,
+    isValidOldLicense,
+    isOsiApprovedLicense,
+    isFsfLibreLicense,
+    isOsiApprovedExpression,
+    isFsfLibreExpression,
+    inspectLicense,
 } from "../../packages/validate-npm-package-license/src/index.cp";
 
 fn eqStr(a: string, b: string): bool {
@@ -97,5 +104,39 @@ fn main() {
         expect_eq(isValidNewLicense("BSD"), false);
         expect_eq(isValidNewLicense("MIT/X11"), false);
         expect_eq(isValidNewLicense(""), false);
+    });
+
+    test("7. @cap/validate-npm-package-license — OSI/FSF flags & compound AND/OR/WITH expressions", () => {
+        expect_eq(isOsiApprovedLicense("MIT"), true);
+        expect_eq(isOsiApprovedLicense("Apache-2.0"), true);
+        expect_eq(isFsfLibreLicense("GPL-3.0-or-later"), true);
+        expect_eq(isFsfLibreLicense("MIT"), true);
+
+        expect_eq(isOsiApprovedExpression("(MIT OR Apache-2.0) AND BSD-3-Clause"), true);
+        expect_eq(isFsfLibreExpression("MIT AND Apache-2.0"), true);
+        expect_eq(isFsfLibreExpression("MIT OR LicenseRef-Proprietary"), true);
+        expect_eq(isFsfLibreExpression("MIT AND LicenseRef-Proprietary"), false);
+        expect_eq(isValidOldLicense("BSD"), true);
+        expect_eq(isValidOldLicense(""), false);
+    });
+
+    test("8. @cap/validate-npm-package-license — inspectLicense detects compound & WITH exception", () => {
+        const d1: LicenseDetails = inspectLicense("Apache-2.0 WITH LLVM-exception");
+        expect_eq(d1.valid_for_new_packages, true);
+        expect_eq(d1.spdx, true);
+        expect_eq(d1.osi_approved, true);
+        expect_eq(d1.fsf_libre, true);
+        expect_eq(d1.has_compound_expr, false);
+        expect_eq(d1.has_exception, true);
+
+        const d2: LicenseDetails = inspectLicense("MIT OR Apache-2.0");
+        expect_eq(d2.spdx, true);
+        expect_eq(d2.has_compound_expr, true);
+        expect_eq(d2.has_exception, false);
+
+        const d3: LicenseDetails = inspectLicense("UNLICENSED");
+        expect_eq(d3.unlicensed, true);
+        expect_eq(d3.osi_approved, false);
+        expect_eq(d3.fsf_libre, false);
     });
 }

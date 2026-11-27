@@ -3,11 +3,15 @@ import {
     TROUGH_CAPACITY,
     StageOutcome,
     StageFn,
+    ErrorHandlerFn,
+    RunReport,
     TagRoute,
     stageOk,
     stageErr,
     stageHalt,
     TroughPipeline,
+    trough,
+    wrapStage,
     dispatchTag,
 } from "../../packages/trough/src/index.cp";
 
@@ -27,6 +31,10 @@ fn failIfNeg(v: i64): StageOutcome {
 fn haltOnFortyTwo(v: i64): StageOutcome {
     if (v == 42) return stageHalt(42);
     return stageOk(v + 1);
+}
+
+fn recoverError(err_code: i32, last_val: i64): StageOutcome {
+    return stageOk(last_val + (err_code as i64));
 }
 
 fn main() {
@@ -108,5 +116,50 @@ fn main() {
         ];
         expect_eq(dispatchTag("text", routes[0..2]), 10 as i32);
         expect_eq(dispatchTag("image", routes[0..2]), -1 as i32);
+    });
+
+    test("7. @cap/trough — trough() factory, wrapStage, isEmpty, clone & extend", () => {
+        let p1 = trough();
+        expect_eq(p1.isEmpty(), true);
+        expect_eq(p1.isFull(), false);
+        * = p1.use(addTen);
+
+        let p2 = p1.clone();
+        * = p2.use(doubleVal);
+        expect_eq(p1.len(), 1 as usize);
+        expect_eq(p2.len(), 2 as usize);
+
+        expect_eq(p1.extend(p2), true);
+        expect_eq(p1.len(), 3 as usize);
+        // (1 + 10) -> 11 -> +10 = 21 -> *2 = 42
+        expect_eq(p1.run(1).value, 42 as i64);
+
+        const single = wrapStage(doubleVal, 21);
+        expect_eq(single.ok, true);
+        expect_eq(single.value, 42 as i64);
+    });
+
+    test("8. @cap/trough — runWithReport & runWithErrorHandler error propagation", () => {
+        let pipe = trough();
+        * = pipe.use(addTen);
+        * = pipe.use(failIfNeg);
+        * = pipe.use(doubleVal);
+
+        const rep: RunReport = pipe.runWithReport(-20);
+        expect_eq(rep.outcome.ok, false);
+        expect_eq(rep.outcome.err_code, 400 as i32);
+        expect_eq(rep.steps_executed, 2 as usize);
+        expect_eq(rep.stopped_index, 1 as i32);
+
+        const ok_rep: RunReport = pipe.runWithReport(5);
+        expect_eq(ok_rep.outcome.ok, true);
+        expect_eq(ok_rep.outcome.value, 30 as i64);
+        expect_eq(ok_rep.steps_executed, 3 as usize);
+        expect_eq(ok_rep.stopped_index, -1 as i32);
+
+        // Error handler receives err_code=400 and last_val=-10 -> returns 390
+        const recovered = pipe.runWithErrorHandler(-20, recoverError);
+        expect_eq(recovered.ok, true);
+        expect_eq(recovered.value, 390 as i64);
     });
 }

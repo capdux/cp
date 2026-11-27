@@ -3,7 +3,13 @@ import {
     countChars,
     padStart,
     padEnd,
+    padLeft,
+    padRight,
     padCenter,
+    pad,
+    padCenterWith,
+    PadOptions,
+    truncateChars,
     repeatStr,
 } from "../../packages/pad/src/index.cp";
 
@@ -82,5 +88,39 @@ fn main() {
         expect_eq(padEnd("42", 8, 48, tiny[0..4]), 0 as usize);
         expect_eq(padCenter("42", 8, 48, tiny[0..4]), 0 as usize);
         expect_eq(repeatStr("abc", 3, tiny[0..4]), 0 as usize);
+    });
+
+    test("7. @cap/pad-str — padLeft & padRight aliases", () => {
+        let buf: [32]u8 = undefined;
+        const n1 = padLeft("7", 4, 48, buf[0..32]);
+        expect_eq(testEq(buf[0..n1], "0007"), true);
+
+        const n2 = padRight("ok", 5, 46, buf[0..32]);
+        expect_eq(testEq(buf[0..n2], "ok..."), true);
+    });
+
+    test("8. @cap/pad-str — pad() & padCenterWith() with custom pad_str and truncate option", () => {
+        let buf: [64]u8 = undefined;
+
+        let o1 = PadOptions.defaults();
+        o1.left = true;
+        o1.pad_str = "ab";
+        const n1 = pad("X", 6, o1, buf[0..64]);
+        expect_eq(testEq(buf[0..n1], "ababaX"), true);
+
+        let o2 = PadOptions.defaults();
+        o2.truncate = true;
+        const n2 = pad("你好世界", 2, o2, buf[0..64]);
+        expect_eq(testEq(buf[0..n2], "你好"), true);
+        expect_eq(truncateChars("abcdef", 3), "abc");
+
+        let o3 = PadOptions.defaults();
+        o3.pad_str = "-=";
+        const n3 = padCenterWith("CP", 7, o3, buf[0..64]);
+        expect_eq(testEq(buf[0..n3], "-=CP-=-"), true);
+
+        o3.truncate = true;
+        const n4 = padCenterWith("abcdef", 4, o3, buf[0..64]);
+        expect_eq(testEq(buf[0..n4], "abcd"), true);
     });
 }

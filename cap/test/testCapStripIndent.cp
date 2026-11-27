@@ -5,7 +5,12 @@ import { test, expect_eq } from "cap:test";
 import {
     minIndent,
     stripIndent,
+    stripIndentInto,
     stripIndentBy,
+    StripIndentOptions,
+    minIndentWithTabWidth,
+    stripIndentWith,
+    indentLines,
 } from "../../packages/strip-indent/src/index.cp";
 
 fn main() {
@@ -71,5 +76,34 @@ fn main() {
         const n2 = stripIndent("    abcdef", tiny[0..5]);
         expect_eq(n2, 5 as usize);
         expect_eq(tiny[0..n2], "abcde");
+    });
+
+    test("7. @cap/strip-indent — stripIndentInto alias & minIndentWithTabWidth", () => {
+        let buf: [128]u8 = undefined;
+        const src = "\n    alpha\n      beta\n";
+        const n = stripIndentInto(src, buf[0..128]);
+        expect_eq(buf[0..n], "\nalpha\n  beta\n");
+
+        // "\t" = 4 cols, "  \t" = 6 cols, blank line ignored -> min = 4
+        expect_eq(minIndentWithTabWidth("   \n\tfoo\n  \tbar\n", 4), 4 as usize);
+        expect_eq(minIndentWithTabWidth("  foo\n\tbar", 4), 2 as usize);
+    });
+
+    test("8. @cap/strip-indent — stripIndentWith (mixed tabs/spaces + trim_blank_lines) & indentLines", () => {
+        let buf: [128]u8 = undefined;
+        let opts = StripIndentOptions.defaults();
+        opts.tab_width = 4;
+        opts.trim_blank_lines = true;
+
+        // "  foo" (2 cols) and "\tbar" (4 cols -> after stripping 2 cols leaves 2 spaces + "bar")
+        const src = "  foo\n   \n\tbar";
+        const n1 = stripIndentWith(src, opts, buf[0..128]);
+        expect_eq(buf[0..n1], "foo\n\n  bar");
+
+        const n2 = indentLines("a\n\nb", 2, 32, false, buf[0..128]);
+        expect_eq(buf[0..n2], "  a\n\n  b");
+
+        const n3 = indentLines("a\n\nb", 1, 9, true, buf[0..128]);
+        expect_eq(buf[0..n3], "\ta\n\t\n\tb");
     });
 }

@@ -117,3 +117,112 @@ pub fn destroyWithError(s: *DestroyableStream, err_code: i32): u8 {
     * = s.lifecycle.markError(err_code);
     return DESTROY_ACTION_DESTROYED;
 }
+
+/// Lightweight idempotent resource destruction state tracker.
+pub struct DestroyState {
+    pub resource_id: u64,
+    pub destroyed: bool,
+    pub destroy_calls: usize,
+    pub err_code: i32,
+
+    pub static fn new(resource_id: u64): DestroyState {
+        return DestroyState {
+            resource_id: resource_id,
+            destroyed: false,
+            destroy_calls: 0,
+            err_code: 0,
+        };
+    }
+
+    pub fn isDestroyed(): bool {
+        return _.destroyed;
+    }
+
+    /// Idempotently destroys the tracked resource. Returns `true` on first transition, `false` if already destroyed.
+    pub fn destroy(*_): bool {
+        if (_.destroyed) {
+            return false;
+        }
+        _.destroyed = true;
+        _.destroy_calls = _.destroy_calls + 1;
+        return true;
+    }
+
+    /// Idempotently destroys the tracked resource with an error code.
+    pub fn destroyWithError(*_, err_code: i32): bool {
+        if (_.destroyed) {
+            return false;
+        }
+        _.destroyed = true;
+        _.destroy_calls = _.destroy_calls + 1;
+        _.err_code = err_code;
+        return true;
+    }
+
+    pub fn reset(*_) {
+        _.destroyed = false;
+        _.err_code = 0;
+    }
+}
+
+/// Alias for `destroyStream`: idempotently destroys a `DestroyableStream`.
+pub fn destroy(s: *DestroyableStream): u8 {
+    return destroyStream(s);
+}
+
+/// Returns true if `s` has been destroyed or finished.
+pub fn isDestroyed(s: DestroyableStream): bool {
+    return s.isDestroyed();
+}
+
+/// Idempotently destroys every stream in `streams`, returning the number of streams newly transitioned
+/// (destroyed or deferred-closed). Already-destroyed streams are skipped safely.
+pub fn destroyAll(streams: []DestroyableStream): usize {
+    let transitioned: usize = 0;
+    let i: usize = 0;
+    while (i < streams.len) {
+        const action = destroyStream(*streams[i]);
+        if (action == DESTROY_ACTION_DESTROYED || action == DESTROY_ACTION_DEFERRED_CLOSE) {
+            transitioned = transitioned + 1;
+        }
+        i = i + 1;
+    }
+    return transitioned;
+}
+
+/// Idempotently destroys every `DestroyState` in `states`, returning how many were newly destroyed.
+pub fn destroyAllStates(states: []DestroyState): usize {
+    let transitioned: usize = 0;
+    let i: usize = 0;
+    while (i < states.len) {
+        if (states[i].destroy()) {
+            transitioned = transitioned + 1;
+        }
+        i = i + 1;
+    }
+    return transitioned;
+}
+
+/// Returns true if at least one stream in `streams` is destroyed.
+pub fn isAnyDestroyed(streams: []const DestroyableStream): bool {
+    let i: usize = 0;
+    while (i < streams.len) {
+        if (streams[i].isDestroyed()) {
+            return true;
+        }
+        i = i + 1;
+    }
+    return false;
+}
+
+/// Returns true if all streams in `streams` are destroyed (true for empty slice).
+pub fn areAllDestroyed(streams: []const DestroyableStream): bool {
+    let i: usize = 0;
+    while (i < streams.len) {
+        if (!streams[i].isDestroyed()) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}

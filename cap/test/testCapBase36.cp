@@ -4,11 +4,19 @@
 import { test, expect_eq } from "cap:test";
 import {
     ParseU64Result,
+    DecodeBytesResult,
     encodeRadix,
     decodeRadix,
     encodeBase36,
     decodeBase36,
+    encodeU64,
+    encodeU64Upper,
+    decodeU64,
+    encodedLenU64,
+    encodeBytes,
+    decodeBytes,
     isValidBase36,
+    isValidBase36String,
 } from "../../packages/base36/src/index.cp";
 
 fn sliceEq(a: []const u8, b: []const u8) -> bool {
@@ -100,5 +108,61 @@ fn main() {
 
         let tiny: [3]u8 = undefined;
         expect_eq(encodeBase36(1234567890, tiny[0..3]), 0 as usize);
+    });
+
+    test("7. @cap/base36 — encodeU64, encodeU64Upper, decodeU64 & encodedLenU64", () => {
+        let buf: [32]u8 = undefined;
+        const n1 = encodeU64(1234567890, buf[0..32]);
+        expect_eq(sliceEq(buf[0..n1], "kf12oi"), true);
+        const n2 = encodeU64Upper(1234567890, buf[0..32]);
+        expect_eq(sliceEq(buf[0..n2], "KF12OI"), true);
+
+        const d1 = decodeU64("kf12oi");
+        expect_eq(d1.valid, true);
+        expect_eq(d1.value, 1234567890 as u64);
+        const d2 = decodeU64("Kf12Oi");
+        expect_eq(d2.valid, true);
+        expect_eq(d2.value, 1234567890 as u64);
+
+        expect_eq(encodedLenU64(0, 36), 1 as usize);
+        expect_eq(encodedLenU64(1234567890, 36), 6 as usize);
+        expect_eq(encodedLenU64(42, 2), 6 as usize);
+        expect_eq(encodedLenU64(42, 1), 0 as usize);
+    });
+
+    test("8. @cap/base36 — encodeBytes & decodeBytes round-trip with leading zeros and case-insensitivity", () => {
+        let enc: [64]u8 = undefined;
+        let dec_buf: [64]u8 = undefined;
+
+        const payload: [5]u8 = [0x00, 0x00, 0xDE, 0xAD, 0xBE];
+        const elen = encodeBytes(payload[0..5], false, enc[0..64]);
+        expect_eq(elen > 2, true);
+        expect_eq(enc[0], '0' as u8);
+        expect_eq(enc[1], '0' as u8);
+
+        const res: DecodeBytesResult = decodeBytes(enc[0..elen] as string, dec_buf[0..64]);
+        expect_eq(res.valid, true);
+        expect_eq(res.len, 5 as usize);
+        expect_eq(sliceEq(dec_buf[0..res.len], payload[0..5]), true);
+
+        // Uppercase encode -> decodeBytes
+        const ulen = encodeBytes(payload[0..5], true, enc[0..64]);
+        const ures: DecodeBytesResult = decodeBytes(enc[0..ulen] as string, dec_buf[0..64]);
+        expect_eq(ures.valid, true);
+        expect_eq(sliceEq(dec_buf[0..ures.len], payload[0..5]), true);
+
+        // All-zero bytes & invalid inputs
+        const zeros: [3]u8 = [0, 0, 0];
+        const zlen = encodeBytes(zeros[0..3], false, enc[0..64]);
+        expect_eq(sliceEq(enc[0..zlen], "000"), true);
+        const zdec = decodeBytes("000", dec_buf[0..64]);
+        expect_eq(zdec.valid, true);
+        expect_eq(zdec.len, 3 as usize);
+        expect_eq(sliceEq(dec_buf[0..3], zeros[0..3]), true);
+
+        expect_eq(decodeBytes("", dec_buf[0..64]).valid, false);
+        expect_eq(decodeBytes("abc!def", dec_buf[0..64]).valid, false);
+        expect_eq(isValidBase36String("3w5e11264sgsgZZZZ999"), true);
+        expect_eq(isValidBase36String("bad_char"), false);
     });
 }

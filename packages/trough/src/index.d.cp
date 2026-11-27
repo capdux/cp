@@ -25,6 +25,20 @@ export class TroughPipeline {
     fn run(initial: i64): StageOutcome;
     fn len(): usize;
     fn clear(_: auto);
+    fn isEmpty(): bool;
+    fn isFull(): bool;
+    fn clone(): TroughPipeline;
+    fn extend(_: auto, other: TroughPipeline): bool;
+    fn runWithReport(initial: i64): RunReport;
+    fn runWithErrorHandler(initial: i64, on_error: ErrorHandlerFn): StageOutcome;
 }
 
+export class RunReport {
+    outcome: StageOutcome,
+    steps_executed: usize,
+    stopped_index: i32,
+}
+
+export fn trough(): TroughPipeline;
+export fn wrapStage(stage: StageFn, value: i64): StageOutcome;
 export fn dispatchTag(tag: string, routes: &[]TagRoute): i32;
