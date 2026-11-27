@@ -1474,3 +1474,9 @@
   - Batch 8~19 正式达成 **100 个核心内置标准库模块 16-lane SIMD + `comptime` 256-entry LUT + `@memcpy` 升级里程碑**，全量 `cap test -m` 深测 100% PASS。
 - **LLVM ReleaseFast 实测基准追加（[bench/ECOSYSTEM_PERF_REPORT.md](file:///data/dev/cp/bench/ECOSYSTEM_PERF_REPORT.md)）**：`cookie-signature.ctEqual` **44.72 GB/s**、`hex.isValidHex` **20.79 GB/s**、`jsonpointer.countSegments` **9.78 GB/s (69.29M ops/s)**、`html-escape` **7.96 GB/s**、`cobs` **3.32 GB/s**、`base64ct` **1.61 GB/s**。
 - **第 12~13 轮 3 小时效率审计**：固化至 [GEMINI.md](file:///data/dev/cp/GEMINI.md) §6.12~§6.13。
+
+## [2026-11-28] - 吸收 `puppeteer-core` 与 `playwright-core` 建成一等公民生态包 (`cap:cdp` + `packages/puppeteer/` + `packages/playwright/`)，并完成 `cap from -npm` / TS→CP 转译器实战升级
+- 新增共享原生 CDP 协议底座 `lib/cdp/{protocol,session,launcher,domains,index}.cp`（`cap:cdp`）及 `doc/lib/cdp.md`、`cap/test/test_cdp_production_deep.cp`（11/11 PASS），更新 `cp_lib_ref.md` 与 `cp_agent_lib_ref.md`。
+- 新增一等公民 `packages/puppeteer/`（10 模块 + `src/index.d.cp` + 3 文档 + `cap/test/testCapPuppeteer.cp` 10/10 PASS）与 `packages/playwright/`（9 模块 + `src/index.d.cp` + 3 文档 + `cap/test/testCapPlaywright.cp` 7/7 PASS），并在 `packages/registry.json` 注册 `chrome-remote-interface`→`cap:cdp`、`puppeteer`（别名 `puppeteer-core`）及 `playwright`（别名 `playwright-core`, `playwright-chromium`）。
+- 升级 `cpc/src/{main.rs,migrate/registry.rs,migrate/ts.rs}` 并发布 Release：默认落盘裸包名 `packages/<name>`、同步 `packages/registry.json`、过滤 `cap:*` 依赖、自动生成 `src/index.d.cp` 与 3 份 README，修复 `constructor`→`init`、`#privateField`、`Symbol()` 与多行无括号控制流。
+- 扩充 `scripts/test_cap_ai_toolchain.py`（51/51 PASS）并通过 `scripts/check_ecosystem_health.py`（906 包 / 1,265 注册条目 16/16 PASS）。

@@ -631,3 +631,8 @@
 - 采用 `lib/` 与 `packages/` 物理顶层目录完全隔离的双路并行流水线，连续 20+ 波次实现 0 冲突、0 回滚、100% 一次合入推送。
 - 生态包侧由文本扫描进一步深入至密码/哈希/位集核心算法（Slice-by-8、`@Vector(4, u32/u64)`、GF(2^8) `comptime` LUT、`u128` 宽乘法），在 LLVM ReleaseFast 下跑出最高 44.72 GB/s（`ctEqual`）与 20.79 GB/s（`isValidHex`）缓存带宽级吞吐。
 - 标准库侧完成 70 模块 ~746 KiB/call 栈清零消除（全仓 `[0; >=4096]` 归零）与 100 模块 16-lane SIMD 升级；下一步同步产出内置标准库 100-Module SIMD 的 ReleaseFast 基准并冲刺 200+ 生态包 SIMD。
+
+## 2026-11-28: 浏览器自动化双核吸收 (`cap:cdp` / `puppeteer` / `playwright`) 与 `cap from -npm` 实战加固
+- **架构思路**: 避免在 `puppeteer` 与 `playwright` 中重复实现 Chrome DevTools Protocol (CDP) 帧扫描、多 Target 会话与浏览器二进制探测，抽取公共无泄漏底座 `lib/cdp/` (`cap:cdp`)；在其上分别构建 Puppeteer 经典控制流模型与 Playwright `BrowserContext`/`Locator`/`ariaSnapshot` 语义模型。
+- **编译器实战反馈闭环**: 直接使用 `cap from -ts` / `cap from -npm` 对 `_ref/puppeteer/packages/puppeteer-core`（185 文件）与 `_ref/playwright/packages/playwright-core`（323 文件）压测，暴露并集中修复了 `@cap/` 遗留路径、重复注册表路径、`cap.json` 入口格式以及 `constructor`→`E0130` 级联等真实工程问题；复测 `puppeteer-core/src` 解析通过率由 98.9% 升至 100.0%，`E0130` 归零。
+- **全量校验**: `cap test`（`cap:cdp` 11/11、Puppeteer 10/10、Playwright 7/7）、`test_cap_ai_toolchain.py`（51/51）、`check_ecosystem_health.py`（16/16）全部 100% 通过。
