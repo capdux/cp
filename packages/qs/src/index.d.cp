@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { hexVal, isAlnum, hexCharUpper, findByte } from "cap:ascii";
 export error QsError { BufferTooSmall, TooManyParams, DepthExceeded, InvalidPercentEncoding, InvalidSyntax }
 
 export class QsParseOptions {
@@ -37,7 +38,6 @@ export class QsEntry {
     val_in_pool: bool,
 }
 
-export fn hexVal(c: u8): u8?;
 export fn isUnreserved(c: u8): bool;
 export fn needsDecode(s: &[]u8, plus_as_space: bool): bool;
 export fn parseDecimalIndex(s: &[]u8): usize?;
@@ -67,7 +67,6 @@ export class QsParsed {
     fn countArrayItems(_: auto, key: &[]u8): usize;
 }
 
-export fn hasByte(s: &[]u8, b: u8): bool;
 export fn parseKeySegments(dec_key: &[]u8, key_off: u16, key_in_pool: bool, allow_dots: bool, max_depth: usize, out_segs: &mut [8]QsPathSegment): usize ! QsError;
 export class QsBuilder {
     buf: []u8,

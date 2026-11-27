@@ -16,6 +16,7 @@ import {
     writeU64LE,
 } from "cap:bin";
 import { writeU64, writeStr } from "cap:fmt";
+import { toLowerByte, isSpace, isDigit } from "cap:ascii";
 
 // ============================================================================
 // Part 1: npm `bytes` / Rust `bytesize` — Human-readable byte size parse/format
@@ -33,24 +34,11 @@ pub const GB: u64 = 1000000000;
 pub const TB: u64 = 1000000000000;
 pub const PB: u64 = 1000000000000000;
 
-fn bytToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') { return c | 0x20; }
-    return c;
-}
-
-fn bytIsSpace(c: u8): bool {
-    return c == ' ' || (c >= 0x09 && c <= 0x0D);
-}
-
-fn bytIsDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
 fn bytUnitMultiplier(unit: string, binary_default: bool): u64 {
     if (unit.len == 0) {
         return 1;
     }
-    let c0: u8 = bytToLower(unit[0]);
+    let c0: u8 = toLowerByte(unit[0]);
     if (unit.len == 1) {
         if (c0 == 'b') { return 1; }
         if (c0 == 'k') { if (binary_default) { return KIB; } return KB; }
@@ -60,7 +48,7 @@ fn bytUnitMultiplier(unit: string, binary_default: bool): u64 {
         if (c0 == 'p') { if (binary_default) { return PIB; } return PB; }
         return 0;
     }
-    let c1: u8 = bytToLower(unit[1]);
+    let c1: u8 = toLowerByte(unit[1]);
     if (unit.len == 2 && c1 == 'b') {
         if (c0 == 'k') { if (binary_default) { return KIB; } return KB; }
         if (c0 == 'm') { if (binary_default) { return MIB; } return MB; }
@@ -69,7 +57,7 @@ fn bytUnitMultiplier(unit: string, binary_default: bool): u64 {
         if (c0 == 'p') { if (binary_default) { return PIB; } return PB; }
         return 0;
     }
-    if (unit.len == 3 && c1 == 'i' && bytToLower(unit[2]) == 'b') {
+    if (unit.len == 3 && c1 == 'i' && toLowerByte(unit[2]) == 'b') {
         if (c0 == 'k') { return KIB; }
         if (c0 == 'm') { return MIB; }
         if (c0 == 'g') { return GIB; }
@@ -98,10 +86,10 @@ fn bytU64Len(val: u64): usize {
 pub fn parseBytes(input: string, binary_default: bool): i64 {
     let start: usize = 0;
     let end: usize = input.len;
-    while (start < end && bytIsSpace(input[start])) {
+    while (start < end && isSpace(input[start])) {
         start += 1;
     }
-    while (end > start && bytIsSpace(input[end - 1])) {
+    while (end > start && isSpace(input[end - 1])) {
         end -= 1;
     }
     if (start >= end) {
@@ -111,7 +99,7 @@ pub fn parseBytes(input: string, binary_default: bool): i64 {
     let i: usize = start;
     let int_part: u64 = 0;
     let has_digit: bool = false;
-    while (i < end && bytIsDigit(input[i])) {
+    while (i < end && isDigit(input[i])) {
         has_digit = true;
         let d: u64 = (input[i] - '0') as u64;
         if (int_part > 900000000000000000) {
@@ -125,7 +113,7 @@ pub fn parseBytes(input: string, binary_default: bool): i64 {
     let frac_scale: u64 = 1;
     if (i < end && input[i] == '.') {
         i += 1;
-        while (i < end && bytIsDigit(input[i])) {
+        while (i < end && isDigit(input[i])) {
             has_digit = true;
             if (frac_scale < 1000000) {
                 frac_part = frac_part * 10 + ((input[i] - '0') as u64);
@@ -139,7 +127,7 @@ pub fn parseBytes(input: string, binary_default: bool): i64 {
         return -1;
     }
 
-    while (i < end && bytIsSpace(input[i])) {
+    while (i < end && isSpace(input[i])) {
         i += 1;
     }
     let unit: string = input[i..end];

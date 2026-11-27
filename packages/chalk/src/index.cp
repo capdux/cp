@@ -51,27 +51,17 @@ import {
     TerminalEnv,
     detectColorLevel,
 } from "../../supports-color/src/index.cp";
-
-fn chkAppend(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
-}
+import { writeStr } from "cap:fmt";
 
 fn chkCopyPlain(text: string, out: []u8): usize {
-    return chkAppend(out, 0, text);
+    return writeStr(text, out, 0);
 }
 
 fn chkWrapOpenClose(open: string, text: string, close: string, out: []u8): usize {
     let p: usize = 0;
-    p = chkAppend(out, p, open);
-    p = chkAppend(out, p, text);
-    p = chkAppend(out, p, close);
+    p = writeStr(open, out, p);
+    p = writeStr(text, out, p);
+    p = writeStr(close, out, p);
     return p;
 }
 
@@ -270,23 +260,23 @@ pub struct Chalk {
         }
         let p: usize = 0;
         if (is_bold) {
-            p = chkAppend(out, p, BOLD.open);
+            p = writeStr(BOLD.open, out, p);
         }
         if (is_underline) {
-            p = chkAppend(out, p, UNDERLINE.open);
+            p = writeStr(UNDERLINE.open, out, p);
         }
         if (fg.open.len > 0) {
-            p = chkAppend(out, p, fg.open);
+            p = writeStr(fg.open, out, p);
         }
-        p = chkAppend(out, p, text);
+        p = writeStr(text, out, p);
         if (fg.close.len > 0) {
-            p = chkAppend(out, p, fg.close);
+            p = writeStr(fg.close, out, p);
         }
         if (is_underline) {
-            p = chkAppend(out, p, UNDERLINE.close);
+            p = writeStr(UNDERLINE.close, out, p);
         }
         if (is_bold) {
-            p = chkAppend(out, p, BOLD.close);
+            p = writeStr(BOLD.close, out, p);
         }
         return p;
     }

@@ -7,6 +7,8 @@
 // - Open-addressing hash index (FNV-1a 64-bit + linear probing + tombstone + automatic rehash) — O(1) key lookup.
 // - Inline key/value storage (`MAX_KEY_LEN = 64`, `MAX_VAL_LEN = 256`) — safe ownership with zero dangling slices.
 
+import { bytesEq } from "cap:bin";
+
 pub const MAX_CAPACITY: usize = 256;
 pub const HASH_BUCKETS: usize = 512;
 pub const MAX_KEY_LEN: usize = 64;
@@ -29,15 +31,6 @@ fn fnv1a64(data: []const u8): u64 {
         h *%= FNV_PRIME;
     }
     return h;
-}
-
-fn bytesEqual(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
 }
 
 fn copyBytes(dst: []u8, src: []const u8) {
@@ -147,7 +140,7 @@ pub struct LruCache {
                 const s_hash = _.slots[b].hash;
                 const s_klen = _.slots[b].key_len as usize;
                 if (s_hash == hash && s_klen == key.len) {
-                    if (bytesEqual(_.slots[b].key_buf[0..s_klen], key)) {
+                    if (bytesEq(_.slots[b].key_buf[0..s_klen], key)) {
                         return b;
                     }
                 }

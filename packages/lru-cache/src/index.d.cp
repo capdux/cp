@@ -1,7 +1,7 @@
 // Type definitions for CP
 
+import { bytesEq } from "cap:bin";
 export fn fnv1a64(data: &[]u8): u64;
-export fn bytesEqual(a: &[]u8, b: &[]u8): bool;
 export fn copyBytes(dst: []u8, src: &[]u8);
 export class LruConfig {
     max_entries: usize,

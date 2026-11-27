@@ -2,9 +2,7 @@
 
 import { readU16BE, readU16LE, readU32BE, readU32LE, readU64BE, readU64LE, writeU16BE, writeU16LE, writeU32BE, writeU32LE, writeU64BE, writeU64LE } from "cap:bin";
 import { writeU64, writeStr } from "cap:fmt";
-export fn bytToLower(c: u8): u8;
-export fn bytIsSpace(c: u8): bool;
-export fn bytIsDigit(c: u8): bool;
+import { toLowerByte, isSpace, isDigit } from "cap:ascii";
 export fn bytUnitMultiplier(unit: string, binary_default: bool): u64;
 export fn bytU64Len(val: u64): usize;
 export fn parseBytes(input: string, binary_default: bool): i64;

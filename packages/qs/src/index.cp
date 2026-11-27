@@ -4,6 +4,7 @@
 // strict null handling, RFC 3986 percent-encoding, and depth/parameter-count DoS protection.
 
 const std = @import("std");
+import { hexVal, isAlnum, hexCharUpper, findByte } from "cap:ascii";
 
 pub const MAX_PARAMS: usize = 64;
 pub const MAX_DEPTH: usize = 8;
@@ -57,18 +58,8 @@ pub struct QsEntry {
     val_in_pool: bool = false,
 }
 
-fn hexVal(c: u8): u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return null;
-}
-
 fn isUnreserved(c: u8): bool {
-    return (c >= 'A' && c <= 'Z')
-        || (c >= 'a' && c <= 'z')
-        || (c >= '0' && c <= '9')
-        || c == '-' || c == '.' || c == '_' || c == '~';
+    return isAlnum(c) || c == '-' || c == '.' || c == '_' || c == '~';
 }
 
 fn needsDecode(s: []const u8, plus_as_space: bool): bool {
@@ -138,7 +129,6 @@ pub fn percentEncode(
     space_as_plus: bool,
     out: []u8,
 ): ([]const u8) ! QsError {
-    const hex_digits = "0123456789ABCDEF";
     let i: usize = 0;
     let pos: usize = 0;
     while (i < input.len) : (i += 1) {
@@ -154,8 +144,8 @@ pub fn percentEncode(
         } else {
             if (pos + 3 > out.len) return QsError.BufferTooSmall;
             out[pos] = '%';
-            out[pos + 1] = hex_digits[(c >> 4) & 0x0F];
-            out[pos + 2] = hex_digits[c & 0x0F];
+            out[pos + 1] = hexCharUpper((c >> 4) & 0x0F);
+            out[pos + 2] = hexCharUpper(c & 0x0F);
             pos += 3;
         }
     }
@@ -289,7 +279,7 @@ pub struct QsParsed {
             const depth = parseKeySegments(dec_key, key_off, key_in_pool, opts.allow_dots, max_depth, &segs)?;
 
             // Check comma-separated array splitting
-            if (opts.comma_arrays && has_eq && hasByte(raw_val, ',')) {
+            if (opts.comma_arrays && has_eq && findByte(raw_val, ',', 0) != null) {
                 let vpos: usize = 0;
                 let item_idx: usize = 0;
                 while (true) {
@@ -557,14 +547,6 @@ pub struct QsParsed {
         }
         return total;
     }
-}
-
-fn hasByte(s: []const u8, b: u8): bool {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        if (s[i] == b) return true;
-    }
-    return false;
 }
 
 fn parseKeySegments(

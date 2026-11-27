@@ -3,6 +3,8 @@
 // Reuses `@cap/itoa` for fast signed/unsigned integer formatting.
 
 import { formatI64 } from "../../itoa/src/index.cp";
+import { isSpace, isDigit, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 pub const MS_SECOND: i64 = 1000;
 pub const MS_MINUTE: i64 = 60000;
@@ -16,48 +18,28 @@ pub struct MsParseResult {
     pub ms: i64,
 }
 
-fn msIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
-fn msIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn msEqIgnoreCase(s: string, start: usize, end: usize, lit: string): bool {
-    let n = end - start;
-    if (n != lit.len) { return false; }
-    let i: usize = 0;
-    while (i < n) {
-        let c = s[start + i];
-        let lo = if (c >= 65 && c <= 90) { c + 32 } else { c };
-        if (lo != lit[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn msUnitMultiplier(s: string, start: usize, end: usize): f64 {
     if (start == end) { return 1.0; } // bare number defaults to ms
-    if (msEqIgnoreCase(s, start, end, "ms") || msEqIgnoreCase(s, start, end, "msec") || msEqIgnoreCase(s, start, end, "msecs") || msEqIgnoreCase(s, start, end, "millisecond") || msEqIgnoreCase(s, start, end, "milliseconds")) {
+    const u = s[start..end];
+    if (eqIgnoreCase(u, "ms") || eqIgnoreCase(u, "msec") || eqIgnoreCase(u, "msecs") || eqIgnoreCase(u, "millisecond") || eqIgnoreCase(u, "milliseconds")) {
         return 1.0;
     }
-    if (msEqIgnoreCase(s, start, end, "s") || msEqIgnoreCase(s, start, end, "sec") || msEqIgnoreCase(s, start, end, "secs") || msEqIgnoreCase(s, start, end, "second") || msEqIgnoreCase(s, start, end, "seconds")) {
+    if (eqIgnoreCase(u, "s") || eqIgnoreCase(u, "sec") || eqIgnoreCase(u, "secs") || eqIgnoreCase(u, "second") || eqIgnoreCase(u, "seconds")) {
         return 1000.0;
     }
-    if (msEqIgnoreCase(s, start, end, "m") || msEqIgnoreCase(s, start, end, "min") || msEqIgnoreCase(s, start, end, "mins") || msEqIgnoreCase(s, start, end, "minute") || msEqIgnoreCase(s, start, end, "minutes")) {
+    if (eqIgnoreCase(u, "m") || eqIgnoreCase(u, "min") || eqIgnoreCase(u, "mins") || eqIgnoreCase(u, "minute") || eqIgnoreCase(u, "minutes")) {
         return 60000.0;
     }
-    if (msEqIgnoreCase(s, start, end, "h") || msEqIgnoreCase(s, start, end, "hr") || msEqIgnoreCase(s, start, end, "hrs") || msEqIgnoreCase(s, start, end, "hour") || msEqIgnoreCase(s, start, end, "hours")) {
+    if (eqIgnoreCase(u, "h") || eqIgnoreCase(u, "hr") || eqIgnoreCase(u, "hrs") || eqIgnoreCase(u, "hour") || eqIgnoreCase(u, "hours")) {
         return 3600000.0;
     }
-    if (msEqIgnoreCase(s, start, end, "d") || msEqIgnoreCase(s, start, end, "day") || msEqIgnoreCase(s, start, end, "days")) {
+    if (eqIgnoreCase(u, "d") || eqIgnoreCase(u, "day") || eqIgnoreCase(u, "days")) {
         return 86400000.0;
     }
-    if (msEqIgnoreCase(s, start, end, "w") || msEqIgnoreCase(s, start, end, "wk") || msEqIgnoreCase(s, start, end, "wks") || msEqIgnoreCase(s, start, end, "week") || msEqIgnoreCase(s, start, end, "weeks")) {
+    if (eqIgnoreCase(u, "w") || eqIgnoreCase(u, "wk") || eqIgnoreCase(u, "wks") || eqIgnoreCase(u, "week") || eqIgnoreCase(u, "weeks")) {
         return 604800000.0;
     }
-    if (msEqIgnoreCase(s, start, end, "y") || msEqIgnoreCase(s, start, end, "yr") || msEqIgnoreCase(s, start, end, "yrs") || msEqIgnoreCase(s, start, end, "year") || msEqIgnoreCase(s, start, end, "years")) {
+    if (eqIgnoreCase(u, "y") || eqIgnoreCase(u, "yr") || eqIgnoreCase(u, "yrs") || eqIgnoreCase(u, "year") || eqIgnoreCase(u, "years")) {
         return 31557600000.0;
     }
     return 0.0;
@@ -71,7 +53,7 @@ pub fn parseMs(input: string): MsParseResult {
     }
     let i: usize = 0;
     let n = input.len;
-    while (i < n && msIsSpace(input[i])) { i = i + 1; }
+    while (i < n && isSpace(input[i])) { i = i + 1; }
     if (i >= n) { return MsParseResult { ok: false, ms: 0 }; }
 
     let neg = false;
@@ -87,14 +69,14 @@ pub fn parseMs(input: string): MsParseResult {
     let frac_scale: f64 = 0.1;
     let has_digits = false;
 
-    while (i < n && msIsDigit(input[i])) {
+    while (i < n && isDigit(input[i])) {
         int_part = int_part * 10.0 + ((input[i] - 48) as f64);
         has_digits = true;
         i = i + 1;
     }
     if (i < n && input[i] == 46) {
         i = i + 1;
-        while (i < n && msIsDigit(input[i])) {
+        while (i < n && isDigit(input[i])) {
             frac_part = frac_part + ((input[i] - 48) as f64) * frac_scale;
             frac_scale = frac_scale * 0.1;
             has_digits = true;
@@ -105,10 +87,10 @@ pub fn parseMs(input: string): MsParseResult {
         return MsParseResult { ok: false, ms: 0 };
     }
 
-    while (i < n && msIsSpace(input[i])) { i = i + 1; }
+    while (i < n && isSpace(input[i])) { i = i + 1; }
     let u_start = i;
     let u_end = n;
-    while (u_end > u_start && msIsSpace(input[u_end - 1])) { u_end = u_end - 1; }
+    while (u_end > u_start && isSpace(input[u_end - 1])) { u_end = u_end - 1; }
 
     let mult = msUnitMultiplier(input, u_start, u_end);
     if (mult == 0.0) {
@@ -118,17 +100,6 @@ pub fn parseMs(input: string): MsParseResult {
     let val = (int_part + frac_part) * mult;
     let rounded: i64 = if (neg) { -((val + 0.5) as i64) } else { (val + 0.5) as i64 };
     return MsParseResult { ok: true, ms: rounded };
-}
-
-fn msPushStr(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p = p + 1;
-        i = i + 1;
-    }
-    return p;
 }
 
 fn msRoundDiv(ms: i64, unit: i64): i64 {
@@ -142,22 +113,16 @@ fn msRoundDiv(ms: i64, unit: i64): i64 {
 fn msFormatUnit(val: i64, short_unit: string, long_singular: string, long_plural: string, long_fmt: bool, out: []u8): usize {
     let tmp: [24]u8 = undefined;
     let n = formatI64(val, tmp[0..24]);
-    let p: usize = 0;
-    let i: usize = 0;
-    while (i < n && p < out.len) {
-        out[p] = tmp[i];
-        p = p + 1;
-        i = i + 1;
-    }
+    let p: usize = writeStr(tmp[0..n], out, 0);
     if (!long_fmt) {
-        return msPushStr(out, p, short_unit);
+        return writeStr(short_unit, out, p);
     }
-    p = msPushStr(out, p, " ");
+    p = writeStr(" ", out, p);
     let abs_v = if (val < 0) { -val } else { val };
     if (abs_v == 1) {
-        return msPushStr(out, p, long_singular);
+        return writeStr(long_singular, out, p);
     }
-    return msPushStr(out, p, long_plural);
+    return writeStr(long_plural, out, p);
 }
 
 /// Formats `ms` into compact (`"1m"`, `"2d"`, `"500ms"`) or verbose (`"1 minute"`, `"2 days"`) form.

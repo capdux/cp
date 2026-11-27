@@ -2,6 +2,7 @@
 
 import { normalizePath, hasBackslash } from "../../normalize-path/src/index.cp";
 import { isExtglob } from "../../is-extglob/src/index.cp";
+import { toLowerByte, findByte, rfindByte } from "cap:ascii";
 export class PicoOptions {
     dot: bool,
     nocase: bool,
@@ -10,9 +11,7 @@ export class PicoOptions {
     fn defaults(): PicoOptions;
 }
 
-export fn pmLower(ch: u8): u8;
 export fn pmCharEq(a: u8, b: u8, nocase: bool): bool;
-export fn pmHasSlash(s: string): bool;
 export fn pmBasenameSlice(path: string): string;
 export fn pmIsLeadingDot(path: string, pIdx: usize): bool;
 export fn pmCountLeadingNegations(pat: string): usize;

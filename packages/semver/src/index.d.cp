@@ -1,6 +1,6 @@
 // Type definitions for CP
 
-import { isSpace, isDigit, trim, strEq } from "cap:ascii";
+import { isSpace, isDigit, isAlnum, trim, strEq } from "cap:ascii";
 import { writeU64, writeStr } from "cap:fmt";
 export fn svrIsIdentChar(c: u8): bool;
 export fn svrIsWildcardStr(s: string): bool;
@@ -8,7 +8,6 @@ export fn svrParseU32Strict(s: string): u32?;
 export fn svrIsAllDigits(s: &[]u8): bool;
 export fn svrValidatePre(s: string): bool;
 export fn svrValidateBuild(s: string): bool;
-export fn svrCopyBytes(src: string, dst: []u8): usize;
 export fn svrWriteByte(out: []u8, pos: usize, b: u8): usize;
 export class SemVer {
     major: u32,

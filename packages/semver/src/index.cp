@@ -3,11 +3,11 @@
 // npm node-semver ranges (`||`, `-`, `^`, `~`, `*`/`x`, `valid`/`gt`/`lt`/`compare`/`inc`/`maxSatisfying`)
 // and Rust Cargo/crates.io `semver` (`Version`, `VersionReq`, `parseVersion`, `matchesVersionReq`, `bump*`).
 
-import { isSpace, isDigit, trim, strEq } from "cap:ascii";
+import { isSpace, isDigit, isAlnum, trim, strEq } from "cap:ascii";
 import { writeU64, writeStr } from "cap:fmt";
 
 fn svrIsIdentChar(c: u8): bool {
-    return isDigit(c) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 45;
+    return isAlnum(c) || c == 45;
 }
 
 fn svrIsWildcardStr(s: string): bool {
@@ -95,15 +95,6 @@ fn svrValidateBuild(s: string): bool {
         i += 1;
     }
     return true;
-}
-
-fn svrCopyBytes(src: string, dst: []u8): usize {
-    const n = if (src.len < dst.len) src.len else dst.len;
-    let i: usize = 0;
-    while (i < n) : (i += 1) {
-        dst[i] = src[i];
-    }
-    return n;
 }
 
 fn svrWriteByte(out: []u8, pos: usize, b: u8): usize {
@@ -259,14 +250,14 @@ pub fn parseSemver(s: string): SemVer {
         if (!svrValidatePre(pre_s)) {
             return SemVer.invalid();
         }
-        out.pre_len = svrCopyBytes(pre_s, out.pre[0..32]);
+        out.pre_len = writeStr(pre_s, out.pre[0..32], 0);
     }
     if (has_build) {
         const bld_s = trimmed[build_start..b];
         if (!svrValidateBuild(bld_s)) {
             return SemVer.invalid();
         }
-        out.build_len = svrCopyBytes(bld_s, out.build[0..32]);
+        out.build_len = writeStr(bld_s, out.build[0..32], 0);
     }
     return out;
 }
@@ -454,7 +445,7 @@ fn svrParsePartial(raw: string): SvrPartial {
         if (!p.has_patch) { return p; }
         const pre_s = s[pre_start..core_end];
         if (!svrValidatePre(pre_s)) { return p; }
-        p.pre_len = svrCopyBytes(pre_s, p.pre[0..32]);
+        p.pre_len = writeStr(pre_s, p.pre[0..32], 0);
     }
 
     p.valid = true;

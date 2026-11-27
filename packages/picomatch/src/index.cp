@@ -4,6 +4,7 @@
 
 import { normalizePath, hasBackslash } from "../../normalize-path/src/index.cp";
 import { isExtglob } from "../../is-extglob/src/index.cp";
+import { toLowerByte, findByte, rfindByte } from "cap:ascii";
 
 const PM_MAX_BUF: usize = 1024;
 const PM_MAX_BRACE_DEPTH: usize = 16;
@@ -27,46 +28,18 @@ pub struct PicoOptions {
     }
 }
 
-fn pmLower(ch: u8): u8 {
-    if (ch >= 65 && ch <= 90) {
-        return ch + 32;
-    }
-    return ch;
-}
-
 fn pmCharEq(a: u8, b: u8, nocase: bool): bool {
     if (nocase) {
-        return pmLower(a) == pmLower(b);
+        return toLowerByte(a) == toLowerByte(b);
     }
     return a == b;
 }
 
-fn pmHasSlash(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == 47) {
-            return true;
-        }
-        i = i + 1;
-    }
-    return false;
-}
-
 fn pmBasenameSlice(path: string): string {
-    let lastSlash: usize = 0;
-    let found = false;
-    let i: usize = 0;
-    while (i < path.len) {
-        if (path[i] == 47) {
-            lastSlash = i;
-            found = true;
-        }
-        i = i + 1;
+    if (lastSlash := rfindByte(path, 47)) {
+        return path[(lastSlash + 1)..path.len];
     }
-    if (!found) {
-        return path;
-    }
-    return path[(lastSlash + 1)..path.len];
+    return path;
 }
 
 fn pmIsLeadingDot(path: string, pIdx: usize): bool {
@@ -137,7 +110,7 @@ fn pmMatchCharClass(ch: u8, pat: string, gIdx: usize, endIdx: usize, nocase: boo
         negated = true;
         i = i + 1;
     }
-    const target: u8 = if (nocase) pmLower(ch) else ch;
+    const target: u8 = if (nocase) toLowerByte(ch) else ch;
     let matched = false;
     while (i < endIdx) {
         let lo: u8 = pat[i];
@@ -157,13 +130,13 @@ fn pmMatchCharClass(ch: u8, pat: string, gIdx: usize, endIdx: usize, nocase: boo
             } else {
                 i = i + 1;
             }
-            const loC: u8 = if (nocase) pmLower(lo) else lo;
-            const hiC: u8 = if (nocase) pmLower(hi) else hi;
+            const loC: u8 = if (nocase) toLowerByte(lo) else lo;
+            const hiC: u8 = if (nocase) toLowerByte(hi) else hi;
             if (target >= loC && target <= hiC) {
                 matched = true;
             }
         } else {
-            const loC: u8 = if (nocase) pmLower(lo) else lo;
+            const loC: u8 = if (nocase) toLowerByte(lo) else lo;
             if (target == loC) {
                 matched = true;
             }
@@ -367,7 +340,7 @@ fn pmMatchWithBraces(path: string, pat: string, opts: PicoOptions, depth: usize)
     if (depth > PM_MAX_BRACE_DEPTH) {
         return pmMatchCore(path, 0, pat, 0, opts, 0);
     }
-    let bounds: [2]usize = [0, 0];
+    let bounds: [2]usize = undefined;
     if (!pmFindBraceGroup(pat, bounds[0..2])) {
         return pmMatchCore(path, 0, pat, 0, opts, 0);
     }
@@ -444,7 +417,7 @@ fn pmMatchNormalized(normPath: string, pat: string, opts: PicoOptions): bool {
     }
 
     let targetPath = normPath;
-    if (opts.basename && !pmHasSlash(corePat)) {
+    if (opts.basename && findByte(corePat, 47, 0) == null) {
         targetPath = pmBasenameSlice(normPath);
     }
 
@@ -520,7 +493,7 @@ pub fn isMatchAny(path: string, patterns: []const string, opts: PicoOptions): bo
             const inner = pat[negCount..pat.len];
             if (inner.len > 0) {
                 let targetPath = normPath;
-                if (opts.basename && !pmHasSlash(inner)) {
+                if (opts.basename && findByte(inner, 47, 0) == null) {
                     targetPath = pmBasenameSlice(normPath);
                 }
                 const hit = pmMatchWithBraces(targetPath, inner, opts, 0);

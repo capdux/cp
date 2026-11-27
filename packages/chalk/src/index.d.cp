@@ -3,7 +3,7 @@
 import { StylePair, BOLD, DIM, ITALIC, UNDERLINE, INVERSE, STRIKETHROUGH, FG_BLACK, FG_RED, FG_GREEN, FG_YELLOW, FG_BLUE, FG_MAGENTA, FG_CYAN, FG_WHITE, FG_GRAY, BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE, BG_GRAY, FG_CLOSE, BG_CLOSE, wrapStyle, formatAnsi256, formatAnsi16m, formatRgbToAnsi16, formatRgbToAnsi256, formatHexToAnsi16m, formatKeywordToAnsi16m } from "../../ansi-styles/src/index.cp";
 import { hexToRgb, keywordToRgb } from "../../color-convert/src/index.cp";
 import { COLOR_LEVEL_NONE, COLOR_LEVEL_BASIC, COLOR_LEVEL_256, COLOR_LEVEL_16M, TerminalEnv, detectColorLevel } from "../../supports-color/src/index.cp";
-export fn chkAppend(out: []u8, pos: usize, s: string): usize;
+import { writeStr } from "cap:fmt";
 export fn chkCopyPlain(text: string, out: []u8): usize;
 export fn chkWrapOpenClose(open: string, text: string, close: string, out: []u8): usize;
 export fn chkApplyPair(level: u8, style: StylePair, text: string, out: []u8): usize;
