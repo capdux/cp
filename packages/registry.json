@@ -5615,7 +5615,11 @@
         "busboy",
         "multer"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/multipart/src/index.d.cp",
+      "agent_doc": "packages/@web/multipart/README_AGENT.md",
+      "readme": "packages/@web/multipart/README.md",
+      "readme_zh": "packages/@web/multipart/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -5710,7 +5714,11 @@
         "mysql2",
         "better-sqlite3"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/db/src/index.d.cp",
+      "agent_doc": "packages/@web/db/README_AGENT.md",
+      "readme": "packages/@web/db/README.md",
+      "readme_zh": "packages/@web/db/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -5733,7 +5741,11 @@
       "cp_target": "@web/jwt",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/jwt/src/index.d.cp",
+      "agent_doc": "packages/@web/jwt/README_AGENT.md",
+      "readme": "packages/@web/jwt/README.md",
+      "readme_zh": "packages/@web/jwt/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -5778,7 +5790,11 @@
       "cp_target": "@web/compress",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/compress/src/index.d.cp",
+      "agent_doc": "packages/@web/compress/README_AGENT.md",
+      "readme": "packages/@web/compress/README.md",
+      "readme_zh": "packages/@web/compress/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -5855,7 +5871,11 @@
       "aliases": [
         "redis"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/redis/src/index.d.cp",
+      "agent_doc": "packages/@web/redis/README_AGENT.md",
+      "readme": "packages/@web/redis/README.md",
+      "readme_zh": "packages/@web/redis/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -10894,12 +10914,16 @@
       "source_name": "toml_parser",
       "source_repo": "https://github.com/toml-rs/toml",
       "license": "MIT",
-      "cp_target": "@cap/toml",
+      "cp_target": "toml_edit",
       "kind": "package",
       "aliases": [
         "toml_edit"
       ],
-      "absorbed_at": "2026-11-27"
+      "absorbed_at": "2026-11-27",
+      "types": "packages/toml_edit/src/index.d.cp",
+      "agent_doc": "packages/toml_edit/README_AGENT.md",
+      "readme": "packages/toml_edit/README.md",
+      "readme_zh": "packages/toml_edit/README.zh-CN.md"
     },
     {
       "source_registry": "crates.io",
@@ -16317,18 +16341,22 @@
       "source_name": "formdata-polyfill",
       "source_repo": "https://github.com/jimmywarting/FormData",
       "license": "MIT",
-      "cp_target": "@web/formdata",
+      "cp_target": "@web/multipart",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/multipart/src/index.d.cp",
+      "agent_doc": "packages/@web/multipart/README_AGENT.md",
+      "readme": "packages/@web/multipart/README.md",
+      "readme_zh": "packages/@web/multipart/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
       "source_name": "fetch-blob",
       "source_repo": "https://github.com/node-fetch/fetch-blob",
       "license": "MIT",
-      "cp_target": "@web/blob",
-      "kind": "package",
+      "cp_target": "cap:blob",
+      "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
     },
@@ -16538,12 +16566,16 @@
       "source_name": "jose",
       "source_repo": "https://github.com/panva/jose",
       "license": "MIT",
-      "cp_target": "@cap/jsonwebtoken",
+      "cp_target": "@web/jwt",
       "kind": "package",
       "aliases": [
         "jwa"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@web/jwt/src/index.d.cp",
+      "agent_doc": "packages/@web/jwt/README_AGENT.md",
+      "readme": "packages/@web/jwt/README.md",
+      "readme_zh": "packages/@web/jwt/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -16561,10 +16593,14 @@
       "source_name": "keyv",
       "source_repo": "https://github.com/jaredwray/keyv",
       "license": "MIT",
-      "cp_target": "@cap/lru-cache",
+      "cp_target": "lru-cache",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/lru-cache/src/index.d.cp",
+      "agent_doc": "packages/lru-cache/README_AGENT.md",
+      "readme": "packages/lru-cache/README.md",
+      "readme_zh": "packages/lru-cache/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -16638,8 +16674,8 @@
       "source_name": "web-streams-polyfill",
       "source_repo": "https://github.com/MattiasBuelens/web-streams-polyfill",
       "license": "MIT",
-      "cp_target": "@web/streams",
-      "kind": "package",
+      "cp_target": "cap:stream",
+      "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
     },
@@ -16648,8 +16684,8 @@
       "source_name": "router",
       "source_repo": "https://github.com/pillarjs/router",
       "license": "MIT",
-      "cp_target": "@cap/find-my-way",
-      "kind": "package",
+      "cp_target": "cap:router",
+      "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
     },
@@ -16669,8 +16705,8 @@
       "source_name": "abort-controller",
       "source_repo": "https://github.com/mysticatea/abort-controller",
       "license": "MIT",
-      "cp_target": "@web/abort-controller",
-      "kind": "package",
+      "cp_target": "cap:context",
+      "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
     },
@@ -17265,7 +17301,11 @@
       "cp_target": "@cap/xxhash",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/@cap/xxhash/src/index.d.cp",
+      "agent_doc": "packages/@cap/xxhash/README_AGENT.md",
+      "readme": "packages/@cap/xxhash/README.md",
+      "readme_zh": "packages/@cap/xxhash/README.zh-CN.md"
     },
     {
       "source_registry": "crates.io",
@@ -17327,8 +17367,8 @@
       "source_name": "rfdc",
       "source_repo": "https://github.com/davidmarkclements/rfdc",
       "license": "MIT",
-      "cp_target": "@cap/klona",
-      "kind": "package",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-26"
     },
@@ -17658,13 +17698,17 @@
       "source_name": "defu",
       "source_repo": "https://github.com/unjs/defu",
       "license": "MIT",
-      "cp_target": "@cap/deepmerge",
+      "cp_target": "merge-descriptors",
       "kind": "package",
       "aliases": [
         "defaults",
         "extend-shallow"
       ],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/merge-descriptors/src/index.d.cp",
+      "agent_doc": "packages/merge-descriptors/README_AGENT.md",
+      "readme": "packages/merge-descriptors/README.md",
+      "readme_zh": "packages/merge-descriptors/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
@@ -17905,10 +17949,14 @@
       "source_name": "cookie-es",
       "source_repo": "https://github.com/unjs/cookie-es",
       "license": "MIT",
-      "cp_target": "@cap/cookie",
+      "cp_target": "cookie",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-26"
+      "absorbed_at": "2026-11-26",
+      "types": "packages/cookie/src/index.d.cp",
+      "agent_doc": "packages/cookie/README_AGENT.md",
+      "readme": "packages/cookie/README.md",
+      "readme_zh": "packages/cookie/README.zh-CN.md"
     },
     {
       "source_registry": "crates.io",
@@ -18284,8 +18332,8 @@
       "source_name": "wasm-streams",
       "source_repo": "https://github.com/MattiasBuelens/wasm-streams",
       "license": "MIT",
-      "cp_target": "@web/streams",
-      "kind": "package",
+      "cp_target": "cap:stream",
+      "kind": "stdlib",
       "aliases": [],
       "absorbed_at": "2026-11-27"
     },
@@ -18399,10 +18447,14 @@
       "source_name": "deep-extend",
       "source_repo": "https://github.com/unclechu/node-deep-extend",
       "license": "MIT",
-      "cp_target": "@cap/deepmerge",
+      "cp_target": "merge-descriptors",
       "kind": "package",
       "aliases": [],
-      "absorbed_at": "2026-11-27"
+      "absorbed_at": "2026-11-27",
+      "types": "packages/merge-descriptors/src/index.d.cp",
+      "agent_doc": "packages/merge-descriptors/README_AGENT.md",
+      "readme": "packages/merge-descriptors/README.md",
+      "readme_zh": "packages/merge-descriptors/README.zh-CN.md"
     },
     {
       "source_registry": "npm",
