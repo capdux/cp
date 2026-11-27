@@ -1,45 +1,116 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI 智能体速查](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent 速查手册](README_AGENT.md)
 
 # schema-utils
 
-> 版本：`4.3.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
+面向 CP 的零堆内存配置项 Schema 校验器（`validate` / `ObjectSchema` / `SchemaProperty` / `SchemaValue`），内置零分配模式匹配引擎（`matchPattern`）、独立字段校验函数以及可读错误报告格式化器。
 
-Zero-heap configuration option schema validator in pure CP
+## 源包溯源与零成本迁移
 
-## 安装与导入
+| 属性 | 说明 |
+| --- | --- |
+| **上游源平台** | [npmjs.com/package/schema-utils](https://www.npmjs.com/package/schema-utils) |
+| **上游原包名** | `schema-utils` v4.3.0 |
+| **上游仓库** | https://github.com/webpack/schema-utils |
+| **许可证** | MIT |
+
+从 TypeScript/npm 迁移到 CP 保持原包名不变：
+
+```ts
+// TypeScript (npm)
+import { validate } from "schema-utils";
+validate(schema, options, { name: "MyPlugin" });
+```
+
+```cp
+// CP —— 原包名直接导入，零堆配置 Schema 校验与报告生成
+import {
+    ObjectSchema, SchemaProperty, SchemaValue,
+    validate, formatValidationReport,
+} from "schema-utils";
+```
+
+## 安装
 
 ```bash
 cap add schema-utils
 ```
 
+## 实战示例
+
+### 1. 对象配置 Schema 校验与报告输出（`validate` & `formatValidationReport`）
+
 ```cp
-import { schemaTypeName } from "schema-utils";
+import {
+    ObjectSchema, SchemaProperty, SchemaValue,
+    validate, formatValidationReport, formatValidationError,
+} from "schema-utils";
+
+fn validateConfig() {
+    let props: [3]SchemaProperty = [
+        SchemaProperty.stringProp("host", true, 1, 64, "^[a-zA-Z0-9.-]+$"),
+        SchemaProperty.intProp("port", true, true, 1, true, 65535),
+        SchemaProperty.boolProp("tls", false),
+    ];
+
+    let schema = ObjectSchema {
+        title: "ServerOptions",
+        properties: &props,
+        additional_properties: false,
+    };
+
+    let values: [3]SchemaValue = [
+        SchemaValue.str("host", "api.example.com"),
+        SchemaValue.int("port", 8080),
+        SchemaValue.boolean("tls", true),
+    ];
+
+    let report = validate(schema, &values);
+    if (!report.valid) {
+        mut out: [512]u8 = [0; 512];
+        let written = formatValidationReport("ServerOptions", report, &mut out);
+        // out[0..written] 为格式化后的多条错误诊断文本
+    }
+}
 ```
 
-## 核心导出 API
+### 2. 独立字段与模式校验函数
 
-- `export enum SchemaType`
-- `export fn schemaTypeName(t: SchemaType): string;`
-- `export fn schuStrEq(a: string, b: string): bool;`
-- `export fn schuWriteStr(out: []u8, pos: usize, s: string): usize;`
-- `export fn schuOk(): ValidationResult;`
-- `export fn schuFail(code: u32, msg: string): ValidationResult;`
-- `export fn validateStringField(value: string, present: bool, c: FieldConstraint): ValidationResult;`
-- `export fn validateIntField(value: i64, present: bool, c: FieldConstraint): ValidationResult;`
-- `export fn validateEnumField(value: string, allowed: &[]string): ValidationResult;`
-- `export fn schuMatchClass(pat: string, start: usize, end: usize, c: u8): bool;`
-- `export fn schuAtomLen(pat: string, pi: usize): usize;`
-- `export fn schuMatchAtom(pat: string, pi: usize, atom_len: usize, c: u8): bool;`
-- `export fn schuMatchHere(pat: string, pi: usize, text: string, ti: usize): bool;`
-- `export fn matchPattern(pattern: string, text: string): bool;`
-- `export fn validatePatternField(value: string, pattern: string): ValidationResult;`
-- `export fn schuTypeMatches(expected: SchemaType, actual: SchemaType): bool;`
-- `export fn schuPushError(report: &mut ValidationReport, err: ValidationError);`
-- `export fn validate(schema: ObjectSchema, values: &[]SchemaValue): ValidationReport;`
-- `export fn formatValidationError(schema_name: string, err: ValidationError, out: []u8): usize;`
-- `export fn formatValidationReport(schema_name: string, report: ValidationReport, out: []u8): usize;`
+```cp
+import {
+    FieldConstraint, validateStringField, validateIntField,
+    validateEnumField, validatePatternField, matchPattern,
+    SchemaType, schemaTypeName,
+} from "schema-utils";
 
-<!-- cap-source-attribution -->
-## 上游来源与许可证说明
+fn demoFieldValidators() {
+    let c = FieldConstraint {
+        name: "username",
+        required: true,
+        min_len: 3,
+        max_len: 20,
+        has_int_range: false,
+        min_int: 0,
+        max_int: 0,
+    };
+    let r1 = validateStringField("alice", true, c); // r1.valid == true
 
-- **上游生态**：`npm` (`schema-utils@4.3.0`)（https://github.com/webpack/schema-utils），许可证：MIT
+    let allowed: [3]string = ["dev", "staging", "prod"];
+    let r2 = validateEnumField("prod", &allowed);   // r2.valid == true
+
+    let ok = matchPattern("^[a-z]+-[0-9]+$", "worker-42"); // true
+    let r3 = validatePatternField("worker-42", "^[a-z]+-[0-9]+$");
+
+    let tname = schemaTypeName(SchemaType.Integer); // "integer"
+}
+```
+
+## 性能与安全亮点
+
+- **零堆分配**：`ValidationReport` 在栈上内联保存最多 16 条 `ValidationError`，格式化输出直接写入调用方 `[]u8` 缓冲区。
+- **内置轻量模式引擎**：`matchPattern` 零依赖支持起止锚点（`^`/`$`）、字符类（`[a-z0-9]`）与量词匹配。
+- **严格多余字段拦截**：配置 `additional_properties: false` 可自动检测未声明的未知配置键。
+- **单遍多错误聚合**：`validate` 一次性汇总缺失必填项、类型不匹配、长度/数值越界、正则不匹配与 `multiple_of` 错误。
+
+## API 参考
+
+完整类型定义见 [`src/index.d.cp`](src/index.d.cp)，AI 智能体极简速查见 [`README_AGENT.md`](README_AGENT.md)。

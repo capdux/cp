@@ -1,29 +1,43 @@
-# hdrhistogram@1.0.0 (Agent Quickref)
+# hdrhistogram — AI Agent Quick Ref
 
-> CP package hdrhistogram | License: BSD-2-Clause
-> Import: `import { ... } from "hdrhistogram";` | Full types: `src/index.d.cp`
+- **Import**: `import { Histogram, HdrError } from "hdrhistogram";`
+- **Origin**: crates.io `hdrhistogram` (v1.0.0, BSD-2-Clause, native C `hdr_histogram.c` + RAII)
+- **Full Types**: `src/index.d.cp`
 
-## Functions
-- `export fn hdr_init(lowest_discernible_value: i64, highest_trackable_value: i64, significant_figures: i32, result: **hdr_histogram!?!): i32;`
-- `export fn hdr_close(h: *hdr_histogram!);`
-- `export fn hdr_reset(h: *hdr_histogram!);`
-- `export fn hdr_get_memory_size(h: *hdr_histogram!): usize;`
-- `export fn hdr_record_value(h: *hdr_histogram!, value: i64): bool;`
-- `export fn hdr_record_values(h: *hdr_histogram!, value: i64, count: i64): bool;`
-- `export fn hdr_record_corrected_value(h: *hdr_histogram!, value: i64, expected_interval: i64): bool;`
-- `export fn hdr_record_corrected_values(h: *hdr_histogram!, value: i64, count: i64, expected_interval: i64): bool;`
-- `export fn hdr_add(h: *hdr_histogram!, from: *&hdr_histogram!): i64;`
-- `export fn hdr_add_while_correcting_for_coordinated_omission(h: *hdr_histogram!, from: *hdr_histogram!, expected_interval: i64): i64;`
-- `export fn hdr_min(h: *&hdr_histogram!): i64;`
-- `export fn hdr_max(h: *&hdr_histogram!): i64;`
-- `export fn hdr_mean(h: *&hdr_histogram!): f64;`
-- `export fn hdr_stddev(h: *&hdr_histogram!): f64;`
-- `export fn hdr_value_at_percentile(h: *&hdr_histogram!, percentile: f64): i64;`
-- `export fn hdr_count_at_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_values_are_equivalent(h: *&hdr_histogram!, a: i64, b: i64): bool;`
-- `export fn hdr_lowest_equivalent_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_median_equivalent_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_next_non_equivalent_value(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdr_size_of_equivalent_value_range(h: *&hdr_histogram!, value: i64): i64;`
-- `export fn hdrClampF64(v: f64, lo: f64, hi: f64): f64;`
-- `export fn hdrTotalCount(h: *&hdr_histogram!): i64;`
+## Errors
+```cp
+error HdrError { InitFailed, InvalidHandle, ValueOutOfRange }
+```
+
+## `Histogram` Class (RAII via `__cp_deinit`)
+- **Lifecycle**:
+  - `init(lowest: i64, highest: i64, sigfigs: i32): !void` (alias: `open(...)`)
+  - `reset(): !void` | `memorySize(): !usize`
+- **Recording**:
+  - `record(value: i64): !void` | `saturatingRecord(value: i64): !void`
+  - `recordCount(value: i64, count: i64): !void` (alias: `recordN`)
+  - `recordCorrected(value: i64, expected_interval: i64): !void` (alias: `recordCorrecting`)
+  - `recordCorrectingN(value: i64, count: i64, expected_interval: i64): !void`
+- **Statistics & Percentiles**:
+  - `len(): !u64` | `isEmpty(): !bool` | `min(): !i64` | `max(): !i64`
+  - `mean(): !f64` | `stddev(): !f64` (alias: `stdev`)
+  - `valueAtPercentile(p: f64): !i64` (alias: `percentile`, `p` in `0.0..100.0`)
+  - `valueAtQuantile(q: f64): !i64` (`q` in `0.0..1.0`)
+  - `percentileBelow(value: i64): !f64` | `quantileBelow(value: i64): !f64`
+  - `countAt(value: i64): !i64`
+- **Merge & Bucket Equivalence**:
+  - `add(other: Histogram): !i64` | `addCorrecting(other: Histogram, expected_interval: i64): !i64`
+  - `equivalent(a: i64, b: i64): !bool` | `lowestEquivalent(value: i64): !i64`
+  - `medianEquivalent(value: i64): !i64` | `nextNonEquivalent(value: i64): !i64`
+  - `sizeOfEquivalentRange(value: i64): !i64`
+
+## Helper Functions
+- `hdrClampF64(v: f64, lo: f64, hi: f64): f64`
+- `hdrTotalCount(h: *&hdr_histogram!): i64`
+- Low-level C bindings `hdr_init`, `hdr_close`, `hdr_record_value`, etc. are also exported.
+
+## Gotchas
+1. Always call `h.init(lowest, highest, sigfigs)?` (or `h.open(...)`) before recording; `sigfigs` must be `1..5` and `lowest >= 1`, `highest >= 2 * lowest`.
+2. `valueAtPercentile` takes `0.0..100.0`, while `valueAtQuantile` takes `0.0..1.0` — do not mix them up.
+3. `record()` returns `HdrError.ValueOutOfRange` for values outside `[lowest, highest]`; use `saturatingRecord()` to clamp instead.
+4. Do NOT manually call `hdr_close` on `Histogram.handle` — `__cp_deinit` frees it automatically.
