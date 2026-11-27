@@ -29,36 +29,36 @@ pub const Comparator = struct {
     op: Op = Op.any,
     version: Version = Version{},
 
-    pub fn matches(self: Comparator, v: Version): bool {
-        switch (self.op) {
+    pub fn matches(v: Version): bool {
+        switch (_.op) {
             Op.any => return true,
-            Op.eq => return v.eql(self.version),
-            Op.lt => return v.lt(self.version),
-            Op.lte => return v.lte(self.version),
-            Op.gt => return v.gt(self.version),
-            Op.gte => return v.gte(self.version),
+            Op.eq => return v.eql(_.version),
+            Op.lt => return v.lt(_.version),
+            Op.lte => return v.lte(_.version),
+            Op.gt => return v.gt(_.version),
+            Op.gte => return v.gte(_.version),
         }
     }
 
-    pub fn satisfies(self: Comparator, v: Version): bool {
-        return self.matches(v);
+    pub fn satisfies(v: Version): bool {
+        return _.matches(v);
     }
 
-    pub fn sameTuple(self: Comparator, v: Version): bool {
-        return self.version.major == v.major &&
-               self.version.minor == v.minor &&
-               self.version.patch == v.patch;
+    pub fn sameTuple(v: Version): bool {
+        return _.version.major == v.major &&
+               _.version.minor == v.minor &&
+               _.version.patch == v.patch;
     }
 
-    pub fn format(self: Comparator, buf: []u8): []const u8 {
-        if (self.op == Op.any) {
+    pub fn format(buf: []u8): []const u8 {
+        if (_.op == Op.any) {
             if (buf.len > 0) {
                 buf[0] = '*';
                 return buf[0..1];
             }
             return "";
         }
-        let op_str: []const u8 = switch (self.op) {
+        let op_str: []const u8 = switch (_.op) {
             Op.any => "*",
             Op.eq => "=",
             Op.lt => "<",
@@ -67,7 +67,7 @@ pub const Comparator = struct {
             Op.gte => ">=",
         };
         let v_buf: [128]u8 = undefined;
-        const v_str = self.version.format(&v_buf);
+        const v_str = _.version.format(&v_buf);
         return std.fmt.bufPrint(buf, "{s}{s}", .{ op_str, v_str }) catch "";
     }
 };
@@ -83,18 +83,18 @@ pub const ComparatorSet = struct {
         }
     }
 
-    pub fn matches(self: ComparatorSet, v: Version): bool {
-        return self.matchesWithOptions(v, false);
+    pub fn matches(v: Version): bool {
+        return _.matchesWithOptions(v, false);
     }
 
-    pub fn matchesWithOptions(self: ComparatorSet, v: Version, include_prerelease: bool): bool {
-        if (self.count == 0) {
+    pub fn matchesWithOptions(v: Version, include_prerelease: bool): bool {
+        if (_.count == 0) {
             return include_prerelease || v.prerelease.len == 0;
         }
 
         let i: usize = 0;
-        while (i < self.count) {
-            if (!self.comparators[i].matches(v)) {
+        while (i < _.count) {
+            if (!_.comparators[i].matches(v)) {
                 return false;
             }
             i += 1;
@@ -106,8 +106,8 @@ pub const ComparatorSet = struct {
         if (v.prerelease.len > 0 && !include_prerelease) {
             let allowed = false;
             let k: usize = 0;
-            while (k < self.count) {
-                const c = self.comparators[k];
+            while (k < _.count) {
+                const c = _.comparators[k];
                 if (c.op != Op.any && c.version.prerelease.len > 0 && c.sameTuple(v)) {
                     allowed = true;
                     break;
@@ -120,12 +120,12 @@ pub const ComparatorSet = struct {
         return true;
     }
 
-    pub fn satisfies(self: ComparatorSet, v: Version): bool {
-        return self.matches(v);
+    pub fn satisfies(v: Version): bool {
+        return _.matches(v);
     }
 
-    pub fn format(self: ComparatorSet, buf: []u8): []const u8 {
-        if (self.count == 0) {
+    pub fn format(buf: []u8): []const u8 {
+        if (_.count == 0) {
             if (buf.len > 0) {
                 buf[0] = '*';
                 return buf[0..1];
@@ -134,13 +134,13 @@ pub const ComparatorSet = struct {
         }
         let pos: usize = 0;
         let i: usize = 0;
-        while (i < self.count) {
+        while (i < _.count) {
             if (i > 0 && pos < buf.len) {
                 buf[pos] = ' ';
                 pos += 1;
             }
             let c_buf: [140]u8 = undefined;
-            const c_str = self.comparators[i].format(&c_buf);
+            const c_str = _.comparators[i].format(&c_buf);
             let k: usize = 0;
             while (k < c_str.len && pos < buf.len) {
                 buf[pos] = c_str[k];

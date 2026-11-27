@@ -99,9 +99,9 @@ pub const Crc32Stream = struct {
         return Crc32Stream{ .state = 0xFFFFFFFF, .is_iscsi = true };
     }
 
-    pub fn update(self: *Crc32Stream, data: []const u8) {
-        let c = self.state;
-        if (self.is_iscsi) {
+    pub fn update(*_, data: []const u8) {
+        let c = _.state;
+        if (_.is_iscsi) {
             for (b of data) {
                 c = CRC32C_ISCSI_TABLE[(c ^ b) & 0xFF] ^ (c >> 8);
             }
@@ -110,11 +110,11 @@ pub const Crc32Stream = struct {
                 c = CRC32_IEEE_TABLE[(c ^ b) & 0xFF] ^ (c >> 8);
             }
         }
-        self.state = c;
+        _.state = c;
     }
 
-    pub fn final(self: Crc32Stream): u32 {
-        return self.state ^ 0xFFFFFFFF;
+    pub fn final(): u32 {
+        return _.state ^ 0xFFFFFFFF;
     }
 };
 
@@ -220,9 +220,9 @@ pub const Crc64Stream = struct {
         return Crc64Stream{ .state = 0, .is_ecma = true };
     }
 
-    pub fn update(self: *Crc64Stream, data: []const u8) {
-        let c = self.state;
-        if (self.is_ecma) {
+    pub fn update(*_, data: []const u8) {
+        let c = _.state;
+        if (_.is_ecma) {
             for (b of data) {
                 c = CRC64_ECMA_TABLE[(c ^ b) & 0xFF] ^ (c >> 8);
             }
@@ -231,11 +231,11 @@ pub const Crc64Stream = struct {
                 c = CRC64_XZ_TABLE[(c ^ b) & 0xFF] ^ (c >> 8);
             }
         }
-        self.state = c;
+        _.state = c;
     }
 
-    pub fn final(self: Crc64Stream): u64 {
-        return if (self.is_ecma) self.state else (self.state ^ 0xFFFFFFFF_FFFFFFFF);
+    pub fn final(): u64 {
+        return if (_.is_ecma) _.state else (_.state ^ 0xFFFFFFFF_FFFFFFFF);
     }
 };
 

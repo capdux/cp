@@ -49,98 +49,98 @@ pub const HashRing = struct {
         };
     }
 
-    pub fn deinit(self: *HashRing) {
-        for (n of self.nodes.items) {
-            self.alloc.free(n);
+    pub fn deinit(*_) {
+        for (n of _.nodes.items) {
+            _.alloc.free(n);
         }
-        self.nodes.deinit(self.alloc);
-        self.points.deinit(self.alloc);
+        _.nodes.deinit(_.alloc);
+        _.points.deinit(_.alloc);
     }
 
-    pub fn nodeCount(self: HashRing): usize {
-        return self.nodes.items.len;
+    pub fn nodeCount(): usize {
+        return _.nodes.items.len;
     }
 
-    pub fn addNode(self: *HashRing, node_id: []const u8): !void {
-        for (existing of self.nodes.items) {
+    pub fn addNode(*_, node_id: []const u8): !void {
+        for (existing of _.nodes.items) {
             if (std.mem.eql(u8, existing, node_id)) { return; }
         }
-        const dup = try self.alloc.dupe(u8, node_id);
-        errdefer self.alloc.free(dup);
-        const node_idx = self.nodes.items.len;
-        try self.nodes.append(self.alloc, dup);
+        const dup = try _.alloc.dupe(u8, node_id);
+        errdefer _.alloc.free(dup);
+        const node_idx = _.nodes.items.len;
+        try _.nodes.append(_.alloc, dup);
 
         let v: usize = 0;
-        while (v < self.vnodes_per_node) : (v += 1) {
-            try self.points.append(self.alloc, RingPoint{
+        while (v < _.vnodes_per_node) : (v += 1) {
+            try _.points.append(_.alloc, RingPoint{
                 .hash = hashVNode(dup, v),
                 .node_idx = node_idx,
             });
         }
-        std.mem.sort(RingPoint, self.points.items, {}, ringPointLess);
+        std.mem.sort(RingPoint, _.points.items, {}, ringPointLess);
     }
 
-    pub fn removeNode(self: *HashRing, node_id: []const u8): ConsistentHashError!void {
+    pub fn removeNode(*_, node_id: []const u8): ConsistentHashError!void {
         let found_idx: usize? = null;
         let i: usize = 0;
-        while (i < self.nodes.items.len) : (i += 1) {
-            if (std.mem.eql(u8, self.nodes.items[i], node_id)) {
+        while (i < _.nodes.items.len) : (i += 1) {
+            if (std.mem.eql(u8, _.nodes.items[i], node_id)) {
                 found_idx = i;
                 break;
             }
         }
         const target_idx = found_idx orelse return ConsistentHashError.NodeNotFound;
 
-        self.alloc.free(self.nodes.items[target_idx]);
-        * = self.nodes.orderedRemove(target_idx);
+        _.alloc.free(_.nodes.items[target_idx]);
+        * = _.nodes.orderedRemove(target_idx);
 
         // Rebuild ring points cleanly
-        self.points.clearRetainingCapacity();
+        _.points.clearRetainingCapacity();
         let ni: usize = 0;
-        while (ni < self.nodes.items.len) : (ni += 1) {
+        while (ni < _.nodes.items.len) : (ni += 1) {
             let v: usize = 0;
-            while (v < self.vnodes_per_node) : (v += 1) {
-                self.points.append(self.alloc, RingPoint{
-                    .hash = hashVNode(self.nodes.items[ni], v),
+            while (v < _.vnodes_per_node) : (v += 1) {
+                _.points.append(_.alloc, RingPoint{
+                    .hash = hashVNode(_.nodes.items[ni], v),
                     .node_idx = ni,
                 }) catch unreachable;
             }
         }
-        std.mem.sort(RingPoint, self.points.items, {}, ringPointLess);
+        std.mem.sort(RingPoint, _.points.items, {}, ringPointLess);
     }
 
-    fn lowerBound(self: HashRing, h: u64): usize {
+    fn lowerBound(h: u64): usize {
         let lo: usize = 0;
-        let hi: usize = self.points.items.len;
+        let hi: usize = _.points.items.len;
         while (lo < hi) {
             const mid = lo + (hi - lo) / 2;
-            if (self.points.items[mid].hash < h) {
+            if (_.points.items[mid].hash < h) {
                 lo = mid + 1;
             } else {
                 hi = mid;
             }
         }
-        return if (lo == self.points.items.len) 0 else lo;
+        return if (lo == _.points.items.len) 0 else lo;
     }
 
-    pub fn getNode(self: HashRing, key: []const u8): ConsistentHashError![]const u8 {
-        if (self.points.items.len == 0) { return ConsistentHashError.EmptyRing; }
-        const idx = self.lowerBound(hashKey(key));
-        return self.nodes.items[self.points.items[idx].node_idx];
+    pub fn getNode(key: []const u8): ConsistentHashError![]const u8 {
+        if (_.points.items.len == 0) { return ConsistentHashError.EmptyRing; }
+        const idx = _.lowerBound(hashKey(key));
+        return _.nodes.items[_.points.items[idx].node_idx];
     }
 
     /// Return up to `count` distinct replica nodes clockwise on the ring
-    pub fn getReplicas(self: HashRing, alloc: std.mem.Allocator, key: []const u8, count: usize): ![]const []const u8 {
-        if (self.points.items.len == 0) { return ConsistentHashError.EmptyRing; }
-        const max_n = @min(count, self.nodes.items.len);
+    pub fn getReplicas(alloc: std.mem.Allocator, key: []const u8, count: usize): ![]const []const u8 {
+        if (_.points.items.len == 0) { return ConsistentHashError.EmptyRing; }
+        const max_n = @min(count, _.nodes.items.len);
         let out = std.ArrayList(StrSlice).empty;
         errdefer out.deinit(alloc);
 
-        let start = self.lowerBound(hashKey(key));
+        let start = _.lowerBound(hashKey(key));
         let visited: usize = 0;
-        while (visited < self.points.items.len and out.items.len < max_n) : (visited += 1) {
-            const pos = (start + visited) % self.points.items.len;
-            const candidate = self.nodes.items[self.points.items[pos].node_idx];
+        while (visited < _.points.items.len and out.items.len < max_n) : (visited += 1) {
+            const pos = (start + visited) % _.points.items.len;
+            const candidate = _.nodes.items[_.points.items[pos].node_idx];
             let dup = false;
             for (chosen of out.items) {
                 if (std.mem.eql(u8, chosen, candidate)) {

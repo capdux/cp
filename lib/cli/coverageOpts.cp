@@ -26,19 +26,19 @@ pub const CoverageMetrics = struct {
     branches_hit: usize = 0,
     branches_total: usize = 0,
 
-    pub fn lineRatio(self: CoverageMetrics): f64 {
-        if (self.lines_total == 0) { return 1.0; }
-        return @as(f64, @floatFromInt(self.lines_hit)) / @as(f64, @floatFromInt(self.lines_total));
+    pub fn lineRatio(): f64 {
+        if (_.lines_total == 0) { return 1.0; }
+        return @as(f64, @floatFromInt(_.lines_hit)) / @as(f64, @floatFromInt(_.lines_total));
     }
 
-    pub fn funcRatio(self: CoverageMetrics): f64 {
-        if (self.funcs_total == 0) { return 1.0; }
-        return @as(f64, @floatFromInt(self.funcs_hit)) / @as(f64, @floatFromInt(self.funcs_total));
+    pub fn funcRatio(): f64 {
+        if (_.funcs_total == 0) { return 1.0; }
+        return @as(f64, @floatFromInt(_.funcs_hit)) / @as(f64, @floatFromInt(_.funcs_total));
     }
 
-    pub fn branchRatio(self: CoverageMetrics): f64 {
-        if (self.branches_total == 0) { return 1.0; }
-        return @as(f64, @floatFromInt(self.branches_hit)) / @as(f64, @floatFromInt(self.branches_total));
+    pub fn branchRatio(): f64 {
+        if (_.branches_total == 0) { return 1.0; }
+        return @as(f64, @floatFromInt(_.branches_hit)) / @as(f64, @floatFromInt(_.branches_total));
     }
 };
 
@@ -51,10 +51,10 @@ pub const CodeCoverageOptions = struct {
     enabled: bool = false,
     fail_on_low_coverage: bool = false,
 
-    pub fn meetsThresholds(self: CodeCoverageOptions, m: CoverageMetrics): bool {
-        if (m.lineRatio() < self.fractions.lines) { return false; }
-        if (m.funcRatio() < self.fractions.functions) { return false; }
-        if (m.branchRatio() < self.fractions.branches) { return false; }
+    pub fn meetsThresholds(m: CoverageMetrics): bool {
+        if (m.lineRatio() < _.fractions.lines) { return false; }
+        if (m.funcRatio() < _.fractions.functions) { return false; }
+        if (m.branchRatio() < _.fractions.branches) { return false; }
         return true;
     }
 };

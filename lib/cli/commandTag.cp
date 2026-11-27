@@ -35,8 +35,8 @@ pub const Tag = enum {
     WhyCommand,
     FuzzilliCommand,
 
-    pub fn char(self: Tag): u8 {
-        return switch (self) {
+    pub fn char(): u8 {
+        return switch (_) {
             .AddCommand => 'I',
             .AutoCommand => 'a',
             .BuildCommand => 'b',
@@ -72,22 +72,22 @@ pub const Tag = enum {
         };
     }
 
-    pub fn readGlobalConfig(self: Tag): bool {
-        return switch (self) {
+    pub fn readGlobalConfig(): bool {
+        return switch (_) {
             .BunxCommand, .PackageManagerCommand, .InstallCommand, .AddCommand, .RemoveCommand, .UpdateCommand, .PatchCommand, .PatchCommitCommand, .OutdatedCommand, .PublishCommand, .AuditCommand => true,
             else => false,
         };
     }
 
-    pub fn isNPMRelated(self: Tag): bool {
-        return switch (self) {
+    pub fn isNPMRelated(): bool {
+        return switch (_) {
             .BunxCommand, .LinkCommand, .UnlinkCommand, .PackageManagerCommand, .InstallCommand, .AddCommand, .RemoveCommand, .UpdateCommand, .PatchCommand, .PatchCommitCommand, .OutdatedCommand, .PublishCommand, .AuditCommand => true,
             else => false,
         };
     }
 
-    pub fn loadsConfig(self: Tag): bool {
-        return switch (self) {
+    pub fn loadsConfig(): bool {
+        return switch (_) {
             .BuildCommand,
             .TestCommand,
             .InstallCommand,
@@ -110,8 +110,8 @@ pub const Tag = enum {
         };
     }
 
-    pub fn alwaysLoadsConfig(self: Tag): bool {
-        return switch (self) {
+    pub fn alwaysLoadsConfig(): bool {
+        return switch (_) {
             .BuildCommand,
             .TestCommand,
             .InstallCommand,
@@ -131,8 +131,8 @@ pub const Tag = enum {
         };
     }
 
-    pub fn usesGlobalOptions(self: Tag): bool {
-        return switch (self) {
+    pub fn usesGlobalOptions(): bool {
+        return switch (_) {
             .AddCommand,
             .AuditCommand,
             .BunxCommand,

@@ -7,16 +7,16 @@ pub const Format = enum {
     cjs,
     internal_bake_dev,
 
-    pub fn keepES6ImportExportSyntax(self: Format): bool {
-        return self == Format.esm;
+    pub fn keepES6ImportExportSyntax(): bool {
+        return _ == Format.esm;
     }
 
-    pub fn isESM(self: Format): bool {
-        return self == Format.esm;
+    pub fn isESM(): bool {
+        return _ == Format.esm;
     }
 
-    pub fn isAlwaysStrictMode(self: Format): bool {
-        return self == Format.esm;
+    pub fn isAlwaysStrictMode(): bool {
+        return _ == Format.esm;
     }
 };
 
@@ -42,29 +42,29 @@ pub const GlobalCache = enum {
     fallback,
     disable,
 
-    pub fn allowVersionSpecifier(self: GlobalCache): bool {
-        return self == .force;
+    pub fn allowVersionSpecifier(): bool {
+        return _ == .force;
     }
 
-    pub fn canUse(self: GlobalCache, has_node_modules: bool): bool {
+    pub fn canUse(has_node_modules: bool): bool {
         if (has_node_modules) {
-            return switch (self) {
+            return switch (_) {
                 .fallback, .allow_install, .force => true,
                 .read_only, .disable, .@"auto" => false,
             };
         }
-        return switch (self) {
+        return switch (_) {
             .read_only, .fallback, .allow_install, .@"auto", .force => true,
             .disable => false,
         };
     }
 
-    pub fn isEnabled(self: GlobalCache): bool {
-        return self != .disable;
+    pub fn isEnabled(): bool {
+        return _ != .disable;
     }
 
-    pub fn canInstall(self: GlobalCache): bool {
-        return switch (self) {
+    pub fn canInstall(): bool {
+        return switch (_) {
             .@"auto", .allow_install, .force, .fallback => true,
             else => false,
         };

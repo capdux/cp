@@ -22,22 +22,22 @@ pub const Category = enum {
     chemical,
     multipart,
 
-    pub fn isCode(self: Category): bool {
-        return switch (self) {
+    pub fn isCode(): bool {
+        return switch (_) {
             .wasm, .json, .css, .html, .javascript => true,
             else => false,
         };
     }
 
-    pub fn isTextLike(self: Category): bool {
-        return switch (self) {
+    pub fn isTextLike(): bool {
+        return switch (_) {
             .javascript, .html, .text, .css, .json => true,
             else => false,
         };
     }
 
-    pub fn autosetFilename(self: Category): bool {
-        return switch (self) {
+    pub fn autosetFilename(): bool {
+        return switch (_) {
             .wasm, .font, .image, .audio, .video, .javascript, .html, .text, .css, .json => false,
             else => true,
         };

@@ -42,7 +42,7 @@ pub const EnvPath = struct {
         return c;
     }
 
-    pub fn append(*_, input: []const u8, custom_delimiter: ?u8): !void {
+    pub fn append(*_, input: []const u8, custom_delimiter: u8?): !void {
         let delim: u8 = if (@import("builtin").os.tag == .windows) ';' else ':';
         if (d := custom_delimiter) {
             delim = d;
@@ -62,7 +62,7 @@ pub const EnvPath = struct {
         try _.buf.appendSlice(_.allocator, trimmed);
     }
 
-    pub fn split(path_str: []const u8, custom_delimiter: ?u8): EnvPathIterator {
+    pub fn split(path_str: []const u8, custom_delimiter: u8?): EnvPathIterator {
         return EnvPathIterator.init(path_str, custom_delimiter);
     }
 };
@@ -72,7 +72,7 @@ pub const EnvPathIterator = struct {
     cursor: usize = 0,
     delimiter: u8,
 
-    pub fn init(path_str: []const u8, custom_delimiter: ?u8): EnvPathIterator {
+    pub fn init(path_str: []const u8, custom_delimiter: u8?): EnvPathIterator {
         let delim: u8 = if (@import("builtin").os.tag == .windows) ';' else ':';
         if (d := custom_delimiter) {
             delim = d;
@@ -84,7 +84,7 @@ pub const EnvPathIterator = struct {
         };
     }
 
-    pub fn next(*_): ?[]const u8 {
+    pub fn next(*_): ([]const u8)? {
         while (_.cursor < _.source.len) {
             let start = _.cursor;
             while (_.cursor < _.source.len and _.source[_.cursor] != _.delimiter) {

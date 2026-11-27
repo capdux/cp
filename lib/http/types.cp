@@ -9,15 +9,15 @@ pub const HttpEncoding = enum {
     zstd,
     chunked,
 
-    pub fn canUseLibDeflate(self: HttpEncoding): bool {
-        return switch (self) {
+    pub fn canUseLibDeflate(): bool {
+        return switch (_) {
             .gzip, .deflate => true,
             else => false,
         };
     }
 
-    pub fn isCompressed(self: HttpEncoding): bool {
-        return switch (self) {
+    pub fn isCompressed(): bool {
+        return switch (_) {
             .brotli, .gzip, .deflate, .zstd => true,
             else => false,
         };
@@ -130,19 +130,19 @@ pub const HttpTypesMethod = enum(u8) {
 
     pub const Set = std.enums.EnumSet(HttpTypesMethod);
 
-    pub fn hasBody(self: HttpTypesMethod): bool {
-        return self != .HEAD and self != .TRACE;
+    pub fn hasBody(): bool {
+        return _ != .HEAD and _ != .TRACE;
     }
 
-    pub fn hasRequestBody(self: HttpTypesMethod): bool {
-        return switch (self) {
+    pub fn hasRequestBody(): bool {
+        return switch (_) {
             .GET, .HEAD, .OPTIONS, .TRACE => false,
             else => true,
         };
     }
 
-    pub fn isIdempotent(self: HttpTypesMethod): bool {
-        return switch (self) {
+    pub fn isIdempotent(): bool {
+        return switch (_) {
             .GET, .HEAD, .PUT, .DELETE, .OPTIONS, .TRACE, .QUERY => true,
             else => false,
         };
@@ -339,17 +339,17 @@ pub const HttpURLPath = struct {
         };
     }
 
-    pub fn isRoot(self: HttpURLPath, asset_prefix: []const u8): bool {
-        const without = self.pathWithoutAssetPrefix(asset_prefix);
+    pub fn isRoot(asset_prefix: []const u8): bool {
+        const without = _.pathWithoutAssetPrefix(asset_prefix);
         if (without.len == 1 and without[0] == '.') { return true; }
         return std.mem.eql(u8, without, "index");
     }
 
-    pub fn pathWithoutAssetPrefix(self: HttpURLPath, asset_prefix: []const u8): []const u8 {
-        if (asset_prefix.len == 0) { return self.path; }
+    pub fn pathWithoutAssetPrefix(asset_prefix: []const u8): []const u8 {
+        if (asset_prefix.len == 0) { return _.path; }
         const offset: usize = if (asset_prefix[0] == '/') 1 else 0;
         const origin = asset_prefix[offset..];
-        let out = self.path;
+        let out = _.path;
         if (out.len >= origin.len and std.mem.eql(u8, out[0..origin.len], origin)) {
             out = out[origin.len..];
         }

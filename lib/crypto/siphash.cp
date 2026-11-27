@@ -77,75 +77,75 @@ pub const SipHashStream = struct {
         return SipHashStream.init(key, 2, 4, true);
     }
 
-    fn compressBlock(self: *SipHashStream, m: u64) {
-        self.v3 ^= m;
+    fn compressBlock(*_, m: u64) {
+        _.v3 ^= m;
         let i: u8 = 0;
-        while (i < self.c_rounds) : (i += 1) {
-            sipRound(&self.v0, &self.v1, &self.v2, &self.v3);
+        while (i < _.c_rounds) : (i += 1) {
+            sipRound(&_.v0, &_.v1, &_.v2, &_.v3);
         }
-        self.v0 ^= m;
+        _.v0 ^= m;
     }
 
-    pub fn update(self: *SipHashStream, data: []const u8) {
-        self.total_len = self.total_len +% data.len;
+    pub fn update(*_, data: []const u8) {
+        _.total_len = _.total_len +% data.len;
         let pos: usize = 0;
-        if (self.buf_len > 0) {
-            const need = 8 - self.buf_len;
+        if (_.buf_len > 0) {
+            const need = 8 - _.buf_len;
             const take = @min(need, data.len);
-            @memcpy(self.buf[self.buf_len .. self.buf_len + take], data[0..take]);
-            self.buf_len += take;
+            @memcpy(_.buf[_.buf_len .. _.buf_len + take], data[0..take]);
+            _.buf_len += take;
             pos += take;
-            if (self.buf_len == 8) {
-                const m = std.mem.readInt(u64, &self.buf, .little);
-                self.compressBlock(m);
-                self.buf_len = 0;
+            if (_.buf_len == 8) {
+                const m = std.mem.readInt(u64, &_.buf, .little);
+                _.compressBlock(m);
+                _.buf_len = 0;
             }
         }
         while (pos + 8 <= data.len) : (pos += 8) {
             const m = std.mem.readInt(u64, data[pos .. pos + 8], .little);
-            self.compressBlock(m);
+            _.compressBlock(m);
         }
         if (pos < data.len) {
             const rem = data.len - pos;
-            @memcpy(self.buf[0..rem], data[pos..]);
-            self.buf_len = rem;
+            @memcpy(_.buf[0..rem], data[pos..]);
+            _.buf_len = rem;
         }
     }
 
-    fn finalizeCommon(self: *SipHashStream) {
+    fn finalizeCommon(*_) {
         let last: [8]u8 = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-        if (self.buf_len > 0) {
-            @memcpy(last[0..self.buf_len], self.buf[0..self.buf_len]);
+        if (_.buf_len > 0) {
+            @memcpy(last[0.._.buf_len], _.buf[0.._.buf_len]);
         }
-        last[7] = @truncate(self.total_len & 0xFF);
+        last[7] = @truncate(_.total_len & 0xFF);
         const m = std.mem.readInt(u64, &last, .little);
-        self.compressBlock(m);
+        _.compressBlock(m);
     }
 
-    pub fn final64(self: *SipHashStream): u64 {
-        self.finalizeCommon();
-        self.v2 ^= 0xff;
+    pub fn final64(*_): u64 {
+        _.finalizeCommon();
+        _.v2 ^= 0xff;
         let i: u8 = 0;
-        while (i < self.d_rounds) : (i += 1) {
-            sipRound(&self.v0, &self.v1, &self.v2, &self.v3);
+        while (i < _.d_rounds) : (i += 1) {
+            sipRound(&_.v0, &_.v1, &_.v2, &_.v3);
         }
-        return self.v0 ^ self.v1 ^ self.v2 ^ self.v3;
+        return _.v0 ^ _.v1 ^ _.v2 ^ _.v3;
     }
 
-    pub fn final128(self: *SipHashStream): [16]u8 {
-        self.finalizeCommon();
-        self.v2 ^= 0xee;
+    pub fn final128(*_): [16]u8 {
+        _.finalizeCommon();
+        _.v2 ^= 0xee;
         let i: u8 = 0;
-        while (i < self.d_rounds) : (i += 1) {
-            sipRound(&self.v0, &self.v1, &self.v2, &self.v3);
+        while (i < _.d_rounds) : (i += 1) {
+            sipRound(&_.v0, &_.v1, &_.v2, &_.v3);
         }
-        const lo = self.v0 ^ self.v1 ^ self.v2 ^ self.v3;
-        self.v1 ^= 0xdd;
+        const lo = _.v0 ^ _.v1 ^ _.v2 ^ _.v3;
+        _.v1 ^= 0xdd;
         let j: u8 = 0;
-        while (j < self.d_rounds) : (j += 1) {
-            sipRound(&self.v0, &self.v1, &self.v2, &self.v3);
+        while (j < _.d_rounds) : (j += 1) {
+            sipRound(&_.v0, &_.v1, &_.v2, &_.v3);
         }
-        const hi = self.v0 ^ self.v1 ^ self.v2 ^ self.v3;
+        const hi = _.v0 ^ _.v1 ^ _.v2 ^ _.v3;
         let out: [16]u8 = undefined;
         std.mem.writeInt(u64, out[0..8], lo, .little);
         std.mem.writeInt(u64, out[8..16], hi, .little);
