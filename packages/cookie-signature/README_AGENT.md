@@ -1,25 +1,42 @@
-# cookie-signature@1.0.0 (Agent Quickref)
+# cookie-signature — AI Agent Quick Ref
 
-> Zero-heap RFC 6265 Cookie parser, Set-Cookie header formatter, and built-in HMAC-SHA256 constant-time cookie signing/verification. | License: MIT
-> Import: `import { ... } from "cookie-signature";` | Full types: `src/index.d.cp`
+- **Import**: `import { SAME_SITE_OMIT, SAME_SITE_STRICT, SAME_SITE_LAX, SAME_SITE_NONE, CookieSlice, CookieOptions, UnsignResult, Sha256State, sign, unsign, getCookie, formatSetCookie, sha256, hmacSha256, ctEqual, encodeBase64Url32 } from "cookie-signature";`
+- **Source**: npm `cookie-signature` (`v1.0.0`, zero-heap HMAC-SHA256 + RFC 6265 Cookie codec)
 
-## Functions
-- `export fn add32(a: u32, b: u32): u32;`
-- `export fn rotr32(x: u32, n: u32): u32;`
-- `export fn sha256K(i: usize): u32;`
-- `export fn sha256Init(): Sha256State;`
-- `export fn sha256Update(st: &mut Sha256State, data: &[]u8);`
-- `export fn sha256Final(st: &mut Sha256State, out32: []u8);`
-- `export fn sha256(data: &[]u8, out32: []u8);`
-- `export fn ctEqual(a: &[]u8, b: &[]u8): bool;`
-- `export fn hmacSha256(key: &[]u8, msg: &[]u8, out: []u8);`
-- `export fn b64UrlChar(v: u8): u8;`
-- `export fn encodeBase64Url32(mac: &[]u8, dst: []u8);`
-- `export fn isWs(c: u8): bool;`
-- `export fn bytesEq(a: &[]u8, b: &[]u8): bool;`
-- `export fn getCookie(header: &[]u8, name: &[]u8): CookieSlice;`
-- `export fn sign(val: &[]u8, secret: &[]u8, dst: []u8): usize;`
-- `export fn unsign(signed_val: &[]u8, secret: &[]u8): UnsignResult;`
-- `export fn appendBytes(dst: []u8, pos: usize, src: &[]u8): i64;`
-- `export fn appendU64(dst: []u8, pos: usize, val: u64): i64;`
-- `export fn formatSetCookie(name: &[]u8, value: &[]u8, opts: CookieOptions, dst: []u8): i64;`
+## Constants
+```cp
+SAME_SITE_OMIT: u8 = 0
+SAME_SITE_STRICT: u8 = 1
+SAME_SITE_LAX: u8 = 2
+SAME_SITE_NONE: u8 = 3
+```
+
+## Core Signatures
+```cp
+class CookieSlice { start: usize, len: usize, found: bool }
+class UnsignResult { ok: bool, val_len: usize }
+class CookieOptions {
+    max_age: i64, path: &[]u8, domain: &[]u8,
+    http_only: bool, secure: bool, same_site: u8,
+}
+
+sign(val: &[]u8, secret: &[]u8, dst: []u8): usize;        // 0 if dst.len < val.len + 44
+unsign(signed_val: &[]u8, secret: &[]u8): UnsignResult;   // constant-time verify
+getCookie(header: &[]u8, name: &[]u8): CookieSlice;
+formatSetCookie(name: &[]u8, value: &[]u8, opts: CookieOptions, dst: []u8): i64; // -1 on overflow
+
+// Crypto primitives
+sha256(data: &[]u8, out32: []u8);
+hmacSha256(key: &[]u8, msg: &[]u8, out: []u8);            // out.len >= 32
+ctEqual(a: &[]u8, b: &[]u8): bool;
+encodeBase64Url32(mac: &[]u8, dst: []u8);                 // dst.len >= 43
+sha256Init(): Sha256State;
+sha256Update(st: &mut Sha256State, data: &[]u8);
+sha256Final(st: &mut Sha256State, out32: []u8);
+```
+
+## Pitfalls
+- `sign` outputs `<val>.<43-byte base64url MAC>`: ensure `dst.len >= val.len + 44`, otherwise `sign` returns `0`.
+- `unsign` does not copy; when `res.ok` is true, slice the original value via `signed_val[0..res.val_len]`.
+- `formatSetCookie` omits `Max-Age` when `opts.max_age < 0` and omits `Path`/`Domain` when empty; returns `-1` if `dst` is too small.
+- `unsign` uses `ctEqual` internally to prevent timing side-channels.
