@@ -2,6 +2,8 @@
 // Inspired by Rust `iri-string`
 // MIT License
 
+import { findByte, rfindByte } from "cap:ascii";
+
 pub struct IriParts {
     pub scheme_start: usize,
     pub scheme_len: usize,
@@ -108,9 +110,7 @@ pub fn parseIri(s: string): IriParts {
         pos = pos + 1;
         res.has_query = true;
         res.query_start = pos;
-        while (pos < s.len && s[pos] != 35) {
-            pos = pos + 1;
-        }
+        pos = findByte(s, 35, pos) ?? s.len;
         res.query_len = pos - res.query_start;
     }
 
@@ -282,8 +282,8 @@ pub fn resolveReference(base: string, rel: string, out: []u8): usize {
         return 0;
     }
 
-    let path_buf: [512]u8 = [0; 512];
-    let merge_buf: [512]u8 = [0; 512];
+    let path_buf: [512]u8 = undefined;
+    let merge_buf: [512]u8 = undefined;
 
     let t_scheme: string = base[b.scheme_start..(b.scheme_start + b.scheme_len)];
     let t_has_auth: bool = false;
@@ -344,17 +344,8 @@ pub fn resolveReference(base: string, rel: string, out: []u8): usize {
                         mlen = 1;
                     } else {
                         // Copy bp up to and including last '/'
-                        let last_slash: usize = 0;
-                        let found_slash: bool = false;
-                        let si: usize = 0;
-                        while (si < bp.len) {
-                            if (bp[si] == 47) {
-                                last_slash = si;
-                                found_slash = true;
-                            }
-                            si = si + 1;
-                        }
-                        if (found_slash) {
+                        const last_slash_opt = rfindByte(bp, 47);
+                        if (last_slash := last_slash_opt) {
                             let prefix_len: usize = last_slash + 1;
                             if (prefix_len > 512) {
                                 return 0;

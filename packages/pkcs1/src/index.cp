@@ -103,7 +103,7 @@ pub struct RsaPublicKey {
 
     pub static fn empty(): RsaPublicKey {
         return RsaPublicKey {
-            n: [0; 512],
+            n: undefined,
             n_len: 0,
             e: 0 as u64,
         };
@@ -171,20 +171,20 @@ pub struct RsaPrivateKey {
     pub static fn empty(): RsaPrivateKey {
         return RsaPrivateKey {
             version: PK1_VERSION_TWO_PRIME,
-            n: [0; 512],
+            n: undefined,
             n_len: 0,
             e: 0 as u64,
-            d: [0; 512],
+            d: undefined,
             d_len: 0,
-            p: [0; 256],
+            p: undefined,
             p_len: 0,
-            q: [0; 256],
+            q: undefined,
             q_len: 0,
-            dp: [0; 256],
+            dp: undefined,
             dp_len: 0,
-            dq: [0; 256],
+            dq: undefined,
             dq_len: 0,
-            qinv: [0; 256],
+            qinv: undefined,
             qinv_len: 0,
         };
     }

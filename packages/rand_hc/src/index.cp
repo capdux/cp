@@ -54,7 +54,7 @@ pub struct Hc128Rng {
     /// Initializes HC-128 from a 32-byte seed (16-byte key + 16-byte IV)
     /// using the 1280-word key/IV expansion and 1024-step internal warm-up.
     static fn fromSeed(seed: [32]u8): Hc128Rng {
-        let w: [1280]u32 = [0; 1280];
+        let w: [1280]u32 = undefined;
 
         // Load 128-bit key into W[0..4] and duplicate into W[4..8]
         let i: usize = 0;
@@ -79,8 +79,8 @@ pub struct Hc128Rng {
         }
 
         let rng: Hc128Rng = Hc128Rng{
-            p: [0; 512],
-            q: [0; 512],
+            p: undefined,
+            q: undefined,
             counter: 0,
         };
 

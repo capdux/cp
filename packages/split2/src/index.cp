@@ -1,6 +1,9 @@
 // @cap/split2 — Zero-allocation streaming line splitter across chunk boundaries
 // Inspired by npm:split2 (https://github.com/mcollina/split2)
 
+import { findByte } from "cap:ascii";
+import { findByteInBytes } from "cap:bin";
+
 pub const SPLIT2_BUF_CAP: usize = 4096;
 
 fn sp2Min(a: usize, b: usize): usize {
@@ -25,7 +28,7 @@ pub struct LineSplitter {
 
     static fn new(): LineSplitter {
         return LineSplitter{
-            buf: [0; 4096],
+            buf: undefined,
             len: 0,
             max_line_len: SPLIT2_BUF_CAP,
             skip_empty: false,
@@ -36,7 +39,7 @@ pub struct LineSplitter {
     static fn withMaxLen(max_len: usize): LineSplitter {
         const clamped: usize = sp2Min(max_len, SPLIT2_BUF_CAP);
         return LineSplitter{
-            buf: [0; 4096],
+            buf: undefined,
             len: 0,
             max_line_len: clamped,
             skip_empty: false,
@@ -59,10 +62,23 @@ pub struct LineSplitter {
         const max_out: usize = sp2Min(out_starts.len, out_lens.len);
         const cap_limit: usize = sp2Min(_.max_line_len, SPLIT2_BUF_CAP);
 
-        let i: usize = 0;
-        while (i < chunk.len) : (i += 1) {
-            const b: u8 = chunk[i];
-            if (b == 0x0A) {
+        let pos: usize = 0;
+        while (pos < chunk.len) {
+            const nl_opt = findByteInBytes(chunk, 0x0A, pos);
+            const seg_end: usize = nl_opt ?? chunk.len;
+            const seg_len: usize = seg_end - pos;
+            if (seg_len > 0) {
+                const avail: usize = if (_.len < cap_limit) (cap_limit - _.len) else 0;
+                const take: usize = sp2Min(seg_len, avail);
+                if (take > 0) {
+                    sp2CopyBytes(_.buf[0..SPLIT2_BUF_CAP], _.len, chunk[pos..(pos + take)], take);
+                    _.len += take;
+                }
+                if (seg_len > avail) {
+                    _.is_overflowed = true;
+                }
+            }
+            if (nl_opt != null) {
                 let line_len: usize = _.len;
                 if (line_len > 0 && _.buf[line_len - 1] == 0x0D) {
                     line_len -= 1;
@@ -77,13 +93,9 @@ pub struct LineSplitter {
                     }
                 }
                 _.len = 0;
+                pos = seg_end + 1;
             } else {
-                if (_.len < cap_limit) {
-                    _.buf[_.len] = b;
-                    _.len += 1;
-                } else {
-                    _.is_overflowed = true;
-                }
+                break;
             }
         }
 
@@ -124,11 +136,11 @@ pub fn splitLines(input: string, out_slices: []string): usize {
     }
     let count: usize = 0;
     let start: usize = 0;
-    let i: usize = 0;
 
-    while (i < input.len) : (i += 1) {
-        if (input[i] == 0x0A) {
-            let end: usize = i;
+    while (start < input.len) {
+        const nl_opt = findByte(input, 0x0A, start);
+        if (nl := nl_opt) {
+            let end: usize = nl;
             if (end > start && input[end - 1] == 0x0D) {
                 end -= 1;
             }
@@ -136,13 +148,14 @@ pub fn splitLines(input: string, out_slices: []string): usize {
                 out_slices[count] = input[start..end];
                 count += 1;
             }
-            start = i + 1;
+            start = nl + 1;
+        } else {
+            if (count < out_slices.len) {
+                out_slices[count] = input[start..input.len];
+                count += 1;
+            }
+            break;
         }
-    }
-
-    if (start < input.len && count < out_slices.len) {
-        out_slices[count] = input[start..input.len];
-        count += 1;
     }
 
     return count;

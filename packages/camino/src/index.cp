@@ -2,6 +2,7 @@
 // Clean-room MIT implementation for CP.
 
 import { isValidUtf8 } from "../../utf8parse/src/index.cp";
+import { bytesEq } from "cap:bin";
 
 pub const CAMINO_MAX_PATH: usize = 512;
 
@@ -31,19 +32,7 @@ fn camTrimTrailingSlashes(data: []const u8, len: usize): usize {
 }
 
 fn camSliceEq(a: []const u8, a_start: usize, a_end: usize, b: []const u8, b_start: usize, b_end: usize): bool {
-    const alen = a_end - a_start;
-    const blen = b_end - b_start;
-    if (alen != blen) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < alen) {
-        if (a[a_start + i] != b[b_start + i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return bytesEq(a[a_start..a_end], b[b_start..b_end]);
 }
 
 fn camIsDot(data: []const u8, start: usize, end: usize): bool {
@@ -169,7 +158,7 @@ pub struct Utf8PathBuf {
     pub length: usize,
 
     pub static fn fromStr(s: string): Utf8PathBuf {
-        let out = Utf8PathBuf { buf: [0; 512], length: 0 };
+        let out = Utf8PathBuf { buf: undefined, length: 0 };
         const n = if (s.len > CAMINO_MAX_PATH) CAMINO_MAX_PATH else s.len;
         let i: usize = 0;
         while (i < n) {
@@ -187,7 +176,7 @@ pub struct Utf8PathBuf {
         if (!isValidUtf8(b)) {
             return null;
         }
-        let out = Utf8PathBuf { buf: [0; 512], length: b.len };
+        let out = Utf8PathBuf { buf: undefined, length: b.len };
         let i: usize = 0;
         while (i < b.len) {
             out.buf[i] = b[i];
@@ -213,17 +202,7 @@ pub struct Utf8PathBuf {
     }
 
     pub fn equals(other: string): bool {
-        if (_.length != other.len) {
-            return false;
-        }
-        let i: usize = 0;
-        while (i < _.length) {
-            if (_.buf[i] != other[i]) {
-                return false;
-            }
-            i += 1;
-        }
-        return true;
+        return bytesEq(_.buf[0.._.length], other);
     }
 
     pub fn push(*_, path: string) {
@@ -269,7 +248,7 @@ pub struct Utf8PathBuf {
             return null;
         }
         const plen = parent_len_opt ?? 0;
-        let out = Utf8PathBuf { buf: [0; 512], length: plen };
+        let out = Utf8PathBuf { buf: undefined, length: plen };
         let i: usize = 0;
         while (i < plen) {
             out.buf[i] = _.buf[i];
@@ -407,7 +386,7 @@ pub struct Utf8PathBuf {
             base_cur = bstep.next_pos;
         }
 
-        let out = Utf8PathBuf { buf: [0; 512], length: 0 };
+        let out = Utf8PathBuf { buf: undefined, length: 0 };
         let first = true;
         while (true) {
             const sstep = camNextComponent(_.buf[0.._.length], _.length, self_cur);

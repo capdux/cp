@@ -2,7 +2,7 @@
 // Clean-room MIT implementation inspired by npm `picocolors` v1.
 // Reuses ANSI SGR StylePair definitions from `@cap/ansi-styles` with zero duplication.
 
-import { strEq } from "cap:ascii";
+import { strEq, findByte } from "cap:ascii";
 import { writeStr } from "cap:fmt";
 import {
     StylePair,
@@ -68,15 +68,32 @@ fn picoFormatPair(
     let p: usize = 0;
     p = writeStr(pair.open, out, p);
 
-    let i: usize = 0;
-    while (i < text.len && p < out.len) {
-        if (pair.close.len > 0 && picoMatchAt(text, i, pair.close)) {
-            p = writeStr(replace_with, out, p);
-            i = i + pair.close.len;
-        } else {
-            out[p] = text[i];
-            p = p + 1;
-            i = i + 1;
+    if (pair.close.len == 0) {
+        p = writeStr(text, out, p);
+    } else {
+        const close_first = pair.close[0];
+        let i: usize = 0;
+        while (i < text.len && p < out.len) {
+            const hit_opt = findByte(text, close_first, i);
+            if (hit := hit_opt) {
+                if (hit > i) {
+                    p = writeStr(text[i..hit], out, p);
+                    if (p >= out.len) {
+                        break;
+                    }
+                }
+                if (picoMatchAt(text, hit, pair.close)) {
+                    p = writeStr(replace_with, out, p);
+                    i = hit + pair.close.len;
+                } else {
+                    out[p] = text[hit];
+                    p = p + 1;
+                    i = hit + 1;
+                }
+            } else {
+                p = writeStr(text[i..text.len], out, p);
+                break;
+            }
         }
     }
 
@@ -252,7 +269,7 @@ pub struct PicoBuf {
     pub static fn new(is_color_supported: bool): PicoBuf {
         return PicoBuf {
             cfg: ColorConfig { is_color_supported: is_color_supported },
-            buf: [0; 1024],
+            buf: undefined,
             len: 0
         };
     }
@@ -260,7 +277,7 @@ pub struct PicoBuf {
     pub static fn fromConfig(cfg: ColorConfig): PicoBuf {
         return PicoBuf {
             cfg: cfg,
-            buf: [0; 1024],
+            buf: undefined,
             len: 0
         };
     }

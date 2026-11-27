@@ -1,6 +1,8 @@
 // @cap/snakecase-keys — Zero-heap object key snake_case converter.
 // Clean-room MIT port of npm `snakecase-keys` v9, composing @cap/map-obj & @cap/heck-case.
 
+import { strEq } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 import { MapObjResult, MAP_OBJ_MAX_ENTRIES } from "../../map-obj/src/index.cp";
 import { toSnakeCase } from "../../heck/src/index.cp";
 
@@ -19,9 +21,9 @@ pub struct SnakecaseKeysResult {
     pub count: usize,
 
     pub static fn empty(): SnakecaseKeysResult {
-        let kb: [1024]u8 = [0; 1024];
-        let offs: [32]usize = [0; 32];
-        let lens: [32]usize = [0; 32];
+        let kb: [1024]u8 = undefined;
+        let offs: [32]usize = undefined;
+        let lens: [32]usize = undefined;
         let vals: [32]string = [""; 32];
         let act: [32]bool = [false; 32];
         return SnakecaseKeysResult {
@@ -45,19 +47,8 @@ pub struct SnakecaseKeysResult {
             if (_.active[i]) {
                 let off = _.key_offs[i];
                 let klen = _.key_lens[i];
-                if (klen == k.len) {
-                    let matched = true;
-                    let j: usize = 0;
-                    while (j < klen) {
-                        if (_.key_buf[off + j] != k[j]) {
-                            matched = false;
-                            break;
-                        }
-                        j = j + 1;
-                    }
-                    if (matched) {
-                        return _.values[i];
-                    }
+                if (bytesEq(_.key_buf[off..(off + klen)], k)) {
+                    return _.values[i];
                 }
             }
             i = i + 1;
@@ -99,13 +90,7 @@ pub struct SnakecaseKeysResult {
 }
 
 fn sckStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
+    return strEq(a, b);
 }
 
 fn sckIsExcluded(k: string, exclude: []string): bool {

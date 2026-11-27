@@ -300,8 +300,8 @@ pub struct PslRuleList {
             return null;
         }
 
-        let norm: [256]u8 = [0; 256];
-        let label_starts: [128]usize = [0; 128];
+        let norm: [256]u8 = undefined;
+        let label_starts: [128]usize = undefined;
         let label_count: usize = 0;
 
         let i: usize = 0;
@@ -434,7 +434,7 @@ pub struct PslRuleList {
             return null;
         }
         let info = info_opt ?? DomainInfo {
-            norm: [0; 256],
+            norm: undefined,
             norm_len: 0,
             suffix_start: 0,
             suffix_len: 0,
@@ -452,7 +452,7 @@ pub struct PslRuleList {
             return null;
         }
         let info = info_opt ?? DomainInfo {
-            norm: [0; 256],
+            norm: undefined,
             norm_len: 0,
             suffix_start: 0,
             suffix_len: 0,
@@ -473,7 +473,7 @@ pub struct PslRuleList {
             return false;
         }
         let info = info_opt ?? DomainInfo {
-            norm: [0; 256],
+            norm: undefined,
             norm_len: 0,
             suffix_start: 0,
             suffix_len: 0,

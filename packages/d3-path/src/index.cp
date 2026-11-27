@@ -82,7 +82,7 @@ pub struct SvgPath {
 
     pub static fn new(): SvgPath {
         return SvgPath {
-            buf: [0; 2048],
+            buf: undefined,
             len: 0,
             has_subpath: false,
             x0: 0.0,
