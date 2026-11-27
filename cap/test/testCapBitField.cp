@@ -1,15 +1,14 @@
 import { test, expect_eq } from "cap:test";
 import {
-    getBitU64,
-    setBitU64,
-    getBitsU64,
-    setBitsU64,
-    getBitU32,
-    setBitU32,
-    getBitsU32,
-    setBitsU32,
-    getBitSlice,
-    setBitSlice,
+    bitLengthU8, bitLengthU16, bitLengthU32, bitLengthU64, bitLengthUsize, bitLengthSlice,
+    getBitU8, setBitU8, getBitsU8, setBitsU8,
+    getBitU16, setBitU16, getBitsU16, setBitsU16,
+    getBitU32, setBitU32, getBitsU32, setBitsU32,
+    getBitU64, setBitU64, getBitsU64, setBitsU64,
+    getBitsRangeU64, setBitsRangeU64,
+    getBitUsize, setBitUsize, getBitsUsize, setBitsUsize,
+    getBitSlice, setBitSlice, toggleBitSlice, getBitsSlice, setBitsSlice, countOnesSlice,
+    BitArray,
 } from "../../packages/bit_field/src/index.cp";
 
 fn main() {
@@ -41,7 +40,6 @@ fn main() {
         expect_eq(getBitsU64(val, 32, 48), 0x5678 as u64);
         expect_eq(getBitsU64(val, 4, 12), 0xEF as u64);
 
-        // Overwrite bits [8..16) with 0xAB (extra high bits in 0xFFAB masked off)
         const updated = setBitsU64(val, 8, 16, 0xFFAB as u64);
         expect_eq(getBitsU64(updated, 8, 16), 0xAB as u64);
         expect_eq(getBitsU64(updated, 0, 8), 0xF0 as u64);
@@ -115,5 +113,54 @@ fn main() {
         setBitSlice(small[0..2], 16, false);
         expect_eq(small[0], 0xFF as u8);
         expect_eq(small[1], 0xFF as u8);
+    });
+
+    test("7. @cap/bit-field — u8, u16, usize BitField & bitLength helpers", () => {
+        expect_eq(bitLengthU8(), 8 as usize);
+        expect_eq(bitLengthU16(), 16 as usize);
+        expect_eq(bitLengthU32(), 32 as usize);
+        expect_eq(bitLengthU64(), 64 as usize);
+        expect_eq(bitLengthUsize() >= 32, true);
+
+        let b8: u8 = setBitU8(0, 7, true);
+        b8 = setBitsU8(b8, 1, 5, 0x0A);
+        expect_eq(getBitU8(b8, 7), true);
+        expect_eq(getBitsU8(b8, 1, 5), 0x0A as u8);
+
+        let b16: u16 = setBitsU16(0, 4, 12, 0xAB);
+        b16 = setBitU16(b16, 15, true);
+        expect_eq(getBitU16(b16, 15), true);
+        expect_eq(getBitsU16(b16, 4, 12), 0xAB as u16);
+
+        let bu: usize = setBitUsize(0, 10, true);
+        bu = setBitsUsize(bu, 16, 24, 0x5C);
+        expect_eq(getBitUsize(bu, 10), true);
+        expect_eq(getBitsUsize(bu, 16, 24), 0x5C as usize);
+
+        // Full [0..64) range via getBitsRangeU64 / setBitsRangeU64
+        const full = setBitsRangeU64(0, 56, 64, 0xAB);
+        expect_eq(getBitsRangeU64(full, 56, 64), 0xAB as u64);
+    });
+
+    test("8. @cap/bit-field — BitArray & cross-byte getBitsSlice/setBitsSlice/toggle/countOnes", () => {
+        let raw: [4]u8 = [0, 0, 0, 0];
+        let ba = BitArray.fromSlice(raw[0..4]);
+        expect_eq(ba.bitLength(), 32 as usize);
+        expect_eq(bitLengthSlice(raw[0..4]), 32 as usize);
+
+        ba.setBits(5, 17, 0xABC);
+        expect_eq(ba.getBits(5, 17), 0xABC as u64);
+        expect_eq(getBitsSlice(raw[0..4], 5, 17), 0xABC as u64);
+
+        ba.toggleBit(0);
+        expect_eq(ba.getBit(0), true);
+        toggleBitSlice(raw[0..4], 0);
+        expect_eq(ba.getBit(0), false);
+
+        ba.setAll();
+        expect_eq(ba.countOnes(), 32 as usize);
+        expect_eq(countOnesSlice(raw[0..4]), 32 as usize);
+        ba.clearAll();
+        expect_eq(ba.countOnes(), 0 as usize);
     });
 }

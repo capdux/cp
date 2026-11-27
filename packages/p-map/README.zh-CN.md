@@ -13,14 +13,21 @@ cap add p-map
 ```
 
 ```cp
-import { batchCount } from "p-map";
+import { defaultPMapOptions } from "p-map";
 ```
 
 ## 核心导出 API
 
+- `export fn defaultPMapOptions(): PMapOptions;`
+- `export fn pMapSkip(): PMapSkip;`
+- `export fn mapOk(value: i64): MapOutcome;`
+- `export fn mapSkip(): MapOutcome;`
+- `export fn mapErr(err_code: i32): MapOutcome;`
 - `export fn batchCount(total_items: usize, concurrency: usize): usize;`
 - `export fn batchRange(total_items: usize, batch_size: usize, batch_idx: usize): BatchSlice?;`
 - `export fn workerPartition(total_items: usize, worker_count: usize, worker_idx: usize): BatchSlice?;`
+- `export fn pMapCollectErrors(items: &[]i64, out: []i64, errors_out: []PMapErrorEntry, opts: PMapOptions, mapper: (i64, usize) => MapOutcome): PMapSummary;`
+- `export fn pMap(items: &[]i64, out: []i64, opts: PMapOptions, mapper: (i64, usize) => MapOutcome): PMapSummary;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

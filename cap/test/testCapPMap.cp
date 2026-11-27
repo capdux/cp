@@ -1,7 +1,24 @@
 import { test, expect_eq } from "cap:test";
 import {
-    BatchSlice, ConcurrencyPool, batchCount, batchRange, workerPartition
+    PMAP_STATUS_OK, PMAP_STATUS_SKIP, PMAP_STATUS_ERR,
+    BatchSlice, ConcurrencyPool, PMapOptions, PMapErrorEntry, MapOutcome,
+    defaultPMapOptions, pMapSkip, mapOk, mapSkip, mapErr,
+    batchCount, batchRange, workerPartition, pMap, pMapCollectErrors,
 } from "../../packages/p-map/src/index.cp";
+
+fn doubleOrSkipEven(val: i64, idx: usize): MapOutcome {
+    if ((val & 1) == 0) {
+        return mapSkip();
+    }
+    return mapOk(val * 10 + (idx as i64));
+}
+
+fn failOnNegative(val: i64, idx: usize): MapOutcome {
+    if (val < 0) {
+        return mapErr((val as i32) - (idx as i32));
+    }
+    return mapOk(val + 1);
+}
 
 fn main() {
     test("1. @cap/p-map — batchCount & batchRange pagination", () => {
@@ -64,10 +81,81 @@ fn main() {
         expect_eq(pool.failedCount(), 1);
     });
 
-    test("6. @cap/p-map — Empty pool is immediately done", () => {
+    test("6. @cap/p-map — Empty pool is immediately done & reportSkip/reset", () => {
         let pool = ConcurrencyPool.new(0, 4, true);
         expect_eq(pool.isDone(), true);
         expect_eq(pool.acquireNext() == null, true);
         expect_eq(pool.reportOk(), false);
+
+        let pool2 = ConcurrencyPool.new(2, 2, true);
+        expect_eq(pool2.remainingCount(), 2 as usize);
+        pool2.acquireNext();
+        expect_eq(pool2.reportSkip(), true);
+        expect_eq(pool2.skippedCount(), 1 as usize);
+        pool2.reset();
+        expect_eq(pool2.skippedCount(), 0 as usize);
+        expect_eq(pool2.remainingCount(), 2 as usize);
+    });
+
+    test("7. @cap/p-map — pMap with concurrency waves & pMapSkip filtering", () => {
+        const items: [5]i64 = [1, 2, 3, 4, 5];
+        let out: [5]i64 = [0; 5];
+        let opts = defaultPMapOptions();
+        opts.concurrency = 2;
+
+        const skip_sentinel = pMapSkip();
+        expect_eq(skip_sentinel.marker, PMAP_STATUS_SKIP);
+
+        const summary = pMap(items[0..5], out[0..5], opts, doubleOrSkipEven);
+        expect_eq(summary.total, 5 as usize);
+        expect_eq(summary.produced, 3 as usize);
+        expect_eq(summary.skipped, 2 as usize);
+        expect_eq(summary.failed, 0 as usize);
+        expect_eq(summary.batches_run, 3 as usize);
+        expect_eq(summary.halted, false);
+        expect_eq(out[0], 10 as i64); // 1*10 + 0
+        expect_eq(out[1], 32 as i64); // 3*10 + 2
+        expect_eq(out[2], 54 as i64); // 5*10 + 4
+    });
+
+    test("8. @cap/p-map — pMapCollectErrors with stop_on_error=true vs false", () => {
+        const items: [5]i64 = [10, -2, 20, -5, 30];
+        let out: [5]i64 = [0; 5];
+        let errs: [5]PMapErrorEntry = [
+            PMapErrorEntry{ index: 0, err_code: 0 },
+            PMapErrorEntry{ index: 0, err_code: 0 },
+            PMapErrorEntry{ index: 0, err_code: 0 },
+            PMapErrorEntry{ index: 0, err_code: 0 },
+            PMapErrorEntry{ index: 0, err_code: 0 },
+        ];
+
+        // stop_on_error = true with concurrency = 2 -> wave 1 runs [0, 1], halts before wave 2
+        const s_stop = pMapCollectErrors(
+            items[0..5],
+            out[0..5],
+            errs[0..5],
+            PMapOptions{ concurrency: 2, stop_on_error: true },
+            failOnNegative,
+        );
+        expect_eq(s_stop.halted, true);
+        expect_eq(s_stop.failed, 1 as usize);
+        expect_eq(s_stop.produced, 1 as usize);
+        expect_eq(s_stop.first_error_index ?? 99, 1 as usize);
+        expect_eq(s_stop.first_error_code, -3 as i32);
+
+        // stop_on_error = false -> collects all errors across all waves
+        const s_all = pMapCollectErrors(
+            items[0..5],
+            out[0..5],
+            errs[0..5],
+            PMapOptions{ concurrency: 2, stop_on_error: false },
+            failOnNegative,
+        );
+        expect_eq(s_all.halted, false);
+        expect_eq(s_all.produced, 3 as usize);
+        expect_eq(s_all.failed, 2 as usize);
+        expect_eq(errs[0].index, 1 as usize);
+        expect_eq(errs[1].index, 3 as usize);
+        expect_eq(errs[1].err_code, -8 as i32);
     });
 }
