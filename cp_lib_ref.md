@@ -1192,3 +1192,14 @@ const h = cap.hash.wyhash("hello");
 - `@cap/stylis` (`npm:stylis` #766, MIT) — 零堆 CSS 嵌套选择器展开与样式压缩预处理器。
 - `@cap/damerau-levenshtein` (`npm:damerau-levenshtein` #888, MIT) — 零堆最优字符串对齐（支持相邻换位）编辑距离与相似度计算器。
 - 零重复映射：`roxmltree`→`@cap/saxes`、`image-webp`→`cap:webp`、`fast-safe-stringify`→`@cap/jcs`、`color`→`cap:color`、`mrmime`→`@cap/mime-types`、`fast-equals`→`@cap/fast-deep-equal`、`decimal.js-light`→`@cap/bigdecimal`、`cookie-es`→`@cap/cookie`。
+
+### Batch 163 — 双平台 Real Top 836–920（8 packages; 881 `@cap/*` + 1,209 mappings!）
+
+- `@cap/dlv-list` (`crates.io:dlv-list` #848, MIT) — 零堆固定数组稳定句柄双向链表（O(1) 空闲槽复用）。
+- `@cap/ordered-multimap` (`crates.io:ordered-multimap` #857, MIT) — 零堆保持插入顺序的多值映射。
+- `@cap/normalize-line-endings` (`crates.io:normalize-line-endings` #875, Apache-2.0) — 行尾风格检测与 `CRLF`/`CR` ↔ `LF` 规整器。
+- `@cap/jsonpath-rust` (`crates.io:jsonpath-rust` #915, MIT) — RFC 9535 JSONPath 表达式解析与规范序列化器。
+- `@cap/sketches-ddsketch` (`crates.io:sketches-ddsketch` #920, Apache-2.0) — DataDog DDSketch 512 桶相对误差流式分位数草图。
+- `@cap/ufo` (`npm:ufo` #836, MIT) — UnJS URL 协议检测、双斜杠清理与路径段安全拼接工具。
+- `@cap/requires-port` (`npm:requires-port` #873, MIT) — URL 协议默认端口查询与非默认端口判定器。
+- `@cap/language-tags` (`npm:language-tags` #890, MIT) — BCP 47 / RFC 5646 语言标签解析、规范大小写格式化与 RFC 4647 前缀匹配器。

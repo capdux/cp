@@ -1,0 +1,15 @@
+{
+  "name": "@cap/language-tags",
+  "version": "1.0.9",
+  "description": "Zero-heap BCP 47 / RFC 5646 language tag parser, canonical formatter, and RFC 4647 range matcher in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "npm",
+    "package": "language-tags",
+    "version": "1.0.9",
+    "license": "MIT",
+    "repository": "https://github.com/mattcg/language-tags"
+  }
+}

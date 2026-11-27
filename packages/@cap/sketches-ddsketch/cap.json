@@ -1,0 +1,15 @@
+{
+  "name": "@cap/sketches-ddsketch",
+  "version": "0.3.0",
+  "description": "Zero-heap DDSketch relative-accuracy quantile sketch for low-memory latency statistics",
+  "entry": "src/index.cp",
+  "license": "Apache-2.0",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "sketches-ddsketch",
+    "version": "0.3.0",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/DataDog/sketches-ddsketch-rust"
+  }
+}

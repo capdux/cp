@@ -570,3 +570,7 @@
 
 ### 2026-11-26 — Batch 162 开发日志（873 `@cap/*` 包 + 1,201 映射里程碑）
 - 三路并行交付 `unicode-linebreak`（#834）、`lexical-write-float`（#838）、`ron`（#859）、`salsa20`（#917）、`stylis`（#766）、`damerau-levenshtein`（#888），全部 6/6 PASS，上游映射正式突破 1,200 大关。
+
+### 2026-11-27 — Batch 163 开发日志（881 `@cap/*` 包 + 1,209 上游映射）
+- 三路并行交付 `dlv-list`（#848）、`ordered-multimap`（#857）、`normalize-line-endings`（#875）、`jsonpath-rust`（#915）、`sketches-ddsketch`（#920）、`ufo`（#836）、`requires-port`（#873）、`language-tags`（#890），全部 6/6 PASS。
+- 检查 `capdux.org` LIVE 同步条件：已过 2026-11-27 00:00 UTC，但当前 shell 未注入 `CAPDUX_TOKEN` 环境变量，待用户提供或配置后即可一键执行 `seed_official.ts` 全量上线。

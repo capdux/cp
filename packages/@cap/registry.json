@@ -3,7 +3,7 @@
   "description": "Global deduplication & mapping registry for CP stdlib (cap:*) and @cap/* packages absorbed from npm and crates.io.",
   "capdux_registry_url": "https://registry.capdux.org/v1/registry.json",
   "github_raw_url": "https://raw.githubusercontent.com/cp-lang/cp/main/packages/@cap/registry.json",
-  "updated_at": "2026-11-26",
+  "updated_at": "2026-11-27",
   "entries": [
     {
       "source_registry": "npm",
@@ -13785,6 +13785,86 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-26"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "dlv-list",
+      "source_repo": "https://github.com/sgodwinson/dlv-list",
+      "license": "MIT",
+      "cp_target": "@cap/dlv-list",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ordered-multimap",
+      "source_repo": "https://github.com/sgodwinson/ordered-multimap",
+      "license": "MIT",
+      "cp_target": "@cap/ordered-multimap",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "normalize-line-endings",
+      "source_repo": "https://github.com/derekdreery/normalize-line-endings",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/normalize-line-endings",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jsonpath-rust",
+      "source_repo": "https://github.com/besok/jsonpath-rust",
+      "license": "MIT",
+      "cp_target": "@cap/jsonpath-rust",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "sketches-ddsketch",
+      "source_repo": "https://github.com/DataDog/sketches-ddsketch-rust",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/sketches-ddsketch",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ufo",
+      "source_repo": "https://github.com/unjs/ufo",
+      "license": "MIT",
+      "cp_target": "@cap/ufo",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "requires-port",
+      "source_repo": "https://github.com/unshiftio/requires-port",
+      "license": "MIT",
+      "cp_target": "@cap/requires-port",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "language-tags",
+      "source_repo": "https://github.com/mattcg/language-tags",
+      "license": "MIT",
+      "cp_target": "@cap/language-tags",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }
