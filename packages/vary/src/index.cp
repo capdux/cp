@@ -1,22 +1,67 @@
 // @cap/vary — Zero-heap RFC 9110 HTTP Vary response header manipulation
 // MIT License (clean-room CP implementation)
+// Accelerated with comptime 256-entry tchar LUT and 16-lane @Vector(16, u8) SIMD scanning.
 
-import { isAlnum, eqIgnoreCase } from "cap:ascii";
-import { findByteInBytes } from "cap:bin";
+import { eqIgnoreCase } from "cap:ascii";
 import { writeStr } from "cap:fmt";
+
+type VaryVec16 = @Vector(16, u8);
+
+fn varyBuildTcharLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        const b: u8 = c as u8;
+        if ((b >= ('a' as u8) && b <= ('z' as u8))
+            || (b >= ('A' as u8) && b <= ('Z' as u8))
+            || (b >= ('0' as u8) && b <= ('9' as u8))
+            || b == '!' as u8 || b == '#' as u8 || b == '$' as u8 || b == '%' as u8
+            || b == '&' as u8 || b == '\'' as u8 || b == '*' as u8 || b == '+' as u8
+            || b == '-' as u8 || b == '.' as u8 || b == '^' as u8 || b == '_' as u8
+            || b == '`' as u8 || b == '|' as u8 || b == '~' as u8)
+        {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const VARY_TCHAR_LUT: [256]u8 = varyBuildTcharLut();
+
+fn varyFindComma(src: []const u8, start: usize) -> usize {
+    let i: usize = start;
+    const len = src.len;
+    const v_comma: VaryVec16 = @splat(',' as u8);
+    while (i + 16 <= len) {
+        const v: VaryVec16 = src[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_comma)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (src[i + k] == ',' as u8) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (src[i] == ',' as u8) {
+            return i;
+        }
+        i += 1;
+    }
+    return len;
+}
 
 fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
 }
 
 fn isTchar(c: u8) -> bool {
-    if (isAlnum(c)) {
-        return true;
-    }
-    return c == '!' as u8 || c == '#' as u8 || c == '$' as u8 || c == '%' as u8
-        || c == '&' as u8 || c == '\'' as u8 || c == '*' as u8 || c == '+' as u8
-        || c == '-' as u8 || c == '.' as u8 || c == '^' as u8 || c == '_' as u8
-        || c == '`' as u8 || c == '|' as u8 || c == '~' as u8;
+    return VARY_TCHAR_LUT[c as usize] != 0;
 }
 
 pub fn isValidFieldName(field: []const u8) -> bool {
@@ -24,8 +69,39 @@ pub fn isValidFieldName(field: []const u8) -> bool {
         return false;
     }
     let i: usize = 0;
-    while (i < field.len) {
-        if (!isTchar(field[i])) {
+    const len = field.len;
+    const v_a: VaryVec16 = @splat('a' as u8);
+    const v_z: VaryVec16 = @splat('z' as u8);
+    const v_A: VaryVec16 = @splat('A' as u8);
+    const v_Z: VaryVec16 = @splat('Z' as u8);
+    const v_0: VaryVec16 = @splat('0' as u8);
+    const v_9: VaryVec16 = @splat('9' as u8);
+    const v_dash: VaryVec16 = @splat('-' as u8);
+    const v_us: VaryVec16 = @splat('_' as u8);
+    const ones: VaryVec16 = @splat(1 as u8);
+    const zeros: VaryVec16 = @splat(0 as u8);
+    while (i + 16 <= len) {
+        const v: VaryVec16 = field[i .. i + 16][0..16].*;
+        const m_lo: VaryVec16 = @select(u8, v >= v_a, @select(u8, v <= v_z, ones, zeros), zeros);
+        const m_hi: VaryVec16 = @select(u8, v >= v_A, @select(u8, v <= v_Z, ones, zeros), zeros);
+        const m_dg: VaryVec16 = @select(u8, v >= v_0, @select(u8, v <= v_9, ones, zeros), zeros);
+        const m_sp: VaryVec16 = @select(u8, v == v_dash, ones, @select(u8, v == v_us, ones, zeros));
+        const ok: VaryVec16 = m_lo | m_hi | m_dg | m_sp;
+        if (@reduce(.And, ok != zeros)) {
+            i += 16;
+            continue;
+        }
+        let k: usize = 0;
+        while (k < 16) {
+            if (VARY_TCHAR_LUT[field[i + k] as usize] == 0) {
+                return false;
+            }
+            k += 1;
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (VARY_TCHAR_LUT[field[i] as usize] == 0) {
             return false;
         }
         i += 1;
@@ -53,7 +129,7 @@ pub fn hasField(header: []const u8, field: []const u8) -> bool {
 
     let pos: usize = 0;
     while (pos < header.len) {
-        const seg_end: usize = findByteInBytes(header, ',' as u8, pos) ?? header.len;
+        const seg_end: usize = varyFindComma(header, pos);
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(header[s])) {
@@ -79,7 +155,7 @@ pub fn hasField(header: []const u8, field: []const u8) -> bool {
 fn headerHasWildcard(src: []const u8) -> bool {
     let pos: usize = 0;
     while (pos < src.len) {
-        const seg_end: usize = findByteInBytes(src, ',' as u8, pos) ?? src.len;
+        const seg_end: usize = varyFindComma(src, pos);
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(src[s])) {
@@ -104,7 +180,7 @@ fn validateFieldList(field_list: []const u8) -> bool {
     let count: usize = 0;
     let pos: usize = 0;
     while (pos < field_list.len) {
-        const seg_end: usize = findByteInBytes(field_list, ',' as u8, pos) ?? field_list.len;
+        const seg_end: usize = varyFindComma(field_list, pos);
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(field_list[s])) {
@@ -130,7 +206,7 @@ fn validateFieldList(field_list: []const u8) -> bool {
 fn dstContainsToken(dst: []const u8, written: usize, tok: []const u8) -> bool {
     let pos: usize = 0;
     while (pos < written) {
-        const seg_end: usize = findByteInBytes(dst[0..written], ',' as u8, pos) ?? written;
+        const seg_end: usize = varyFindComma(dst[0..written], pos);
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(dst[s])) {
@@ -154,7 +230,7 @@ fn appendTokens(src: []const u8, dst: []u8, start_pos: usize) -> i64 {
     let cur: usize = start_pos;
     let pos: usize = 0;
     while (pos < src.len) {
-        const seg_end: usize = findByteInBytes(src, ',' as u8, pos) ?? src.len;
+        const seg_end: usize = varyFindComma(src, pos);
         let s: usize = pos;
         let e: usize = seg_end;
         while (s < e && isWs(src[s])) {

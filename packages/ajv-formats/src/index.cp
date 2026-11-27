@@ -1,20 +1,64 @@
 // @cap/ajv-formats — Zero-allocation JSON Schema format validators
 // Clean-room MIT implementation modeled on npm `ajv-formats`.
+// Accelerated with comptime 256-entry bitmask LUT and 16-lane @Vector(16, u8) SIMD scanning.
+
+type AjvfVec16 = @Vector(16, u8);
+
+const AJVF_DIGIT: u8 = 1;
+const AJVF_ALPHA: u8 = 2;
+const AJVF_HEX: u8 = 4;
+const AJVF_EMAIL_LOCAL: u8 = 8;
+const AJVF_SCHEME: u8 = 16;
+const AJVF_URI_SAFE: u8 = 32;
+
+fn ajvfBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) : (c += 1) {
+        const b: u8 = c as u8;
+        let f: u8 = 0;
+        const is_d = b >= '0' && b <= '9';
+        const is_a = (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z');
+        if (is_d) { f |= AJVF_DIGIT | AJVF_HEX | AJVF_EMAIL_LOCAL | AJVF_SCHEME; }
+        if (is_a) { f |= AJVF_ALPHA | AJVF_EMAIL_LOCAL | AJVF_SCHEME; }
+        if ((b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')) { f |= AJVF_HEX; }
+        if (b == '.' || b == '!' || b == '#' || b == '$' || b == '%' || b == '&' || b == '\''
+            || b == '*' || b == '+' || b == '-' || b == '/' || b == '=' || b == '?' || b == '^'
+            || b == '_' || b == '`' || b == '{' || b == '|' || b == '}' || b == '~')
+        {
+            f |= AJVF_EMAIL_LOCAL;
+        }
+        if (b == '+' || b == '-' || b == '.') {
+            f |= AJVF_SCHEME;
+        }
+        if (b > 0x20 && b < 0x7F
+            && b != '<' && b != '>' && b != '"' && b != '{' && b != '}'
+            && b != '|' && b != '\\' && b != '^' && b != '`')
+        {
+            f |= AJVF_URI_SAFE;
+        }
+        lut[c] = f;
+    }
+    return lut;
+}
+
+const AJVF_CHAR_LUT: [256]u8 = ajvfBuildCharLut();
 
 fn ajvfIsDigit(b: u8): bool {
-    return b >= '0' && b <= '9';
+    return (AJVF_CHAR_LUT[b as usize] & AJVF_DIGIT) != 0;
 }
 
 fn ajvfIsAlpha(b: u8): bool {
-    return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z');
+    return (AJVF_CHAR_LUT[b as usize] & AJVF_ALPHA) != 0;
 }
 
 fn ajvfIsAlphaNum(b: u8): bool {
-    return ajvfIsAlpha(b) || ajvfIsDigit(b);
+    return (AJVF_CHAR_LUT[b as usize] & (AJVF_DIGIT | AJVF_ALPHA)) != 0;
 }
 
 fn ajvfIsHex(b: u8): bool {
-    return ajvfIsDigit(b) || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F');
+    return (AJVF_CHAR_LUT[b as usize] & AJVF_HEX) != 0;
 }
 
 fn ajvfParse2Digits(s: string, offset: usize): i32 {
@@ -144,11 +188,7 @@ pub fn isHostname(s: string): bool {
 }
 
 fn ajvfIsEmailLocalChar(b: u8): bool {
-    if (ajvfIsAlphaNum(b)) return true;
-    if (b == '.' || b == '!' || b == '#' || b == '$' || b == '%' || b == '&' || b == '\'') return true;
-    if (b == '*' || b == '+' || b == '-' || b == '/' || b == '=' || b == '?' || b == '^') return true;
-    if (b == '_' || b == '`' || b == '{' || b == '|' || b == '}' || b == '~') return true;
-    return false;
+    return (AJVF_CHAR_LUT[b as usize] & AJVF_EMAIL_LOCAL) != 0;
 }
 
 /// Validate email address (`local@domain`).
@@ -157,6 +197,20 @@ pub fn isEmail(s: string): bool {
     let at_pos: usize = s.len;
     let at_count: usize = 0;
     let i: usize = 0;
+    const v_at: AjvfVec16 = @splat('@' as u8);
+    while (i + 16 <= s.len) {
+        const v: AjvfVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_at)) {
+            let k: usize = 0;
+            while (k < 16) : (k += 1) {
+                if (s[i + k] == '@') {
+                    at_pos = i + k;
+                    at_count += 1;
+                }
+            }
+        }
+        i += 16;
+    }
     while (i < s.len) : (i += 1) {
         if (s[i] == '@') {
             at_pos = i;
@@ -290,7 +344,7 @@ pub fn isUuid(s: string): bool {
 }
 
 fn ajvfIsSchemeChar(b: u8): bool {
-    return ajvfIsAlphaNum(b) || b == '+' || b == '-' || b == '.';
+    return (AJVF_CHAR_LUT[b as usize] & AJVF_SCHEME) != 0;
 }
 
 /// Validate RFC 3986 absolute URI (requires valid scheme and legal URI characters).
@@ -302,18 +356,43 @@ pub fn isUri(s: string): bool {
     if (pos >= s.len || s[pos] != ':') return false;
     pos += 1;
 
-    // Validate percent-encodings and forbidden characters
+    // Validate percent-encodings and forbidden characters (16-lane SIMD fast path)
     let i = pos;
-    while (i < s.len) : (i += 1) {
-        const b = s[i];
-        if (b <= 0x20 || b >= 0x7F) return false;
-        if (b == '<' || b == '>' || b == '"' || b == '{' || b == '}' || b == '|' || b == '\\' || b == '^' || b == '`') {
-            return false;
+    const v_sp: AjvfVec16 = @splat(0x20 as u8);
+    const v_lb: AjvfVec16 = @splat(0x7B as u8);
+    const v_pct: AjvfVec16 = @splat('%' as u8);
+    const v_qt: AjvfVec16 = @splat('"' as u8);
+    const v_lt: AjvfVec16 = @splat('<' as u8);
+    const v_gt: AjvfVec16 = @splat('>' as u8);
+    const v_bs: AjvfVec16 = @splat('\\' as u8);
+    const v_ct: AjvfVec16 = @splat('^' as u8);
+    const v_bt: AjvfVec16 = @splat('`' as u8);
+    while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: AjvfVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v <= v_sp) ||
+                @reduce(.Or, v >= v_lb) ||
+                @reduce(.Or, v == v_pct) ||
+                @reduce(.Or, v == v_qt) ||
+                @reduce(.Or, v == v_lt) ||
+                @reduce(.Or, v == v_gt) ||
+                @reduce(.Or, v == v_bs) ||
+                @reduce(.Or, v == v_ct) ||
+                @reduce(.Or, v == v_bt))
+            {
+                break;
+            }
+            i += 16;
         }
+        if (i >= s.len) break;
+        const b = s[i];
+        if ((AJVF_CHAR_LUT[b as usize] & AJVF_URI_SAFE) == 0) return false;
         if (b == '%') {
             if (i + 2 >= s.len || !ajvfIsHex(s[i + 1]) || !ajvfIsHex(s[i + 2])) return false;
-            i += 2;
+            i += 3;
+            continue;
         }
+        i += 1;
     }
 
     // If authority is present (//...), verify bracket matching & port digits
@@ -367,13 +446,24 @@ pub fn isJsonPointer(s: string): bool {
     if (s.len == 0) return true;
     if (s[0] != '/') return false;
     let i: usize = 1;
-    while (i < s.len) : (i += 1) {
+    const v_tilde: AjvfVec16 = @splat('~' as u8);
+    while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: AjvfVec16 = s[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_tilde)) {
+                break;
+            }
+            i += 16;
+        }
+        if (i >= s.len) break;
         if (s[i] == '~') {
             if (i + 1 >= s.len) return false;
             const next = s[i + 1];
             if (next != '0' && next != '1') return false;
-            i += 1;
+            i += 2;
+            continue;
         }
+        i += 1;
     }
     return true;
 }

@@ -1,5 +1,35 @@
 // @cap/password-hash — Zero-allocation pure CP PHC string format parser & serializer
 // Parity with RustCrypto crates.io:password-hash (MIT)
+// Accelerated with comptime 256-entry bitmask LUT, 16-lane @Vector(16, u8) SIMD scanning & ctEqual, and @memcpy.
+
+type PhcVec16 = @Vector(16, u8);
+
+const PHC_KEY: u8 = 1;
+const PHC_VAL: u8 = 2;
+const PHC_B64: u8 = 4;
+
+fn phchBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        const b: u8 = c as u8;
+        let f: u8 = 0;
+        if ((b >= ('a' as u8) && b <= ('z' as u8)) || (b >= ('0' as u8) && b <= ('9' as u8))) {
+            f |= PHC_KEY | PHC_VAL | PHC_B64;
+        } else if (b >= ('A' as u8) && b <= ('Z' as u8)) {
+            f |= PHC_VAL | PHC_B64;
+        }
+        if (b == ('-' as u8)) { f |= PHC_KEY | PHC_VAL; }
+        if (b == ('.' as u8)) { f |= PHC_VAL; }
+        if (b == ('/' as u8) || b == ('+' as u8)) { f |= PHC_VAL | PHC_B64; }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const PHC_CHAR_LUT: [256]u8 = phchBuildCharLut();
 
 /// A single key=value parameter in a PHC string.
 pub struct PhcParam {
@@ -40,39 +70,15 @@ fn phchEmptyHash(): PhcHash {
 }
 
 fn phchIsLowerAlnumHyphen(c: u8): bool {
-    if (c >= ('a' as u8) && c <= ('z' as u8)) {
-        return true;
-    }
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return true;
-    }
-    return c == ('-' as u8);
+    return (PHC_CHAR_LUT[c as usize] & PHC_KEY) != 0;
 }
 
 fn phchIsParamValueChar(c: u8): bool {
-    if (c >= ('a' as u8) && c <= ('z' as u8)) {
-        return true;
-    }
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return true;
-    }
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return true;
-    }
-    return c == ('/' as u8) || c == ('+' as u8) || c == ('.' as u8) || c == ('-' as u8);
+    return (PHC_CHAR_LUT[c as usize] & PHC_VAL) != 0;
 }
 
 fn phchIsB64Char(c: u8): bool {
-    if (c >= ('a' as u8) && c <= ('z' as u8)) {
-        return true;
-    }
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return true;
-    }
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return true;
-    }
-    return c == ('/' as u8) || c == ('+' as u8);
+    return (PHC_CHAR_LUT[c as usize] & PHC_B64) != 0;
 }
 
 fn phchIsValidAlgo(s: string): bool {
@@ -147,7 +153,16 @@ fn phchIsValidHash(s: string): bool {
 
 fn phchContainsByte(s: string, target: u8): bool {
     let i: usize = 0;
-    while (i < s.len) {
+    const len = s.len;
+    const vt: PhcVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: PhcVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            return true;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (s[i] == target) {
             return true;
         }
@@ -195,10 +210,8 @@ fn phchAppendBytes(out: []u8, pos: usize, src: string): usize {
     if (pos + src.len > out.len) {
         return 0;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(out[pos .. pos + src.len], src[0..src.len]);
     }
     return pos + src.len;
 }
@@ -466,9 +479,23 @@ pub fn ctEqual(a: string, b: string): bool {
     if (a.len != b.len) {
         return false;
     }
-    let diff: u8 = 0;
+    let acc: PhcVec16 = @splat(0 as u8);
     let i: usize = 0;
-    while (i < a.len) {
+    const len = a.len;
+    while (i + 16 <= len) {
+        const va: PhcVec16 = a[i .. i + 16][0..16].*;
+        const vb: PhcVec16 = b[i .. i + 16][0..16].*;
+        acc = acc | (va ^ vb);
+        i += 16;
+    }
+    const lanes: [16]u8 = acc;
+    let diff: u8 = 0;
+    let k: usize = 0;
+    while (k < 16) {
+        diff = diff | lanes[k];
+        k += 1;
+    }
+    while (i < len) {
         diff = diff | (a[i] ^ b[i]);
         i += 1;
     }

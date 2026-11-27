@@ -1,8 +1,11 @@
 // @cap/camino — Zero-heap strictly validated UTF-8 path engine (crates.io camino equivalent)
 // Clean-room MIT implementation for CP.
+// Accelerated with 16-lane @Vector(16, u8) SIMD slash scanning and @memcpy bulk copies.
 
 import { isValidUtf8 } from "../../utf8parse/src/index.cp";
 import { bytesEq } from "cap:bin";
+
+type CamVec16 = @Vector(16, u8);
 
 pub const CAMINO_MAX_PATH: usize = 512;
 
@@ -18,6 +21,54 @@ struct CamCompStep {
     next_pos: usize,
     is_root: bool,
     found: bool,
+}
+
+fn camFindNextSlash(data: []const u8, start: usize, len: usize): usize {
+    let i: usize = start;
+    const v_sl: CamVec16 = @splat('/' as u8);
+    while (i + 16 <= len) {
+        const v: CamVec16 = data[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (data[i + k] == '/') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && data[i] != '/') {
+        i += 1;
+    }
+    return i;
+}
+
+fn camFindLastSlash(data: []const u8, trimmed: usize): usize? {
+    let i: usize = trimmed;
+    const v_sl: CamVec16 = @splat('/' as u8);
+    while (i >= 16) {
+        const base = i - 16;
+        const v: CamVec16 = data[base .. i][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            let k: usize = 16;
+            while (k > 0) {
+                k -= 1;
+                if (data[base + k] == '/') {
+                    return base + k;
+                }
+            }
+        }
+        i = base;
+    }
+    while (i > 0) {
+        i -= 1;
+        if (data[i] == '/') {
+            return i;
+        }
+    }
+    return null;
 }
 
 fn camTrimTrailingSlashes(data: []const u8, len: usize): usize {
@@ -51,14 +102,10 @@ fn camFileNameSpan(data: []const u8, len: usize): CamSpan {
     if (trimmed == 1 && data[0] == '/') {
         return CamSpan { start: 0, end: 0, found: false };
     }
-    let i: usize = trimmed;
     let start: usize = 0;
-    while (i > 0) {
-        i -= 1;
-        if (data[i] == '/') {
-            start = i + 1;
-            break;
-        }
+    const slash_opt = camFindLastSlash(data, trimmed);
+    if (slash_opt != null) {
+        start = (slash_opt ?? 0) + 1;
     }
     if (start >= trimmed || camIsDot(data, start, trimmed) || camIsDotDot(data, start, trimmed)) {
         return CamSpan { start: 0, end: 0, found: false };
@@ -85,10 +132,8 @@ fn camCopyToDst(data: []const u8, start: usize, end: usize, dst: []u8): usize? {
     if (dst.len < n) {
         return null;
     }
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = data[start + i];
-        i += 1;
+    if (n > 0) {
+        @memcpy(dst[0..n], data[start..end]);
     }
     return n;
 }
@@ -113,9 +158,7 @@ fn camNextComponent(data: []const u8, len: usize, cursor: usize): CamCompStep {
             return CamCompStep { start: 0, end: 0, next_pos: len, is_root: false, found: false };
         }
         const seg_start = pos;
-        while (pos < len && data[pos] != '/') {
-            pos += 1;
-        }
+        pos = camFindNextSlash(data, pos, len);
         const seg_end = pos;
         if (camIsDot(data, seg_start, seg_end)) {
             continue;
@@ -133,20 +176,11 @@ fn camParentLength(data: []const u8, len: usize): usize? {
     if (trimmed == 1 && data[0] == '/') {
         return null;
     }
-    let i: usize = trimmed;
-    let found_slash = false;
-    let slash_idx: usize = 0;
-    while (i > 0) {
-        i -= 1;
-        if (data[i] == '/') {
-            found_slash = true;
-            slash_idx = i;
-            break;
-        }
-    }
-    if (!found_slash) {
+    const slash_opt = camFindLastSlash(data, trimmed);
+    if (slash_opt == null) {
         return 0;
     }
+    const slash_idx = slash_opt ?? 0;
     if (slash_idx == 0) {
         return 1;
     }
@@ -160,10 +194,8 @@ pub struct Utf8PathBuf {
     pub static fn fromStr(s: string): Utf8PathBuf {
         let out = Utf8PathBuf { buf: undefined, length: 0 };
         const n = if (s.len > CAMINO_MAX_PATH) CAMINO_MAX_PATH else s.len;
-        let i: usize = 0;
-        while (i < n) {
-            out.buf[i] = s[i];
-            i += 1;
+        if (n > 0) {
+            @memcpy(out.buf[0..n], s[0..n]);
         }
         out.length = n;
         return out;
@@ -177,10 +209,8 @@ pub struct Utf8PathBuf {
             return null;
         }
         let out = Utf8PathBuf { buf: undefined, length: b.len };
-        let i: usize = 0;
-        while (i < b.len) {
-            out.buf[i] = b[i];
-            i += 1;
+        if (b.len > 0) {
+            @memcpy(out.buf[0..b.len], b[0..b.len]);
         }
         return out;
     }
@@ -208,11 +238,7 @@ pub struct Utf8PathBuf {
     pub fn push(*_, path: string) {
         if (path.len > 0 && path[0] == '/') {
             const n = if (path.len > CAMINO_MAX_PATH) CAMINO_MAX_PATH else path.len;
-            let i: usize = 0;
-            while (i < n) {
-                _.buf[i] = path[i];
-                i += 1;
-            }
+            @memcpy(_.buf[0..n], path[0..n]);
             _.length = n;
             return;
         }
@@ -225,11 +251,11 @@ pub struct Utf8PathBuf {
                 _.length += 1;
             }
         }
-        let i: usize = 0;
-        while (i < path.len && _.length < CAMINO_MAX_PATH) {
-            _.buf[_.length] = path[i];
-            _.length += 1;
-            i += 1;
+        const avail = CAMINO_MAX_PATH - _.length;
+        const take = if (path.len < avail) path.len else avail;
+        if (take > 0) {
+            @memcpy(_.buf[_.length .. _.length + take], path[0..take]);
+            _.length += take;
         }
     }
 
@@ -249,10 +275,8 @@ pub struct Utf8PathBuf {
         }
         const plen = parent_len_opt ?? 0;
         let out = Utf8PathBuf { buf: undefined, length: plen };
-        let i: usize = 0;
-        while (i < plen) {
-            out.buf[i] = _.buf[i];
-            i += 1;
+        if (plen > 0) {
+            @memcpy(out.buf[0..plen], _.buf[0..plen]);
         }
         return out;
     }
@@ -313,12 +337,8 @@ pub struct Utf8PathBuf {
         _.length = stem_end;
         _.buf[_.length] = '.';
         _.length += 1;
-        let i: usize = 0;
-        while (i < ext.len) {
-            _.buf[_.length] = ext[i];
-            _.length += 1;
-            i += 1;
-        }
+        @memcpy(_.buf[_.length .. _.length + ext.len], ext[0..ext.len]);
+        _.length += ext.len;
         return true;
     }
 
@@ -406,11 +426,12 @@ pub struct Utf8PathBuf {
                         out.length += 1;
                     }
                 }
-                let k: usize = sstep.start;
-                while (k < sstep.end && out.length < CAMINO_MAX_PATH) {
-                    out.buf[out.length] = _.buf[k];
-                    out.length += 1;
-                    k += 1;
+                const seg_len = sstep.end - sstep.start;
+                const avail = CAMINO_MAX_PATH - out.length;
+                const take = if (seg_len < avail) seg_len else avail;
+                if (take > 0) {
+                    @memcpy(out.buf[out.length .. out.length + take], _.buf[sstep.start .. sstep.start + take]);
+                    out.length += take;
                 }
                 first = false;
             }

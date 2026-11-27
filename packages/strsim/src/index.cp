@@ -1,6 +1,9 @@
 // @cap/strsim — Zero-heap string similarity & edit-distance metrics modeled on Rust's `strsim` crate.
 // Clean-room MIT implementation (Hamming, Levenshtein, OSA Damerau-Levenshtein,
 // Normalized Levenshtein, Jaro, Jaro-Winkler, and Sorensen-Dice bigram similarity).
+// Accelerated with 16-lane @Vector(16, u8) SIMD Hamming distance, @memcpy row copies, and @memset.
+
+type SsmVec16 = @Vector(16, u8);
 
 pub const STRSIM_MAX_LEN: usize = 128;
 
@@ -14,7 +17,28 @@ pub fn hamming(a: string, b: string): usize? {
     if (a.len != b.len) { return null; }
     let dist: usize = 0;
     let i: usize = 0;
-    while (i < a.len) {
+    const len = a.len;
+    const ones: SsmVec16 = @splat(1 as u8);
+    const zeros: SsmVec16 = @splat(0 as u8);
+    while (i + 16 <= len) {
+        let acc: SsmVec16 = zeros;
+        let step: usize = 0;
+        while (step < 255 && i + 16 <= len) {
+            const va: SsmVec16 = a[i .. i + 16][0..16].*;
+            const vb: SsmVec16 = b[i .. i + 16][0..16].*;
+            const diff: SsmVec16 = @select(u8, va != vb, ones, zeros);
+            acc = acc + diff;
+            i += 16;
+            step += 1;
+        }
+        const lanes: [16]u8 = acc;
+        let k: usize = 0;
+        while (k < 16) {
+            dist += lanes[k] as usize;
+            k += 1;
+        }
+    }
+    while (i < len) {
         if (a[i] != b[i]) { dist = dist + 1; }
         i = i + 1;
     }
@@ -45,11 +69,7 @@ pub fn levenshtein(a: string, b: string): usize {
             curr[k] = ssmMin3(prev[k] + 1, curr[k - 1] + 1, prev[k - 1] + cost);
             k = k + 1;
         }
-        let cpy: usize = 0;
-        while (cpy <= m) {
-            prev[cpy] = curr[cpy];
-            cpy = cpy + 1;
-        }
+        @memcpy(prev[0 .. m + 1], curr[0 .. m + 1]);
         i = i + 1;
     }
     return prev[m];
@@ -86,12 +106,8 @@ pub fn osaDistance(a: string, b: string): usize {
             curr[k] = best;
             k = k + 1;
         }
-        let cpy: usize = 0;
-        while (cpy <= m) {
-            prev2[cpy] = prev1[cpy];
-            prev1[cpy] = curr[cpy];
-            cpy = cpy + 1;
-        }
+        @memcpy(prev2[0 .. m + 1], prev1[0 .. m + 1]);
+        @memcpy(prev1[0 .. m + 1], curr[0 .. m + 1]);
         i = i + 1;
     }
     return prev1[m];

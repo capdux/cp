@@ -1,7 +1,36 @@
-// @cap/memmem — Zero-allocation BMH + KMP byte-substring search engine for CP
+// @cap/memmem — Zero-allocation BMH + KMP + 16-lane SIMD byte-substring search engine for CP
 // Clean-room MIT implementation inspired by Rust `memchr::memmem` (1.82B downloads).
+// Accelerated with 16-lane @Vector(16, u8) SIMD byte/first-last prefiltering and @memcpy.
+
+type MmVec16 = @Vector(16, u8);
 
 const MAX_NEEDLE: usize = 256;
+
+fn mmFindByte(haystack: []const u8, start: usize, target: u8) -> i64 {
+    let i: usize = start;
+    const len = haystack.len;
+    const vt: MmVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: MmVec16 = haystack[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (haystack[i + k] == target) {
+                    return (i + k) as i64;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (haystack[i] == target) {
+            return i as i64;
+        }
+        i += 1;
+    }
+    return -1 as i64;
+}
 
 pub struct Finder {
     pub needle_buf: [MAX_NEEDLE]u8,
@@ -20,16 +49,9 @@ pub struct Finder {
             nlen = MAX_NEEDLE;
         }
 
-        let i: usize = 0;
-        while (i < MAX_NEEDLE) {
-            nbuf[i] = 0 as u8;
-            lps[i] = 0 as u16;
-            i += 1;
-        }
-        let k: usize = 0;
-        while (k < nlen) {
-            nbuf[k] = needle[k];
-            k += 1;
+        if (nlen > (0 as usize)) {
+            @memcpy(nbuf[0..nlen], needle[0..nlen]);
+            lps[0] = 0 as u16;
         }
 
         // Build Boyer-Moore-Horspool bad-character shift table
@@ -112,15 +134,7 @@ pub struct Finder {
             return -1 as i64;
         }
         if (m == (1 as usize)) {
-            const target = _.needle_buf[0];
-            let i = start;
-            while (i < haystack.len) {
-                if (haystack[i] == target) {
-                    return i as i64;
-                }
-                i += 1;
-            }
-            return -1 as i64;
+            return mmFindByte(haystack, start, _.needle_buf[0]);
         }
         if (_.is_periodic) {
             return _.findKmpFrom(haystack, start);
@@ -193,9 +207,43 @@ fn findLongNeedle(haystack: []const u8, needle: []const u8) -> i64 {
     }
     const limit = haystack.len - needle.len;
     const last = needle.len - (1 as usize);
+    const firstByte = needle[0];
+    const lastByte = needle[last];
+    const vf: MmVec16 = @splat(firstByte);
+    const vl: MmVec16 = @splat(lastByte);
+    const ones: MmVec16 = @splat(1 as u8);
+    const zeros: MmVec16 = @splat(0 as u8);
     let pos: usize = 0;
+    while (pos + 15 <= limit) {
+        const v1: MmVec16 = haystack[pos .. pos + 16][0..16].*;
+        const v2: MmVec16 = haystack[pos + last .. pos + last + 16][0..16].*;
+        const m1: MmVec16 = @select(u8, v1 == vf, ones, zeros);
+        const m2: MmVec16 = @select(u8, v2 == vl, ones, zeros);
+        if (@reduce(.Or, (m1 & m2) != zeros)) {
+            let lane: usize = 0;
+            while (lane < 16) {
+                const p = pos + lane;
+                if (haystack[p] == firstByte && haystack[p + last] == lastByte) {
+                    let k: usize = 1;
+                    let ok = true;
+                    while (k < last) {
+                        if (haystack[p + k] != needle[k]) {
+                            ok = false;
+                            break;
+                        }
+                        k += 1;
+                    }
+                    if (ok) {
+                        return p as i64;
+                    }
+                }
+                lane += 1;
+            }
+        }
+        pos += 16;
+    }
     while (pos <= limit) {
-        if (haystack[pos] == needle[0] && haystack[pos + last] == needle[last]) {
+        if (haystack[pos] == firstByte && haystack[pos + last] == lastByte) {
             let k: usize = 1;
             let ok = true;
             while (k < last) {
@@ -222,15 +270,7 @@ pub fn find(haystack: []const u8, needle: []const u8) -> i64 {
         return -1 as i64;
     }
     if (needle.len == (1 as usize)) {
-        const target = needle[0];
-        let i: usize = 0;
-        while (i < haystack.len) {
-            if (haystack[i] == target) {
-                return i as i64;
-            }
-            i += 1;
-        }
-        return -1 as i64;
+        return mmFindByte(haystack, 0 as usize, needle[0]);
     }
     if (needle.len <= MAX_NEEDLE) {
         const f = Finder.init(needle);
@@ -249,8 +289,43 @@ pub fn rfind(haystack: []const u8, needle: []const u8) -> i64 {
     const last = needle.len - (1 as usize);
     const firstByte = needle[0];
     const lastByte = needle[last];
-    let pos = haystack.len - needle.len;
-    while (true) {
+    const vf: MmVec16 = @splat(firstByte);
+    const vl: MmVec16 = @splat(lastByte);
+    const ones: MmVec16 = @splat(1 as u8);
+    const zeros: MmVec16 = @splat(0 as u8);
+    let end_pos = haystack.len - needle.len + (1 as usize);
+    while (end_pos >= 16) {
+        const base = end_pos - 16;
+        const v1: MmVec16 = haystack[base .. base + 16][0..16].*;
+        const v2: MmVec16 = haystack[base + last .. base + last + 16][0..16].*;
+        const m1: MmVec16 = @select(u8, v1 == vf, ones, zeros);
+        const m2: MmVec16 = @select(u8, v2 == vl, ones, zeros);
+        if (@reduce(.Or, (m1 & m2) != zeros)) {
+            let lane: usize = 16;
+            while (lane > 0) {
+                lane -= 1;
+                const p = base + lane;
+                if (haystack[p] == firstByte && haystack[p + last] == lastByte) {
+                    let k: usize = 1;
+                    let ok = true;
+                    while (k < last) {
+                        if (haystack[p + k] != needle[k]) {
+                            ok = false;
+                            break;
+                        }
+                        k += 1;
+                    }
+                    if (ok) {
+                        return p as i64;
+                    }
+                }
+            }
+        }
+        end_pos = base;
+    }
+    while (end_pos > (0 as usize)) {
+        end_pos -= 1;
+        const pos = end_pos;
         if (haystack[pos] == firstByte && haystack[pos + last] == lastByte) {
             let k: usize = 1;
             let ok = true;
@@ -265,10 +340,6 @@ pub fn rfind(haystack: []const u8, needle: []const u8) -> i64 {
                 return pos as i64;
             }
         }
-        if (pos == (0 as usize)) {
-            break;
-        }
-        pos -= 1;
     }
     return -1 as i64;
 }

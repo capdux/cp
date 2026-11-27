@@ -1,9 +1,96 @@
 // packages/mediatype/src/index.cp
 // Zero-allocation RFC 9110 / RFC 6838 HTTP Media Type (MIME) parser & matcher.
 // MIT clean-room pure CP implementation (unified npm media-type + crates.io mediatype).
+// Accelerated with comptime 256-entry tchar/lower LUTs, 16-lane @Vector(16, u8) SIMD scanning/lowercasing, and @memcpy.
 
 import { trim, toLowerByte, eqIgnoreCase } from "cap:ascii";
 import { writeStr } from "cap:fmt";
+
+type MtVec16 = @Vector(16, u8);
+
+fn mtBuildTcharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        const b: u8 = c as u8;
+        if ((b >= ('a' as u8) && b <= ('z' as u8))
+            || (b >= ('A' as u8) && b <= ('Z' as u8))
+            || (b >= ('0' as u8) && b <= ('9' as u8))
+            || b == ('!' as u8) || b == ('#' as u8) || b == ('$' as u8) || b == ('%' as u8) || b == ('&' as u8)
+            || b == ('\'' as u8) || b == ('*' as u8) || b == ('+' as u8) || b == ('-' as u8) || b == ('.' as u8)
+            || b == ('^' as u8) || b == ('_' as u8) || b == ('`' as u8) || b == ('|' as u8) || b == ('~' as u8))
+        {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+fn mtBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 65 && c <= 90) {
+            lut[c] = (c + 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const MT_TCHAR_LUT: [256]u8 = mtBuildTcharLut();
+const MT_LOWER_LUT: [256]u8 = mtBuildLowerLut();
+
+fn mtFindByte(s: []const u8, start: usize, target: u8): usize {
+    let i: usize = start;
+    const len = s.len;
+    const vt: MtVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: MtVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
+fn mtCopyLower(src: []const u8, out: []u8, start_pos: usize): usize {
+    let pos = start_pos;
+    const avail = if (pos < out.len) (out.len - pos) else (0 as usize);
+    const take = if (src.len < avail) src.len else avail;
+    let i: usize = 0;
+    const v_A: MtVec16 = @splat('A' as u8);
+    const v_Z: MtVec16 = @splat('Z' as u8);
+    const v_32: MtVec16 = @splat(32 as u8);
+    const v_0: MtVec16 = @splat(0 as u8);
+    while (i + 16 <= take) {
+        const v: MtVec16 = src[i .. i + 16][0..16].*;
+        const add_mask: MtVec16 = @select(u8, v >= v_A, @select(u8, v <= v_Z, v_32, v_0), v_0);
+        const lowered: [16]u8 = v + add_mask;
+        @memcpy(out[pos + i .. pos + i + 16], lowered[0..16]);
+        i += 16;
+    }
+    while (i < take) {
+        out[pos + i] = MT_LOWER_LUT[src[i] as usize];
+        i += 1;
+    }
+    return pos + take;
+}
 
 /// Zero-copy parsed HTTP Media Type components.
 /// Example: `application/vnd.api+json; charset=utf-8`
@@ -16,10 +103,7 @@ pub struct MediaType {
 }
 
 fn mtToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
+    return MT_LOWER_LUT[c as usize];
 }
 
 fn mtIsOws(c: u8): bool {
@@ -44,7 +128,7 @@ fn mtEqIgnoreCase(a: []const u8, b: []const u8): bool {
     }
     let i: usize = 0;
     while (i < a.len) {
-        if (mtToLower(a[i]) != mtToLower(b[i])) {
+        if (MT_LOWER_LUT[a[i] as usize] != MT_LOWER_LUT[b[i] as usize]) {
             return false;
         }
         i += 1;
@@ -53,19 +137,7 @@ fn mtEqIgnoreCase(a: []const u8, b: []const u8): bool {
 }
 
 fn mtIsTchar(c: u8): bool {
-    if ((c >= ('a' as u8) && c <= ('z' as u8)) || (c >= ('A' as u8) && c <= ('Z' as u8)) || (c >= ('0' as u8) && c <= ('9' as u8))) {
-        return true;
-    }
-    if (c == ('!' as u8) || c == ('#' as u8) || c == ('$' as u8) || c == ('%' as u8) || c == ('&' as u8)) {
-        return true;
-    }
-    if (c == ('\'' as u8) || c == ('*' as u8) || c == ('+' as u8) || c == ('-' as u8) || c == ('.' as u8)) {
-        return true;
-    }
-    if (c == ('^' as u8) || c == ('_' as u8) || c == ('`' as u8) || c == ('|' as u8) || c == ('~' as u8)) {
-        return true;
-    }
-    return false;
+    return MT_TCHAR_LUT[c as usize] != 0;
 }
 
 /// Validate an RFC 9110 / RFC 6838 HTTP token (non-empty sequence of tchar).
@@ -74,8 +146,39 @@ pub fn isValidToken(s: string): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < s.len) {
-        if (!mtIsTchar(s[i])) {
+    const len = s.len;
+    const v_a: MtVec16 = @splat('a' as u8);
+    const v_z: MtVec16 = @splat('z' as u8);
+    const v_A: MtVec16 = @splat('A' as u8);
+    const v_Z: MtVec16 = @splat('Z' as u8);
+    const v_0: MtVec16 = @splat('0' as u8);
+    const v_9: MtVec16 = @splat('9' as u8);
+    const v_dash: MtVec16 = @splat('-' as u8);
+    const v_dot: MtVec16 = @splat('.' as u8);
+    const ones: MtVec16 = @splat(1 as u8);
+    const zeros: MtVec16 = @splat(0 as u8);
+    while (i + 16 <= len) {
+        const v: MtVec16 = s[i .. i + 16][0..16].*;
+        const m_lo: MtVec16 = @select(u8, v >= v_a, @select(u8, v <= v_z, ones, zeros), zeros);
+        const m_hi: MtVec16 = @select(u8, v >= v_A, @select(u8, v <= v_Z, ones, zeros), zeros);
+        const m_dg: MtVec16 = @select(u8, v >= v_0, @select(u8, v <= v_9, ones, zeros), zeros);
+        const m_sp: MtVec16 = @select(u8, v == v_dash, ones, @select(u8, v == v_dot, ones, zeros));
+        const ok: MtVec16 = m_lo | m_hi | m_dg | m_sp;
+        if (@reduce(.And, ok != zeros)) {
+            i += 16;
+            continue;
+        }
+        let k: usize = 0;
+        while (k < 16) {
+            if (MT_TCHAR_LUT[s[i + k] as usize] == 0) {
+                return false;
+            }
+            k += 1;
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (MT_TCHAR_LUT[s[i] as usize] == 0) {
             return false;
         }
         i += 1;
@@ -92,10 +195,7 @@ pub fn parseMediaType(input: string, out: *MediaType): bool {
     }
 
     // Split essence and optional parameter section at first ';'.
-    let semi: usize = 0;
-    while (semi < trimmed.len && trimmed[semi] != (';' as u8)) {
-        semi += 1;
-    }
+    const semi = mtFindByte(trimmed, 0, ';' as u8);
 
     const essence = mtTrimOws(trimmed[0..semi]);
     let paramsSlice: []const u8 = "";
@@ -104,10 +204,7 @@ pub fn parseMediaType(input: string, out: *MediaType): bool {
     }
 
     // Split top / fullSub at '/'.
-    let slash: usize = 0;
-    while (slash < essence.len && essence[slash] != ('/' as u8)) {
-        slash += 1;
-    }
+    const slash = mtFindByte(essence, 0, '/' as u8);
     if (slash == 0 || slash + 1 >= essence.len) {
         return false;
     }
@@ -224,19 +321,15 @@ pub fn getParam(mt: MediaType, name: string, out: []u8): usize {
         } else {
             // Unquoted token parameter value.
             const valStart = i;
-            while (i < p.len && p[i] != (';' as u8)) {
-                i += 1;
-            }
+            i = mtFindByte(p, i, ';' as u8);
             const val = mtTrimOws(p[valStart..i]);
             if (matched) {
                 let copyLen = val.len;
                 if (copyLen > out.len) {
                     copyLen = out.len;
                 }
-                let ci: usize = 0;
-                while (ci < copyLen) {
-                    out[ci] = val[ci];
-                    ci += 1;
+                if (copyLen > 0) {
+                    @memcpy(out[0..copyLen], val[0..copyLen]);
                 }
                 return copyLen;
             }
@@ -249,34 +342,18 @@ pub fn getParam(mt: MediaType, name: string, out: []u8): usize {
 /// Format `mt` as normalized lowercase `type/subtype[+suffix]` into `out`.
 /// Returns bytes written into `out`.
 pub fn formatMediaType(mt: MediaType, out: []u8): usize {
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < mt.top.len && pos < out.len) {
-        out[pos] = mtToLower(mt.top[i]);
-        pos += 1;
-        i += 1;
-    }
+    let pos: usize = mtCopyLower(mt.top, out, 0);
     if (pos < out.len) {
         out[pos] = '/' as u8;
         pos += 1;
     }
-    let j: usize = 0;
-    while (j < mt.subtype.len && pos < out.len) {
-        out[pos] = mtToLower(mt.subtype[j]);
-        pos += 1;
-        j += 1;
-    }
+    pos = mtCopyLower(mt.subtype, out, pos);
     if (mt.suffix.len > 0) {
         if (pos < out.len) {
             out[pos] = '+' as u8;
             pos += 1;
         }
-        let k: usize = 0;
-        while (k < mt.suffix.len && pos < out.len) {
-            out[pos] = mtToLower(mt.suffix[k]);
-            pos += 1;
-            k += 1;
-        }
+        pos = mtCopyLower(mt.suffix, out, pos);
     }
     return pos;
 }

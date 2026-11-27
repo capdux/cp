@@ -1,28 +1,53 @@
 // packages/@cap/tinystr/src/index.cp
 // Zero-allocation stack-inline fixed-capacity ASCII strings in pure CP.
 // Clean-room MIT implementation (ICU4X tinystr v0.7/v0.8 parity).
+// Accelerated with 16-lane @Vector(16, u8) SIMD case/validation, comptime 256-entry LUT, and @memcpy.
 
-import { toLowerByte, toUpperByte, isAlpha, isDigit, isAlnum, eqIgnoreCase } from "cap:ascii";
+import { toLowerByte, toUpperByte, eqIgnoreCase } from "cap:ascii";
 import { bytesEq } from "cap:bin";
+
+type TsVec16 = @Vector(16, u8);
+
+const TS_DIGIT: u8 = 1;
+const TS_LOWER: u8 = 2;
+const TS_UPPER: u8 = 4;
+
+fn tsBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        const b: u8 = c as u8;
+        let f: u8 = 0;
+        if (b >= ('0' as u8) && b <= ('9' as u8)) { f |= TS_DIGIT; }
+        if (b >= ('a' as u8) && b <= ('z' as u8)) { f |= TS_LOWER; }
+        if (b >= ('A' as u8) && b <= ('Z' as u8)) { f |= TS_UPPER; }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const TS_CHAR_LUT: [256]u8 = tsBuildCharLut();
 
 pub const TINYSTR_OK: i64 = 0;
 pub const TINYSTR_ERR_TOO_LONG: i64 = -1;
 pub const TINYSTR_ERR_NON_ASCII: i64 = -2;
 pub const TINYSTR_ERR_CONTAINS_NUL: i64 = -3;
 
-fn tsIsLower(b: u8): bool {
-    return b >= ('a' as u8) && b <= ('z' as u8);
-}
-
-fn tsIsUpper(b: u8): bool {
-    return b >= ('A' as u8) && b <= ('Z' as u8);
-}
-
 fn tsValidateBytes(src: []const u8, max_len: usize): i64 {
     if (src.len > max_len) {
         return TINYSTR_ERR_TOO_LONG;
     }
     let i: usize = 0;
+    if (src.len == 16) {
+        const v: TsVec16 = src[0..16][0..16].*;
+        const v_zero: TsVec16 = @splat(0 as u8);
+        const v_hi: TsVec16 = @splat(0x80 as u8);
+        if (!@reduce(.Or, v == v_zero) && !@reduce(.Or, v >= v_hi)) {
+            return TINYSTR_OK;
+        }
+    }
     while (i < src.len) {
         const ch = src[i];
         if (ch == (0 as u8)) {
@@ -57,6 +82,13 @@ fn tsValidatePacked(buf: []const u8): i64 {
 }
 
 fn tsSliceLen(buf: []const u8): usize {
+    if (buf.len == 16) {
+        const v: TsVec16 = buf[0..16][0..16].*;
+        const v_zero: TsVec16 = @splat(0 as u8);
+        if (!@reduce(.Or, v == v_zero)) {
+            return 16;
+        }
+    }
     let i: usize = 0;
     while (i < buf.len && buf[i] != (0 as u8)) {
         i = i + 1;
@@ -69,10 +101,8 @@ fn tsCopyOut(src: []const u8, n: usize, out: []u8): usize {
     if (out.len < take) {
         take = out.len;
     }
-    let i: usize = 0;
-    while (i < take) {
-        out[i] = src[i];
-        i = i + 1;
+    if (take > 0) {
+        @memcpy(out[0..take], src[0..take]);
     }
     return take;
 }
@@ -104,7 +134,7 @@ fn tsSliceCmp(a: []const u8, b: []const u8): i32 {
 fn tsAllAlpha(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!isAlpha(buf[i])) {
+        if ((TS_CHAR_LUT[buf[i] as usize] & (TS_LOWER | TS_UPPER)) == 0) {
             return false;
         }
         i = i + 1;
@@ -115,7 +145,7 @@ fn tsAllAlpha(buf: []const u8, n: usize): bool {
 fn tsAllAlnum(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!isAlnum(buf[i])) {
+        if (TS_CHAR_LUT[buf[i] as usize] == 0) {
             return false;
         }
         i = i + 1;
@@ -126,7 +156,7 @@ fn tsAllAlnum(buf: []const u8, n: usize): bool {
 fn tsAllDigit(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!isDigit(buf[i])) {
+        if ((TS_CHAR_LUT[buf[i] as usize] & TS_DIGIT) == 0) {
             return false;
         }
         i = i + 1;
@@ -137,7 +167,7 @@ fn tsAllDigit(buf: []const u8, n: usize): bool {
 fn tsAllLower(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!tsIsLower(buf[i])) {
+        if ((TS_CHAR_LUT[buf[i] as usize] & TS_LOWER) == 0) {
             return false;
         }
         i = i + 1;
@@ -148,7 +178,7 @@ fn tsAllLower(buf: []const u8, n: usize): bool {
 fn tsAllUpper(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!tsIsUpper(buf[i])) {
+        if ((TS_CHAR_LUT[buf[i] as usize] & TS_UPPER) == 0) {
             return false;
         }
         i = i + 1;
@@ -450,10 +480,8 @@ pub struct TinyAsciiStr16 {
             return TinyAsciiStr16Result { ok: false, value: TinyAsciiStr16.empty(), err: err };
         }
         let b: [16]u8 = [0; 16];
-        let i: usize = 0;
-        while (i < src.len) {
-            b[i] = src[i];
-            i = i + 1;
+        if (src.len > 0) {
+            @memcpy(b[0..src.len], src[0..src.len]);
         }
         return TinyAsciiStr16Result { ok: true, value: TinyAsciiStr16 { bytes: b }, err: TINYSTR_OK };
     }
@@ -494,33 +522,36 @@ pub struct TinyAsciiStr16 {
     }
 
     pub fn toAsciiLowercase(): TinyAsciiStr16 {
-        let b: [16]u8 = undefined;
-        let i: usize = 0;
-        while (i < 16) {
-            b[i] = toLowerByte(_.bytes[i]);
-            i = i + 1;
-        }
+        const v: TsVec16 = _.bytes;
+        const v_A: TsVec16 = @splat('A' as u8);
+        const v_Z: TsVec16 = @splat('Z' as u8);
+        const v_32: TsVec16 = @splat(32 as u8);
+        const v_0: TsVec16 = @splat(0 as u8);
+        const mask: TsVec16 = @select(u8, v >= v_A, @select(u8, v <= v_Z, v_32, v_0), v_0);
+        const b: [16]u8 = v + mask;
         return TinyAsciiStr16 { bytes: b };
     }
 
     pub fn toAsciiUppercase(): TinyAsciiStr16 {
-        let b: [16]u8 = undefined;
-        let i: usize = 0;
-        while (i < 16) {
-            b[i] = toUpperByte(_.bytes[i]);
-            i = i + 1;
-        }
+        const v: TsVec16 = _.bytes;
+        const v_a: TsVec16 = @splat('a' as u8);
+        const v_z: TsVec16 = @splat('z' as u8);
+        const v_32: TsVec16 = @splat(32 as u8);
+        const v_0: TsVec16 = @splat(0 as u8);
+        const mask: TsVec16 = @select(u8, v >= v_a, @select(u8, v <= v_z, v_32, v_0), v_0);
+        const b: [16]u8 = v - mask;
         return TinyAsciiStr16 { bytes: b };
     }
 
     pub fn toAsciiTitlecase(): TinyAsciiStr16 {
-        let b: [16]u8 = undefined;
+        const v: TsVec16 = _.bytes;
+        const v_A: TsVec16 = @splat('A' as u8);
+        const v_Z: TsVec16 = @splat('Z' as u8);
+        const v_32: TsVec16 = @splat(32 as u8);
+        const v_0: TsVec16 = @splat(0 as u8);
+        const mask: TsVec16 = @select(u8, v >= v_A, @select(u8, v <= v_Z, v_32, v_0), v_0);
+        let b: [16]u8 = v + mask;
         b[0] = toUpperByte(_.bytes[0]);
-        let i: usize = 1;
-        while (i < 16) {
-            b[i] = toLowerByte(_.bytes[i]);
-            i = i + 1;
-        }
         return TinyAsciiStr16 { bytes: b };
     }
 
