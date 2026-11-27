@@ -1,6 +1,91 @@
 // Reference-hardened against RazrFalcon/roxmltree (MIT/Apache-2.0)
 // Source: Absorbed from /data/dev/bun/src/string/immutable.zig | Synced: 2026-11-22T13:00:28Z (XML 1.0 Text / Attribute / CDATA Escaper)
 
+type XmlEscVec16 = @Vector(16, u8);
+
+fn makeXmlHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(u8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(u8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(u8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+const XML_HEX_LUT: [u8; 256] = makeXmlHexLut();
+
+fn findByteSimd(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_needle: XmlEscVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: XmlEscVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_needle);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
+fn findXmlTextSpecialSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_amp: XmlEscVec16 = @splat('&' as u8);
+    const v_lt: XmlEscVec16 = @splat('<' as u8);
+    const v_gt: XmlEscVec16 = @splat('>' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: XmlEscVec16 = s[i .. i + 16][0..16].*;
+        const hit = (chunk == v_amp) | (chunk == v_lt) | (chunk == v_gt);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '&' || c == '<' || c == '>') return i;
+    }
+    return s.len;
+}
+
+fn findXmlAttrSpecialSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_amp: XmlEscVec16 = @splat('&' as u8);
+    const v_lt: XmlEscVec16 = @splat('<' as u8);
+    const v_gt: XmlEscVec16 = @splat('>' as u8);
+    const v_quot: XmlEscVec16 = @splat('"' as u8);
+    const v_apos: XmlEscVec16 = @splat('\'' as u8);
+    const v_cr: XmlEscVec16 = @splat('\r' as u8);
+    const v_lf: XmlEscVec16 = @splat('\n' as u8);
+    const v_tab: XmlEscVec16 = @splat('\t' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: XmlEscVec16 = s[i .. i + 16][0..16].*;
+        const hit = (chunk == v_amp) | (chunk == v_lt) | (chunk == v_gt) |
+            (chunk == v_quot) | (chunk == v_apos) |
+            (chunk == v_cr) | (chunk == v_lf) | (chunk == v_tab);
+        const mask: u16 = @bitCast(hit);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        const c = s[i];
+        if (c == '&' || c == '<' || c == '>' || c == '"' || c == '\'' || c == '\r' || c == '\n' || c == '\t') {
+            return i;
+        }
+    }
+    return s.len;
+}
+
 /// XML 1.0 Fifth Edition §2.2 合法字符码点校验
 pub fn isValidXmlChar(cp: u32): bool {
     if (cp == 0x09 || cp == 0x0A || cp == 0x0D) return true;
@@ -15,6 +100,11 @@ fn strEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: XmlEscVec16 = a[i .. i + 16][0..16].*;
+        const vb: XmlEscVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -41,11 +131,9 @@ struct XmlEscapeBuf {
         if (_.pos + s.len > _.out.len) {
             return false;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.out[_.pos] = s[i];
-            _.pos += 1;
-            i += 1;
+        if (s.len > 0) {
+            @memcpy(_.out[_.pos .. _.pos + s.len], s);
+            _.pos += s.len;
         }
         return true;
     }
@@ -82,16 +170,22 @@ struct XmlEscapeBuf {
 /// 转义 XML 1.0 元素文本节点（转义 `&`, `<`, `>`，并安全消解 `]]>`）
 pub fn escapeXmlText(src: []const u8, out: []u8): ([]const u8)? {
     let w = XmlEscapeBuf{ out: out, pos: 0 };
-    for (c of src) {
+    let i: usize = 0;
+    while (i < src.len) {
+        const next = findXmlTextSpecialSimd(src, i);
+        if (next > i) {
+            if (!w.writeSlice(src[i..next])) return null;
+        }
+        if (next >= src.len) break;
+        const c = src[next];
         if (c == '&') {
             if (!w.writeSlice("&amp;")) return null;
         } else if (c == '<') {
             if (!w.writeSlice("&lt;")) return null;
-        } else if (c == '>') {
-            if (!w.writeSlice("&gt;")) return null;
         } else {
-            if (!w.writeByte(c)) return null;
+            if (!w.writeSlice("&gt;")) return null;
         }
+        i = next + 1;
     }
     return out[0..w.pos];
 }
@@ -99,7 +193,14 @@ pub fn escapeXmlText(src: []const u8, out: []u8): ([]const u8)? {
 /// 转义 XML 1.0 属性值（转义 `&`, `<`, `>`, `"`, `'`, `\r`, `\n`, `\t`）
 pub fn escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)? {
     let w = XmlEscapeBuf{ out: out, pos: 0 };
-    for (c of src) {
+    let i: usize = 0;
+    while (i < src.len) {
+        const next = findXmlAttrSpecialSimd(src, i);
+        if (next > i) {
+            if (!w.writeSlice(src[i..next])) return null;
+        }
+        if (next >= src.len) break;
+        const c = src[next];
         if (c == '&') {
             if (!w.writeSlice("&amp;")) return null;
         } else if (c == '<') {
@@ -114,11 +215,10 @@ pub fn escapeXmlAttr(src: []const u8, out: []u8): ([]const u8)? {
             if (!w.writeSlice("&#xD;")) return null;
         } else if (c == '\n') {
             if (!w.writeSlice("&#xA;")) return null;
-        } else if (c == '\t') {
-            if (!w.writeSlice("&#x9;")) return null;
         } else {
-            if (!w.writeByte(c)) return null;
+            if (!w.writeSlice("&#x9;")) return null;
         }
+        i = next + 1;
     }
     return out[0..w.pos];
 }
@@ -130,12 +230,17 @@ pub fn wrapXmlCdata(src: []const u8, out: []u8): ([]const u8)? {
 
     let i: usize = 0;
     while (i < src.len) {
-        if (i + 2 < src.len && src[i] == ']' && src[i + 1] == ']' && src[i + 2] == '>') {
+        const next = findByteSimd(src, i, ']');
+        if (next > i) {
+            if (!w.writeSlice(src[i..next])) return null;
+        }
+        if (next >= src.len) break;
+        if (next + 2 < src.len && src[next + 1] == ']' && src[next + 2] == '>') {
             if (!w.writeSlice("]]]]><![CDATA[>")) return null;
-            i += 3;
+            i = next + 3;
         } else {
-            if (!w.writeByte(src[i])) return null;
-            i += 1;
+            if (!w.writeByte(']')) return null;
+            i = next + 1;
         }
     }
 
@@ -158,17 +263,9 @@ fn parseHexCodePoint(s: []const u8): u32? {
     if (s.len == 0 || s.len > 6) return null;
     let val: u32 = 0;
     for (c of s) {
-        let d: u32 = 0;
-        if (c >= '0' && c <= '9') {
-            d = u32(c - '0');
-        } else if (c >= 'a' && c <= 'f') {
-            d = u32(c - 'a') + 10;
-        } else if (c >= 'A' && c <= 'F') {
-            d = u32(c - 'A') + 10;
-        } else {
-            return null;
-        }
-        val = (val << 4) | d;
+        const d = XML_HEX_LUT[usize(c)];
+        if (d == 0xFF) return null;
+        val = (val << 4) | u32(d);
         if (val > 0x10_FFFF) return null;
     }
     return val;
@@ -180,11 +277,12 @@ pub fn unescapeXml(src: []const u8, out: []u8): ([]const u8)? {
     let i: usize = 0;
 
     while (i < src.len) {
-        if (src[i] != '&') {
-            if (!w.writeByte(src[i])) return null;
-            i += 1;
-            continue;
+        const amp = findByteSimd(src, i, '&');
+        if (amp > i) {
+            if (!w.writeSlice(src[i..amp])) return null;
         }
+        if (amp >= src.len) break;
+        i = amp;
 
         // 查找闭合分号 ';'
         let semi: usize? = null;

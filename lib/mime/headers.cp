@@ -1,5 +1,36 @@
 // Source: Absorbed from /data/dev/bun/src/http/MimeType.zig | Synced: 2026-11-22T11:12:13Z (RFC 5322 MIME Header Block Parser & Unfolder)
 
+type MimeHdrVec16 = @Vector(16, u8);
+
+fn makeMimeFnameLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 33;
+    while (i <= 126) : (i += 1) {
+        if (i != ':') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+fn makeMimeLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const MIME_FNAME_LUT: [u8; 256] = makeMimeFnameLut();
+const MIME_LOWER_LUT: [u8; 256] = makeMimeLowerLut();
+
 /// RFC 5322 报文头与报文体切分结果（零拷贝切片）
 export struct MimeMessageSplit {
     headers_raw: []const u8;
@@ -28,20 +59,25 @@ fn trimOws(s: []const u8): []const u8 {
     return s[start..end];
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
 fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
+    const lo_A: MimeHdrVec16 = @splat(65 as u8);
+    const hi_Z: MimeHdrVec16 = @splat(90 as u8);
+    const case_bit: MimeHdrVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: MimeHdrVec16 = a[i .. i + 16][0..16].*;
+        const vb: MimeHdrVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (MIME_LOWER_LUT[usize(a[i])] != MIME_LOWER_LUT[usize(b[i])]) {
             return false;
         }
         i += 1;
@@ -49,14 +85,25 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
     return true;
 }
 
-fn findByte(s: []const u8, needle: u8): usize? {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == needle) {
-            return i;
+fn findByteFromSimd(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_needle: MimeHdrVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: MimeHdrVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_needle);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
         }
-        i += 1;
     }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
+fn findByte(s: []const u8, needle: u8): usize? {
+    const idx = findByteFromSimd(s, 0, needle);
+    if (idx < s.len) return idx;
     return null;
 }
 
@@ -65,8 +112,18 @@ fn isValidFieldName(name: []const u8): bool {
     if (name.len == 0) {
         return false;
     }
-    for (c of name) {
-        if (c < 33 || c > 126 || c == ':') {
+    let i: usize = 0;
+    const v_lo: MimeHdrVec16 = @splat(33 as u8);
+    const v_hi: MimeHdrVec16 = @splat(126 as u8);
+    const v_colon: MimeHdrVec16 = @splat(':' as u8);
+    while (i + 16 <= name.len) : (i += 16) {
+        const chunk: MimeHdrVec16 = name[i .. i + 16][0..16].*;
+        const bad = (chunk < v_lo) | (chunk > v_hi) | (chunk == v_colon);
+        const mask: u16 = @bitCast(bad);
+        if (mask != 0) return false;
+    }
+    while (i < name.len) : (i += 1) {
+        if (MIME_FNAME_LUT[usize(name[i])] == 0) {
             return false;
         }
     }
@@ -84,19 +141,21 @@ export fn splitHeadersAndBody(raw: []const u8): MimeMessageSplit {
 
     let i: usize = 0;
     while (i < raw.len) {
-        if (raw[i] == '\r' && i + 3 < raw.len && raw[i + 1] == '\n' && raw[i + 2] == '\r' && raw[i + 3] == '\n') {
+        const nl = findByteFromSimd(raw, i, '\n');
+        if (nl >= raw.len) break;
+        if (nl > 0 && raw[nl - 1] == '\r' && nl + 2 < raw.len && raw[nl + 1] == '\r' && raw[nl + 2] == '\n') {
             return MimeMessageSplit{
-                headers_raw: raw[0..i],
-                body: raw[i + 4..],
+                headers_raw: raw[0 .. nl - 1],
+                body: raw[nl + 3 ..],
             };
         }
-        if (raw[i] == '\n' && i + 1 < raw.len && raw[i + 1] == '\n') {
+        if (nl + 1 < raw.len && raw[nl + 1] == '\n') {
             return MimeMessageSplit{
-                headers_raw: raw[0..i],
-                body: raw[i + 2..],
+                headers_raw: raw[0..nl],
+                body: raw[nl + 2 ..],
             };
         }
-        i += 1;
+        i = nl + 1;
     }
 
     return MimeMessageSplit{
@@ -107,12 +166,12 @@ export fn splitHeadersAndBody(raw: []const u8): MimeMessageSplit {
 
 fn readPhysicalLine(src: []const u8, pos: *usize): []const u8 {
     const start = pos.*;
-    while (pos.* < src.len && src[pos.*] != '\n') {
-        pos.* += 1;
-    }
-    let end = pos.*;
-    if (pos.* < src.len && src[pos.*] == '\n') {
-        pos.* += 1;
+    const nl = findByteFromSimd(src, start, '\n');
+    let end = nl;
+    if (nl < src.len) {
+        pos.* = nl + 1;
+    } else {
+        pos.* = src.len;
     }
     if (end > start && src[end - 1] == '\r') {
         end -= 1;
@@ -124,11 +183,9 @@ fn copyBytes(out: []u8, pos: *usize, s: []const u8): bool {
     if (pos.* + s.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos.*] = s[i];
-        pos.* += 1;
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos.* .. pos.* + s.len], s);
+        pos.* += s.len;
     }
     return true;
 }

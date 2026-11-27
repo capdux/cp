@@ -37,20 +37,120 @@ pub struct SqlToken {
     pub col: usize,
 }
 
+type SqlLexVec16 = @Vector(16, u8);
+
+const SQL_CH_ALPHA: u8 = 1;
+const SQL_CH_DIGIT: u8 = 2;
+const SQL_CH_ALNUM: u8 = 3;
+const SQL_CH_WS: u8 = 4;
+
+fn makeSqlCharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '_') {
+            lut[i] |= SQL_CH_ALPHA;
+        }
+        if (i >= '0' && i <= '9') {
+            lut[i] |= SQL_CH_DIGIT;
+        }
+        if (i == ' ' || i == '\t' || i == '\n' || i == '\r') {
+            lut[i] |= SQL_CH_WS;
+        }
+    }
+    return lut;
+}
+
+fn makeSqlLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const SQL_CHAR_LUT: [u8; 256] = makeSqlCharLut();
+const SQL_LOWER_LUT: [u8; 256] = makeSqlLowerLut();
+
 fn isAlpha(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return (SQL_CHAR_LUT[usize(c)] & SQL_CH_ALPHA) != 0;
 }
 
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (SQL_CHAR_LUT[usize(c)] & SQL_CH_DIGIT) != 0;
 }
 
 fn isAlphaNum(c: u8): bool {
-    return isAlpha(c) || isDigit(c);
+    return (SQL_CHAR_LUT[usize(c)] & SQL_CH_ALNUM) != 0;
 }
 
 fn isWhitespace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (SQL_CHAR_LUT[usize(c)] & SQL_CH_WS) != 0;
+}
+
+fn findByteSimd(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_needle: SqlLexVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: SqlLexVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_needle);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
+fn findEitherByteSimd(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i = start;
+    const va: SqlLexVec16 = @splat(a);
+    const vb: SqlLexVec16 = @splat(b);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: SqlLexVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast((chunk == va) | (chunk == vb));
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == a || s[i] == b) return i;
+    }
+    return s.len;
+}
+
+fn scanIdentEndSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_a: SqlLexVec16 = @splat('a' as u8);
+    const v_z: SqlLexVec16 = @splat('z' as u8);
+    const v_A: SqlLexVec16 = @splat('A' as u8);
+    const v_Z: SqlLexVec16 = @splat('Z' as u8);
+    const v_0: SqlLexVec16 = @splat('0' as u8);
+    const v_9: SqlLexVec16 = @splat('9' as u8);
+    const v_us: SqlLexVec16 = @splat('_' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: SqlLexVec16 = s[i .. i + 16][0..16].*;
+        const ok = ((chunk >= v_a) & (chunk <= v_z)) |
+            ((chunk >= v_A) & (chunk <= v_Z)) |
+            ((chunk >= v_0) & (chunk <= v_9)) |
+            (chunk == v_us);
+        const mask: u16 = @bitCast(ok);
+        const bad: u16 = ~mask;
+        if (bad != 0) {
+            return i + usize(@ctz(bad));
+        }
+    }
+    while (i < s.len && isAlphaNum(s[i])) : (i += 1) {}
+    return i;
 }
 
 pub fn eqIgnoreCase(a: string, b: string): bool {
@@ -58,16 +158,22 @@ pub fn eqIgnoreCase(a: string, b: string): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: SqlLexVec16 = @splat(65 as u8);
+    const hi_Z: SqlLexVec16 = @splat(90 as u8);
+    const case_bit: SqlLexVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: SqlLexVec16 = a[i .. i + 16][0..16].*;
+        const vb: SqlLexVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) {
-        let ca = a[i];
-        let cb = b[i];
-        if (ca >= 'A' && ca <= 'Z') {
-            ca = ca + 32;
-        }
-        if (cb >= 'A' && cb <= 'Z') {
-            cb = cb + 32;
-        }
-        if (ca != cb) {
+        if (SQL_LOWER_LUT[usize(a[i])] != SQL_LOWER_LUT[usize(b[i])]) {
             return false;
         }
         i += 1;
@@ -146,10 +252,9 @@ pub fn tokenizeSql(alloc: std.mem.Allocator, sql: string): ![]SqlToken {
         if (c == '-' && i + 1 < sql.len && sql[i + 1] == '-') {
             i += 2;
             col += 2;
-            while (i < sql.len && sql[i] != '\n') {
-                i += 1;
-                col += 1;
-            }
+            const nl = findByteSimd(sql, i, '\n');
+            col += nl - i;
+            i = nl;
             continue;
         }
 
@@ -159,6 +264,13 @@ pub fn tokenizeSql(alloc: std.mem.Allocator, sql: string): ![]SqlToken {
             col += 2;
             let closed = false;
             while (i + 1 < sql.len) {
+                const hit = findEitherByteSimd(sql, i, '*', '\n');
+                if (hit > i) {
+                    const advance = if (hit < sql.len) hit - i else (sql.len - 1) - i;
+                    col += advance;
+                    i += advance;
+                }
+                if (i + 1 >= sql.len) break;
                 if (sql[i] == '*' && sql[i + 1] == '/') {
                     i += 2;
                     col += 2;
@@ -189,6 +301,12 @@ pub fn tokenizeSql(alloc: std.mem.Allocator, sql: string): ![]SqlToken {
             col += 1;
             let closed = false;
             while (i < sql.len) {
+                const hit = findEitherByteSimd(sql, i, '\'', '\n');
+                if (hit > i) {
+                    col += hit - i;
+                    i = hit;
+                }
+                if (i >= sql.len) break;
                 if (sql[i] == '\'') {
                     if (i + 1 < sql.len && sql[i + 1] == '\'') {
                         i += 2;
@@ -228,6 +346,12 @@ pub fn tokenizeSql(alloc: std.mem.Allocator, sql: string): ![]SqlToken {
             col += 1;
             let closed = false;
             while (i < sql.len) {
+                const hit = findEitherByteSimd(sql, i, quote, '\n');
+                if (hit > i) {
+                    col += hit - i;
+                    i = hit;
+                }
+                if (i >= sql.len) break;
                 if (sql[i] == quote) {
                     if (i + 1 < sql.len && sql[i + 1] == quote) {
                         i += 2;
@@ -321,10 +445,9 @@ pub fn tokenizeSql(alloc: std.mem.Allocator, sql: string): ![]SqlToken {
         // Identifier or Keyword
         if (isAlpha(c)) {
             const start = i;
-            while (i < sql.len && isAlphaNum(sql[i])) {
-                i += 1;
-                col += 1;
-            }
+            const end_idx = scanIdentEndSimd(sql, i);
+            col += end_idx - i;
+            i = end_idx;
             const word = sql[start..i];
             const kind = if (isSqlKeyword(word)) SqlTokenKind.Keyword else SqlTokenKind.Identifier;
             list.append(alloc, SqlToken{

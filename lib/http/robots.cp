@@ -1,5 +1,39 @@
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (RFC 9309 robots.txt Parser & Matcher)
 
+type RobotsVec16 = @Vector(16, u8);
+
+fn makeRobotsLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const ROBOTS_LOWER_LUT: [u8; 256] = makeRobotsLowerLut();
+
+fn findByteSimd(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_needle: RobotsVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: RobotsVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_needle);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
@@ -15,12 +49,20 @@ fn trimOws(s: []const u8): []const u8 {
 fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) { return false; }
     let i: usize = 0;
+    const lo_A: RobotsVec16 = @splat(65 as u8);
+    const hi_Z: RobotsVec16 = @splat(90 as u8);
+    const case_bit: RobotsVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: RobotsVec16 = a[i .. i + 16][0..16].*;
+        const vb: RobotsVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) { return false; }
+    }
     while (i < a.len) {
-        let ca = a[i];
-        let cb = b[i];
-        if (ca >= 'A' && ca <= 'Z') { ca += 32; }
-        if (cb >= 'A' && cb <= 'Z') { cb += 32; }
-        if (ca != cb) { return false; }
+        if (ROBOTS_LOWER_LUT[usize(a[i])] != ROBOTS_LOWER_LUT[usize(b[i])]) { return false; }
         i += 1;
     }
     return true;
@@ -39,15 +81,7 @@ fn stripBom(src: []const u8): []const u8 {
 }
 
 fn stripCommentAndTrim(line: []const u8): []const u8 {
-    let end = line.len;
-    let i: usize = 0;
-    while (i < line.len) {
-        if (line[i] == '#') {
-            end = i;
-            break;
-        }
-        i += 1;
-    }
+    const end = findByteSimd(line, 0, '#');
     return trimOws(line[0..end]);
 }
 
@@ -60,16 +94,8 @@ fn parseDirectiveLine(raw_line: []const u8): ParsedLine? {
     const clean = stripCommentAndTrim(raw_line);
     if (clean.len == 0) { return null; }
 
-    let colon_idx: usize? = null;
-    let i: usize = 0;
-    while (i < clean.len) {
-        if (clean[i] == ':') {
-            colon_idx = i;
-            break;
-        }
-        i += 1;
-    }
-    if (ci := colon_idx) {
+    const ci = findByteSimd(clean, 0, ':');
+    if (ci < clean.len) {
         const field = trimOws(clean[0..ci]);
         const value = trimOws(clean[(ci + 1)..clean.len]);
         if (field.len == 0) { return null; }
@@ -138,7 +164,7 @@ fn findBestUaSpecificity(src: []const u8, user_agent: []const u8): i64 {
     let pos: usize = 0;
     while (pos < src.len) {
         const line_start = pos;
-        while (pos < src.len && src[pos] != '\n') { pos += 1; }
+        pos = findByteSimd(src, pos, '\n');
         let line_end = pos;
         if (line_end > line_start && src[line_end - 1] == '\r') { line_end -= 1; }
         if (pos < src.len && src[pos] == '\n') { pos += 1; }
@@ -173,7 +199,7 @@ pub fn isAllowed(robots_txt: []const u8, user_agent: []const u8, path: []const u
     let pos: usize = 0;
     while (pos < src.len) {
         const line_start = pos;
-        while (pos < src.len && src[pos] != '\n') { pos += 1; }
+        pos = findByteSimd(src, pos, '\n');
         let line_end = pos;
         if (line_end > line_start && src[line_end - 1] == '\r') { line_end -= 1; }
         if (pos < src.len && src[pos] == '\n') { pos += 1; }
@@ -252,7 +278,7 @@ pub fn crawlDelaySec(robots_txt: []const u8, user_agent: []const u8): u64? {
     let pos: usize = 0;
     while (pos < src.len) {
         const line_start = pos;
-        while (pos < src.len && src[pos] != '\n') { pos += 1; }
+        pos = findByteSimd(src, pos, '\n');
         let line_end = pos;
         if (line_end > line_start && src[line_end - 1] == '\r') { line_end -= 1; }
         if (pos < src.len && src[pos] == '\n') { pos += 1; }
@@ -298,7 +324,7 @@ pub struct SitemapIter {
     fn next(*_): ([]const u8)? {
         while (_.pos < _.src.len) {
             const line_start = _.pos;
-            while (_.pos < _.src.len && _.src[_.pos] != '\n') { _.pos += 1; }
+            _.pos = findByteSimd(_.src, _.pos, '\n');
             let line_end = _.pos;
             if (line_end > line_start && _.src[line_end - 1] == '\r') { line_end -= 1; }
             if (_.pos < _.src.len && _.src[_.pos] == '\n') { _.pos += 1; }

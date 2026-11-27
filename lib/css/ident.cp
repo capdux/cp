@@ -2,6 +2,52 @@
 // Pure-CP zero-allocation W3C CSS Values Level 4 `<ident>`, `<custom-ident>`, `<dashed-ident>`,
 // CSS Modules `DashedIdentReference` (`--var from "..." | global`), and CSSOM identifier serializer.
 
+type CssIdentVec16 = @Vector(16, u8);
+
+const CSS_HEX_LOWER: []const u8 = "0123456789abcdef";
+
+fn makeCssSafeIdentLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || (i >= '0' && i <= '9') ||
+            i == '-' || i == '_' || i >= 0x80)
+        {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+fn makeCssWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('\r')] = 1;
+    lut[usize('\n')] = 1;
+    return lut;
+}
+
+fn makeCssLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const CSS_SAFE_IDENT_LUT: [u8; 256] = makeCssSafeIdentLut();
+const CSS_WS_LUT: [u8; 256] = makeCssWsLut();
+const CSS_LOWER_LUT: [u8; 256] = makeCssLowerLut();
+
 /// CSS 标识符解析与序列化错误集
 pub err CssIdentError {
     EmptyIdent,
@@ -13,14 +59,7 @@ pub err CssIdentError {
 }
 
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
+    return CSS_WS_LUT[usize(c)] != 0;
 }
 
 fn isDigit(c: u8): bool {
@@ -32,7 +71,34 @@ fn isAsciiAlpha(c: u8): bool {
 }
 
 fn isSafeIdentByte(c: u8): bool {
-    return isAsciiAlpha(c) || isDigit(c) || c == '-' || c == '_' || c >= 0x80;
+    return CSS_SAFE_IDENT_LUT[usize(c)] != 0;
+}
+
+fn scanSafeIdentEndSimd(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_a: CssIdentVec16 = @splat('a' as u8);
+    const v_z: CssIdentVec16 = @splat('z' as u8);
+    const v_A: CssIdentVec16 = @splat('A' as u8);
+    const v_Z: CssIdentVec16 = @splat('Z' as u8);
+    const v_0: CssIdentVec16 = @splat('0' as u8);
+    const v_9: CssIdentVec16 = @splat('9' as u8);
+    const v_dash: CssIdentVec16 = @splat('-' as u8);
+    const v_us: CssIdentVec16 = @splat('_' as u8);
+    const v_hi: CssIdentVec16 = @splat(0x80 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: CssIdentVec16 = s[i .. i + 16][0..16].*;
+        const ok = ((chunk >= v_a) & (chunk <= v_z)) |
+            ((chunk >= v_A) & (chunk <= v_Z)) |
+            ((chunk >= v_0) & (chunk <= v_9)) |
+            (chunk == v_dash) | (chunk == v_us) | (chunk >= v_hi);
+        const mask: u16 = @bitCast(ok);
+        const bad: u16 = ~mask;
+        if (bad != 0) {
+            return i + usize(@ctz(bad));
+        }
+    }
+    while (i < s.len && CSS_SAFE_IDENT_LUT[usize(s[i])] != 0) : (i += 1) {}
+    return i;
 }
 
 fn trimWs(s: []const u8): []const u8 {
@@ -52,6 +118,11 @@ fn bytesEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssIdentVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssIdentVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -66,8 +137,20 @@ fn eqlAsciiIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: CssIdentVec16 = @splat(65 as u8);
+    const hi_Z: CssIdentVec16 = @splat(90 as u8);
+    const case_bit: CssIdentVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssIdentVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssIdentVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
     while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+        if (CSS_LOWER_LUT[usize(a[i])] != CSS_LOWER_LUT[usize(b[i])]) {
             return false;
         }
         i += 1;
@@ -87,19 +170,14 @@ fn appendBytes(out: []u8, pos: usize, src: []const u8): usize! {
     if (src.len > out.len - pos) {
         return err.BufferTooSmall;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(out[pos .. pos + src.len], src);
     }
     return pos + src.len;
 }
 
 fn hexDigitLower(nibble: u8): u8 {
-    if (nibble < 10) {
-        return '0' + nibble;
-    }
-    return 'a' + (nibble - 10);
+    return CSS_HEX_LOWER[usize(nibble & 0x0F)];
 }
 
 fn appendHexEscape(out: []u8, pos: usize, byte: u8): usize! {
@@ -130,14 +208,7 @@ fn isValidRawCssIdent(s: []const u8): bool {
     } else if (!isAsciiAlpha(s[0]) && s[0] != '_' && s[0] < 0x80) {
         return false;
     }
-    let i: usize = 1;
-    while (i < s.len) {
-        if (!isSafeIdentByte(s[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return scanSafeIdentEndSimd(s, 1) == s.len;
 }
 
 /// 判断是否为 `<custom-ident>` 禁用的 6 大 CSS-wide 全局关键字（大小写不敏感，对齐 Bun `CustomIdent.parse`）
@@ -155,6 +226,14 @@ pub fn serializeCssIdentifier(ident: []const u8, out: []u8): usize! {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < ident.len) {
+        if (i >= 2) {
+            const safe_end = scanSafeIdentEndSimd(ident, i);
+            if (safe_end > i) {
+                pos = appendBytes(out, pos, ident[i..safe_end])?;
+                i = safe_end;
+                if (i >= ident.len) break;
+            }
+        }
         const c = ident[i];
         if (c == 0) {
             // U+0000 -> U+FFFD (UTF-8: EF BF BD)
@@ -245,12 +324,8 @@ pub struct DashedIdent {
         if (s.len == 2) {
             return err.InvalidIdent;
         }
-        let i: usize = 2;
-        while (i < s.len) {
-            if (!isSafeIdentByte(s[i])) {
-                return err.InvalidIdent;
-            }
-            i += 1;
+        if (scanSafeIdentEndSimd(s, 2) != s.len) {
+            return err.InvalidIdent;
         }
         return DashedIdent{ value: s };
     }
