@@ -1,6 +1,9 @@
 // @cap/text-stats — Zero-allocation bilingual EN/CJK text statistics & reading-time engine
 // Clean-room MIT implementation inspired by npm `reading-time` and `word-count`.
 
+import { isAlnum, isDigit, isSpace } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub const DEFAULT_EN_WPM: usize = 200;
 pub const DEFAULT_CJK_CPM: usize = 350;
 
@@ -88,11 +91,8 @@ fn isCjkChar(cp: u32) -> bool {
 }
 
 fn isWordCoreChar(cp: u32) -> bool {
-    if ((cp >= 'A' as u32 && cp <= 'Z' as u32)
-        || (cp >= 'a' as u32 && cp <= 'z' as u32)
-        || (cp >= '0' as u32 && cp <= '9' as u32))
-    {
-        return true;
+    if (cp < 128) {
+        return isAlnum(cp as u8);
     }
     // Latin-1 Supplement & Latin Extended letters
     if ((cp >= 0x00C0 && cp <= 0x00D6)
@@ -104,12 +104,8 @@ fn isWordCoreChar(cp: u32) -> bool {
     return false;
 }
 
-fn isDigitByte(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
 fn isWsCp(cp: u32) -> bool {
-    return cp == ' ' as u32 || cp == '\t' as u32 || cp == '\r' as u32 || cp == '\n' as u32 || cp == 0x3000;
+    return (cp < 128 && isSpace(cp as u8)) || cp == 0x3000;
 }
 
 fn isSentenceEnd(cp: u32) -> bool {
@@ -190,7 +186,7 @@ pub fn analyzeTextWithWpm(text: string, en_wpm: usize, cjk_cpm: usize) -> TextSt
             if (!isWordCoreChar(next_ch.cp)) {
                 in_word = false;
             }
-        } else if (cp == '.' as u32 && in_word && i > 0 && i + 1 < text.len && isDigitByte(text[i - 1]) && isDigitByte(text[i + 1])) {
+        } else if (cp == '.' as u32 && in_word && i > 0 && i + 1 < text.len && isDigit(text[i - 1]) && isDigit(text[i + 1])) {
             // Keep decimal numbers like `3.14` as a single word and not a sentence end
         } else {
             in_word = false;
@@ -263,46 +259,6 @@ pub fn analyzeText(text: string) -> TextStats {
 // Reading Time Formatter (Zero Heap Allocation)
 // ---------------------------------------------------------------------------
 
-fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
-    if (pos < out.len) {
-        out[pos] = c;
-        return pos + 1;
-    }
-    return pos;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendUsize(out: []u8, pos: usize, val: usize) -> usize {
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    let digits: [24]u8 = undefined;
-    let len: usize = 0;
-    let v = val;
-    while (v > 0) {
-        digits[len] = ('0' as usize + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let p = pos;
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p, digits[k]);
-    }
-    return p;
-}
-
 /// Formats `stats` reading time into `out`.
 /// - English (`zh = false`): `"< 1 min read"` or `"N min read"`
 /// - Chinese (`zh = true`): `"不足 1 分钟"` or `"约 N 分钟读完"`
@@ -310,20 +266,20 @@ pub fn formatReadingTime(stats: TextStats, zh: bool, out: []u8) -> string {
     let pos: usize = 0;
     if (stats.est_reading_min == 0) {
         if (zh) {
-            pos = appendStr(out, pos, "不足 1 分钟");
+            pos = writeStr("不足 1 分钟", out, pos);
         } else {
-            pos = appendStr(out, pos, "< 1 min read");
+            pos = writeStr("< 1 min read", out, pos);
         }
         return out[0..pos];
     }
 
     if (zh) {
-        pos = appendStr(out, pos, "约 ");
-        pos = appendUsize(out, pos, stats.est_reading_min);
-        pos = appendStr(out, pos, " 分钟读完");
+        pos = writeStr("约 ", out, pos);
+        pos = writeU64(stats.est_reading_min as u64, out, pos);
+        pos = writeStr(" 分钟读完", out, pos);
     } else {
-        pos = appendUsize(out, pos, stats.est_reading_min);
-        pos = appendStr(out, pos, " min read");
+        pos = writeU64(stats.est_reading_min as u64, out, pos);
+        pos = writeStr(" min read", out, pos);
     }
     return out[0..pos];
 }

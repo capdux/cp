@@ -8,22 +8,10 @@
 //   compression, optional `<~...~>` framing, whitespace tolerance, and strict overflow/char validation.
 // - Zero heap allocation: writes directly into caller-provided `out: []u8`.
 
+import { isSpace, findByte, trim, startsWith, endsWith } from "cap:ascii";
+import { readU32BE, writeU32BE } from "cap:bin";
+
 const Z85_ALPHABET: string = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#";
-
-fn z85Index(c: u8) -> i8 {
-    let i: usize = 0;
-    while (i < 85) {
-        if (Z85_ALPHABET[i] == c) {
-            return i as i8;
-        }
-        i += 1;
-    }
-    return -1;
-}
-
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-}
 
 // ============================================================================
 // 1. ZeroMQ Z85 (RFC 32)
@@ -43,10 +31,7 @@ pub fn encodeZ85(input: string, out: []u8) -> string? {
     let in_pos: usize = 0;
     let out_pos: usize = 0;
     while (in_pos < input.len) {
-        let v: u32 = ((input[in_pos] as u32) << 24) |
-            ((input[in_pos + 1] as u32) << 16) |
-            ((input[in_pos + 2] as u32) << 8) |
-            (input[in_pos + 3] as u32);
+        let v: u32 = readU32BE(input, in_pos) ?? 0;
         in_pos += 4;
 
         out[out_pos + 4] = Z85_ALPHABET[(v % 85) as usize];
@@ -81,21 +66,19 @@ pub fn decodeZ85(encoded: string, out: []u8) -> string? {
         let acc: u64 = 0;
         let k: usize = 0;
         while (k < 5) {
-            const d = z85Index(encoded[in_pos + k]);
-            if (d < 0) {
+            const d_opt = findByte(Z85_ALPHABET, encoded[in_pos + k], 0);
+            if (d_opt == null) {
                 return null;
             }
-            acc = (acc * 85) + (d as u64);
+            acc = (acc * 85) + (d_opt.? as u64);
             k += 1;
         }
         if (acc > (0xFFFFFFFF as u64)) {
             return null;
         }
-        const v: u32 = acc as u32;
-        out[out_pos] = ((v >> 24) & 0xFF) as u8;
-        out[out_pos + 1] = ((v >> 16) & 0xFF) as u8;
-        out[out_pos + 2] = ((v >> 8) & 0xFF) as u8;
-        out[out_pos + 3] = (v & 0xFF) as u8;
+        if (!writeU32BE(out, out_pos, acc as u32)) {
+            return null;
+        }
         in_pos += 5;
         out_pos += 4;
     }
@@ -114,10 +97,7 @@ pub fn encodeAscii85(input: string, out: []u8) -> string? {
     let out_pos: usize = 0;
 
     while (in_pos + 4 <= input.len) {
-        let v: u32 = ((input[in_pos] as u32) << 24) |
-            ((input[in_pos + 1] as u32) << 16) |
-            ((input[in_pos + 2] as u32) << 8) |
-            (input[in_pos + 3] as u32);
+        let v: u32 = readU32BE(input, in_pos) ?? 0;
         in_pos += 4;
 
         if (v == 0) {
@@ -182,31 +162,23 @@ pub fn encodeAscii85(input: string, out: []u8) -> string? {
 /// Decodes Adobe Ascii85 into `out`. Automatically skips whitespace and optional `<~` / `~>` framing,
 /// expands `'z'` into 4 zero bytes, and rejects malformed characters, misplaced `'z'`, or `u32` overflows.
 pub fn decodeAscii85(encoded: string, out: []u8) -> string? {
-    let start: usize = 0;
-    let end: usize = encoded.len;
-
-    while (start < end && isSpace(encoded[start])) {
-        start += 1;
-    }
-    while (end > start && isSpace(encoded[end - 1])) {
-        end -= 1;
-    }
+    let body = trim(encoded);
 
     // Strip optional Adobe `<~` ... `~>` delimiters
-    if (end - start >= 2 && encoded[start] == '<' && encoded[start + 1] == '~') {
-        start += 2;
+    if (startsWith(body, "<~")) {
+        body = body[2..body.len];
     }
-    if (end - start >= 2 && encoded[end - 2] == '~' && encoded[end - 1] == '>') {
-        end -= 2;
+    if (endsWith(body, "~>")) {
+        body = body[0..body.len - 2];
     }
 
     let out_pos: usize = 0;
     let acc: u64 = 0;
     let group_count: usize = 0;
 
-    let i = start;
-    while (i < end) {
-        const c = encoded[i];
+    let i: usize = 0;
+    while (i < body.len) {
+        const c = body[i];
         i += 1;
 
         if (isSpace(c)) {
@@ -217,13 +189,9 @@ pub fn decodeAscii85(encoded: string, out: []u8) -> string? {
             if (group_count != 0) {
                 return null;
             }
-            if (out_pos + 4 > out.len) {
+            if (!writeU32BE(out, out_pos, 0)) {
                 return null;
             }
-            out[out_pos] = 0;
-            out[out_pos + 1] = 0;
-            out[out_pos + 2] = 0;
-            out[out_pos + 3] = 0;
             out_pos += 4;
             continue;
         }
@@ -239,14 +207,9 @@ pub fn decodeAscii85(encoded: string, out: []u8) -> string? {
             if (acc > (0xFFFFFFFF as u64)) {
                 return null;
             }
-            if (out_pos + 4 > out.len) {
+            if (!writeU32BE(out, out_pos, acc as u32)) {
                 return null;
             }
-            const v: u32 = acc as u32;
-            out[out_pos] = ((v >> 24) & 0xFF) as u8;
-            out[out_pos + 1] = ((v >> 16) & 0xFF) as u8;
-            out[out_pos + 2] = ((v >> 8) & 0xFF) as u8;
-            out[out_pos + 3] = (v & 0xFF) as u8;
             out_pos += 4;
             acc = 0;
             group_count = 0;

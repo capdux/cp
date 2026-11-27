@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isSpace, isDigit } from "cap:ascii";
+import { writeU64, writeStr } from "cap:fmt";
 export class PathCmd {
     code: u8,
     relative: bool,
@@ -27,8 +29,6 @@ export class PathBounds {
     fn empty(): PathBounds;
 }
 
-export fn isWs(c: u8): bool;
-export fn isDigit(c: u8): bool;
 export fn skipWs(s: string, start: usize): usize;
 export fn skipWsComma(s: string, start: usize): usize;
 export fn expectedArgCount(code: u8): u8?;
@@ -55,6 +55,5 @@ export class BoundsAcc {
 export fn includePoint(acc: BoundsAcc, x: f64, y: f64): BoundsAcc;
 export fn computeBounds(p: ParsedPath): PathBounds;
 export fn appendByte(out: []u8, pos: usize, c: u8): usize;
-export fn appendU64(out: []u8, pos: usize, val: u64): usize;
 export fn appendFloatCompact(out: []u8, start_pos: usize, val: f64): usize;
 export fn formatSvgPath(p: ParsedPath, out: []u8): string;

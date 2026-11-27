@@ -1,6 +1,9 @@
 // @cap/path-slash — Zero-heap POSIX '/' and Windows '\' path conversion
 // Clean-room pure CP counterpart to crates.io:path-slash
 
+import { findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 fn pshIsAsciiAlpha(b: u8): bool {
     return (b >= 0x41 && b <= 0x5A) || (b >= 0x61 && b <= 0x7A);
 }
@@ -15,14 +18,6 @@ fn pshWriteByte(out: []u8, pos: usize, b: u8): usize {
         return pos + 1;
     }
     return pos;
-}
-
-fn pshWriteReplacement(out: []u8, pos: usize): usize {
-    let p = pos;
-    p = pshWriteByte(out, p, 0xEF);
-    p = pshWriteByte(out, p, 0xBF);
-    p = pshWriteByte(out, p, 0xBD);
-    return p;
 }
 
 fn pshValidUtf8Len(s: string, offset: usize): usize {
@@ -111,18 +106,14 @@ pub fn toSlashLossy(path: string, out: []u8): usize {
     while (i < path.len && pos < out.len) {
         const clen = pshValidUtf8Len(path, i);
         if (clen == 0) {
-            pos = pshWriteReplacement(out, pos);
+            pos = writeStr("\xEF\xBF\xBD", out, pos);
             i += 1;
         } else if (clen == 1) {
             const b = path[i];
             pos = pshWriteByte(out, pos, if (b == 0x5C) 0x2F else b);
             i += 1;
         } else {
-            let k: usize = 0;
-            while (k < clen) {
-                pos = pshWriteByte(out, pos, path[i + k]);
-                k += 1;
-            }
+            pos = writeStr(path[i..i + clen], out, pos);
             i += clen;
         }
     }
@@ -145,26 +136,12 @@ pub fn fromSlash(path: string, out: []u8): usize {
 
 /// Returns true if `path` contains at least one backslash `\`.
 pub fn hasBackslash(path: string): bool {
-    let i: usize = 0;
-    while (i < path.len) {
-        if (path[i] == 0x5C) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return findByteInBytes(path, 0x5C, 0) != null;
 }
 
 /// Returns true if `path` contains at least one forward slash `/`.
 pub fn hasForwardSlash(path: string): bool {
-    let i: usize = 0;
-    while (i < path.len) {
-        if (path[i] == 0x2F) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return findByteInBytes(path, 0x2F, 0) != null;
 }
 
 /// Trim trailing `/` or `\` separators while preserving root paths (`/`, `\`, `C:/`, `C:\`).

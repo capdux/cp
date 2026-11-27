@@ -3,6 +3,8 @@
 // and Rust `textwrap`.
 
 import { charWidth } from "../../unicode-width/src/index.cp";
+import { isSpace, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 pub struct WrapOptions {
     pub width: usize,
@@ -42,21 +44,6 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
         return pos + 1;
     }
     return pos;
-}
-
-fn appendSlice(out: []u8, pos: usize, s: string, start: usize, end: usize) -> usize {
-    let p = pos;
-    let i = start;
-    while (i < end && i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    return appendSlice(out, pos, s, 0 as usize, s.len);
 }
 
 fn decodeUtf8(s: string, pos: usize) -> DecodedChar {
@@ -139,13 +126,8 @@ fn ansiSeqLen(s: string, pos: usize) -> usize {
 
 fn isAnsiReset(s: string, pos: usize, seq_len: usize) -> bool {
     // Matches `\x1b[0m` or `\x1b[m`
-    if (seq_len == 4 && s[pos] == 0x1B && s[pos + 1] == '[' && s[pos + 2] == '0' && s[pos + 3] == 'm') {
-        return true;
-    }
-    if (seq_len == 3 && s[pos] == 0x1B && s[pos + 1] == '[' && s[pos + 2] == 'm') {
-        return true;
-    }
-    return false;
+    const slice = s[pos..pos + seq_len];
+    return strEq(slice, "\x1b[0m") || strEq(slice, "\x1b[m");
 }
 
 /// Returns terminal display column width (0, 1, or 2) for a Unicode codepoint.
@@ -155,10 +137,6 @@ fn codepointWidth(cp: u32) -> usize {
 
 fn isSpaceByte(c: u8) -> bool {
     return c == ' ' || c == '\t';
-}
-
-fn isReflowSpaceByte(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +200,7 @@ fn writeHardBrokenToken(
             if (seq_end > tok_end) {
                 seq_end = tok_end;
             }
-            pos = appendSlice(out, pos, text, i, seq_end);
+            pos = writeStr(text[i..seq_end], out, pos);
             i = seq_end;
             continue;
         }
@@ -236,7 +214,7 @@ fn writeHardBrokenToken(
         if (ch_end > tok_end) {
             ch_end = tok_end;
         }
-        pos = appendSlice(out, pos, text, i, ch_end);
+        pos = writeStr(text[i..ch_end], out, pos);
         col += cw;
         i = ch_end;
     }
@@ -262,13 +240,13 @@ fn wrapSegment(
     let i = seg_start;
     while (i < seg_end) {
         const b = text[i];
-        const is_ws = if (opts.preserve_newlines) isSpaceByte(b) else isReflowSpaceByte(b);
+        const is_ws = if (opts.preserve_newlines) isSpaceByte(b) else isSpace(b);
         if (is_ws) {
             const run_start = i;
             let run_w: usize = 0;
             while (i < seg_end) {
                 const c = text[i];
-                const c_ws = if (opts.preserve_newlines) isSpaceByte(c) else isReflowSpaceByte(c);
+                const c_ws = if (opts.preserve_newlines) isSpaceByte(c) else isSpace(c);
                 if (!c_ws) {
                     break;
                 }
@@ -292,7 +270,7 @@ fn wrapSegment(
             } else if (!wrapped_line && opts.preserve_newlines) {
                 // Preserve leading indentation on the original first line of a paragraph
                 if (run_w <= opts.width) {
-                    pos = appendSlice(out, pos, text, run_start, i);
+                    pos = writeStr(text[run_start..i], out, pos);
                     col += run_w;
                 }
             }
@@ -316,15 +294,15 @@ fn wrapSegment(
 
         // Trailing ANSI sequence(s) at end of segment: emit directly without breaking
         if (i >= seg_end) {
-            pos = appendSlice(out, pos, text, tok_start, seg_end);
+            pos = writeStr(text[tok_start..seg_end], out, pos);
             break;
         }
 
         // If ANSI was immediately followed by whitespace, emit the ANSI directly
         const b_after_ansi = text[i];
-        const after_is_ws = if (opts.preserve_newlines) isSpaceByte(b_after_ansi) else isReflowSpaceByte(b_after_ansi);
+        const after_is_ws = if (opts.preserve_newlines) isSpaceByte(b_after_ansi) else isSpace(b_after_ansi);
         if (after_is_ws) {
-            pos = appendSlice(out, pos, text, tok_start, i);
+            pos = writeStr(text[tok_start..i], out, pos);
             continue;
         }
 
@@ -366,7 +344,7 @@ fn wrapSegment(
                     continue;
                 }
                 const cur_b = text[i];
-                const cur_ws = if (opts.preserve_newlines) isSpaceByte(cur_b) else isReflowSpaceByte(cur_b);
+                const cur_ws = if (opts.preserve_newlines) isSpaceByte(cur_b) else isSpace(cur_b);
                 if (cur_ws) {
                     break;
                 }
@@ -390,14 +368,14 @@ fn wrapSegment(
             if (col + space_w + tok_w <= opts.width) {
                 if (has_pending_ws) {
                     if (opts.preserve_newlines) {
-                        pos = appendSlice(out, pos, text, ws_start, ws_end);
+                        pos = writeStr(text[ws_start..ws_end], out, pos);
                     } else {
                         pos = appendByte(out, pos, ' ');
                     }
                     col += space_w;
                     has_pending_ws = false;
                 }
-                pos = appendSlice(out, pos, text, tok_start, tok_end);
+                pos = writeStr(text[tok_start..tok_end], out, pos);
                 col += tok_w;
             } else {
                 // Wrap to next line, discarding pending trailing whitespace
@@ -406,7 +384,7 @@ fn wrapSegment(
                 col = 0;
                 wrapped_line = true;
                 if (tok_w <= opts.width || !opts.break_words) {
-                    pos = appendSlice(out, pos, text, tok_start, tok_end);
+                    pos = writeStr(text[tok_start..tok_end], out, pos);
                     col = tok_w;
                 } else {
                     const cur = writeHardBrokenToken(text, tok_start, tok_end, opts.width, out, pos, col);
@@ -417,7 +395,7 @@ fn wrapSegment(
         } else {
             has_pending_ws = false;
             if (tok_w <= opts.width || !opts.break_words) {
-                pos = appendSlice(out, pos, text, tok_start, tok_end);
+                pos = writeStr(text[tok_start..tok_end], out, pos);
                 col = tok_w;
             } else {
                 const cur = writeHardBrokenToken(text, tok_start, tok_end, opts.width, out, pos, col);
@@ -440,7 +418,7 @@ pub fn wrapTextWith(text: string, opts: WrapOptions, out: []u8) -> string {
         return out[0..0];
     }
     if (opts.width == 0) {
-        const n = appendStr(out, 0 as usize, text);
+        const n = writeStr(text, out, 0 as usize);
         return out[0..n];
     }
     if (!opts.preserve_newlines) {
@@ -500,9 +478,9 @@ pub fn indent(text: string, prefix: string, out: []u8) -> string {
     while (i <= text.len) {
         if (i == text.len || text[i] == '\n') {
             if (lineHasContent(text, line_start, i)) {
-                pos = appendStr(out, pos, prefix);
+                pos = writeStr(prefix, out, pos);
             }
-            pos = appendSlice(out, pos, text, line_start, i);
+            pos = writeStr(text[line_start..i], out, pos);
             if (i < text.len && text[i] == '\n') {
                 pos = appendByte(out, pos, '\n');
             }
@@ -554,7 +532,7 @@ pub fn dedent(text: string, out: []u8) -> string {
                 if (skip > line_len) {
                     skip = line_len;
                 }
-                pos = appendSlice(out, pos, text, line_start2 + skip, j);
+                pos = writeStr(text[line_start2 + skip..j], out, pos);
             }
             if (j < text.len && text[j] == '\n') {
                 pos = appendByte(out, pos, '\n');
@@ -574,7 +552,7 @@ pub fn dedent(text: string, out: []u8) -> string {
 /// Preserves ANSI escape sequences and safely resets active ANSI styling before appending `ellipsis`.
 pub fn truncate(text: string, max_width: usize, ellipsis: string, out: []u8) -> string {
     if (displayWidth(text) <= max_width) {
-        const n = appendStr(out, 0 as usize, text);
+        const n = writeStr(text, out, 0 as usize);
         return out[0..n];
     }
     if (max_width == 0) {
@@ -590,7 +568,7 @@ pub fn truncate(text: string, max_width: usize, ellipsis: string, out: []u8) -> 
         while (i < ellipsis.len) {
             const seq = ansiSeqLen(ellipsis, i);
             if (seq > 0) {
-                pos = appendSlice(out, pos, ellipsis, i, i + seq);
+                pos = writeStr(ellipsis[i..i + seq], out, pos);
                 i += seq;
                 continue;
             }
@@ -599,7 +577,7 @@ pub fn truncate(text: string, max_width: usize, ellipsis: string, out: []u8) -> 
             if (col + cw > max_width) {
                 break;
             }
-            pos = appendSlice(out, pos, ellipsis, i, i + ch.len);
+            pos = writeStr(ellipsis[i..i + ch.len], out, pos);
             col += cw;
             i += ch.len;
         }
@@ -613,7 +591,7 @@ pub fn truncate(text: string, max_width: usize, ellipsis: string, out: []u8) -> 
     while (i < text.len) {
         const seq = ansiSeqLen(text, i);
         if (seq > 0) {
-            pos = appendSlice(out, pos, text, i, i + seq);
+            pos = writeStr(text[i..i + seq], out, pos);
             active_ansi = !isAnsiReset(text, i, seq);
             i += seq;
             continue;
@@ -623,14 +601,14 @@ pub fn truncate(text: string, max_width: usize, ellipsis: string, out: []u8) -> 
         if (col + cw > budget) {
             break;
         }
-        pos = appendSlice(out, pos, text, i, i + ch.len);
+        pos = writeStr(text[i..i + ch.len], out, pos);
         col += cw;
         i += ch.len;
     }
 
     if (active_ansi) {
-        pos = appendStr(out, pos, "\x1b[0m");
+        pos = writeStr("\x1b[0m", out, pos);
     }
-    pos = appendStr(out, pos, ellipsis);
+    pos = writeStr(ellipsis, out, pos);
     return out[0..pos];
 }

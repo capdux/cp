@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase, isDigit } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 export enum DeviceKind {
     Desktop = 0,
     Mobile = 1,
@@ -49,8 +51,6 @@ export class UserAgent {
     bot_name: string,
 }
 
-export fn toLowerAscii(c: u8): u8;
-export fn findSubstr(haystack: string, needle: string): usize?;
 export fn findSubstrCI(haystack: string, needle: string): usize?;
 export fn contains(haystack: string, needle: string): bool;
 export fn containsCI(haystack: string, needle: string): bool;

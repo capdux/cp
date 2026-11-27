@@ -3,6 +3,9 @@
 // Modeled after npm `sqids`/`hashids` and Rust `sqids`/`harsh`.
 
 const std = @import("std");
+import { isDigit, toLower } from "cap:ascii";
+import { bytesEq, startsWithBytes, endsWithBytes, findByteInBytes, indexOfBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
 
 pub const DEFAULT_ALPHABET: string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 pub const MIN_ALPHABET_LEN: usize = 3;
@@ -80,61 +83,30 @@ const BLOCKLIST: [52]string = [
     "wtf",
 ];
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
-}
-
 fn hasDigit(s: string): bool {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        if (s[i] >= '0' && s[i] <= '9') return true;
+        if (isDigit(s[i])) return true;
     }
     return false;
-}
-
-fn containsSlice(haystack: []const u8, needle: []const u8): bool {
-    if (needle.len == 0) return true;
-    if (needle.len > haystack.len) return false;
-    const limit = haystack.len - needle.len;
-    let i: usize = 0;
-    while (i <= limit) : (i += 1) {
-        if (std.mem.eql(u8, haystack[i .. i + needle.len], needle)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-fn startsWithSlice(haystack: []const u8, prefix: []const u8): bool {
-    if (prefix.len > haystack.len) return false;
-    return std.mem.eql(u8, haystack[0..prefix.len], prefix);
-}
-
-fn endsWithSlice(haystack: []const u8, suffix: []const u8): bool {
-    if (suffix.len > haystack.len) return false;
-    return std.mem.eql(u8, haystack[haystack.len - suffix.len .. haystack.len], suffix);
 }
 
 fn isBlockedId(id: []const u8): bool {
     if (id.len == 0 || id.len > MAX_ENCODE_BUF) return false;
     let lower_buf: [MAX_ENCODE_BUF]u8 = undefined;
-    let i: usize = 0;
-    while (i < id.len) : (i += 1) {
-        lower_buf[i] = toLowerAscii(id[i]);
-    }
-    const lower = lower_buf[0..id.len];
+    const n = toLower(id, lower_buf[0..id.len]);
+    const lower = lower_buf[0..n];
 
     let b: usize = 0;
     while (b < BLOCKLIST.len) : (b += 1) {
         const word = BLOCKLIST[b];
         if (word.len <= lower.len) {
             if (lower.len <= 3 || word.len <= 3) {
-                if (std.mem.eql(u8, lower, word)) return true;
+                if (bytesEq(lower, word)) return true;
             } else if (hasDigit(word)) {
-                if (startsWithSlice(lower, word) || endsWithSlice(lower, word)) return true;
+                if (startsWithBytes(lower, word) || endsWithBytes(lower, word)) return true;
             } else {
-                if (containsSlice(lower, word)) return true;
+                if (indexOfBytes(lower, word, 0) != null) return true;
             }
         }
     }
@@ -170,14 +142,6 @@ fn reverseBytes(buf: []u8) {
     }
 }
 
-fn indexOfByte(haystack: []const u8, needle: u8): usize? {
-    let i: usize = 0;
-    while (i < haystack.len) : (i += 1) {
-        if (haystack[i] == needle) return i;
-    }
-    return null;
-}
-
 /// Encodes a single `u64` into base-`alphabet.len` digits and appends to `dst`.
 /// Returns the new length of `dst`, or `null` on buffer overflow.
 fn appendToId(num: u64, alphabet: []const u8, dst: []u8, pos: usize): usize? {
@@ -210,7 +174,7 @@ fn chunkToNumber(chunk: []const u8, alphabet: []const u8): u64? {
     let acc: u64 = 0;
     let i: usize = 0;
     while (i < chunk.len) : (i += 1) {
-        if (digit_idx := indexOfByte(alphabet, chunk[i])) {
+        if (digit_idx := findByteInBytes(alphabet, chunk[i], 0)) {
             const digit: u64 = @intCast(digit_idx);
             if (acc > (max_u64 - digit) / base) return null;
             acc = acc * base + digit;
@@ -368,11 +332,8 @@ pub struct Sqids {
             }
 
             if (ret_len > out.len) return "";
-            let c: usize = 0;
-            while (c < ret_len) : (c += 1) {
-                out[c] = tmp[c];
-            }
-            return out[0..ret_len];
+            const written = writeStr(tmp[0..ret_len], out, 0);
+            return out[0..written];
         }
 
         return "";
@@ -394,14 +355,14 @@ pub struct Sqids {
         // Validate every character belongs to the alphabet
         let v: usize = 0;
         while (v < id.len) : (v += 1) {
-            if (indexOfByte(alpha, id[v]) == null) {
+            if (findByteInBytes(alpha, id[v], 0) == null) {
                 return 0;
             }
         }
 
         const prefix = id[0];
         let offset: usize = 0;
-        if (found := indexOfByte(alpha, prefix)) {
+        if (found := findByteInBytes(alpha, prefix, 0)) {
             offset = found;
         } else {
             return 0;
@@ -420,7 +381,7 @@ pub struct Sqids {
         while (rem.len > 0) {
             const separator = work[0];
             let sep_pos: usize = rem.len;
-            if (found_sep := indexOfByte(rem, separator)) {
+            if (found_sep := findByteInBytes(rem, separator, 0)) {
                 sep_pos = found_sep;
             }
 

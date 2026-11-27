@@ -1,6 +1,9 @@
 // @cap/shlex — Zero-allocation POSIX shell quoting & lexical splitter for CP
 // Clean-room MIT implementation inspired by npm `shell-quote` and Rust `shlex`.
 
+import { isAlnum, isSpace } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_TOKENS: usize = 64;
 const MAX_POOL_BYTES: usize = 4096;
 
@@ -46,14 +49,10 @@ pub struct SplitResult {
 }
 
 fn isSafeUnquotedChar(c: u8) -> bool {
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+    if (isAlnum(c)) {
         return true;
     }
     return c == '_' || c == '@' || c == '%' || c == '+' || c == '=' || c == ':' || c == ',' || c == '.' || c == '/' || c == '-';
-}
-
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
 pub fn needsQuote(arg: string) -> bool {
@@ -91,24 +90,13 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 pub fn quoteArg(arg: string, out: []u8) -> string {
     if (!needsQuote(arg)) {
-        const n = appendStr(out, 0 as usize, arg);
+        const n = writeStr(arg, out, 0 as usize);
         return out[0..n];
     }
     if (arg.len == 0) {
-        const n = appendStr(out, 0 as usize, "''");
+        const n = writeStr("''", out, 0 as usize);
         return out[0..n];
     }
     let pos: usize = 0;
@@ -116,7 +104,7 @@ pub fn quoteArg(arg: string, out: []u8) -> string {
     let i: usize = 0;
     while (i < arg.len) {
         if (arg[i] == '\'') {
-            pos = appendStr(out, pos, "'\\''");
+            pos = writeStr("'\\''", out, pos);
         } else {
             pos = appendByte(out, pos, arg[i]);
         }
@@ -135,7 +123,7 @@ pub fn joinArgs(args: []string, out: []u8) -> string {
             pos = appendByte(out, pos, ' ');
         }
         const q = quoteArg(args[i], tmp[0..512]);
-        pos = appendStr(out, pos, q);
+        pos = writeStr(q, out, pos);
         i += 1;
     }
     return out[0..pos];

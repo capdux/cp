@@ -1,14 +1,11 @@
 // @cap/porter-stem — Zero-allocation Martin Porter (1980) English Stemmer
 // Clean-room MIT implementation in pure CP (Steps 1a, 1b, 1c, 2, 3, 4, 5a, 5b).
 
-const MAX_WORD_LEN: usize = 128;
+import { toLower } from "cap:ascii";
+import { bytesEq, endsWithBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
 
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
+const MAX_WORD_LEN: usize = 128;
 
 fn isConsonant(buf: []const u8, idx: usize) -> bool {
     const ch = buf[idx];
@@ -56,12 +53,8 @@ pub fn measure(word: []const u8) -> usize {
     if (n > MAX_WORD_LEN) {
         n = MAX_WORD_LEN;
     }
-    let i: usize = 0;
-    while (i < n) {
-        buf[i] = toLowerAscii(word[i]);
-        i += 1;
-    }
-    return measurePrefix(buf[0..n], n);
+    const written = toLower(word[0..n], buf[0..n]);
+    return measurePrefix(buf[0..written], written);
 }
 
 fn containsVowel(buf: []const u8, end: usize) -> bool {
@@ -97,31 +90,6 @@ fn endsCvc(buf: []const u8, end: usize) -> bool {
     return last != 119 && last != 120 && last != 121;
 }
 
-fn endsWith(buf: []const u8, len: usize, suffix: string) -> bool {
-    if (suffix.len > len) {
-        return false;
-    }
-    const start = len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (buf[start + i] != suffix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn replaceSuffix(buf: []u8, len: usize, suf_len: usize, rep: string) -> usize {
-    const stem_len = len - suf_len;
-    let i: usize = 0;
-    while (i < rep.len && stem_len + i < buf.len) {
-        buf[stem_len + i] = rep[i];
-        i += 1;
-    }
-    return stem_len + i;
-}
-
 fn tryStep2(buf: []u8, len: usize) -> usize {
     if (len < 3) {
         return len;
@@ -139,10 +107,10 @@ fn tryStep2(buf: []u8, len: usize) -> usize {
     let i: usize = 0;
     while (i < 21) {
         const s = sufs[i];
-        if (endsWith(buf, len, s)) {
+        if (endsWithBytes(buf[0..len], s)) {
             const stem_len = len - s.len;
             if (measurePrefix(buf, stem_len) > 0) {
-                return replaceSuffix(buf, len, s.len, reps[i]);
+                return writeStr(reps[i], buf, stem_len);
             }
             return len;
         }
@@ -157,10 +125,10 @@ fn tryStep3(buf: []u8, len: usize) -> usize {
     let i: usize = 0;
     while (i < 7) {
         const s = sufs[i];
-        if (endsWith(buf, len, s)) {
+        if (endsWithBytes(buf[0..len], s)) {
             const stem_len = len - s.len;
             if (measurePrefix(buf, stem_len) > 0) {
-                return replaceSuffix(buf, len, s.len, reps[i]);
+                return writeStr(reps[i], buf, stem_len);
             }
             return len;
         }
@@ -178,7 +146,7 @@ fn tryStep4(buf: []u8, len: usize) -> usize {
     let i: usize = 0;
     while (i < 19) {
         const s = sufs[i];
-        if (endsWith(buf, len, s)) {
+        if (endsWithBytes(buf[0..len], s)) {
             const stem_len = len - s.len;
             if (i == 11) {
                 // "ion" requires stem ending in 's' or 't'
@@ -209,52 +177,43 @@ pub fn stem(word: string, out: []u8) -> usize {
     }
 
     let buf: [128]u8 = undefined;
-    let i: usize = 0;
-    while (i < n) {
-        buf[i] = toLowerAscii(word[i]);
-        i += 1;
-    }
+    n = toLower(word[0..n], buf[0..n]);
 
     if (n < 3) {
         if (n > out.len) {
             return 0;
         }
-        let k: usize = 0;
-        while (k < n) {
-            out[k] = buf[k];
-            k += 1;
-        }
-        return n;
+        return writeStr(buf[0..n], out, 0);
     }
 
     // Step 1a
-    if (endsWith(buf[0..n], n, "sses")) {
+    if (endsWithBytes(buf[0..n], "sses")) {
         n -= 2;
-    } else if (endsWith(buf[0..n], n, "ies")) {
+    } else if (endsWithBytes(buf[0..n], "ies")) {
         n -= 2;
-    } else if (endsWith(buf[0..n], n, "ss")) {
+    } else if (endsWithBytes(buf[0..n], "ss")) {
         // unchanged
-    } else if (endsWith(buf[0..n], n, "s")) {
+    } else if (endsWithBytes(buf[0..n], "s")) {
         n -= 1;
     }
 
     // Step 1b
     let step1b_extra = false;
-    if (endsWith(buf[0..n], n, "eed")) {
+    if (endsWithBytes(buf[0..n], "eed")) {
         const stem_len = n - 3;
         if (measurePrefix(buf[0..n], stem_len) > 0) {
             n -= 1; // eed -> ee
         }
-    } else if (endsWith(buf[0..n], n, "ed") && containsVowel(buf[0..n], n - 2)) {
+    } else if (endsWithBytes(buf[0..n], "ed") && containsVowel(buf[0..n], n - 2)) {
         n -= 2;
         step1b_extra = true;
-    } else if (endsWith(buf[0..n], n, "ing") && containsVowel(buf[0..n], n - 3)) {
+    } else if (endsWithBytes(buf[0..n], "ing") && containsVowel(buf[0..n], n - 3)) {
         n -= 3;
         step1b_extra = true;
     }
 
     if (step1b_extra) {
-        if (endsWith(buf[0..n], n, "at") || endsWith(buf[0..n], n, "bl") || endsWith(buf[0..n], n, "iz")) {
+        if (endsWithBytes(buf[0..n], "at") || endsWithBytes(buf[0..n], "bl") || endsWithBytes(buf[0..n], "iz")) {
             if (n < MAX_WORD_LEN) {
                 buf[n] = 101; // 'e'
                 n += 1;
@@ -274,7 +233,7 @@ pub fn stem(word: string, out: []u8) -> usize {
     }
 
     // Step 1c
-    if (endsWith(buf[0..n], n, "y") && containsVowel(buf[0..n], n - 1)) {
+    if (endsWithBytes(buf[0..n], "y") && containsVowel(buf[0..n], n - 1)) {
         buf[n - 1] = 105; // 'i'
     }
 
@@ -303,12 +262,7 @@ pub fn stem(word: string, out: []u8) -> usize {
     if (n > out.len) {
         return 0;
     }
-    let k: usize = 0;
-    while (k < n) {
-        out[k] = buf[k];
-        k += 1;
-    }
-    return n;
+    return writeStr(buf[0..n], out, 0);
 }
 
 /// Returns true if `a` and `b` reduce to the same non-empty Porter stem.
@@ -320,12 +274,5 @@ pub fn sameStem(a: string, b: string) -> bool {
     if (la == 0 || la != lb) {
         return false;
     }
-    let i: usize = 0;
-    while (i < la) {
-        if (sa[i] != sb[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return bytesEq(sa[0..la], sb[0..lb]);
 }

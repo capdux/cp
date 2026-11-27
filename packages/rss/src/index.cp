@@ -1,6 +1,10 @@
 // @cap/rss — Zero-allocation RSS 2.0 XML Feed Generator & Tag Extractor
 // Clean-room MIT implementation in pure CP.
 
+import { isSpace, trim } from "cap:ascii";
+import { startsWithBytes, endsWithBytes, findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 pub struct RssChannel {
     pub title: []const u8,
     pub link: []const u8,
@@ -20,12 +24,7 @@ fn pushSlice(dst: []u8, pos: usize, src: []const u8) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushXmlEscaped(dst: []u8, pos: usize, src: []const u8) -> i64 {
@@ -165,24 +164,6 @@ pub struct RssWriter {
     }
 }
 
-fn isSpace(b: u8) -> bool {
-    return b == 32 || b == 9 || b == 10 || b == 13;
-}
-
-fn startsWithAt(haystack: []const u8, pos: usize, needle: []const u8) -> bool {
-    if (pos + needle.len > haystack.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < needle.len) {
-        if (haystack[pos + i] != needle[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 /// Zero-copy extraction of the first `<tag>...</tag>` value starting at `start_pos`.
 /// Automatically strips `<![CDATA[...]]>` wrappers if present. Returns `""` if not found.
 pub fn extractTagValue(xml: []const u8, tag: []const u8, start_pos: usize) -> []const u8 {
@@ -193,35 +174,27 @@ pub fn extractTagValue(xml: []const u8, tag: []const u8, start_pos: usize) -> []
     let i = start_pos;
 
     while (i < n) {
-        if (xml[i] == 60 && i + 1 + tag.len < n && startsWithAt(xml, i + 1, tag)) {
+        if (xml[i] == 60 && i + 1 + tag.len < n && startsWithBytes(xml[i + 1..n], tag)) {
             const after = i + 1 + tag.len;
             const sep = xml[after];
             if (sep == 62 || isSpace(sep)) {
                 // Find end of opening tag '>'
-                let open_end = after;
-                while (open_end < n && xml[open_end] != 62) {
-                    open_end += 1;
-                }
-                if (open_end >= n) {
+                const open_end_opt = findByteInBytes(xml, 62, after);
+                if (open_end_opt == null) {
                     return "";
                 }
-                const content_start = open_end + 1;
+                const content_start = open_end_opt.? + 1;
 
                 // Find closing "</tag>"
                 let j = content_start;
                 while (j + 2 + tag.len < n) {
-                    if (xml[j] == 60 && xml[j + 1] == 47 && startsWithAt(xml, j + 2, tag) && xml[j + 2 + tag.len] == 62) {
-                        let a = content_start;
-                        let b = j;
-                        // Strip surrounding whitespace only when checking CDATA wrapper
-                        let ta = a;
-                        let tb = b;
-                        while (ta < tb && isSpace(xml[ta])) { ta += 1; }
-                        while (tb > ta && isSpace(xml[tb - 1])) { tb -= 1; }
-                        if (tb - ta >= 12 && startsWithAt(xml, ta, "<![CDATA[") && startsWithAt(xml, tb - 3, "]]>")) {
-                            return xml[ta + 9..tb - 3];
+                    if (xml[j] == 60 && xml[j + 1] == 47 && startsWithBytes(xml[j + 2..n], tag) && xml[j + 2 + tag.len] == 62) {
+                        const content = xml[content_start..j];
+                        const trimmed = trim(content);
+                        if (trimmed.len >= 12 && startsWithBytes(trimmed, "<![CDATA[") && endsWithBytes(trimmed, "]]>")) {
+                            return trimmed[9..trimmed.len - 3];
                         }
-                        return xml[a..b];
+                        return content;
                     }
                     j += 1;
                 }
@@ -240,7 +213,7 @@ pub fn countItems(xml: []const u8) -> usize {
     let count: usize = 0;
     let i: usize = 0;
     while (i + 5 < n) {
-        if (xml[i] == 60 && startsWithAt(xml, i + 1, "item")) {
+        if (xml[i] == 60 && startsWithBytes(xml[i + 1..n], "item")) {
             const sep = xml[i + 5];
             if (sep == 62 || isSpace(sep)) {
                 count += 1;

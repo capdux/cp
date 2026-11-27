@@ -2,6 +2,9 @@
 // Clean-room MIT implementation inspired by npm `parse-svg-path`, `svg-path-parser`,
 // and Rust `svgtypes`.
 
+import { isSpace, isDigit } from "cap:ascii";
+import { writeU64, writeStr } from "cap:fmt";
+
 pub const MAX_PATH_CMDS: usize = 64;
 
 pub struct PathCmd {
@@ -73,17 +76,9 @@ pub struct PathBounds {
 // Internal Lexer & Number Parsing Helpers
 // ---------------------------------------------------------------------------
 
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
 fn skipWs(s: string, start: usize) -> usize {
     let i = start;
-    while (i < s.len && isWs(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i += 1;
     }
     return i;
@@ -446,27 +441,6 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendU64(out: []u8, pos: usize, val: u64) -> usize {
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    let digits: [24]u8 = undefined;
-    let len: usize = 0;
-    let v = val;
-    while (v > 0) {
-        digits[len] = ('0' as u64 + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let p = pos;
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p, digits[k]);
-    }
-    return p;
-}
-
 fn appendFloatCompact(out: []u8, start_pos: usize, val: f64) -> usize {
     let pos = start_pos;
     const neg = val < 0.0;
@@ -477,7 +451,7 @@ fn appendFloatCompact(out: []u8, start_pos: usize, val: f64) -> usize {
     }
     const int_part = scaled / 10000;
     let frac_part = scaled % 10000;
-    pos = appendU64(out, pos, int_part);
+    pos = writeU64(int_part, out, pos);
     if (frac_part > 0) {
         pos = appendByte(out, pos, '.');
         let fbuf: [4]u8 = [
@@ -490,11 +464,7 @@ fn appendFloatCompact(out: []u8, start_pos: usize, val: f64) -> usize {
         while (flen > 0 && fbuf[flen - 1] == '0') {
             flen -= 1;
         }
-        let k: usize = 0;
-        while (k < flen) {
-            pos = appendByte(out, pos, fbuf[k]);
-            k += 1;
-        }
+        pos = writeStr(fbuf[0..flen], out, pos);
     }
     return pos;
 }

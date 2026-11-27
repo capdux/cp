@@ -1,5 +1,8 @@
 // Type definitions for CP
 
+import { isSpace, trim } from "cap:ascii";
+import { startsWithBytes, endsWithBytes, findByteInBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
 export class RssChannel {
     title: &[]u8,
     link: &[]u8,
@@ -31,7 +34,5 @@ export class RssWriter {
     fn written(): &[]u8;
 }
 
-export fn isSpace(b: u8): bool;
-export fn startsWithAt(haystack: &[]u8, pos: usize, needle: &[]u8): bool;
 export fn extractTagValue(xml: &[]u8, tag: &[]u8, start_pos: usize): &[]u8;
 export fn countItems(xml: &[]u8): usize;

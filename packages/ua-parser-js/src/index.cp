@@ -8,7 +8,8 @@
 // - Device classification: Desktop, Mobile, Tablet, Bot, Cli, Unknown
 // - Dedicated AI crawler detection (`isAiBot`): GPTBot, ClaudeBot, PerplexityBot, Bytespider, Google-Extended, CCBot, etc.
 
-const std = @import("std");
+import { eqIgnoreCase, isDigit } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 
 /// High-level device category.
 pub enum DeviceKind: u8 {
@@ -63,51 +64,19 @@ pub struct UserAgent {
     bot_name: string = "",
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
-}
-
-fn findSubstr(haystack: string, needle: string): usize? {
-    if (needle.len == 0) return 0;
-    if (needle.len > haystack.len) return null;
-    const limit = haystack.len - needle.len;
-    let i: usize = 0;
-    while (i <= limit) : (i += 1) {
-        let j: usize = 0;
-        let matched = true;
-        while (j < needle.len) : (j += 1) {
-            if (haystack[i + j] != needle[j]) {
-                matched = false;
-                break;
-            }
-        }
-        if (matched) return i;
-    }
-    return null;
-}
-
 fn findSubstrCI(haystack: string, needle: string): usize? {
     if (needle.len == 0) return 0;
     if (needle.len > haystack.len) return null;
     const limit = haystack.len - needle.len;
     let i: usize = 0;
     while (i <= limit) : (i += 1) {
-        let j: usize = 0;
-        let matched = true;
-        while (j < needle.len) : (j += 1) {
-            if (toLowerAscii(haystack[i + j]) != toLowerAscii(needle[j])) {
-                matched = false;
-                break;
-            }
-        }
-        if (matched) return i;
+        if (eqIgnoreCase(haystack[i .. i + needle.len], needle)) return i;
     }
     return null;
 }
 
 fn contains(haystack: string, needle: string): bool {
-    return findSubstr(haystack, needle) != null;
+    return indexOfBytes(haystack, needle, 0) != null;
 }
 
 fn containsCI(haystack: string, needle: string): bool {
@@ -115,12 +84,12 @@ fn containsCI(haystack: string, needle: string): bool {
 }
 
 fn isVersionChar(c: u8): bool {
-    return (c >= '0' && c <= '9') || c == '.' || c == '_';
+    return isDigit(c) || c == '.' || c == '_';
 }
 
 /// Extracts a version token immediately following `prefix` (case-sensitive).
 fn extractVersionAfter(ua: string, prefix: string): string {
-    if (idx := findSubstr(ua, prefix)) {
+    if (idx := indexOfBytes(ua, prefix, 0)) {
         const start = idx + prefix.len;
         let end = start;
         while (end < ua.len && isVersionChar(ua[end])) : (end += 1) {}
