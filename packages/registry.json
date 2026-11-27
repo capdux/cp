@@ -18820,6 +18820,23 @@
       "agent_doc": "packages/puppeteer/README_AGENT.md",
       "readme": "packages/puppeteer/README.md",
       "readme_zh": "packages/puppeteer/README.zh-CN.md"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "playwright",
+      "source_repo": "https://github.com/microsoft/playwright",
+      "license": "Apache-2.0",
+      "cp_target": "playwright",
+      "kind": "package",
+      "aliases": [
+        "playwright-core",
+        "playwright-chromium"
+      ],
+      "absorbed_at": "2026-11-28",
+      "types": "packages/playwright/src/index.d.cp",
+      "agent_doc": "packages/playwright/README_AGENT.md",
+      "readme": "packages/playwright/README.md",
+      "readme_zh": "packages/playwright/README.zh-CN.md"
     }
   ]
 }
