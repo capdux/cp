@@ -46,10 +46,11 @@ pub class ZipArchive {
 
     /// Finds an entry by exact path name, or returns `null` if not present.
     pub fn find(name: []const u8): (*const ZipEntry)? {
+        const entries = _.entries;
         let i: usize = 0;
-        while (i < _.entries.len) : (i += 1) {
-            if (std.mem.eql(u8, _.entries[i].name, name)) {
-                return &_.entries[i];
+        while (i < entries.len) : (i += 1) {
+            if (std.mem.eql(u8, entries[i].name, name)) {
+                return &entries[i];
             }
         }
         return null;

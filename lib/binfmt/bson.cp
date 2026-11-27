@@ -107,7 +107,7 @@ pub struct ObjectId {
     }
 
     pub fn eql(other: ObjectId): bool {
-        return std.mem.eql(u8, &_.bytes, &other.bytes);
+        return std.mem.eql(u8, _.bytes[0..], other.bytes[0..]);
     }
 }
 

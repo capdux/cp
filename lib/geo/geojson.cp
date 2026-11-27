@@ -684,7 +684,7 @@ pub fn stringify(allocator: std.mem.Allocator, doc: GeoJsonDoc): ([]u8) ! GeoJso
     return out.toOwnedSlice(allocator) catch return GeoJsonError.OutOfMemory;
 }
 
-fn extendBBox(bbox: *BBox?, pos: Position) {
+fn extendBBox(bbox: *(BBox?), pos: Position) {
     if (b := bbox.*) {
         let updated = b;
         if (pos.lon < updated.min_lon) updated.min_lon = pos.lon;
@@ -702,7 +702,7 @@ fn extendBBox(bbox: *BBox?, pos: Position) {
     }
 }
 
-fn mergeBBox(dst: *BBox?, src: BBox?) {
+fn mergeBBox(dst: *(BBox?), src: BBox?) {
     if (s := src) {
         extendBBox(dst, Position{ lon: s.min_lon, lat: s.min_lat, alt: null });
         extendBBox(dst, Position{ lon: s.max_lon, lat: s.max_lat, alt: null });

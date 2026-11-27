@@ -617,7 +617,8 @@ pub struct RecordBatch {
         if (idx >= _.columns.len) {
             return ArrowError.IndexOutOfBounds;
         }
-        return &_.columns[idx];
+        const cols = _.columns;
+        return &cols[idx];
     }
 
     pub fn deinit(*_, alloc: std.mem.Allocator) {

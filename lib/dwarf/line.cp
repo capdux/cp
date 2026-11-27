@@ -110,25 +110,25 @@ pub struct LineTable {
     }
 
     pub fn lookupAddress(pc: u64): LineLocation? {
-        return lookupAddressImpl(&_, pc);
+        return lookupAddressImpl(_.header, _.rows, pc);
     }
 }
 
 pub fn lookupAddress(table: *const LineTable, pc: u64): LineLocation? {
-    return lookupAddressImpl(table, pc);
+    return lookupAddressImpl(table.header, table.rows, pc);
 }
 
-fn lookupAddressImpl(table: *const LineTable, pc: u64): LineLocation? {
-    if (table.rows.len == 0) {
+fn lookupAddressImpl(header: LineProgramHeader, rows: []const LineRow, pc: u64): LineLocation? {
+    if (rows.len == 0) {
         return null;
     }
 
     // Binary search for the last row with row.address <= pc
     let lo: usize = 0;
-    let hi: usize = table.rows.len;
+    let hi: usize = rows.len;
     while (lo < hi) {
         const mid = lo + (hi - lo) / 2;
-        if (table.rows[mid].address <= pc) {
+        if (rows[mid].address <= pc) {
             lo = mid + 1;
         } else {
             hi = mid;
@@ -139,7 +139,7 @@ fn lookupAddressImpl(table: *const LineTable, pc: u64): LineLocation? {
         return null;
     }
 
-    const row = table.rows[lo - 1];
+    const row = rows[lo - 1];
     if (row.end_sequence && row.address < pc) {
         return null;
     }
@@ -147,20 +147,20 @@ fn lookupAddressImpl(table: *const LineTable, pc: u64): LineLocation? {
     let file_name: []const u8 = "";
     let dir_name: []const u8 = "";
 
-    if (table.header.version >= 5) {
-        if (row.file_index < table.header.file_names.len) {
-            const fe = table.header.file_names[row.file_index];
+    if (header.version >= 5) {
+        if (row.file_index < header.file_names.len) {
+            const fe = header.file_names[row.file_index];
             file_name = fe.name;
-            if (fe.dir_index < table.header.include_directories.len) {
-                dir_name = table.header.include_directories[fe.dir_index];
+            if (fe.dir_index < header.include_directories.len) {
+                dir_name = header.include_directories[fe.dir_index];
             }
         }
     } else {
-        if (row.file_index >= 1 && row.file_index <= table.header.file_names.len) {
-            const fe = table.header.file_names[row.file_index - 1];
+        if (row.file_index >= 1 && row.file_index <= header.file_names.len) {
+            const fe = header.file_names[row.file_index - 1];
             file_name = fe.name;
-            if (fe.dir_index >= 1 && fe.dir_index <= table.header.include_directories.len) {
-                dir_name = table.header.include_directories[fe.dir_index - 1];
+            if (fe.dir_index >= 1 && fe.dir_index <= header.include_directories.len) {
+                dir_name = header.include_directories[fe.dir_index - 1];
             }
         }
     }

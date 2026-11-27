@@ -211,10 +211,11 @@ pub struct MetricsDocument {
     }
 
     pub fn findFamily(target_name: []const u8): (*const MetricFamily)? {
+        const families = _.families;
         let i: usize = 0;
-        while (i < _.families.len) {
-            if (std.mem.eql(u8, _.families[i].name, target_name)) {
-                return &_.families[i];
+        while (i < families.len) {
+            if (std.mem.eql(u8, families[i].name, target_name)) {
+                return &families[i];
             }
             i += 1;
         }

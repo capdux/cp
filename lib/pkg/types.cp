@@ -172,11 +172,13 @@ pub struct SemverString {
     }
 
     pub fn eql(other: SemverString, this_buf: []const u8, other_buf: []const u8): bool {
-        return std.mem.eql(u8, SemverString.sliceOf(&_, this_buf), SemverString.sliceOf(&other, other_buf));
+        const res = std.mem.eql(u8, SemverString.sliceOf(&_, this_buf), SemverString.sliceOf(&other, other_buf));
+        return res;
     }
 
     pub fn order(other: SemverString, this_buf: []const u8, other_buf: []const u8): std.math.Order {
-        return std.mem.order(u8, SemverString.sliceOf(&_, this_buf), SemverString.sliceOf(&other, other_buf));
+        const res = std.mem.order(u8, SemverString.sliceOf(&_, this_buf), SemverString.sliceOf(&other, other_buf));
+        return res;
     }
 }
 

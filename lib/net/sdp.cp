@@ -248,10 +248,11 @@ pub class SdpSession {
 
     /// Finds the first `MediaSection` matching `media_type` (e.g. `"audio"`, `"video"`, `"application"`).
     pub fn findMedia(media_type: []const u8): (*const MediaSection)? {
+        const media = _.media;
         let i: usize = 0;
-        while (i < _.media.len) : (i += 1) {
-            if (std.mem.eql(u8, _.media[i].media_type, media_type)) {
-                return &_.media[i];
+        while (i < media.len) : (i += 1) {
+            if (std.mem.eql(u8, media[i].media_type, media_type)) {
+                return &media[i];
             }
         }
         return null;

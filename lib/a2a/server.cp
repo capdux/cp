@@ -202,7 +202,8 @@ pub struct A2aServer {
 
     pub fn getTask(task_id: []const u8): (*const A2aTask)? {
         const idx = _.findTaskIndex(task_id) orelse return null;
-        return &_.tasks.items[idx];
+        const items = _.tasks.items;
+        return &items[idx];
     }
 
     pub fn sendTask(

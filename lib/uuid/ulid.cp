@@ -233,7 +233,7 @@ pub struct Ulid {
 
     /// Returns true if both ULIDs have identical 16-byte representations.
     fn eql(other: Ulid): bool {
-        return std.mem.eql(u8, &_.bytes, &other.bytes);
+        return std.mem.eql(u8, _.bytes[0..], other.bytes[0..]);
     }
 
     /// Lexicographical unsigned byte comparison: -1 if less, 0 if equal, 1 if greater.

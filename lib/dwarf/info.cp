@@ -35,10 +35,11 @@ pub struct AbbrevTable {
     }
 
     pub fn find(code: u64): (*const AbbrevEntry)? {
+        const entries = _.entries;
         let i: usize = 0;
-        while (i < _.entries.len) {
-            if (_.entries[i].code == code) {
-                return &_.entries[i];
+        while (i < entries.len) {
+            if (entries[i].code == code) {
+                return &entries[i];
             }
             i += 1;
         }
@@ -81,10 +82,11 @@ pub struct DieNode {
     attrs: []DieAttr,
 
     pub fn getAttr(name: u32): (*const AttrValue)? {
+        const attrs = _.attrs;
         let i: usize = 0;
-        while (i < _.attrs.len) {
-            if (_.attrs[i].name == name) {
-                return &_.attrs[i].value;
+        while (i < attrs.len) {
+            if (attrs[i].name == name) {
+                return &attrs[i].value;
             }
             i += 1;
         }

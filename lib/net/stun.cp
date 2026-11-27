@@ -109,10 +109,11 @@ pub class StunMessage {
 
     /// Finds the first attribute matching `attr_type`, or returns `null`.
     pub fn findAttr(attr_type: u16): (*const StunAttribute)? {
+        const attrs = _.attributes;
         let i: usize = 0;
-        while (i < _.attributes.len) : (i += 1) {
-            if (_.attributes[i].attr_type == attr_type) {
-                return &_.attributes[i];
+        while (i < attrs.len) : (i += 1) {
+            if (attrs[i].attr_type == attr_type) {
+                return &attrs[i];
             }
         }
         return null;

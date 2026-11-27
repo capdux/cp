@@ -112,7 +112,7 @@ pub struct GitOid {
 
     /// Compares two OIDs for byte-for-byte equality.
     pub fn eql(other: GitOid): bool {
-        return std.mem.eql(u8, &_.bytes, &other.bytes);
+        return std.mem.eql(u8, _.bytes[0..], other.bytes[0..]);
     }
 
     /// Returns `true` if all 20 bytes are zero.

@@ -394,7 +394,8 @@ pub struct Uuid {
 
     /// Returns the UUID interpreted as a big-endian 128-bit unsigned integer.
     fn asU128(): u128 {
-        return std.mem.readInt(u128, &_.bytes, .big);
+        const val = std.mem.readInt(u128, &_.bytes, .big);
+        return val;
     }
 
     /// Returns true if all 16 bytes are zero (16-lane SIMD accelerated).
@@ -456,7 +457,8 @@ pub struct Uuid {
 
     /// Returns true if both UUIDs have identical 16-byte representations (16-lane SIMD accelerated).
     fn eql(other: Uuid): bool {
-        return simdEql16(&_.bytes, &other.bytes);
+        const eq = simdEql16(&_.bytes, &other.bytes);
+        return eq;
     }
 
     /// Lexicographical unsigned byte comparison: -1 if less, 0 if equal, 1 if greater.

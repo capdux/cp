@@ -130,7 +130,7 @@ pub struct X25519KeyPair {
     }
 
     fn computeShared(peer_pk: []const u8): ([32]u8)? {
-        return X25519KeyPair.sharedSecret(&_.secret_key, peer_pk);
+        return X25519KeyPair.sharedSecret(_.secret_key[0..], peer_pk);
     }
 }
 

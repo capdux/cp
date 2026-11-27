@@ -39,7 +39,7 @@ struct Node {
 }
 
 pub struct RangeIter {
-    tree: *const BPlusTree,
+    nodes: []const Node,
     curr_leaf: u32,
     curr_idx: usize,
     end_key: ([]const u8)?,
@@ -51,7 +51,7 @@ pub struct RangeIter {
             _.done = true;
             return null;
         }
-        const leaf = &_.tree.nodes.items[_.curr_leaf];
+        const leaf = &_.nodes[_.curr_leaf];
         if (_.curr_idx >= leaf.keys.items.len) {
             _.curr_leaf = leaf.next_leaf;
             _.curr_idx = 0;
@@ -240,7 +240,7 @@ pub struct BPlusTree {
     pub fn rangeIter(start_key: ([]const u8)?, end_key: ([]const u8)?, inclusive_end: bool): RangeIter {
         if (_.head_leaf == NULL_NODE) {
             return RangeIter{
-                .tree = &_,
+                .nodes = _.nodes.items,
                 .curr_leaf = NULL_NODE,
                 .curr_idx = 0,
                 .end_key = end_key,
@@ -257,7 +257,7 @@ pub struct BPlusTree {
             }
         }
         return RangeIter{
-            .tree = &_,
+            .nodes = _.nodes.items,
             .curr_leaf = leaf_idx,
             .curr_idx = idx,
             .end_key = end_key,

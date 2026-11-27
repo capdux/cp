@@ -199,10 +199,11 @@ pub struct TemplateVars {
     }
 
     fn getEntry(name: []const u8): (&UriVarEntry)? {
+        const items = _.entries.items;
         let i: usize = 0;
-        while (i < _.entries.items.len) : (i += 1) {
-            if (std.mem.eql(u8, _.entries.items[i].name, name)) {
-                return &_.entries.items[i];
+        while (i < items.len) : (i += 1) {
+            if (std.mem.eql(u8, items[i].name, name)) {
+                return &items[i];
             }
         }
         return null;
