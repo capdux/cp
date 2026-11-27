@@ -19,7 +19,7 @@ pub struct BlockHandle {
         std.mem.writeInt(u64, out[8..16], _.size, .little);
     }
 
-    pub fn decode(data: []const u8): SstError!BlockHandle {
+    pub static fn decode(data: []const u8): SstError!BlockHandle {
         if (data.len < 16) {
             return SstError.InvalidBlock;
         }

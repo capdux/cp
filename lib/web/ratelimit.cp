@@ -54,7 +54,7 @@ pub struct TokenBucket {
     }
 
     /// Initializes a `TokenBucket` with an explicit starting token count (clamped to `capacity`).
-    pub fn initWithTokens(
+    pub static fn initWithTokens(
         capacity: u64,
         refill_per_sec: f64,
         initial_tokens: u64,

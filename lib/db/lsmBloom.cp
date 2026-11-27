@@ -49,7 +49,7 @@ pub struct BloomFilter {
         return out;
     }
 
-    pub fn buildFromMutKeys(alloc: std.mem.Allocator, keys: []const []u8, bits_per_key: u32): ![]u8 {
+    pub static fn buildFromMutKeys(alloc: std.mem.Allocator, keys: []const []u8, bits_per_key: u32): ![]u8 {
         let actual_bits: u64 = 0;
         let k: u32 = 0;
         let out = try allocFilterHeader(alloc, keys.len, bits_per_key, &actual_bits, &k);

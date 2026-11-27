@@ -287,7 +287,7 @@ pub struct HnswIndex {
         return results.toOwnedSlice(alloc);
     }
 
-    fn selectNeighbors(candidates: []const Candidate, max_conn: usize, out: *std.ArrayList(usize), alloc: std.mem.Allocator): !void {
+    static fn selectNeighbors(candidates: []const Candidate, max_conn: usize, out: *std.ArrayList(usize), alloc: std.mem.Allocator): !void {
         const count = if (candidates.len < max_conn) candidates.len else max_conn;
         let i: usize = 0;
         while (i < count) {
@@ -528,7 +528,7 @@ pub struct HnswIndex {
         return buf.toOwnedSlice(alloc);
     }
 
-    pub fn loadBytes(alloc: std.mem.Allocator, bytes: []const u8): !HnswIndex {
+    pub static fn loadBytes(alloc: std.mem.Allocator, bytes: []const u8): !HnswIndex {
         if (bytes.len < 8) {
             return HnswError.CorruptSnapshot;
         }

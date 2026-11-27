@@ -767,7 +767,7 @@ pub struct SearchIndex {
     /// Extracts a dense keyword-rich window of up to `max_len` bytes from `text`,
     /// wrapping matched terms with `open_tag` and `close_tag`.
     /// Caller owns the returned `[]u8` slice and must free it with `alloc.free(snippet)`.
-    pub fn highlightSnippet(
+    pub static fn highlightSnippet(
         alloc: std.mem.Allocator,
         text: string,
         terms: []const string,

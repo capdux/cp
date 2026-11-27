@@ -125,7 +125,7 @@ export struct ContentType {
     params_raw: []const u8,
 
     /// Parse an RFC 9110 `Content-Type` header (e.g. `"application/json; charset=utf-8"`).
-    pub fn parse(header: []const u8): ContentType? {
+    pub static fn parse(header: []const u8): ContentType? {
         const s = trimWs(header);
         if (s.len == 0) return null;
 

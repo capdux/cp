@@ -179,7 +179,7 @@ pub struct HttpConnectionPool {
         return slot.port == port && slot.is_ssl == is_ssl && std.ascii.eqlIgnoreCase(slot.host, host);
     }
 
-    fn isExpired(slot: PooledConnection, now_ms: i64, idle_timeout_ms: i64): bool {
+    static fn isExpired(slot: PooledConnection, now_ms: i64, idle_timeout_ms: i64): bool {
         if (idle_timeout_ms <= 0) return false;
         return (now_ms - slot.last_used_ms) > idle_timeout_ms;
     }

@@ -46,7 +46,7 @@ export struct ColorEnv {
     wt_session: ([]const u8)?,
     ci: ([]const u8)?,
 
-    pub fn empty(is_tty: bool): ColorEnv {
+    pub static fn empty(is_tty: bool): ColorEnv {
         return ColorEnv {
             is_tty: is_tty,
             no_color: null,

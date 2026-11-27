@@ -23,7 +23,7 @@ pub const HttpEncoding = enum {
         };
     }
 
-    pub fn fromHeader(s: []const u8): OptEncoding {
+    pub static fn fromHeader(s: []const u8): HttpEncoding? {
         const trimmed = std.mem.trim(u8, s, " \t");
         if (std.ascii.eqlIgnoreCase(trimmed, "identity")) { return .identity; }
         if (std.ascii.eqlIgnoreCase(trimmed, "gzip")) { return .gzip; }
@@ -276,7 +276,7 @@ pub const HttpURLPath = struct {
     query_string: []const u8 = "",
     is_source_map: bool = false,
 
-    pub fn parse(raw_pathname: []const u8): HttpURLPath {
+    pub static fn parse(raw_pathname: []const u8): HttpURLPath {
         if (raw_pathname.len == 0) {
             return HttpURLPath{};
         }
