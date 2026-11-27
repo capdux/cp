@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq, trim, isAlnum } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class SshPublicKey {
     alg: u8,
     key_type: string,
@@ -8,9 +10,7 @@ export class SshPublicKey {
     valid: bool,
 }
 
-export fn isSpace(c: u8): bool;
-export fn isLineTrim(c: u8): bool;
-export fn strEq(a: string, b: string): bool;
+export fn isHspace(c: u8): bool;
 export fn identifyAlgorithm(key_type: string): u8;
 export fn isValidBase64(b64: string): bool;
 export fn parsePublicKey(line: string): SshPublicKey;

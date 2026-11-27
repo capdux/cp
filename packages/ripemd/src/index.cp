@@ -1,5 +1,5 @@
 import { hexCharLower } from "cap:ascii";
-import { readU32Le, writeU32Le } from "cap:bin";
+import { readU32LE, writeU32LE } from "cap:bin";
 
 pub const RIPEMD160_DIGEST_LEN: usize = 20;
 pub const RIPEMD160_BLOCK_LEN: usize = 64;
@@ -89,7 +89,7 @@ fn rmdCompress(state: [5]u32, block: []u8): [5]u32 {
     let x: [16]u32 = undefined;
     let wi: usize = 0;
     while (wi < 16) {
-        x[wi] = readU32Le(block, wi * 4);
+        x[wi] = readU32LE(block, wi * 4) ?? 0;
         wi = wi + 1;
     }
 
@@ -233,7 +233,7 @@ pub struct Ripemd160 {
 
         let oi: usize = 0;
         while (oi < 5) {
-            writeU32Le(out20, oi * 4, st[oi]);
+            writeU32LE(out20, oi * 4, st[oi]);
             oi = oi + 1;
         }
     }

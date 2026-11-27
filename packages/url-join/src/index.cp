@@ -9,6 +9,9 @@
 // - `withTrailingSlash` & `withoutTrailingSlash`: query/hash-aware trailing slash helpers.
 // - Zero heap allocation: writes directly into caller-provided `out: []u8`.
 
+import { strEq, eqIgnoreCase, isAlpha, isAlnum, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     if (pos < out.len) {
         out[pos] = b;
@@ -17,37 +20,8 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
-fn pushStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
 fn isSchemeChar(c: u8) -> bool {
-    return isAlpha(c) || (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.';
+    return isAlnum(c) || c == '+' || c == '-' || c == '.';
 }
 
 /// Returns the end index of a URL scheme prefix if present:
@@ -70,11 +44,7 @@ fn schemePrefixLen(s: string) -> usize {
     if (i < s.len && s[i] == ':') {
         if (i + 2 < s.len && s[i + 1] == '/' && s[i + 2] == '/') {
             // Preserve `file:///` triple slash when present
-            if (i + 3 < s.len && s[i + 3] == '/' && i == 4 &&
-                (s[0] == 'f' || s[0] == 'F') &&
-                (s[1] == 'i' || s[1] == 'I') &&
-                (s[2] == 'l' || s[2] == 'L') &&
-                (s[3] == 'e' || s[3] == 'E')) {
+            if (i + 3 < s.len && s[i + 3] == '/' && i == 4 && eqIgnoreCase(s[0..4], "file")) {
                 return i + 4;
             }
             return i + 3;
@@ -91,15 +61,7 @@ struct PartSplit {
 }
 
 fn splitPart(p: string) -> PartSplit {
-    let hash_idx: usize = p.len;
-    let i: usize = 0;
-    while (i < p.len) {
-        if (p[i] == '#') {
-            hash_idx = i;
-            break;
-        }
-        i += 1;
-    }
+    const hash_idx = findByte(p, '#', 0) ?? p.len;
     const before_hash = p[0..hash_idx];
     const hash = p[hash_idx..p.len];
 
@@ -107,16 +69,7 @@ fn splitPart(p: string) -> PartSplit {
         return PartSplit{ path: "", query: before_hash[1..before_hash.len], hash: hash };
     }
 
-    let q_idx: usize = before_hash.len;
-    let j: usize = 0;
-    while (j < before_hash.len) {
-        if (before_hash[j] == '?') {
-            q_idx = j;
-            break;
-        }
-        j += 1;
-    }
-
+    const q_idx = findByte(before_hash, '?', 0) ?? before_hash.len;
     const path = before_hash[0..q_idx];
     const query = if (q_idx < before_hash.len) { before_hash[(q_idx + 1)..before_hash.len] } else { "" };
     return PartSplit{ path: path, query: query, hash: hash };
@@ -163,7 +116,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
         if (!has_path) {
             const pfx_len = schemePrefixLen(sp.path);
             if (pfx_len > 0) {
-                pos = pushStr(out, pos, sp.path[0..pfx_len]);
+                pos = writeStr(sp.path[0..pfx_len], out, pos);
                 const rest = sp.path[pfx_len..sp.path.len];
                 if (rest.len == 0) {
                     has_path = true;
@@ -171,7 +124,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
                     last_path_had_trailing_slash = false;
                 } else {
                     const trimmed = trimTrailingSlashes(rest);
-                    pos = pushStr(out, pos, trimmed);
+                    pos = writeStr(trimmed, out, pos);
                     has_path = true;
                     ends_with_scheme = (trimmed.len == 0);
                     last_path_had_trailing_slash = (trimmed.len > 0 && rest[rest.len - 1] == '/');
@@ -182,7 +135,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
                 if (leading_slash) {
                     pos = pushByte(out, pos, '/');
                 }
-                pos = pushStr(out, pos, core);
+                pos = writeStr(core, out, pos);
                 has_path = true;
                 ends_with_scheme = (leading_slash && core.len == 0);
                 last_path_had_trailing_slash = (core.len > 0 && sp.path[sp.path.len - 1] == '/');
@@ -198,7 +151,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
             if (!ends_with_scheme && pos > 0 && out[pos - 1] != '/') {
                 pos = pushByte(out, pos, '/');
             }
-            pos = pushStr(out, pos, core);
+            pos = writeStr(core, out, pos);
             ends_with_scheme = false;
             last_path_had_trailing_slash = (sp.path[sp.path.len - 1] == '/');
         }
@@ -232,7 +185,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
             } else {
                 pos = pushByte(out, pos, '&');
             }
-            pos = pushStr(out, pos, q);
+            pos = writeStr(q, out, pos);
         }
     }
 
@@ -251,7 +204,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
         }
     }
     if (final_hash.len > 0) {
-        pos = pushStr(out, pos, final_hash);
+        pos = writeStr(final_hash, out, pos);
     }
 
     return out[0..pos];
@@ -311,7 +264,7 @@ pub fn normalizeUrlPath(path: string, out: []u8) -> string {
         if (k > 0) {
             pos = pushByte(out, pos, '/');
         }
-        pos = pushStr(out, pos, segs[k]);
+        pos = writeStr(segs[k], out, pos);
         k += 1;
     }
 
@@ -325,40 +278,22 @@ pub fn normalizeUrlPath(path: string, out: []u8) -> string {
 /// Appends a `key=value` query parameter to `base_url`, using `?` or `&` as appropriate
 /// while preserving any trailing `#hash` fragment.
 pub fn withQuery(base_url: string, key: string, value: string, out: []u8) -> string {
-    let hash_idx: usize = base_url.len;
-    let i: usize = 0;
-    while (i < base_url.len) {
-        if (base_url[i] == '#') {
-            hash_idx = i;
-            break;
-        }
-        i += 1;
-    }
-
+    const hash_idx = findByte(base_url, '#', 0) ?? base_url.len;
     const before_hash = base_url[0..hash_idx];
     const hash_part = base_url[hash_idx..base_url.len];
-
-    let has_q = false;
-    let j: usize = 0;
-    while (j < before_hash.len) {
-        if (before_hash[j] == '?') {
-            has_q = true;
-            break;
-        }
-        j += 1;
-    }
+    const has_q = findByte(before_hash, '?', 0) != null;
 
     let pos: usize = 0;
-    pos = pushStr(out, pos, before_hash);
+    pos = writeStr(before_hash, out, pos);
     if (!has_q) {
         pos = pushByte(out, pos, '?');
     } else if (before_hash.len > 0 && before_hash[before_hash.len - 1] != '?' && before_hash[before_hash.len - 1] != '&') {
         pos = pushByte(out, pos, '&');
     }
-    pos = pushStr(out, pos, key);
+    pos = writeStr(key, out, pos);
     pos = pushByte(out, pos, '=');
-    pos = pushStr(out, pos, value);
-    pos = pushStr(out, pos, hash_part);
+    pos = writeStr(value, out, pos);
+    pos = writeStr(hash_part, out, pos);
 
     return out[0..pos];
 }
@@ -381,11 +316,11 @@ pub fn withTrailingSlash(url: string, out: []u8) -> string {
     const suffix = url[suf_idx..url.len];
 
     let pos: usize = 0;
-    pos = pushStr(out, pos, path_part);
+    pos = writeStr(path_part, out, pos);
     if (path_part.len == 0 || path_part[path_part.len - 1] != '/') {
         pos = pushByte(out, pos, '/');
     }
-    pos = pushStr(out, pos, suffix);
+    pos = writeStr(suffix, out, pos);
     return out[0..pos];
 }
 
@@ -407,7 +342,7 @@ pub fn withoutTrailingSlash(url: string, out: []u8) -> string {
     }
 
     let pos: usize = 0;
-    pos = pushStr(out, pos, path_part[0..end]);
-    pos = pushStr(out, pos, suffix);
+    pos = writeStr(path_part[0..end], out, pos);
+    pos = writeStr(suffix, out, pos);
     return out[0..pos];
 }

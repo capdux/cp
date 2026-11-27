@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq, eqIgnoreCase, isDigit, isAlpha, isAlnum, isHexDigit, findByte } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 export class Cursor {
     data: string,
     pos: usize,
@@ -27,10 +29,6 @@ export class UintResult {
     value: u64,
 }
 
-export fn nbToLower(c: u8): u8;
-export fn nbIsDigit(c: u8): bool;
-export fn nbIsAlpha(c: u8): bool;
-export fn nbIsHex(c: u8): bool;
 export fn nbFailSpan(start: usize): SpanResult;
 export fn tag(cur: &mut Cursor, lit: string): bool;
 export fn tagNoCase(cur: &mut Cursor, lit: string): bool;

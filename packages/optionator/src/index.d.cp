@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { strEq } from "cap:ascii";
+import { BufWriter } from "cap:fmt";
 export class OptionSpec {
     long_name: string,
     short_alias: string,
@@ -9,10 +11,6 @@ export class OptionSpec {
     required: bool,
 }
 
-export fn optnStrEq(a: string, b: string): bool;
-export fn optnWriteStr(out: []u8, pos: usize, s: string): usize;
-export fn optnWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn optnWriteSpaces(out: []u8, pos: usize, count: usize): usize;
 export fn optnLeftColLen(spec: OptionSpec): usize;
 export fn formatOptionRow(spec: OptionSpec, col_width: usize, out: []u8): usize;
 export fn generateHelp(program: string, summary: string, specs: &[]OptionSpec, out: []u8): usize;

@@ -1,11 +1,9 @@
 // Type definitions for CP
 
-export fn pfmtStrEq(a: string, b: string): bool;
+import { strEq } from "cap:ascii";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
 export fn pfmtWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn pfmtWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn pfmtWriteSpaces(out: []u8, pos: usize, count: usize): usize;
-export fn pfmtWriteU64(out: []u8, pos: usize, val: u64): usize;
-export fn pfmtWriteI64(out: []u8, pos: usize, val: i64): usize;
 export fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize;
 export fn pfmtWriteStringLiteral(out: []u8, pos: usize, s: string, escape_string: bool): usize;
 export class PrettyOptions {

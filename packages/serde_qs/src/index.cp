@@ -3,6 +3,7 @@
 // Clean-room MIT parity with crates.io `serde_qs` v0.13.
 // Composes `@cap/percent-encoding` for RFC/WHATWG percent encoding & form decoding.
 
+import { strEq, findByte } from "cap:ascii";
 import {
     AsciiSet,
     componentSet,
@@ -26,42 +27,6 @@ pub struct QsPath {
     pub depth: usize,
 }
 
-fn sqsStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn sqsFindByte(s: string, start: usize, end: usize, target: u8): usize {
-    let i = start;
-    while (i < end) {
-        if (s[i] == target) {
-            return i;
-        }
-        i += 1;
-    }
-    return end;
-}
-
-fn sqsNeedsDecode(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == (0x25 as u8) || s[i] == (0x2B as u8)) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
-}
-
 fn sqsKeyEncodeSet(): AsciiSet {
     let set = componentSet();
     // Preserve structural bracket delimiters `[` and `]` in nested keys (serde_qs convention).
@@ -79,7 +44,7 @@ pub fn parseKeyPath(key: string): QsPath {
         return QsPath { segments: segs, depth: 0 };
     }
 
-    const first_open = sqsFindByte(key, 0, key.len, 0x5B as u8); // '['
+    const first_open = findByte(key, 0x5B as u8, 0) ?? key.len; // '['
     if (first_open == key.len) {
         segs[0] = key;
         return QsPath { segments: segs, depth: 1 };
@@ -93,7 +58,7 @@ pub fn parseKeyPath(key: string): QsPath {
     let pos = first_open;
     while (pos < key.len && depth < 8) {
         if (key[pos] == (0x5B as u8)) {
-            const close = sqsFindByte(key, pos + 1, key.len, 0x5D as u8); // ']'
+            const close = findByte(key, 0x5D as u8, pos + 1) ?? key.len; // ']'
             if (close < key.len) {
                 segs[depth] = key[(pos + 1)..close];
                 depth += 1;
@@ -104,7 +69,7 @@ pub fn parseKeyPath(key: string): QsPath {
                 break;
             }
         } else {
-            const next_open = sqsFindByte(key, pos, key.len, 0x5B as u8);
+            const next_open = findByte(key, 0x5B as u8, pos) ?? key.len;
             segs[depth] = key[pos..next_open];
             depth += 1;
             pos = next_open;
@@ -128,9 +93,9 @@ pub fn parseQs(query: string, out_pairs: []QsPair): usize {
 
     let count: usize = 0;
     while (pos < query.len && count < out_pairs.len) {
-        const amp = sqsFindByte(query, pos, query.len, 0x26 as u8); // '&'
+        const amp = findByte(query, 0x26 as u8, pos) ?? query.len; // '&'
         if (amp > pos) {
-            const eq = sqsFindByte(query, pos, amp, 0x3D as u8); // '='
+            const eq = findByte(query[0..amp], 0x3D as u8, pos) ?? amp; // '='
             if (eq < amp) {
                 out_pairs[count] = QsPair {
                     key: query[pos..eq],
@@ -168,16 +133,16 @@ pub fn getQsValueDecoded(query: string, target_key: string, out: []u8): usize? {
     let key_buf: [256]u8 = undefined;
 
     while (pos < query.len) {
-        const amp = sqsFindByte(query, pos, query.len, 0x26 as u8); // '&'
+        const amp = findByte(query, 0x26 as u8, pos) ?? query.len; // '&'
         if (amp > pos) {
-            const eq = sqsFindByte(query, pos, amp, 0x3D as u8); // '='
+            const eq = findByte(query[0..amp], 0x3D as u8, pos) ?? amp; // '='
             const raw_key = if (eq < amp) query[pos..eq] else query[pos..amp];
             const raw_val = if (eq < amp) query[(eq + 1)..amp] else "";
 
-            let matched = sqsStrEq(raw_key, target_key);
-            if (!matched && sqsNeedsDecode(raw_key)) {
+            let matched = strEq(raw_key, target_key);
+            if (!matched && (findByte(raw_key, 0x25 as u8, 0) != null || findByte(raw_key, 0x2B as u8, 0) != null)) {
                 const klen = percentDecodePlus(raw_key, key_buf[0..]);
-                matched = sqsStrEq(key_buf[0..klen], target_key);
+                matched = strEq(key_buf[0..klen], target_key);
             }
 
             if (matched) {

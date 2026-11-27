@@ -1,22 +1,11 @@
 // @cap/pretty-format — Pure CP zero-allocation structured value pretty-printer.
 // Clean-room MIT implementation inspired by npm `pretty-format`.
 
+import { strEq } from "cap:ascii";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
+
 pub const PRETTY_BUF_CAP: usize = 2048;
 pub const PRETTY_MAX_NEST: usize = 32;
-
-fn pfmtStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
 
 fn pfmtWriteByte(out: []u8, pos: usize, b: u8): usize {
     if (pos >= out.len) {
@@ -24,17 +13,6 @@ fn pfmtWriteByte(out: []u8, pos: usize, b: u8): usize {
     }
     out[pos] = b;
     return pos + 1;
-}
-
-fn pfmtWriteStr(out: []u8, pos: usize, s: string): usize {
-    let w: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && w < out.len) {
-        out[w] = s[i];
-        w = w + 1;
-        i = i + 1;
-    }
-    return w;
 }
 
 fn pfmtWriteSpaces(out: []u8, pos: usize, count: usize): usize {
@@ -48,51 +26,15 @@ fn pfmtWriteSpaces(out: []u8, pos: usize, count: usize): usize {
     return w;
 }
 
-fn pfmtWriteU64(out: []u8, pos: usize, val: u64): usize {
-    let tmp: [24]u8 = undefined;
-    let count: usize = 0;
-    let v: u64 = val;
-    if (v == (0 as u64)) {
-        return pfmtWriteByte(out, pos, '0' as u8);
-    }
-    while (v > (0 as u64)) {
-        let digit: u8 = ((v % (10 as u64)) as u8) + ('0' as u8);
-        tmp[count] = digit;
-        count = count + 1;
-        v = v / (10 as u64);
-    }
-    let w: usize = pos;
-    let k: usize = count;
-    while (k > 0 && w < out.len) {
-        k = k - 1;
-        out[w] = tmp[k];
-        w = w + 1;
-    }
-    return w;
-}
-
-fn pfmtWriteI64(out: []u8, pos: usize, val: i64): usize {
-    let w: usize = pos;
-    if (val < (0 as i64)) {
-        w = pfmtWriteByte(out, w, '-' as u8);
-        if (val == (-9223372036854775807 as i64 - (1 as i64))) {
-            return pfmtWriteStr(out, w, "9223372036854775808");
-        }
-        let mag: u64 = (0 as i64 - val) as u64;
-        return pfmtWriteU64(out, w, mag);
-    }
-    return pfmtWriteU64(out, w, val as u64);
-}
-
 fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize {
     if (val != val) {
-        return pfmtWriteStr(out, pos, "NaN");
+        return writeStr("NaN", out, pos);
     }
     if (val > 1.0e308) {
-        return pfmtWriteStr(out, pos, "Infinity");
+        return writeStr("Infinity", out, pos);
     }
     if (val < -1.0e308) {
-        return pfmtWriteStr(out, pos, "-Infinity");
+        return writeStr("-Infinity", out, pos);
     }
     let w: usize = pos;
     let x: f64 = val;
@@ -101,7 +43,7 @@ fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize {
         x = -x;
     }
     let int_part: u64 = x as u64;
-    w = pfmtWriteU64(out, w, int_part);
+    w = writeU64(int_part, out, w);
 
     let frac: f64 = x - (int_part as f64);
     let scaled: u64 = ((frac * 1000000.0) + 0.5) as u64;
@@ -111,7 +53,7 @@ fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize {
         if (val < 0.0) {
             w = pfmtWriteByte(out, w, '-' as u8);
         }
-        return pfmtWriteU64(out, w, int_part + (1 as u64));
+        return writeU64(int_part + (1 as u64), out, w);
     }
     if (scaled == (0 as u64)) {
         return w;
@@ -131,12 +73,7 @@ fn pfmtWriteF64(out: []u8, pos: usize, val: f64): usize {
     }
     if (trimmed > 0) {
         w = pfmtWriteByte(out, w, '.' as u8);
-        let j: usize = 0;
-        while (j < trimmed && w < out.len) {
-            out[w] = frac_buf[j];
-            w = w + 1;
-            j = j + 1;
-        }
+        w = writeStr(frac_buf[0..trimmed], out, w);
     }
     return w;
 }
@@ -149,15 +86,15 @@ fn pfmtWriteStringLiteral(out: []u8, pos: usize, s: string, escape_string: bool)
         let ch: u8 = s[i];
         if (escape_string) {
             if (ch == ('\\' as u8)) {
-                w = pfmtWriteStr(out, w, "\\\\");
+                w = writeStr("\\\\", out, w);
             } else if (ch == ('"' as u8)) {
-                w = pfmtWriteStr(out, w, "\\\"");
+                w = writeStr("\\\"", out, w);
             } else if (ch == ('\n' as u8)) {
-                w = pfmtWriteStr(out, w, "\\n");
+                w = writeStr("\\n", out, w);
             } else if (ch == ('\r' as u8)) {
-                w = pfmtWriteStr(out, w, "\\r");
+                w = writeStr("\\r", out, w);
             } else if (ch == ('\t' as u8)) {
-                w = pfmtWriteStr(out, w, "\\t");
+                w = writeStr("\\t", out, w);
             } else {
                 w = pfmtWriteByte(out, w, ch);
             }
@@ -211,7 +148,7 @@ pub struct PrettyWriter {
     pub static fn new(opts: PrettyOptions): PrettyWriter {
         return PrettyWriter {
             opts: opts,
-            buf: [0; 2048],
+            buf: undefined,
             len: 0,
             depth: 0,
             item_counts: [0; 32],
@@ -242,14 +179,14 @@ pub struct PrettyWriter {
         if (_.truncated_depth > 0) {
             return;
         }
-        _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "null");
+        _.len = writeStr("null", _.buf[0..PRETTY_BUF_CAP], _.len);
     }
 
     pub fn writeUndefined(*_) {
         if (_.truncated_depth > 0) {
             return;
         }
-        _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "undefined");
+        _.len = writeStr("undefined", _.buf[0..PRETTY_BUF_CAP], _.len);
     }
 
     pub fn writeBool(*_, val: bool) {
@@ -257,9 +194,9 @@ pub struct PrettyWriter {
             return;
         }
         if (val) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "true");
+            _.len = writeStr("true", _.buf[0..PRETTY_BUF_CAP], _.len);
         } else {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "false");
+            _.len = writeStr("false", _.buf[0..PRETTY_BUF_CAP], _.len);
         }
     }
 
@@ -267,7 +204,7 @@ pub struct PrettyWriter {
         if (_.truncated_depth > 0) {
             return;
         }
-        _.len = pfmtWriteI64(_.buf[0..PRETTY_BUF_CAP], _.len, val);
+        _.len = writeI64(val, _.buf[0..PRETTY_BUF_CAP], _.len);
     }
 
     pub fn writeFloat(*_, val: f64) {
@@ -288,9 +225,9 @@ pub struct PrettyWriter {
         if (_.truncated_depth > 0) {
             return;
         }
-        _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "Symbol(");
+        _.len = writeStr("Symbol(", _.buf[0..PRETTY_BUF_CAP], _.len);
         if (desc.len > 0) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, desc);
+            _.len = writeStr(desc, _.buf[0..PRETTY_BUF_CAP], _.len);
         }
         _.len = pfmtWriteByte(_.buf[0..PRETTY_BUF_CAP], _.len, ')' as u8);
     }
@@ -299,11 +236,11 @@ pub struct PrettyWriter {
         if (_.truncated_depth > 0) {
             return;
         }
-        _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "[Function ");
+        _.len = writeStr("[Function ", _.buf[0..PRETTY_BUF_CAP], _.len);
         if (name.len > 0) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, name);
+            _.len = writeStr(name, _.buf[0..PRETTY_BUF_CAP], _.len);
         } else {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "anonymous");
+            _.len = writeStr("anonymous", _.buf[0..PRETTY_BUF_CAP], _.len);
         }
         _.len = pfmtWriteByte(_.buf[0..PRETTY_BUF_CAP], _.len, ']' as u8);
     }
@@ -315,14 +252,14 @@ pub struct PrettyWriter {
             return false;
         }
         if (_.depth >= _.opts.max_depth) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "[Object]");
+            _.len = writeStr("[Object]", _.buf[0..PRETTY_BUF_CAP], _.len);
             _.truncated_depth = 1;
             return false;
         }
         if (!_.opts.min && type_name.len > 0) {
-            let is_basic: bool = pfmtStrEq(type_name, "Object");
+            let is_basic: bool = strEq(type_name, "Object");
             if (_.opts.print_basic_prototype || !is_basic) {
-                _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, type_name);
+                _.len = writeStr(type_name, _.buf[0..PRETTY_BUF_CAP], _.len);
                 _.len = pfmtWriteByte(_.buf[0..PRETTY_BUF_CAP], _.len, ' ' as u8);
             }
         }
@@ -352,7 +289,7 @@ pub struct PrettyWriter {
             _.len = pfmtWriteSpaces(_.buf[0..PRETTY_BUF_CAP], _.len, _.depth * _.opts.indent);
         }
         _.len = pfmtWriteStringLiteral(_.buf[0..PRETTY_BUF_CAP], _.len, k, _.opts.escape_string);
-        _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, ": ");
+        _.len = writeStr(": ", _.buf[0..PRETTY_BUF_CAP], _.len);
         if (level < PRETTY_MAX_NEST) {
             _.item_counts[level] = prev_count + 1;
         }
@@ -370,7 +307,7 @@ pub struct PrettyWriter {
         _.depth = _.depth - 1;
         let count: usize = if (_.depth < PRETTY_MAX_NEST) { _.item_counts[_.depth] } else { 0 };
         if (count > 0 && !_.opts.min) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, ",\n");
+            _.len = writeStr(",\n", _.buf[0..PRETTY_BUF_CAP], _.len);
             _.len = pfmtWriteSpaces(_.buf[0..PRETTY_BUF_CAP], _.len, _.depth * _.opts.indent);
         }
         _.len = pfmtWriteByte(_.buf[0..PRETTY_BUF_CAP], _.len, '}' as u8);
@@ -383,14 +320,14 @@ pub struct PrettyWriter {
             return false;
         }
         if (_.depth >= _.opts.max_depth) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, "[Array]");
+            _.len = writeStr("[Array]", _.buf[0..PRETTY_BUF_CAP], _.len);
             _.truncated_depth = 1;
             return false;
         }
         if (!_.opts.min && type_name.len > 0) {
-            let is_basic: bool = pfmtStrEq(type_name, "Array");
+            let is_basic: bool = strEq(type_name, "Array");
             if (_.opts.print_basic_prototype || !is_basic) {
-                _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, type_name);
+                _.len = writeStr(type_name, _.buf[0..PRETTY_BUF_CAP], _.len);
                 _.len = pfmtWriteByte(_.buf[0..PRETTY_BUF_CAP], _.len, ' ' as u8);
             }
         }
@@ -436,7 +373,7 @@ pub struct PrettyWriter {
         _.depth = _.depth - 1;
         let count: usize = if (_.depth < PRETTY_MAX_NEST) { _.item_counts[_.depth] } else { 0 };
         if (count > 0 && !_.opts.min) {
-            _.len = pfmtWriteStr(_.buf[0..PRETTY_BUF_CAP], _.len, ",\n");
+            _.len = writeStr(",\n", _.buf[0..PRETTY_BUF_CAP], _.len);
             _.len = pfmtWriteSpaces(_.buf[0..PRETTY_BUF_CAP], _.len, _.depth * _.opts.indent);
         }
         _.len = pfmtWriteByte(_.buf[0..PRETTY_BUF_CAP], _.len, ']' as u8);
@@ -450,7 +387,7 @@ pub fn formatStringLiteral(s: string, escape: bool, out: []u8): usize {
 
 /// Formats a signed 64-bit integer into `out`.
 pub fn formatPrimitiveInt(v: i64, out: []u8): usize {
-    return pfmtWriteI64(out, 0, v);
+    return writeI64(v, out, 0);
 }
 
 export {

@@ -1,6 +1,8 @@
 // Type definitions for CP
 
-import { toCamelCase } from "../../camelcase/src/index.cp";
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, writeI64, parseI64 } from "cap:fmt";
+import { toCamelCase } from "../../ident_case/src/index.cp";
 import { decamelize } from "../../decamelize/src/core.cp";
 export class ParsedItem {
     data: [128]u8,
@@ -21,16 +23,7 @@ export class ParsedEntry {
     str_len: usize,
 }
 
-export fn ypStrEq(a: string, b: string): bool;
-export fn ypCopyToBuf(dst: []u8, src: string): usize;
-export fn ypIsDigit(ch: u8): bool;
 export fn ypIsNegativeNumber(s: string): bool;
-export class YpIntParse {
-    ok: bool,
-    val: i64,
-}
-
-export fn ypParseInt(s: string): YpIntParse;
 export fn ypFormatInt(valIn: i64, out: []u8): i64;
 export fn ypIsFlagToken(s: string): bool;
 export fn ypEmptyItem(): ParsedItem;
@@ -59,5 +52,4 @@ export fn ypPushPositional(args: &mut ParsedArgs, s: string);
 export fn ypPushRest(args: &mut ParsedArgs, s: string);
 export fn ypSetEntry(args: &mut ParsedArgs, rawKey: string, kind: u8, boolVal: bool, intVal: i64, strVal: string);
 export fn ypSetCoerced(args: &mut ParsedArgs, rawKey: string, rawVal: string);
-export fn ypFindEq(s: string, start: usize): usize;
 export fn parseArgs(argv: &[]string): ParsedArgs;

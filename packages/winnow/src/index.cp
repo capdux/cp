@@ -2,6 +2,9 @@
 // Zero-allocation byte-level zero-copy parser combinators (winnow / nom parity).
 // MIT clean-room pure CP implementation.
 
+import { strEq, eqIgnoreCase, isDigit, isAlpha, isAlnum, isHexDigit, findByte } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+
 /// Zero-copy byte cursor over an input string slice.
 pub struct Cursor {
     pub data: string,
@@ -69,25 +72,6 @@ pub struct UintResult {
     pub value: u64,
 }
 
-fn nbToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn nbIsDigit(c: u8): bool {
-    return c >= ('0' as u8) && c <= ('9' as u8);
-}
-
-fn nbIsAlpha(c: u8): bool {
-    return (c >= ('a' as u8) && c <= ('z' as u8)) || (c >= ('A' as u8) && c <= ('Z' as u8));
-}
-
-fn nbIsHex(c: u8): bool {
-    return nbIsDigit(c) || (c >= ('a' as u8) && c <= ('f' as u8)) || (c >= ('A' as u8) && c <= ('F' as u8));
-}
-
 fn nbFailSpan(start: usize): SpanResult {
     return SpanResult{ ok: false, start: start, len: 0 };
 }
@@ -98,12 +82,8 @@ pub fn tag(cur: *Cursor, lit: string): bool {
     if (p + lit.len > cur.*.data.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < lit.len) {
-        if (cur.*.data[p + i] != lit[i]) {
-            return false;
-        }
-        i += 1;
+    if (!strEq(cur.*.data[p..(p + lit.len)], lit)) {
+        return false;
     }
     cur.*.pos = p + lit.len;
     return true;
@@ -115,12 +95,8 @@ pub fn tagNoCase(cur: *Cursor, lit: string): bool {
     if (p + lit.len > cur.*.data.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < lit.len) {
-        if (nbToLower(cur.*.data[p + i]) != nbToLower(lit[i])) {
-            return false;
-        }
-        i += 1;
+    if (!eqIgnoreCase(cur.*.data[p..(p + lit.len)], lit)) {
+        return false;
     }
     cur.*.pos = p + lit.len;
     return true;
@@ -153,26 +129,9 @@ pub fn takeUntil(cur: *Cursor, needle: string): SpanResult {
     if (needle.len == 0) {
         return SpanResult{ ok: true, start: p, len: 0 };
     }
-    const d = cur.*.data;
-    if (p + needle.len > d.len) {
-        return nbFailSpan(p);
-    }
-    let i = p;
-    while (i + needle.len <= d.len) {
-        let matched = true;
-        let j: usize = 0;
-        while (j < needle.len) {
-            if (d[i + j] != needle[j]) {
-                matched = false;
-                break;
-            }
-            j += 1;
-        }
-        if (matched) {
-            cur.*.pos = i;
-            return SpanResult{ ok: true, start: p, len: i - p };
-        }
-        i += 1;
+    if (idx := indexOfBytes(cur.*.data, needle, p)) {
+        cur.*.pos = idx;
+        return SpanResult{ ok: true, start: p, len: idx - p };
     }
     return nbFailSpan(p);
 }
@@ -181,10 +140,7 @@ pub fn takeUntil(cur: *Cursor, needle: string): SpanResult {
 pub fn takeTillByte(cur: *Cursor, stop: u8): SpanResult {
     const p = cur.*.pos;
     const d = cur.*.data;
-    let i = p;
-    while (i < d.len && d[i] != stop) {
-        i += 1;
-    }
+    const i = findByte(d, stop, p) ?? d.len;
     cur.*.pos = i;
     return SpanResult{ ok: true, start: p, len: i - p };
 }
@@ -218,7 +174,7 @@ pub fn digit1(cur: *Cursor): SpanResult {
     const p = cur.*.pos;
     const d = cur.*.data;
     let i = p;
-    while (i < d.len && nbIsDigit(d[i])) {
+    while (i < d.len && isDigit(d[i])) {
         i += 1;
     }
     if (i == p) {
@@ -233,7 +189,7 @@ pub fn alpha1(cur: *Cursor): SpanResult {
     const p = cur.*.pos;
     const d = cur.*.data;
     let i = p;
-    while (i < d.len && nbIsAlpha(d[i])) {
+    while (i < d.len && isAlpha(d[i])) {
         i += 1;
     }
     if (i == p) {
@@ -248,7 +204,7 @@ pub fn alphanumeric1(cur: *Cursor): SpanResult {
     const p = cur.*.pos;
     const d = cur.*.data;
     let i = p;
-    while (i < d.len && (nbIsAlpha(d[i]) || nbIsDigit(d[i]))) {
+    while (i < d.len && isAlnum(d[i])) {
         i += 1;
     }
     if (i == p) {
@@ -263,7 +219,7 @@ pub fn hexDigit1(cur: *Cursor): SpanResult {
     const p = cur.*.pos;
     const d = cur.*.data;
     let i = p;
-    while (i < d.len && nbIsHex(d[i])) {
+    while (i < d.len && isHexDigit(d[i])) {
         i += 1;
     }
     if (i == p) {
@@ -278,14 +234,14 @@ pub fn hexDigit1(cur: *Cursor): SpanResult {
 pub fn parseU64(cur: *Cursor): UintResult {
     const saved = cur.*.pos;
     const d = cur.*.data;
-    if (saved >= d.len || !nbIsDigit(d[saved])) {
+    if (saved >= d.len || !isDigit(d[saved])) {
         return UintResult{ ok: false, value: 0 as u64 };
     }
 
     const maxDiv10: u64 = 1844674407370955161 as u64;
     let acc: u64 = 0 as u64;
     let i = saved;
-    while (i < d.len && nbIsDigit(d[i])) {
+    while (i < d.len && isDigit(d[i])) {
         const digit = (d[i] - ('0' as u8)) as u64;
         if (acc > maxDiv10 || (acc == maxDiv10 && digit > (5 as u64))) {
             return UintResult{ ok: false, value: 0 as u64 };
@@ -316,13 +272,13 @@ pub fn parseI64(cur: *Cursor): IntResult {
         i += 1;
     }
 
-    if (i >= d.len || !nbIsDigit(d[i])) {
+    if (i >= d.len || !isDigit(d[i])) {
         return IntResult{ ok: false, value: 0 as i64 };
     }
 
     const maxDiv10: u64 = 922337203685477580 as u64;
     let acc: u64 = 0 as u64;
-    while (i < d.len && nbIsDigit(d[i])) {
+    while (i < d.len && isDigit(d[i])) {
         const digit = (d[i] - ('0' as u8)) as u64;
         let maxLast: u64 = 7 as u64;
         if (neg) {

@@ -1,9 +1,8 @@
 // Type definitions for CP
 
+import { strEq, eqIgnoreCase, isAlpha, isAlnum, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn pushByte(out: []u8, pos: usize, b: u8): usize;
-export fn pushStr(out: []u8, pos: usize, s: string): usize;
-export fn strEq(a: string, b: string): bool;
-export fn isAlpha(c: u8): bool;
 export fn isSchemeChar(c: u8): bool;
 export fn schemePrefixLen(s: string): usize;
 export class PartSplit {

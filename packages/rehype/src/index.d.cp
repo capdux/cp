@@ -1,12 +1,9 @@
 // Type definitions for CP
 
+import { strEq, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { escapeHtml } from "../../escape-html/src/index.cp";
-export fn rhToLower(ch: u8): u8;
-export fn rhStrEq(a: string, b: string): bool;
-export fn rhStrEqIgnoreCase(a: string, b: string): bool;
-export fn rhCopyBuf(dst: []u8, src: string): usize;
 export fn rhWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn rhWriteBytes(out: []u8, pos: usize, s: string): usize;
 export fn isVoidElement(tag: string): bool;
 export class HastAttr {
     name: [48]u8,

@@ -1,5 +1,8 @@
 // @cap/optionator — Zero-heap CLI option spec & aligned --help generator (clean-room CP)
 
+import { strEq } from "cap:ascii";
+import { BufWriter } from "cap:fmt";
+
 pub struct OptionSpec {
     long_name: string,
     short_alias: string,
@@ -7,43 +10,6 @@ pub struct OptionSpec {
     description: string,
     default_val: string,
     required: bool,
-}
-
-fn optnStrEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
-
-fn optnWriteStr(out: []u8, pos: usize, s: string): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
-    }
-    return p;
-}
-
-fn optnWriteByte(out: []u8, pos: usize, b: u8): usize {
-    if (pos < out.len) {
-        out[pos] = b;
-        return pos + 1;
-    }
-    return pos;
-}
-
-fn optnWriteSpaces(out: []u8, pos: usize, count: usize): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < count && p < out.len) : (i += 1) {
-        out[p] = ' ';
-        p += 1;
-    }
-    return p;
 }
 
 fn optnLeftColLen(spec: OptionSpec): usize {
@@ -66,29 +32,29 @@ fn optnLeftColLen(spec: OptionSpec): usize {
 }
 
 pub fn formatOptionRow(spec: OptionSpec, col_width: usize, out: []u8): usize {
-    let pos: usize = 0;
-    pos = optnWriteStr(out, pos, "  ");
+    let w = BufWriter.new(out);
+    w.writeStr("  ");
     let has_short = spec.short_alias.len > 0;
     let has_long = spec.long_name.len > 0;
     if (has_short) {
-        pos = optnWriteByte(out, pos, '-');
-        pos = optnWriteStr(out, pos, spec.short_alias);
+        w.writeByte('-');
+        w.writeStr(spec.short_alias);
     }
     if (has_short && has_long) {
-        pos = optnWriteStr(out, pos, ", ");
+        w.writeStr(", ");
     }
     if (has_long) {
-        pos = optnWriteStr(out, pos, "--");
-        pos = optnWriteStr(out, pos, spec.long_name);
+        w.writeStr("--");
+        w.writeStr(spec.long_name);
     }
     if (spec.value_type.len > 0) {
-        pos = optnWriteByte(out, pos, ' ');
-        pos = optnWriteStr(out, pos, spec.value_type);
+        w.writeByte(' ');
+        w.writeStr(spec.value_type);
     }
 
     let has_right = spec.description.len > 0 || spec.default_val.len > 0 || spec.required;
     if (!has_right) {
-        return pos;
+        return w.written();
     }
 
     let left_len = optnLeftColLen(spec);
@@ -96,30 +62,30 @@ pub fn formatOptionRow(spec: OptionSpec, col_width: usize, out: []u8): usize {
     if (col_width > left_len && col_width - left_len > 2) {
         pad = col_width - left_len;
     }
-    pos = optnWriteSpaces(out, pos, pad);
+    w.writeRepeat(' ', pad);
 
     let wrote_any = false;
     if (spec.description.len > 0) {
-        pos = optnWriteStr(out, pos, spec.description);
+        w.writeStr(spec.description);
         wrote_any = true;
     }
     if (spec.required) {
         if (wrote_any) {
-            pos = optnWriteByte(out, pos, ' ');
+            w.writeByte(' ');
         }
-        pos = optnWriteStr(out, pos, "[required]");
+        w.writeStr("[required]");
         wrote_any = true;
     }
     if (spec.default_val.len > 0) {
         if (wrote_any) {
-            pos = optnWriteByte(out, pos, ' ');
+            w.writeByte(' ');
         }
-        pos = optnWriteStr(out, pos, "(default: ");
-        pos = optnWriteStr(out, pos, spec.default_val);
-        pos = optnWriteByte(out, pos, ')');
+        w.writeStr("(default: ");
+        w.writeStr(spec.default_val);
+        w.writeByte(')');
     }
 
-    return pos;
+    return w.written();
 }
 
 pub fn generateHelp(
@@ -128,21 +94,21 @@ pub fn generateHelp(
     specs: []const OptionSpec,
     out: []u8,
 ): usize {
-    let pos: usize = 0;
+    let w = BufWriter.new(out);
     if (program.len > 0) {
-        pos = optnWriteStr(out, pos, "Usage: ");
-        pos = optnWriteStr(out, pos, program);
-        pos = optnWriteStr(out, pos, " [options]\n");
+        w.writeStr("Usage: ");
+        w.writeStr(program);
+        w.writeStr(" [options]\n");
     }
     if (summary.len > 0) {
-        pos = optnWriteStr(out, pos, summary);
-        pos = optnWriteByte(out, pos, '\n');
+        w.writeStr(summary);
+        w.writeByte('\n');
     }
     if (specs.len > 0) {
-        if (pos > 0) {
-            pos = optnWriteByte(out, pos, '\n');
+        if (w.written() > 0) {
+            w.writeByte('\n');
         }
-        pos = optnWriteStr(out, pos, "Options:\n");
+        w.writeStr("Options:\n");
 
         let max_left: usize = 0;
         let i: usize = 0;
@@ -156,12 +122,13 @@ pub fn generateHelp(
 
         let j: usize = 0;
         while (j < specs.len) : (j += 1) {
+            let pos = w.written();
             let n = formatOptionRow(specs[j], col_width, out[pos..out.len]);
-            pos += n;
-            pos = optnWriteByte(out, pos, '\n');
+            w.pos = pos + n;
+            w.writeByte('\n');
         }
     }
-    return pos;
+    return w.written();
 }
 
 pub fn findOptionSpec(specs: []const OptionSpec, flag: string): OptionSpec? {
@@ -169,7 +136,7 @@ pub fn findOptionSpec(specs: []const OptionSpec, flag: string): OptionSpec? {
         let name: string = flag[2..flag.len];
         let i: usize = 0;
         while (i < specs.len) : (i += 1) {
-            if (specs[i].long_name.len > 0 && optnStrEq(specs[i].long_name, name)) {
+            if (specs[i].long_name.len > 0 && strEq(specs[i].long_name, name)) {
                 return specs[i];
             }
         }
@@ -179,7 +146,7 @@ pub fn findOptionSpec(specs: []const OptionSpec, flag: string): OptionSpec? {
         let alias: string = flag[1..flag.len];
         let i: usize = 0;
         while (i < specs.len) : (i += 1) {
-            if (specs[i].short_alias.len > 0 && optnStrEq(specs[i].short_alias, alias)) {
+            if (specs[i].short_alias.len > 0 && strEq(specs[i].short_alias, alias)) {
                 return specs[i];
             }
         }

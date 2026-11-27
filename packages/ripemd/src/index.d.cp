@@ -1,7 +1,7 @@
 // Type definitions for CP
 
 import { hexCharLower } from "cap:ascii";
-import { readU32Le, writeU32Le } from "cap:bin";
+import { readU32LE, writeU32LE } from "cap:bin";
 export fn rmdAdd(a: u32, b: u32): u32;
 export fn rmdAdd3(a: u32, b: u32, c: u32): u32;
 export fn rmdAdd4(a: u32, b: u32, c: u32, d: u32): u32;

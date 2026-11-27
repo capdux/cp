@@ -2,6 +2,8 @@
 // Clean-room MIT implementation with parity to npm `rehype` / `hast`.
 // Composes `@cap/escape-html` for XSS-safe text and attribute escaping with zero duplication.
 
+import { strEq, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 
 pub const HAST_ROOT: u8 = 0;
@@ -17,54 +19,6 @@ const RH_ATTR_NAME_CAP: usize = 48;
 const RH_ATTR_VAL_CAP: usize = 192;
 const RH_MAX_DEPTH: usize = 48;
 
-fn rhToLower(ch: u8): u8 {
-    if (ch >= 65 && ch <= 90) {
-        return ch + 32;
-    }
-    return ch;
-}
-
-fn rhStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn rhStrEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (rhToLower(a[i]) != rhToLower(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn rhCopyBuf(dst: []u8, src: string): usize {
-    let n = src.len;
-    if (n > dst.len) {
-        n = dst.len;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = src[i];
-        i = i + 1;
-    }
-    return n;
-}
-
 fn rhWriteByte(out: []u8, pos: usize, b: u8): usize {
     if (pos < out.len) {
         out[pos] = b;
@@ -73,34 +27,23 @@ fn rhWriteByte(out: []u8, pos: usize, b: u8): usize {
     return pos;
 }
 
-fn rhWriteBytes(out: []u8, pos: usize, s: string): usize {
-    let w = pos;
-    let i: usize = 0;
-    while (i < s.len && w < out.len) {
-        out[w] = s[i];
-        w = w + 1;
-        i = i + 1;
-    }
-    return w;
-}
-
 /// Return `true` if `tag` is one of the 14 standard HTML5 void elements
 /// (`area`, `base`, `br`, `col`, `embed`, `hr`, `img`, `input`, `link`, `meta`, `param`, `source`, `track`, `wbr`).
 pub fn isVoidElement(tag: string): bool {
-    if (rhStrEqIgnoreCase(tag, "area")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "base")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "br")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "col")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "embed")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "hr")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "img")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "input")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "link")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "meta")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "param")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "source")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "track")) { return true; }
-    if (rhStrEqIgnoreCase(tag, "wbr")) { return true; }
+    if (eqIgnoreCase(tag, "area")) { return true; }
+    if (eqIgnoreCase(tag, "base")) { return true; }
+    if (eqIgnoreCase(tag, "br")) { return true; }
+    if (eqIgnoreCase(tag, "col")) { return true; }
+    if (eqIgnoreCase(tag, "embed")) { return true; }
+    if (eqIgnoreCase(tag, "hr")) { return true; }
+    if (eqIgnoreCase(tag, "img")) { return true; }
+    if (eqIgnoreCase(tag, "input")) { return true; }
+    if (eqIgnoreCase(tag, "link")) { return true; }
+    if (eqIgnoreCase(tag, "meta")) { return true; }
+    if (eqIgnoreCase(tag, "param")) { return true; }
+    if (eqIgnoreCase(tag, "source")) { return true; }
+    if (eqIgnoreCase(tag, "track")) { return true; }
+    if (eqIgnoreCase(tag, "wbr")) { return true; }
     return false;
 }
 
@@ -128,7 +71,7 @@ pub struct HastNode {
 fn rhMakeNode(kind: u8, text: string): HastNode {
     let tbuf: [256]u8 = undefined;
     tbuf[0] = 0;
-    const tlen = rhCopyBuf(tbuf[0..RH_TEXT_CAP], text);
+    const tlen = writeStr(text, tbuf[0..RH_TEXT_CAP], 0);
     return HastNode {
         kind: kind,
         text: tbuf,
@@ -165,7 +108,7 @@ fn rhSerializeHtml(
     }
 
     if (node.kind == HAST_DOCTYPE) {
-        return rhWriteBytes(out, w, "<!doctype html>");
+        return writeStr("<!doctype html>", out, w);
     }
 
     if (node.kind == HAST_TEXT) {
@@ -177,23 +120,23 @@ fn rhSerializeHtml(
     }
 
     if (node.kind == HAST_COMMENT) {
-        w = rhWriteBytes(out, w, "<!--");
-        w = rhWriteBytes(out, w, node.text[0..node.text_len]);
-        w = rhWriteBytes(out, w, "-->");
+        w = writeStr("<!--", out, w);
+        w = writeStr(node.text[0..node.text_len], out, w);
+        w = writeStr("-->", out, w);
         return w;
     }
 
     if (node.kind == HAST_ELEMENT) {
         const tag = node.text[0..node.text_len];
         w = rhWriteByte(out, w, 60); // '<'
-        w = rhWriteBytes(out, w, tag);
+        w = writeStr(tag, out, w);
 
         let ai = node.first_attr;
         while (ai >= 0 && w < out.len) {
             const attr = attrs[ai as usize];
             w = rhWriteByte(out, w, 32); // ' '
-            w = rhWriteBytes(out, w, attr.name[0..attr.name_len]);
-            w = rhWriteBytes(out, w, "=\"");
+            w = writeStr(attr.name[0..attr.name_len], out, w);
+            w = writeStr("=\"", out, w);
             if (attr.value_len > 0 && w < out.len) {
                 const en = escapeHtml(attr.value[0..attr.value_len], out[w..out.len]);
                 w = w + en;
@@ -210,8 +153,8 @@ fn rhSerializeHtml(
                 w = rhSerializeHtml(nodes, attrs, child as usize, out, w, depth + 1);
                 child = nodes[child as usize].next_sibling;
             }
-            w = rhWriteBytes(out, w, "</");
-            w = rhWriteBytes(out, w, tag);
+            w = writeStr("</", out, w);
+            w = writeStr(tag, out, w);
             w = rhWriteByte(out, w, 62); // '>'
         }
         return w;
@@ -232,7 +175,7 @@ fn rhExtractText(
     }
     const node = nodes[node_id];
     if (node.kind == HAST_TEXT) {
-        return rhWriteBytes(out, pos, node.text[0..node.text_len]);
+        return writeStr(node.text[0..node.text_len], out, pos);
     }
     if (node.kind == HAST_ROOT || node.kind == HAST_ELEMENT) {
         let w = pos;
@@ -379,8 +322,8 @@ pub struct HastTree {
         let cur = _.nodes[node_id].first_attr;
         while (cur >= 0) {
             const idx = cur as usize;
-            if (rhStrEq(_.attrs[idx].name[0.._.attrs[idx].name_len], name)) {
-                _.attrs[idx].value_len = rhCopyBuf(_.attrs[idx].value[0..RH_ATTR_VAL_CAP], value);
+            if (strEq(_.attrs[idx].name[0.._.attrs[idx].name_len], name)) {
+                _.attrs[idx].value_len = writeStr(value, _.attrs[idx].value[0..RH_ATTR_VAL_CAP], 0);
                 return true;
             }
             cur = _.attrs[idx].next_attr;
@@ -394,8 +337,8 @@ pub struct HastTree {
         let vbuf: [192]u8 = undefined;
         nbuf[0] = 0;
         vbuf[0] = 0;
-        const nlen = rhCopyBuf(nbuf[0..RH_ATTR_NAME_CAP], name);
-        const vlen = rhCopyBuf(vbuf[0..RH_ATTR_VAL_CAP], value);
+        const nlen = writeStr(name, nbuf[0..RH_ATTR_NAME_CAP], 0);
+        const vlen = writeStr(value, vbuf[0..RH_ATTR_VAL_CAP], 0);
 
         const aid = _.attr_len as i32;
         _.attrs[_.attr_len] = HastAttr {
@@ -448,7 +391,7 @@ pub struct HastTree {
         let i: usize = 0;
         while (i < _.node_len) {
             const node = _.nodes[i];
-            if (node.kind == HAST_ELEMENT && rhStrEqIgnoreCase(node.text[0..node.text_len], tag)) {
+            if (node.kind == HAST_ELEMENT && eqIgnoreCase(node.text[0..node.text_len], tag)) {
                 total = total + 1;
             }
             i = i + 1;

@@ -1,6 +1,9 @@
 // @cap/ssh-key — Zero-heap OpenSSH public key (authorized_keys) parser & validator
 // Clean-room MIT implementation for CP (compatible with npm sshpk & Rust ssh-key).
 
+import { strEq, trim, isAlnum } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const ALG_UNKNOWN: u8 = 0;
 pub const ALG_ED25519: u8 = 1;
 pub const ALG_RSA: u8 = 2;
@@ -18,22 +21,8 @@ pub struct SshPublicKey {
     pub valid: bool,
 }
 
-fn isSpace(c: u8): bool {
+fn isHspace(c: u8): bool {
     return c == ' ' || c == '\t';
-}
-
-fn isLineTrim(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn strEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i += 1;
-    }
-    return true;
 }
 
 /// Identify OpenSSH public key algorithm identifier string.
@@ -64,12 +53,7 @@ pub fn isValidBase64(b64: string): bool {
             if (pad_count > 2) { return false; }
         } else {
             if (pad_started) { return false; }
-            let ok: bool =
-                (c >= 'A' && c <= 'Z') ||
-                (c >= 'a' && c <= 'z') ||
-                (c >= '0' && c <= '9') ||
-                c == '+' || c == '/';
-            if (!ok) { return false; }
+            if (!isAlnum(c) && c != '+' && c != '/') { return false; }
         }
         i += 1;
     }
@@ -86,36 +70,33 @@ pub fn parsePublicKey(line: string): SshPublicKey {
         valid: false,
     };
 
-    let start: usize = 0;
-    let end: usize = line.len;
-    while (start < end && isLineTrim(line[start])) { start += 1; }
-    while (end > start && isLineTrim(line[end - 1])) { end -= 1; }
-    if (start >= end || line[start] == '#') {
+    let s: string = trim(line);
+    if (s.len == 0 || s[0] == '#') {
         return invalid;
     }
 
-    let i: usize = start;
-    while (i < end && !isSpace(line[i])) { i += 1; }
-    let key_type: string = line[start..i];
+    let i: usize = 0;
+    while (i < s.len && !isHspace(s[i])) { i += 1; }
+    let key_type: string = s[0..i];
     let alg: u8 = identifyAlgorithm(key_type);
     if (alg == ALG_UNKNOWN) {
         return invalid;
     }
 
-    while (i < end && isSpace(line[i])) { i += 1; }
-    if (i >= end) { return invalid; }
+    while (i < s.len && isHspace(s[i])) { i += 1; }
+    if (i >= s.len) { return invalid; }
 
     let b64_start: usize = i;
-    while (i < end && !isSpace(line[i])) { i += 1; }
-    let key_b64: string = line[b64_start..i];
+    while (i < s.len && !isHspace(s[i])) { i += 1; }
+    let key_b64: string = s[b64_start..i];
     if (!isValidBase64(key_b64)) {
         return invalid;
     }
 
-    while (i < end && isSpace(line[i])) { i += 1; }
+    while (i < s.len && isHspace(s[i])) { i += 1; }
     let comment: string = "";
-    if (i < end) {
-        comment = line[i..end];
+    if (i < s.len) {
+        comment = s[i..s.len];
     }
 
     return SshPublicKey {
@@ -140,18 +121,14 @@ pub fn formatPublicKey(key: SshPublicKey, out: []u8): usize {
         return 0;
     }
 
-    let pos: usize = 0;
-    let i: usize = 0;
-    while (i < key.key_type.len) { out[pos] = key.key_type[i]; pos += 1; i += 1; }
+    let pos: usize = writeStr(key.key_type, out, 0);
     out[pos] = ' ';
     pos += 1;
-    i = 0;
-    while (i < key.key_b64.len) { out[pos] = key.key_b64[i]; pos += 1; i += 1; }
+    pos = writeStr(key.key_b64, out, pos);
     if (key.comment.len > 0) {
         out[pos] = ' ';
         pos += 1;
-        i = 0;
-        while (i < key.comment.len) { out[pos] = key.comment[i]; pos += 1; i += 1; }
+        pos = writeStr(key.comment, out, pos);
     }
     return pos;
 }

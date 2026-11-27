@@ -2,6 +2,8 @@
 // Clean-room MIT implementation with parity to npm `yargs-parser`.
 // Reuses `@cap/camelcase` and `@cap/decamelize` for automatic camelCase/kebab-case key lookup.
 
+import { bytesEq, findByteInBytes } from "cap:bin";
+import { writeStr, writeI64, parseI64 } from "cap:fmt";
 import { toCamelCase } from "../../ident_case/src/index.cp";
 import { decamelize } from "../../decamelize/src/core.cp";
 
@@ -36,44 +38,13 @@ pub struct ParsedEntry {
     pub str_len: usize,
 }
 
-fn ypStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn ypCopyToBuf(dst: []u8, src: string): usize {
-    let n = src.len;
-    if (n > dst.len) {
-        n = dst.len;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = src[i];
-        i = i + 1;
-    }
-    return n;
-}
-
-fn ypIsDigit(ch: u8): bool {
-    return ch >= 48 && ch <= 57;
-}
-
 fn ypIsNegativeNumber(s: string): bool {
-    if (s.len < 2 || s[0] != 45 || !ypIsDigit(s[1])) {
+    if (s.len < 2 || s[0] != 45 || s[1] < 48 || s[1] > 57) {
         return false;
     }
     let i: usize = 1;
     while (i < s.len) {
-        if (!ypIsDigit(s[i])) {
+        if (s[i] < 48 || s[i] > 57) {
             return false;
         }
         i = i + 1;
@@ -81,77 +52,13 @@ fn ypIsNegativeNumber(s: string): bool {
     return true;
 }
 
-struct YpIntParse {
-    ok: bool,
-    val: i64,
-}
-
-fn ypParseInt(s: string): YpIntParse {
-    if (s.len == 0) {
-        return YpIntParse { ok: false, val: 0 };
-    }
-    let i: usize = 0;
-    let neg = false;
-    if (s[0] == 45) {
-        neg = true;
-        i = 1;
-    } else if (s[0] == 43) {
-        i = 1;
-    }
-    if (i >= s.len || (s.len - i) > 18) {
-        return YpIntParse { ok: false, val: 0 };
-    }
-    let acc: i64 = 0;
-    while (i < s.len) {
-        if (!ypIsDigit(s[i])) {
-            return YpIntParse { ok: false, val: 0 };
-        }
-        acc = (acc * 10) + ((s[i] - 48) as i64);
-        i = i + 1;
-    }
-    if (neg) {
-        return YpIntParse { ok: true, val: -acc };
-    }
-    return YpIntParse { ok: true, val: acc };
-}
-
 fn ypFormatInt(valIn: i64, out: []u8): i64 {
     let tmp: [32]u8 = undefined;
-    let neg = false;
-    let mag: u64 = 0;
-    if (valIn < 0) {
-        neg = true;
-        mag = (-valIn) as u64;
-    } else {
-        mag = valIn as u64;
-    }
-    let n: usize = 0;
-    if (mag == 0) {
-        tmp[0] = 48;
-        n = 1;
-    } else {
-        while (mag > 0 && n < 30) {
-            tmp[n] = ((mag % 10) as u8) + 48;
-            mag = mag / 10;
-            n = n + 1;
-        }
-    }
-    const total = if (neg) n + 1 else n;
-    if (out.len < total) {
+    const n = writeI64(valIn, tmp[0..], 0);
+    if (out.len < n) {
         return -1;
     }
-    let pos: usize = 0;
-    if (neg) {
-        out[pos] = 45;
-        pos = pos + 1;
-    }
-    let k: usize = n;
-    while (k > 0) {
-        k = k - 1;
-        out[pos] = tmp[k];
-        pos = pos + 1;
-    }
-    return pos as i64;
+    return writeStr(tmp[0..n], out, 0) as i64;
 }
 
 fn ypIsFlagToken(s: string): bool {
@@ -195,13 +102,13 @@ fn ypEmptyEntry(): ParsedEntry {
 }
 
 fn ypEntryMatchesKey(entry: ParsedEntry, query: string): bool {
-    if (ypStrEq(entry.key[0..entry.key_len], query)) {
+    if (bytesEq(entry.key[0..entry.key_len], query)) {
         return true;
     }
-    if (entry.camel_len > 0 && ypStrEq(entry.camel_key[0..entry.camel_len], query)) {
+    if (entry.camel_len > 0 && bytesEq(entry.camel_key[0..entry.camel_len], query)) {
         return true;
     }
-    if (entry.kebab_len > 0 && ypStrEq(entry.kebab_key[0..entry.kebab_len], query)) {
+    if (entry.kebab_len > 0 && bytesEq(entry.kebab_key[0..entry.kebab_len], query)) {
         return true;
     }
     return false;
@@ -247,7 +154,7 @@ pub struct ParsedArgs {
             return e.int_val != 0;
         }
         const s = e.str_val[0..e.str_len];
-        if (ypStrEq(s, "false") || ypStrEq(s, "0") || s.len == 0) {
+        if (bytesEq(s, "false") || bytesEq(s, "0") || s.len == 0) {
             return false;
         }
         return true;
@@ -281,19 +188,14 @@ pub struct ParsedArgs {
             if (out.len < e.str_len) {
                 return -1;
             }
-            let i: usize = 0;
-            while (i < e.str_len) {
-                out[i] = e.str_val[i];
-                i = i + 1;
-            }
-            return e.str_len as i64;
+            return writeStr(e.str_val[0..e.str_len], out, 0) as i64;
         }
         if (e.kind == ARG_BOOL) {
             const lit = if (e.bool_val) "true" else "false";
             if (out.len < lit.len) {
                 return -1;
             }
-            return ypCopyToBuf(out, lit) as i64;
+            return writeStr(lit, out, 0) as i64;
         }
         return ypFormatInt(e.int_val, out);
     }
@@ -317,12 +219,7 @@ pub struct ParsedArgs {
         if (out.len < item.len) {
             return 0;
         }
-        let i: usize = 0;
-        while (i < item.len) {
-            out[i] = item.data[i];
-            i = i + 1;
-        }
-        return item.len;
+        return writeStr(item.data[0..item.len], out, 0);
     }
 
     /// Return the number of `--` passthrough arguments.
@@ -339,12 +236,7 @@ pub struct ParsedArgs {
         if (out.len < item.len) {
             return 0;
         }
-        let i: usize = 0;
-        while (i < item.len) {
-            out[i] = item.data[i];
-            i = i + 1;
-        }
-        return item.len;
+        return writeStr(item.data[0..item.len], out, 0);
     }
 }
 
@@ -353,7 +245,7 @@ fn ypPushPositional(args: *ParsedArgs, s: string) {
         return;
     }
     let item = ypEmptyItem();
-    item.len = ypCopyToBuf(item.data[0..YP_VAL_CAP], s);
+    item.len = writeStr(s, item.data[0..YP_VAL_CAP], 0);
     args.positionals[args.pos_count] = item;
     args.pos_count = args.pos_count + 1;
 }
@@ -363,7 +255,7 @@ fn ypPushRest(args: *ParsedArgs, s: string) {
         return;
     }
     let item = ypEmptyItem();
-    item.len = ypCopyToBuf(item.data[0..YP_VAL_CAP], s);
+    item.len = writeStr(s, item.data[0..YP_VAL_CAP], 0);
     args.rest[args.rest_count] = item;
     args.rest_count = args.rest_count + 1;
 }
@@ -380,14 +272,14 @@ fn ypSetEntry(
         return;
     }
     let entry = ypEmptyEntry();
-    entry.key_len = ypCopyToBuf(entry.key[0..YP_KEY_CAP], rawKey);
+    entry.key_len = writeStr(rawKey, entry.key[0..YP_KEY_CAP], 0);
     entry.camel_len = toCamelCase(rawKey, entry.camel_key[0..YP_KEY_CAP]);
     entry.kebab_len = decamelize(rawKey, "-", entry.kebab_key[0..YP_KEY_CAP]);
     entry.kind = kind;
     entry.bool_val = boolVal;
     entry.int_val = intVal;
     if (kind == ARG_STRING) {
-        entry.str_len = ypCopyToBuf(entry.str_val[0..YP_VAL_CAP], strVal);
+        entry.str_len = writeStr(strVal, entry.str_val[0..YP_VAL_CAP], 0);
     }
 
     // Override existing entry if key (or camel/kebab alias) already present
@@ -408,31 +300,19 @@ fn ypSetEntry(
 }
 
 fn ypSetCoerced(args: *ParsedArgs, rawKey: string, rawVal: string) {
-    if (ypStrEq(rawVal, "true")) {
+    if (bytesEq(rawVal, "true")) {
         ypSetEntry(args, rawKey, ARG_BOOL, true, 1, "");
         return;
     }
-    if (ypStrEq(rawVal, "false")) {
+    if (bytesEq(rawVal, "false")) {
         ypSetEntry(args, rawKey, ARG_BOOL, false, 0, "");
         return;
     }
-    const parsedInt = ypParseInt(rawVal);
-    if (parsedInt.ok) {
-        ypSetEntry(args, rawKey, ARG_INT, parsedInt.val != 0, parsedInt.val, "");
+    if (v := parseI64(rawVal)) {
+        ypSetEntry(args, rawKey, ARG_INT, v != 0, v, "");
         return;
     }
     ypSetEntry(args, rawKey, ARG_STRING, true, 0, rawVal);
-}
-
-fn ypFindEq(s: string, start: usize): usize {
-    let i = start;
-    while (i < s.len) {
-        if (s[i] == 61) {
-            return i;
-        }
-        i = i + 1;
-    }
-    return s.len;
 }
 
 /// Parse a CLI argument slice `argv` into a zero-allocation `ParsedArgs` struct.
@@ -454,7 +334,7 @@ pub fn parseArgs(argv: []const string): ParsedArgs {
         const tok = argv[i];
 
         // `--` end-of-options terminator
-        if (ypStrEq(tok, "--")) {
+        if (bytesEq(tok, "--")) {
             i = i + 1;
             while (i < argv.len) {
                 ypPushRest(&args, argv[i]);
@@ -466,7 +346,7 @@ pub fn parseArgs(argv: []const string): ParsedArgs {
 
         // Long option `--...`
         if (tok.len > 2 && tok[0] == 45 && tok[1] == 45) {
-            const eqIdx = ypFindEq(tok, 2);
+            const eqIdx = findByteInBytes(tok, 61, 2) ?? tok.len;
             if (eqIdx < tok.len) {
                 const key = tok[2..eqIdx];
                 const val = tok[(eqIdx + 1)..tok.len];
@@ -484,7 +364,7 @@ pub fn parseArgs(argv: []const string): ParsedArgs {
             }
 
             const key = tok[2..tok.len];
-            if (i + 1 < argv.len && !ypIsFlagToken(argv[i + 1]) && !ypStrEq(argv[i + 1], "--")) {
+            if (i + 1 < argv.len && !ypIsFlagToken(argv[i + 1]) && !bytesEq(argv[i + 1], "--")) {
                 ypSetCoerced(&args, key, argv[i + 1]);
                 i = i + 2;
             } else {
@@ -496,7 +376,7 @@ pub fn parseArgs(argv: []const string): ParsedArgs {
 
         // Short option(s) `-f`, `-abc`, `-p 8080`, `-p=8080`
         if (ypIsFlagToken(tok)) {
-            const eqIdx = ypFindEq(tok, 1);
+            const eqIdx = findByteInBytes(tok, 61, 1) ?? tok.len;
             if (eqIdx < tok.len) {
                 const key = tok[1..eqIdx];
                 const val = tok[(eqIdx + 1)..tok.len];
@@ -512,7 +392,7 @@ pub fn parseArgs(argv: []const string): ParsedArgs {
                 k = k + 1;
             }
             const lastKey = tok[k..(k + 1)];
-            if (i + 1 < argv.len && !ypIsFlagToken(argv[i + 1]) && !ypStrEq(argv[i + 1], "--")) {
+            if (i + 1 < argv.len && !ypIsFlagToken(argv[i + 1]) && !bytesEq(argv[i + 1], "--")) {
                 ypSetCoerced(&args, lastKey, argv[i + 1]);
                 i = i + 2;
             } else {
