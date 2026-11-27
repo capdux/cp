@@ -1,40 +1,82 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# @cap/snappy-block
+# snap
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:snap` ([https://github.com/BurntSushi/rust-snappy](https://github.com/BurntSushi/rust-snappy))（原库名 `snap` → CP 包名 `@cap/snappy-block`）
+> **Source Attribution**: Clean-room MIT CP implementation of [`crates.io:snap`](https://github.com/BurntSushi/rust-snappy) (BSD-3-Clause) | CP Package Version: `1.0.0` | Zero external dependencies
 
-零堆分配的 CP Google Snappy Raw Block 极速无损块压缩与解压引擎 — 洁净室 MIT 实现，对标 Rust `snap` crate，100% 兼容 Parquet / Kafka / LevelDB / RocksDB / gRPC 标准 Snappy 字节流格式。
+Zero-allocation Google Snappy Raw Block lossless compressor and decompressor for CP. Implements the full Snappy raw block specification: varint32 uncompressed length header, Literal / Copy-1 / Copy-2 / Copy-4 tags, and overlapping RLE back-reference decompression.
 
-Zero-allocation Google Snappy Raw Block lossless compressor & decompressor for CP — clean-room MIT parity with Rust `snap`.
+## Zero-Cost Migration (Rust → CP)
 
-## 安装 / Install
+Keep the exact same package name (`"snap"`) — no renaming required.
 
-```bash
-cap add @cap/snappy-block
-```
+| Rust (`crates.io:snap::raw`) | CP (`snap`) |
+| :--- | :--- |
+| `use snap::raw::{Encoder, Decoder, max_compress_len, decompress_len};` | `import { compress, decompress, maxCompressedLen, uncompressedLen } from "snap";` |
+| `max_compress_len(src.len())` | `maxCompressedLen(src.len)` |
+| `Encoder::new().compress(src, dst)` | `compress(src, dst)` |
+| `decompress_len(compressed)` | `uncompressedLen(compressed)` |
+| `Decoder::new().decompress(compressed, out)` | `decompress(compressed, out)` |
 
-## API 参考 / API Reference
+## API Reference
 
-| 函数 / Function | 签名 / Signature | 说明 / Description |
-| --- | --- | --- |
-| `maxCompressedLen` | `(input_len: usize) -> usize` | 计算最坏情况压缩缓冲区大小 `32 + len + len / 6` |
-| `uncompressedLen` | `(src: []const u8) -> i64` | 仅解析头部 varint32 原始长度（非法返回 `-1`） |
-| `compress` | `(src: []const u8, dst: []u8) -> i64` | 压缩为标准 Snappy Raw Block（缓冲不足返回 `-1`） |
-| `decompress` | `(src: []const u8, dst: []u8) -> i64` | 解压并支持 Literal / Copy-1 / Copy-2 / Copy-4 与重叠 RLE |
+| Signature | Description |
+| :--- | :--- |
+| `maxCompressedLen(input_len: usize): usize` | Worst-case compressed byte size (`32 + len + len / 6`). |
+| `uncompressedLen(src: &[]u8): i64` | Read varint32 uncompressed length header (`-1` if malformed). |
+| `compress(src: &[]u8, dst: []u8): i64` | Compress `src` into `dst`; returns compressed byte count or `-1` on error/short buffer. |
+| `decompress(src: &[]u8, dst: []u8): i64` | Decompress Snappy raw block `src` into `dst`; returns decompressed byte count or `-1` on corrupt/short buffer. |
 
-## 使用示例 / Usage
+## Usage Examples
+
+### Basic Compress & Decompress Round-Trip
 
 ```cp
-import { compress, decompress, uncompressedLen } from "@cap/snappy-block";
+import { compress, decompress, maxCompressedLen, uncompressedLen } from "snap";
 
-let comp: [256]u8 = undefined;
-let out: [256]u8 = undefined;
-const n = compress("Snappy Snappy Snappy Snappy!", comp[0..256]);
-const orig = uncompressedLen(comp[0..(n as usize)]); // 28
-const m = decompress(comp[0..(n as usize)], out[0..256]);
+fn demoRoundTrip() {
+    const input = "hello snappy hello snappy hello snappy hello snappy!";
+    let compressed: [128]u8 = undefined;
+
+    const c_len = compress(input, compressed[0..]);
+    if (c_len > 0) {
+        const expected = uncompressedLen(compressed[0..(c_len as usize)]);
+        let restored: [128]u8 = undefined;
+        const d_len = decompress(compressed[0..(c_len as usize)], restored[0..]);
+        // expected == input.len as i64 && d_len == expected
+        * = expected; * = d_len;
+    }
+    * = maxCompressedLen(input.len);
+}
 ```
+
+### Handling Corrupt Inputs & Short Buffers
+
+```cp
+import { compress, decompress } from "snap";
+
+fn demoErrorHandling() {
+    const payload = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; // RLE-friendly
+    let tiny: [4]u8 = undefined;
+    // Destination buffer too small -> returns -1 safely
+    const rc = compress(payload, tiny[0..]);
+    // rc == -1
+
+    const bad_block = [0xFF as u8, 0xFF as u8, 0xFF as u8, 0xFF as u8, 0xFF as u8, 0xFF as u8];
+    let out: [64]u8 = undefined;
+    // Malformed varint / truncated block -> returns -1 without panic
+    const rd = decompress(bad_block[0..], out[0..]);
+    // rd == -1
+    * = rc; * = rd;
+}
+```
+
+## Performance & Safety Highlights
+
+- **Zero Heap Allocation**: 4096-entry 16-bit hash table (`let table: [4096]u16 = undefined`) lives on the stack with zero dynamic allocation and zero startup zeroing.
+- **Fast `@memcpy` Bulk Copy**: Literal runs and non-overlapping Copy-1/Copy-2/Copy-4 back-references use `@memcpy` directly; overlapping RLE copies (`offset < copy_len`) fall back cleanly to byte-wise RLE expansion.
+- **Strict Bounds & Corruption Defense**: Validates varint32 length, offset non-zero/in-bounds, and output capacity on every tag; returns `-1` on any malformed input.
+- **Wire-Format Compatible**: 100% interoperable with Google Snappy and Rust `snap::raw`.
 
 ## License
 
