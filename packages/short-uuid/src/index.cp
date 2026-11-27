@@ -1,5 +1,6 @@
 // @cap/short-uuid — Zero-allocation 128-bit UUID lossless short ID translator for CP
 // Clean-room MIT implementation inspired by npm `short-uuid` and `uuid-translator`.
+// Accelerated with comptime 256-entry Hex/Base58 LUTs, O(1) inverse alphabet lookup, and undefined stack buffers.
 
 /// Flickr Base58 alphabet (58 chars, omits ambiguous `0`, `O`, `I`, `l`).
 pub const FLICKR_BASE58: string = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -10,23 +11,46 @@ pub const URL_BASE62: string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl
 /// RFC 6265 Cookie-safe Base90 alphabet (90 chars).
 pub const COOKIE_BASE90: string = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&'()*+-./:<=>?@[]^_`{|}~";
 
+const SU_HEX_LOWER = "0123456789abcdef";
+
+fn suBuildHexDecodeLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = (c - 48) as u8;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 70) {
+        lut[c] = (c - 55) as u8;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 102) {
+        lut[c] = (c - 87) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+fn suBuildAlphabetInvLut(alphabet: string) -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let i: usize = 0;
+    while (i < alphabet.len) {
+        lut[alphabet[i] as usize] = i as u8;
+        i += 1;
+    }
+    return lut;
+}
+
+const SU_HEX_DECODE_LUT: [256]u8 = suBuildHexDecodeLut();
+const SU_FLICKR58_INV: [256]u8 = suBuildAlphabetInvLut(FLICKR_BASE58);
+
 // ---------------------------------------------------------------------------
 // Hex / UUID Byte Helpers
 // ---------------------------------------------------------------------------
-
-fn parseHexNibble(c: u8) -> u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
-    if (c >= 'A' && c <= 'F') return (c - 'A') + 10;
-    return null;
-}
-
-fn hexNibbleLower(v: u8) -> u8 {
-    if (v < 10) {
-        return '0' + v;
-    }
-    return 'a' + (v - 10);
-}
 
 /// Parses a standard 36-char hyphenated UUID or 32-char compact hex UUID (case-insensitive)
 /// into 16 big-endian bytes in `out16`. Returns `false` on invalid input or small buffer.
@@ -45,12 +69,12 @@ pub fn uuidToBytes(uuid: string, out16: []u8) -> bool {
                 i += 1;
                 continue;
             }
-            const hi = parseHexNibble(uuid[i]);
-            const lo = parseHexNibble(uuid[i + 1]);
-            if (hi == null || lo == null) {
+            const hi = SU_HEX_DECODE_LUT[uuid[i] as usize];
+            const lo = SU_HEX_DECODE_LUT[uuid[i + 1] as usize];
+            if ((hi | lo) >= 16) {
                 return false;
             }
-            out16[byte_idx] = (hi.? << 4) | lo.?;
+            out16[byte_idx] = (hi << 4) | lo;
             byte_idx += 1;
             i += 2;
         }
@@ -59,12 +83,12 @@ pub fn uuidToBytes(uuid: string, out16: []u8) -> bool {
     if (uuid.len == 32) {
         let byte_idx: usize = 0;
         while (byte_idx < 16) {
-            const hi = parseHexNibble(uuid[byte_idx * 2]);
-            const lo = parseHexNibble(uuid[byte_idx * 2 + 1]);
-            if (hi == null || lo == null) {
+            const hi = SU_HEX_DECODE_LUT[uuid[byte_idx * 2] as usize];
+            const lo = SU_HEX_DECODE_LUT[uuid[byte_idx * 2 + 1] as usize];
+            if ((hi | lo) >= 16) {
                 return false;
             }
-            out16[byte_idx] = (hi.? << 4) | lo.?;
+            out16[byte_idx] = (hi << 4) | lo;
             byte_idx += 1;
         }
         return true;
@@ -85,8 +109,8 @@ pub fn bytesToUuid(bytes16: []u8, out36: []u8) -> string {
             pos += 1;
         }
         const b = bytes16[i];
-        out36[pos] = hexNibbleLower((b >> 4) & 0x0F);
-        out36[pos + 1] = hexNibbleLower(b & 0x0F);
+        out36[pos] = SU_HEX_LOWER[(b >> 4) as usize];
+        out36[pos + 1] = SU_HEX_LOWER[(b & 0x0F) as usize];
         pos += 2;
         i += 1;
     }
@@ -101,34 +125,24 @@ fn validateAlphabet(alphabet: string) -> bool {
     if (alphabet.len < 2 || alphabet.len > 128) {
         return false;
     }
+    let seen: [256]u8 = [0; 256];
     let i: usize = 0;
     while (i < alphabet.len) {
-        let j = i + 1;
-        while (j < alphabet.len) {
-            if (alphabet[i] == alphabet[j]) {
-                return false;
-            }
-            j += 1;
+        const idx = alphabet[i] as usize;
+        if (seen[idx] != 0) {
+            return false;
         }
+        seen[idx] = 1;
         i += 1;
     }
     return true;
 }
 
-fn findInAlphabet(alphabet: string, c: u8) -> u32? {
-    let i: usize = 0;
-    while (i < alphabet.len) {
-        if (alphabet[i] == c) {
-            return i as u32;
-        }
-        i += 1;
-    }
-    return null;
-}
-
 /// Computes the exact fixed character width needed to encode any 128-bit value in `base`.
 /// (e.g. Base58 -> 22, Base62 -> 22, Base90 -> 20).
 fn maxEncodedLen(base: u32) -> usize {
+    if (base == 58 || base == 62) { return 22; }
+    if (base == 90) { return 20; }
     let max_val: [16]u8 = [
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -156,27 +170,11 @@ fn maxEncodedLen(base: u32) -> usize {
     return digits;
 }
 
-// ---------------------------------------------------------------------------
-// Public Shorten / Expand API
-// ---------------------------------------------------------------------------
-
-/// Encodes a 128-bit UUID into a fixed-length short ID using `alphabet` (e.g. `FLICKR_BASE58`,
-/// `URL_BASE62`, `COOKIE_BASE90`), writing into `out`.
-pub fn shortenUuidWith(uuid: string, alphabet: string, out: []u8) -> string? {
-    if (!validateAlphabet(alphabet)) {
+fn shortenBytesFast(bytes: []u8, alphabet: string, fixed_len: usize, out: []u8) -> string? {
+    if (out.len < fixed_len || bytes.len < 16) {
         return null;
     }
-    let bytes: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    if (!uuidToBytes(uuid, bytes[0..16])) {
-        return null;
-    }
-
     const base = alphabet.len as u32;
-    const fixed_len = maxEncodedLen(base);
-    if (out.len < fixed_len) {
-        return null;
-    }
-
     let step: usize = 0;
     while (step < fixed_len) {
         let rem: u32 = 0;
@@ -190,27 +188,56 @@ pub fn shortenUuidWith(uuid: string, alphabet: string, out: []u8) -> string? {
         out[fixed_len - 1 - step] = alphabet[rem as usize];
         step += 1;
     }
-
     return out[0..fixed_len];
+}
+
+// ---------------------------------------------------------------------------
+// Public Shorten / Expand API
+// ---------------------------------------------------------------------------
+
+/// Encodes a 128-bit UUID into a fixed-length short ID using `alphabet` (e.g. `FLICKR_BASE58`,
+/// `URL_BASE62`, `COOKIE_BASE90`), writing into `out`.
+pub fn shortenUuidWith(uuid: string, alphabet: string, out: []u8) -> string? {
+    if (!validateAlphabet(alphabet)) {
+        return null;
+    }
+    let bytes: [16]u8 = undefined;
+    if (!uuidToBytes(uuid, bytes[0..16])) {
+        return null;
+    }
+    const fixed_len = maxEncodedLen(alphabet.len as u32);
+    return shortenBytesFast(bytes[0..16], alphabet, fixed_len, out);
 }
 
 /// Decodes a short ID using `alphabet` back into a canonical 36-char lowercase UUID in `out36`.
 /// Returns `null` on invalid alphabet, empty input, unknown character, 128-bit overflow, or small buffer.
 pub fn expandUuidWith(short_id: string, alphabet: string, out36: []u8) -> string? {
-    if (!validateAlphabet(alphabet) || short_id.len == 0 || out36.len < 36) {
+    if (alphabet.len < 2 || alphabet.len > 128 || short_id.len == 0 || out36.len < 36) {
         return null;
     }
 
+    // Build O(1) inverse LUT while validating alphabet uniqueness in a single O(N) pass
+    let inv: [256]u8 = [255; 256];
+    let a: usize = 0;
+    while (a < alphabet.len) {
+        const ch = alphabet[a] as usize;
+        if (inv[ch] != 255) {
+            return null;
+        }
+        inv[ch] = a as u8;
+        a += 1;
+    }
+
     const base = alphabet.len as u32;
-    let bytes: [16]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let bytes: [16]u8 = [0; 16];
 
     let i: usize = 0;
     while (i < short_id.len) {
-        const digit_opt = findInAlphabet(alphabet, short_id[i]);
-        if (digit_opt == null) {
+        const d = inv[short_id[i] as usize];
+        if (d == 255) {
             return null;
         }
-        let carry: u32 = digit_opt.?;
+        let carry: u32 = d as u32;
         let j: usize = 16;
         while (j > 0) {
             j -= 1;
@@ -229,10 +256,37 @@ pub fn expandUuidWith(short_id: string, alphabet: string, out36: []u8) -> string
 
 /// Compresses a 128-bit UUID into a fixed 22-character `FLICKR_BASE58` short ID in `out`.
 pub fn shortenUuid(uuid: string, out: []u8) -> string? {
-    return shortenUuidWith(uuid, FLICKR_BASE58, out);
+    let bytes: [16]u8 = undefined;
+    if (!uuidToBytes(uuid, bytes[0..16])) {
+        return null;
+    }
+    return shortenBytesFast(bytes[0..16], FLICKR_BASE58, 22, out);
 }
 
 /// Expands a `FLICKR_BASE58` short ID back into a canonical 36-character lowercase UUID in `out36`.
 pub fn expandUuid(short_id: string, out36: []u8) -> string? {
-    return expandUuidWith(short_id, FLICKR_BASE58, out36);
+    if (short_id.len == 0 || out36.len < 36) {
+        return null;
+    }
+    let bytes: [16]u8 = [0; 16];
+    let i: usize = 0;
+    while (i < short_id.len) {
+        const d = SU_FLICKR58_INV[short_id[i] as usize];
+        if (d == 255) {
+            return null;
+        }
+        let carry: u32 = d as u32;
+        let j: usize = 16;
+        while (j > 0) {
+            j -= 1;
+            const acc: u32 = (bytes[j] as u32) * 58 + carry;
+            bytes[j] = (acc & 0xFF) as u8;
+            carry = acc >> 8;
+        }
+        if (carry != 0) {
+            return null;
+        }
+        i += 1;
+    }
+    return bytesToUuid(bytes[0..16], out36);
 }

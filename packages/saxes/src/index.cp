@@ -1,8 +1,60 @@
 // @cap/saxes — Zero-allocation streaming SAX XML 1.0 event parser
 // Clean-room ISC implementation inspired by npm:saxes
+// Accelerated with comptime 256-entry LUTs, 16-lane @Vector(16, u8) SIMD scanning, and @memcpy.
+
+type SaxVec16 = @Vector(16, u8);
 
 pub const SAX_MAX_ATTRS: usize = 8;
 pub const SAX_MAX_DEPTH: usize = 32;
+
+const SAX_BIT_WS: u8 = 1;
+const SAX_BIT_NAME_START: u8 = 2;
+const SAX_BIT_NAME_CHAR: u8 = 4;
+
+fn saxBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c == 32 || c == 9 || c == 10 || c == 13) {
+            f |= SAX_BIT_WS;
+        }
+        const is_ns = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 58 || c >= 0x80;
+        if (is_ns) {
+            f |= SAX_BIT_NAME_START | SAX_BIT_NAME_CHAR;
+        } else if ((c >= 48 && c <= 57) || c == 45 || c == 46) {
+            f |= SAX_BIT_NAME_CHAR;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+fn saxBuildHexLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = (c - 48) as u8;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 70) {
+        lut[c] = (c - 55) as u8;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 102) {
+        lut[c] = (c - 87) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const SAX_CHAR_LUT: [256]u8 = saxBuildCharLut();
+const SAX_HEX_LUT: [256]u8 = saxBuildHexLut();
 
 pub enum XmlEventKind {
     OpenTag,
@@ -48,19 +100,59 @@ fn saxMakeEvent(kind: XmlEventKind, name: string, text: string): XmlEvent {
 }
 
 fn saxIsWs(ch: u8): bool {
-    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+    return (SAX_CHAR_LUT[ch as usize] & SAX_BIT_WS) != 0;
 }
 
 fn saxIsNameStart(ch: u8): bool {
-    if (ch >= 'a' && ch <= 'z') return true;
-    if (ch >= 'A' && ch <= 'Z') return true;
-    return ch == '_' || ch == ':' || ch >= 0x80;
+    return (SAX_CHAR_LUT[ch as usize] & SAX_BIT_NAME_START) != 0;
 }
 
 fn saxIsNameChar(ch: u8): bool {
-    if (saxIsNameStart(ch)) return true;
-    if (ch >= '0' && ch <= '9') return true;
-    return ch == '-' || ch == '.';
+    return (SAX_CHAR_LUT[ch as usize] & SAX_BIT_NAME_CHAR) != 0;
+}
+
+fn saxFindByte(s: string, start: usize, target: u8): usize {
+    let i = start;
+    const len = s.len;
+    const v_t: SaxVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: SaxVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_t)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
+fn saxFindAttrEnd(s: string, start: usize, quote: u8): usize {
+    let i = start;
+    const len = s.len;
+    const v_q: SaxVec16 = @splat(quote);
+    const v_lt: SaxVec16 = @splat(60 as u8);
+    while (i + 16 <= len) {
+        const v: SaxVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_q) || @reduce(.Or, v == v_lt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == quote || c == '<') { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != quote && s[i] != '<') {
+        i += 1;
+    }
+    return i;
 }
 
 fn saxStrEq(a: string, b: string): bool {
@@ -84,15 +176,29 @@ fn saxStartsWithAt(s: string, pos: usize, prefix: string): bool {
 fn saxFindSubstrFrom(s: string, start: usize, needle: string): i64 {
     if (needle.len == 0) return i64(start);
     if (start + needle.len > s.len) return -1;
+    const first = needle[0];
     let i = start;
-    while (i + needle.len <= s.len) : (i += 1) {
-        if (saxStartsWithAt(s, i, needle)) return i64(i);
+    while (i + needle.len <= s.len) {
+        i = saxFindByte(s, i, first);
+        if (i + needle.len > s.len) return -1;
+        if (needle.len == 1 || saxStartsWithAt(s, i, needle)) return i64(i);
+        i += 1;
     }
     return -1;
 }
 
 fn saxAllWs(s: string): bool {
     let i: usize = 0;
+    const v_sp: SaxVec16 = @splat(32 as u8);
+    const v_tab: SaxVec16 = @splat(9 as u8);
+    const v_lf: SaxVec16 = @splat(10 as u8);
+    const v_cr: SaxVec16 = @splat(13 as u8);
+    while (i + 16 <= s.len) {
+        const v: SaxVec16 = s[i .. i + 16][0..16].*;
+        const is_ws = (v == v_sp) | (v == v_tab) | (v == v_lf) | (v == v_cr);
+        if (!@reduce(.And, is_ws)) return false;
+        i += 16;
+    }
     while (i < s.len) : (i += 1) {
         if (!saxIsWs(s[i])) return false;
     }
@@ -139,16 +245,27 @@ fn saxEncodeUtf8(cp: u32, out: []u8, pos: usize): usize {
 }
 
 fn saxHexVal(ch: u8): i32 {
-    if (ch >= '0' && ch <= '9') return i32(ch - '0');
-    if (ch >= 'a' && ch <= 'f') return i32(ch - 'a') + 10;
-    if (ch >= 'A' && ch <= 'F') return i32(ch - 'A') + 10;
-    return -1;
+    const v = SAX_HEX_LUT[ch as usize];
+    if (v == 255) return -1;
+    return i32(v);
 }
 
 fn saxDecodeEntitiesImpl(raw: string, out: []u8): usize {
     let i: usize = 0;
     let w: usize = 0;
     while (i < raw.len) {
+        const amp = saxFindByte(raw, i, '&');
+        if (amp > i) {
+            const avail = if (w < out.len) { out.len - w } else { 0 };
+            const chunk_len = amp - i;
+            const n = if (chunk_len < avail) { chunk_len } else { avail };
+            if (n > 0) {
+                @memcpy(out[w .. w + n], raw[i .. i + n]);
+                w += n;
+            }
+            i = amp;
+            if (i >= raw.len) break;
+        }
         if (raw[i] == '&') {
             const semi_pos = saxFindSubstrFrom(raw, i + 1, ";");
             if (semi_pos > i64(i + 1)) {
@@ -255,9 +372,7 @@ pub struct SaxesParser {
         while (pos < xml.len) {
             if (xml[pos] != '<') {
                 const start = pos;
-                while (pos < xml.len && xml[pos] != '<') {
-                    pos += 1;
-                }
+                pos = saxFindByte(xml, pos + 1, '<');
                 const txt = xml[start..pos];
                 if (saxFindSubstrFrom(txt, 0, "]]>") >= 0) {
                     _.has_err = true;
@@ -342,13 +457,13 @@ pub struct SaxesParser {
 
             // DOCTYPE declaration: <!DOCTYPE ...>
             if (saxStartsWithAt(xml, pos, "<!DOCTYPE")) {
-                const gt_pos = saxFindSubstrFrom(xml, pos + 9, ">");
-                if (gt_pos < 0) {
+                const gt_pos = saxFindByte(xml, pos + 9, '>');
+                if (gt_pos >= xml.len) {
                     _.has_err = true;
                     count = saxEmit(out, count, saxMakeEvent(XmlEventKind.Error, "", "unterminated DOCTYPE"));
                     return count;
                 }
-                pos = usize(gt_pos) + 1;
+                pos = gt_pos + 1;
                 continue;
             }
 
@@ -470,17 +585,15 @@ pub struct SaxesParser {
                 const quote = xml[pos];
                 pos += 1;
                 const v_start = pos;
-                while (pos < xml.len && xml[pos] != quote) {
-                    if (xml[pos] == '<') {
-                        _.has_err = true;
-                        count = saxEmit(out, count, saxMakeEvent(XmlEventKind.Error, a_name, "unescaped '<' in attribute value"));
-                        return count;
-                    }
-                    pos += 1;
-                }
+                pos = saxFindAttrEnd(xml, pos, quote);
                 if (pos >= xml.len) {
                     _.has_err = true;
                     count = saxEmit(out, count, saxMakeEvent(XmlEventKind.Error, a_name, "unterminated attribute value"));
+                    return count;
+                }
+                if (xml[pos] == '<') {
+                    _.has_err = true;
+                    count = saxEmit(out, count, saxMakeEvent(XmlEventKind.Error, a_name, "unescaped '<' in attribute value"));
                     return count;
                 }
                 const a_val = xml[v_start..pos];

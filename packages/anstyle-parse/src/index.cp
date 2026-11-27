@@ -1,5 +1,8 @@
 // @cap/anstyle-parse — Zero-heap VT100/ANSI escape sequence state-machine parser in pure CP
 // MIT License — Clean-room implementation supporting Text, CSI, OSC, and ESC sequences
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUT, and @memcpy.
+
+type AnsiVec16 = @Vector(16, u8);
 
 pub const TOKEN_TEXT: u8 = 0;
 pub const TOKEN_CSI: u8 = 1;
@@ -8,6 +11,73 @@ pub const TOKEN_ESC: u8 = 3;
 
 const BYTE_ESC: u8 = 27; // 0x1B
 const BYTE_BEL: u8 = 7;  // 0x07
+
+const ANSI_CLS_PARAM: u8 = 1;
+const ANSI_CLS_INTER: u8 = 2;
+const ANSI_CLS_FINAL: u8 = 4;
+
+fn ansiBuildClassLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c >= 0x30 && c <= 0x3F) { f |= ANSI_CLS_PARAM; }
+        if (c >= 0x20 && c <= 0x2F) { f |= ANSI_CLS_INTER; }
+        if (c >= 0x40 && c <= 0x7E) { f |= ANSI_CLS_FINAL; }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const ANSI_CLASS_LUT: [256]u8 = ansiBuildClassLut();
+
+fn ansiFindEsc(input: string, start: usize): usize {
+    let i = start;
+    const len = input.len;
+    const v_esc: AnsiVec16 = @splat(BYTE_ESC);
+    while (i + 16 <= len) {
+        const v: AnsiVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_esc)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (input[i + k] == BYTE_ESC) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && input[i] != BYTE_ESC) {
+        i += 1;
+    }
+    return i;
+}
+
+fn ansiFindOscDelim(input: string, start: usize): usize {
+    let i = start;
+    const len = input.len;
+    const v_bel: AnsiVec16 = @splat(BYTE_BEL);
+    const v_esc: AnsiVec16 = @splat(BYTE_ESC);
+    while (i + 16 <= len) {
+        const v: AnsiVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_bel) || @reduce(.Or, v == v_esc)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const b = input[i + k];
+                if (b == BYTE_BEL || b == BYTE_ESC) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const b = input[i];
+        if (b == BYTE_BEL || b == BYTE_ESC) { return i; }
+        i += 1;
+    }
+    return len;
+}
 
 pub struct AnsiToken {
     pub kind: u8,
@@ -25,10 +95,7 @@ pub struct SgrParams {
 /// Parse the next single ANSI token (Text, CSI, OSC, or ESC) starting at `pos`.
 fn nextToken(input: string, pos: usize): AnsiToken {
     if (input[pos] != BYTE_ESC) {
-        let j: usize = pos + 1;
-        while (j < input.len && input[j] != BYTE_ESC) {
-            j += 1;
-        }
+        const j = ansiFindEsc(input, pos + 1);
         return AnsiToken {
             kind: TOKEN_TEXT,
             start: pos,
@@ -52,14 +119,14 @@ fn nextToken(input: string, pos: usize): AnsiToken {
     // CSI: ESC [ <params 0x30..0x3F>* <intermediates 0x20..0x2F>* <final 0x40..0x7E>
     if (intro == 91) { // '['
         let j: usize = pos + 2;
-        while (j < input.len && input[j] >= 0x30 && input[j] <= 0x3F) {
+        while (j < input.len && (ANSI_CLASS_LUT[input[j] as usize] & ANSI_CLS_PARAM) != 0) {
             j += 1;
         }
-        while (j < input.len && input[j] >= 0x20 && input[j] <= 0x2F) {
+        while (j < input.len && (ANSI_CLASS_LUT[input[j] as usize] & ANSI_CLS_INTER) != 0) {
             j += 1;
         }
         let fb: u8 = 0;
-        if (j < input.len && input[j] >= 0x40 && input[j] <= 0x7E) {
+        if (j < input.len && (ANSI_CLASS_LUT[input[j] as usize] & ANSI_CLS_FINAL) != 0) {
             fb = input[j];
             j += 1;
         }
@@ -76,6 +143,8 @@ fn nextToken(input: string, pos: usize): AnsiToken {
         let j: usize = pos + 2;
         let fb: u8 = 0;
         while (j < input.len) {
+            j = ansiFindOscDelim(input, j);
+            if (j >= input.len) { break; }
             if (input[j] == BYTE_BEL) {
                 fb = BYTE_BEL;
                 j += 1;
@@ -98,7 +167,7 @@ fn nextToken(input: string, pos: usize): AnsiToken {
 
     // Generic 2-byte / intermediate ESC sequence: ESC <intermediates 0x20..0x2F>* <final>
     let j: usize = pos + 1;
-    while (j < input.len && input[j] >= 0x20 && input[j] <= 0x2F) {
+    while (j < input.len && (ANSI_CLASS_LUT[input[j] as usize] & ANSI_CLS_INTER) != 0) {
         j += 1;
     }
     let fb: u8 = 0;
@@ -143,7 +212,7 @@ pub fn parseCsiParams(csi_seq: string): SgrParams {
         return res;
     }
     const final_b: u8 = csi_seq[csi_seq.len - 1];
-    if (final_b < 0x40 || final_b > 0x7E) {
+    if ((ANSI_CLASS_LUT[final_b as usize] & ANSI_CLS_FINAL) == 0) {
         return res;
     }
 
@@ -195,12 +264,12 @@ pub fn stripAnsiToBuf(input: string, out: []u8): usize {
     let w: usize = 0;
     while (pos < input.len) {
         const tok: AnsiToken = nextToken(input, pos);
-        if (tok.kind == TOKEN_TEXT) {
-            let k: usize = 0;
-            while (k < tok.len && w < out.len) {
-                out[w] = input[tok.start + k];
-                w += 1;
-                k += 1;
+        if (tok.kind == TOKEN_TEXT && w < out.len) {
+            const avail = out.len - w;
+            const n = if (tok.len < avail) { tok.len } else { avail };
+            if (n > 0) {
+                @memcpy(out[w .. w + n], input[tok.start .. tok.start + n]);
+                w += n;
             }
         }
         pos += tok.len;
@@ -210,14 +279,7 @@ pub fn stripAnsiToBuf(input: string, out: []u8): usize {
 
 /// Return true if `input` contains any ANSI escape introducer (`ESC`, 0x1B).
 pub fn hasAnsi(input: string): bool {
-    let i: usize = 0;
-    while (i < input.len) {
-        if (input[i] == BYTE_ESC) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return ansiFindEsc(input, 0) < input.len;
 }
 
 /// Return the total number of visible (non-ANSI) bytes in `input` without allocating.

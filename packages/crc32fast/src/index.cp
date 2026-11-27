@@ -1,3 +1,6 @@
+// @cap/crc32fast — Slice-by-8 IEEE CRC32 hasher in pure CP
+// Accelerated with comptime [8][256]u32 LUT (8 bytes per hot-loop iteration) and undefined stack buffers.
+
 pub const CRC32_POLY_REVERSED: u32 = 3988292384; // 0xEDB88320
 
 fn crcByteStep(crc_in: u32, b: u8): u32 {
@@ -13,16 +16,16 @@ fn crcByteStep(crc_in: u32, b: u8): u32 {
     return c;
 }
 
-fn crcBuildTables(): [4][256]u32 {
-    @setEvalBranchQuota(40000);
-    let tbl: [4][256]u32 = undefined;
+fn crcBuildTables(): [8][256]u32 {
+    @setEvalBranchQuota(80000);
+    let tbl: [8][256]u32 = undefined;
     let i: usize = 0;
     while (i < 256) {
         tbl[0][i] = crcByteStep(0, i as u8);
         i = i + 1;
     }
     let t: usize = 1;
-    while (t < 4) {
+    while (t < 8) {
         let j: usize = 0;
         while (j < 256) {
             const prev = tbl[t - 1][j];
@@ -34,7 +37,7 @@ fn crcBuildTables(): [4][256]u32 {
     return tbl;
 }
 
-const CRC32_LUT: [4][256]u32 = crcBuildTables();
+const CRC32_LUT: [8][256]u32 = crcBuildTables();
 
 fn crcGf2MatrixTimes(mat: [32]u32, vec: u32): u32 {
     let sum: u32 = 0;
@@ -92,6 +95,47 @@ pub fn combineCrc32(crc1: u32, crc2: u32, len2: u64): u32 {
     return c1 ^ crc2;
 }
 
+fn crc32UpdateSlice(state_in: u32, buf: []const u8): u32 {
+    let c: u32 = state_in ^ 4294967295; // 0xFFFFFFFF
+    let i: usize = 0;
+    // Slice-by-8 hot loop: 8 bytes per iteration
+    while (i + 8 <= buf.len) {
+        const lo: u32 = (buf[i] as u32)
+            | ((buf[i + 1] as u32) << 8)
+            | ((buf[i + 2] as u32) << 16)
+            | ((buf[i + 3] as u32) << 24);
+        const x: u32 = c ^ lo;
+        c = CRC32_LUT[7][(x & 255) as usize]
+            ^ CRC32_LUT[6][((x >> 8) & 255) as usize]
+            ^ CRC32_LUT[5][((x >> 16) & 255) as usize]
+            ^ CRC32_LUT[4][((x >> 24) & 255) as usize]
+            ^ CRC32_LUT[3][buf[i + 4] as usize]
+            ^ CRC32_LUT[2][buf[i + 5] as usize]
+            ^ CRC32_LUT[1][buf[i + 6] as usize]
+            ^ CRC32_LUT[0][buf[i + 7] as usize];
+        i = i + 8;
+    }
+    // Slice-by-4 tail
+    if (i + 4 <= buf.len) {
+        const w: u32 = (buf[i] as u32)
+            | ((buf[i + 1] as u32) << 8)
+            | ((buf[i + 2] as u32) << 16)
+            | ((buf[i + 3] as u32) << 24);
+        const x: u32 = c ^ w;
+        c = CRC32_LUT[3][(x & 255) as usize]
+            ^ CRC32_LUT[2][((x >> 8) & 255) as usize]
+            ^ CRC32_LUT[1][((x >> 16) & 255) as usize]
+            ^ CRC32_LUT[0][((x >> 24) & 255) as usize];
+        i = i + 4;
+    }
+    while (i < buf.len) {
+        const idx: usize = ((c ^ (buf[i] as u32)) & 255) as usize;
+        c = (c >> 8) ^ CRC32_LUT[0][idx];
+        i = i + 1;
+    }
+    return c ^ 4294967295;
+}
+
 pub struct Crc32Hasher {
     pub state: u32,
     pub amount: u64,
@@ -105,52 +149,12 @@ pub struct Crc32Hasher {
     }
 
     pub fn update(*_, buf: []const u8) {
-        let c: u32 = _.state ^ 4294967295; // 0xFFFFFFFF
-        let i: usize = 0;
-        // Slice-by-4 hot loop: 4 bytes per iteration
-        while (i + 4 <= buf.len) {
-            const w: u32 = (buf[i] as u32)
-                | ((buf[i + 1] as u32) << 8)
-                | ((buf[i + 2] as u32) << 16)
-                | ((buf[i + 3] as u32) << 24);
-            const x: u32 = c ^ w;
-            c = CRC32_LUT[3][(x & 255) as usize]
-                ^ CRC32_LUT[2][((x >> 8) & 255) as usize]
-                ^ CRC32_LUT[1][((x >> 16) & 255) as usize]
-                ^ CRC32_LUT[0][((x >> 24) & 255) as usize];
-            i = i + 4;
-        }
-        while (i < buf.len) {
-            const idx: usize = ((c ^ (buf[i] as u32)) & 255) as usize;
-            c = (c >> 8) ^ CRC32_LUT[0][idx];
-            i = i + 1;
-        }
-        _.state = c ^ 4294967295;
+        _.state = crc32UpdateSlice(_.state, buf);
         _.amount = _.amount + (buf.len as u64);
     }
 
     pub fn updateStr(*_, s: string) {
-        let c: u32 = _.state ^ 4294967295;
-        let i: usize = 0;
-        // Slice-by-4 hot loop: 4 bytes per iteration
-        while (i + 4 <= s.len) {
-            const w: u32 = (s[i] as u32)
-                | ((s[i + 1] as u32) << 8)
-                | ((s[i + 2] as u32) << 16)
-                | ((s[i + 3] as u32) << 24);
-            const x: u32 = c ^ w;
-            c = CRC32_LUT[3][(x & 255) as usize]
-                ^ CRC32_LUT[2][((x >> 8) & 255) as usize]
-                ^ CRC32_LUT[1][((x >> 16) & 255) as usize]
-                ^ CRC32_LUT[0][((x >> 24) & 255) as usize];
-            i = i + 4;
-        }
-        while (i < s.len) {
-            const idx: usize = ((c ^ (s[i] as u32)) & 255) as usize;
-            c = (c >> 8) ^ CRC32_LUT[0][idx];
-            i = i + 1;
-        }
-        _.state = c ^ 4294967295;
+        _.state = crc32UpdateSlice(_.state, s);
         _.amount = _.amount + (s.len as u64);
     }
 
@@ -170,13 +174,9 @@ pub struct Crc32Hasher {
 }
 
 pub fn hashBytes(buf: []const u8): u32 {
-    let h = Crc32Hasher.new();
-    h.update(buf);
-    return h.finalize();
+    return crc32UpdateSlice(0, buf);
 }
 
 pub fn hashStr(s: string): u32 {
-    let h = Crc32Hasher.new();
-    h.updateStr(s);
-    return h.finalize();
+    return crc32UpdateSlice(0, s);
 }

@@ -1,16 +1,32 @@
 // @cap/url-join — Zero-allocation smart URL joiner & path normalizer for CP
 // Clean-room MIT implementation inspired by npm `url-join` and `ufo`.
-//
-// Features:
-// - `urlJoin`: preserves schemes (`https://`, `http://`, `ws://`, `wss://`, `file:///`, `mailto:`, `//`),
-//   deduplicates slashes, skips empty parts, merges multiple `?query` strings with `&`, and moves `#hash` to the end.
-// - `normalizeUrlPath`: collapses redundant `/`, `.`, and `..` segments cleanly.
-// - `withQuery`: appends `key=value` with automatic `?` vs `&` while preserving `#hash`.
-// - `withTrailingSlash` & `withoutTrailingSlash`: query/hash-aware trailing slash helpers.
-// - Zero heap allocation: writes directly into caller-provided `out: []u8`.
+// Accelerated with comptime 256-entry LUT, 16-lane @Vector(16, u8) SIMD scanning, and @memcpy.
 
-import { strEq, eqIgnoreCase, isAlpha, isAlnum, findByte } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+import { strEq, eqIgnoreCase } from "cap:ascii";
+
+type UjVec16 = @Vector(16, u8);
+
+const UJ_BIT_ALPHA: u8 = 1;
+const UJ_BIT_SCHEME: u8 = 2;
+
+fn ujBuildSchemeLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) {
+            f |= UJ_BIT_ALPHA | UJ_BIT_SCHEME;
+        } else if ((c >= 48 && c <= 57) || c == 43 || c == 45 || c == 46) {
+            f |= UJ_BIT_SCHEME;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const UJ_SCHEME_LUT: [256]u8 = ujBuildSchemeLut();
 
 fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     if (pos < out.len) {
@@ -20,8 +36,39 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
+fn ujCopySlice(out: []u8, pos: usize, src: string) -> usize {
+    if (pos >= out.len || src.len == 0) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const n = if (src.len < avail) { src.len } else { avail };
+    @memcpy(out[pos .. pos + n], src[0..n]);
+    return pos + n;
+}
+
+fn ujFindByte(s: string, start: usize, target: u8) -> usize {
+    let i = start;
+    const len = s.len;
+    const v_t: UjVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: UjVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_t)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
 fn isSchemeChar(c: u8) -> bool {
-    return isAlnum(c) || c == '+' || c == '-' || c == '.';
+    return (UJ_SCHEME_LUT[c as usize] & UJ_BIT_SCHEME) != 0;
 }
 
 /// Returns the end index of a URL scheme prefix if present:
@@ -34,7 +81,7 @@ fn schemePrefixLen(s: string) -> usize {
     if (s.len >= 2 && s[0] == '/' && s[1] == '/') {
         return 2;
     }
-    if (s.len == 0 || !isAlpha(s[0])) {
+    if (s.len == 0 || (UJ_SCHEME_LUT[s[0] as usize] & UJ_BIT_ALPHA) == 0) {
         return 0;
     }
     let i: usize = 1;
@@ -61,7 +108,7 @@ struct PartSplit {
 }
 
 fn splitPart(p: string) -> PartSplit {
-    const hash_idx = findByte(p, '#', 0) ?? p.len;
+    const hash_idx = ujFindByte(p, 0, '#');
     const before_hash = p[0..hash_idx];
     const hash = p[hash_idx..p.len];
 
@@ -69,7 +116,7 @@ fn splitPart(p: string) -> PartSplit {
         return PartSplit{ path: "", query: before_hash[1..before_hash.len], hash: hash };
     }
 
-    const q_idx = findByte(before_hash, '?', 0) ?? before_hash.len;
+    const q_idx = ujFindByte(before_hash, 0, '?');
     const path = before_hash[0..q_idx];
     const query = if (q_idx < before_hash.len) { before_hash[(q_idx + 1)..before_hash.len] } else { "" };
     return PartSplit{ path: path, query: query, hash: hash };
@@ -116,7 +163,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
         if (!has_path) {
             const pfx_len = schemePrefixLen(sp.path);
             if (pfx_len > 0) {
-                pos = writeStr(sp.path[0..pfx_len], out, pos);
+                pos = ujCopySlice(out, pos, sp.path[0..pfx_len]);
                 const rest = sp.path[pfx_len..sp.path.len];
                 if (rest.len == 0) {
                     has_path = true;
@@ -124,7 +171,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
                     last_path_had_trailing_slash = false;
                 } else {
                     const trimmed = trimTrailingSlashes(rest);
-                    pos = writeStr(trimmed, out, pos);
+                    pos = ujCopySlice(out, pos, trimmed);
                     has_path = true;
                     ends_with_scheme = (trimmed.len == 0);
                     last_path_had_trailing_slash = (trimmed.len > 0 && rest[rest.len - 1] == '/');
@@ -135,7 +182,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
                 if (leading_slash) {
                     pos = pushByte(out, pos, '/');
                 }
-                pos = writeStr(core, out, pos);
+                pos = ujCopySlice(out, pos, core);
                 has_path = true;
                 ends_with_scheme = (leading_slash && core.len == 0);
                 last_path_had_trailing_slash = (core.len > 0 && sp.path[sp.path.len - 1] == '/');
@@ -151,7 +198,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
             if (!ends_with_scheme && pos > 0 && out[pos - 1] != '/') {
                 pos = pushByte(out, pos, '/');
             }
-            pos = writeStr(core, out, pos);
+            pos = ujCopySlice(out, pos, core);
             ends_with_scheme = false;
             last_path_had_trailing_slash = (sp.path[sp.path.len - 1] == '/');
         }
@@ -185,7 +232,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
             } else {
                 pos = pushByte(out, pos, '&');
             }
-            pos = writeStr(q, out, pos);
+            pos = ujCopySlice(out, pos, q);
         }
     }
 
@@ -204,7 +251,7 @@ pub fn urlJoin(parts: []string, out: []u8) -> string {
         }
     }
     if (final_hash.len > 0) {
-        pos = writeStr(final_hash, out, pos);
+        pos = ujCopySlice(out, pos, final_hash);
     }
 
     return out[0..pos];
@@ -231,9 +278,7 @@ pub fn normalizeUrlPath(path: string, out: []u8) -> string {
             break;
         }
         const start = i;
-        while (i < path.len && path[i] != '/') {
-            i += 1;
-        }
+        i = ujFindByte(path, i, '/');
         const seg = path[start..i];
 
         if (strEq(seg, ".")) {
@@ -264,7 +309,7 @@ pub fn normalizeUrlPath(path: string, out: []u8) -> string {
         if (k > 0) {
             pos = pushByte(out, pos, '/');
         }
-        pos = writeStr(segs[k], out, pos);
+        pos = ujCopySlice(out, pos, segs[k]);
         k += 1;
     }
 
@@ -278,35 +323,50 @@ pub fn normalizeUrlPath(path: string, out: []u8) -> string {
 /// Appends a `key=value` query parameter to `base_url`, using `?` or `&` as appropriate
 /// while preserving any trailing `#hash` fragment.
 pub fn withQuery(base_url: string, key: string, value: string, out: []u8) -> string {
-    const hash_idx = findByte(base_url, '#', 0) ?? base_url.len;
+    const hash_idx = ujFindByte(base_url, 0, '#');
     const before_hash = base_url[0..hash_idx];
     const hash_part = base_url[hash_idx..base_url.len];
-    const has_q = findByte(before_hash, '?', 0) != null;
+    const has_q = ujFindByte(before_hash, 0, '?') < before_hash.len;
 
     let pos: usize = 0;
-    pos = writeStr(before_hash, out, pos);
+    pos = ujCopySlice(out, pos, before_hash);
     if (!has_q) {
         pos = pushByte(out, pos, '?');
     } else if (before_hash.len > 0 && before_hash[before_hash.len - 1] != '?' && before_hash[before_hash.len - 1] != '&') {
         pos = pushByte(out, pos, '&');
     }
-    pos = writeStr(key, out, pos);
+    pos = ujCopySlice(out, pos, key);
     pos = pushByte(out, pos, '=');
-    pos = writeStr(value, out, pos);
-    pos = writeStr(hash_part, out, pos);
+    pos = ujCopySlice(out, pos, value);
+    pos = ujCopySlice(out, pos, hash_part);
 
     return out[0..pos];
 }
 
 fn findQueryOrHash(url: string) -> usize {
     let i: usize = 0;
-    while (i < url.len) {
+    const len = url.len;
+    const v_q: UjVec16 = @splat(63 as u8); // '?'
+    const v_h: UjVec16 = @splat(35 as u8); // '#'
+    while (i + 16 <= len) {
+        const v: UjVec16 = url[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_q) || @reduce(.Or, v == v_h)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = url[i + k];
+                if (c == '?' || c == '#') { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (url[i] == '?' || url[i] == '#') {
             return i;
         }
         i += 1;
     }
-    return url.len;
+    return len;
 }
 
 /// Ensures the path portion of `url` ends with `/`, preserving `?query` and `#hash`.
@@ -316,11 +376,11 @@ pub fn withTrailingSlash(url: string, out: []u8) -> string {
     const suffix = url[suf_idx..url.len];
 
     let pos: usize = 0;
-    pos = writeStr(path_part, out, pos);
+    pos = ujCopySlice(out, pos, path_part);
     if (path_part.len == 0 || path_part[path_part.len - 1] != '/') {
         pos = pushByte(out, pos, '/');
     }
-    pos = writeStr(suffix, out, pos);
+    pos = ujCopySlice(out, pos, suffix);
     return out[0..pos];
 }
 
@@ -342,7 +402,7 @@ pub fn withoutTrailingSlash(url: string, out: []u8) -> string {
     }
 
     let pos: usize = 0;
-    pos = writeStr(path_part[0..end], out, pos);
-    pos = writeStr(suffix, out, pos);
+    pos = ujCopySlice(out, pos, path_part[0..end]);
+    pos = ujCopySlice(out, pos, suffix);
     return out[0..pos];
 }

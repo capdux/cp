@@ -1,5 +1,8 @@
 // @cap/string-decoder — Zero-allocation streaming UTF-8 / Latin1 / UTF-16LE StringDecoder in pure CP
 // Clean-room MIT implementation of npm `string_decoder` (#62, 378M/wk).
+// Accelerated with comptime 256-entry UTF-8 lead LUT, 16-lane @Vector(16, u8) SIMD ASCII fast-path, and @memcpy.
+
+type SdecVec16 = @Vector(16, u8);
 
 pub enum DecoderEncoding {
     Utf8,
@@ -7,12 +10,31 @@ pub enum DecoderEncoding {
     Utf16Le,
 }
 
+fn sdecBuildUtf8LenLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [1; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c < 0x80) {
+            lut[c] = 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            lut[c] = 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            lut[c] = 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            lut[c] = 4;
+        } else {
+            lut[c] = 1;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const SDEC_UTF8_LEN_LUT: [256]u8 = sdecBuildUtf8LenLut();
+
 fn sdecUtf8ExpectedLen(lead: u8): usize {
-    if (lead < 0x80) { return 1; }
-    if ((lead & 0xE0) == 0xC0) { return 2; }
-    if ((lead & 0xF0) == 0xE0) { return 3; }
-    if ((lead & 0xF8) == 0xF0) { return 4; }
-    return 1; // Invalid lead byte treated as single replacement
+    return SDEC_UTF8_LEN_LUT[lead as usize] as usize;
 }
 
 fn sdecPushReplacement(out: []u8, pos: usize): usize {
@@ -85,7 +107,18 @@ pub struct StringDecoder {
         if (_.encoding == .Latin1) {
             let p: usize = 0;
             let i: usize = 0;
+            const v_hi: SdecVec16 = @splat(0x80 as u8);
+            const v_zero: SdecVec16 = @splat(0 as u8);
             while (i < chunk.len) {
+                if (i + 16 <= chunk.len && p + 16 <= out.len) {
+                    const v: SdecVec16 = chunk[i .. i + 16][0..16].*;
+                    if (!@reduce(.Or, (v & v_hi) != v_zero)) {
+                        @memcpy(out[p .. p + 16], chunk[i .. i + 16]);
+                        i += 16;
+                        p += 16;
+                        continue;
+                    }
+                }
                 p = sdecPushCodePointUtf8(chunk[i] as u32, out, p);
                 i += 1;
             }
@@ -130,8 +163,19 @@ pub struct StringDecoder {
             }
         }
 
-        // 2. Process remaining bytes in `chunk`
+        // 2. Process remaining bytes in `chunk` with 16-lane SIMD ASCII fast-path
+        const v_hi: SdecVec16 = @splat(0x80 as u8);
+        const v_zero: SdecVec16 = @splat(0 as u8);
         while (i < chunk.len) {
+            if (i + 16 <= chunk.len && p + 16 <= out.len) {
+                const v: SdecVec16 = chunk[i .. i + 16][0..16].*;
+                if (!@reduce(.Or, (v & v_hi) != v_zero)) {
+                    @memcpy(out[p .. p + 16], chunk[i .. i + 16]);
+                    i += 16;
+                    p += 16;
+                    continue;
+                }
+            }
             const b = chunk[i];
             if (b < 0x80) {
                 if (p < out.len) {
@@ -185,11 +229,11 @@ pub struct StringDecoder {
                 k += 1;
             }
             if (ok) {
-                let c3: usize = 0;
-                while (c3 < expected && p < out.len) {
-                    out[p] = chunk[i + c3];
-                    p += 1;
-                    c3 += 1;
+                const rem_out = if (p < out.len) { out.len - p } else { 0 };
+                const n = if (expected < rem_out) { expected } else { rem_out };
+                if (n > 0) {
+                    @memcpy(out[p .. p + n], chunk[i .. i + n]);
+                    p += n;
                 }
                 i += expected;
             } else {
