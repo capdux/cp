@@ -1,23 +1,61 @@
 // @cap/fast-glob — Pure CP zero-allocation glob pattern set & path matcher.
 // Clean-room MIT implementation inspired by npm `fast-glob` v3.
 // Reuses `@cap/glob-match` for wildcard & brace matching.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUTs, @memcpy, and undefined stack buffers.
 
 import { globMatch, isStaticGlob } from "../../glob-match/src/index.cp";
 
 pub const FGL_MAX_PATTERNS: usize = 16;
 const FGL_CASE_BUF_LEN: usize = 512;
 
-fn fglToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
+type FglVec16 = @Vector(16, u8);
+
+const FGL_CLS_META: u8 = 1;
+const FGL_CLS_BS: u8 = 2;
+const FGL_CLS_DYNAMIC: u8 = 4;
+
+fn fglBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 65 && c <= 90) {
+            lut[c] = (c + 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
     }
-    return b;
+    return lut;
+}
+
+fn fglBuildMetaLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[42] = FGL_CLS_META | FGL_CLS_DYNAMIC;  // '*'
+    lut[63] = FGL_CLS_META | FGL_CLS_DYNAMIC;  // '?'
+    lut[91] = FGL_CLS_META | FGL_CLS_DYNAMIC;  // '['
+    lut[93] = FGL_CLS_META;                    // ']'
+    lut[123] = FGL_CLS_META | FGL_CLS_DYNAMIC; // '{'
+    lut[125] = FGL_CLS_META;                   // '}'
+    lut[40] = FGL_CLS_META;                    // '('
+    lut[41] = FGL_CLS_META;                    // ')'
+    lut[33] = FGL_CLS_META | FGL_CLS_DYNAMIC;  // '!'
+    lut[64] = FGL_CLS_META;                    // '@'
+    lut[43] = FGL_CLS_META;                    // '+'
+    lut[92] = FGL_CLS_BS;                      // '\'
+    return lut;
+}
+
+const FGL_LOWER_LUT: [256]u8 = fglBuildLowerLut();
+const FGL_META_LUT: [256]u8 = fglBuildMetaLut();
+
+fn fglToLower(b: u8): u8 {
+    return FGL_LOWER_LUT[b as usize];
 }
 
 fn fglIsGlobMeta(b: u8): bool {
-    return b == 42 || b == 63 || b == 91 || b == 93 ||
-        b == 123 || b == 125 || b == 40 || b == 41 ||
-        b == 33 || b == 64 || b == 43;
+    return (FGL_META_LUT[b as usize] & FGL_CLS_META) != 0;
 }
 
 fn fglNormalizeRelPath(raw: string): string {
@@ -38,7 +76,22 @@ fn fglPathDepth(path: string): usize {
     }
     let depth: usize = 1;
     let i: usize = 0;
-    while (i < path.len) {
+    const len = path.len;
+    const v_slash: FglVec16 = @splat(47);
+    while (i + 16 <= len) {
+        const v: FglVec16 = path[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_slash)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (path[i + k] == 47) {
+                    depth = depth + 1;
+                }
+                k = k + 1;
+            }
+        }
+        i = i + 16;
+    }
+    while (i < len) {
         if (path[i] == 47) { // '/'
             depth = depth + 1;
         }
@@ -49,9 +102,19 @@ fn fglPathDepth(path: string): usize {
 
 fn fglHasDotSegment(path: string): bool {
     let i: usize = 0;
+    const len = path.len;
     let seg_start = true;
-    while (i < path.len) {
-        let b = path[i];
+    const v_slash: FglVec16 = @splat(47);
+    const v_dot: FglVec16 = @splat(46);
+    while (i < len) {
+        if (!seg_start && i + 16 <= len) {
+            const v: FglVec16 = path[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_slash) && !@reduce(.Or, v == v_dot)) {
+                i = i + 16;
+                continue;
+            }
+        }
+        const b = path[i];
         if (seg_start && b == 46) { // '.'
             return true;
         }
@@ -67,8 +130,24 @@ fn fglLowerInto(src: string, dst: []u8): usize {
         n = dst.len;
     }
     let i: usize = 0;
+    const v_a: FglVec16 = @splat(65);
+    while (i + 16 <= n) {
+        const v: FglVec16 = src[i .. i + 16][0..16].*;
+        const off: FglVec16 = v -% v_a;
+        if (@reduce(.Min, off) > 25) {
+            @memcpy(dst[i .. i + 16], src[i .. i + 16]);
+        } else {
+            const arr: [16]u8 = v;
+            let k: usize = 0;
+            while (k < 16) {
+                dst[i + k] = FGL_LOWER_LUT[arr[k] as usize];
+                k = k + 1;
+            }
+        }
+        i = i + 16;
+    }
     while (i < n) {
-        dst[i] = fglToLower(src[i]);
+        dst[i] = FGL_LOWER_LUT[src[i] as usize];
         i = i + 1;
     }
     return n;
@@ -78,12 +157,12 @@ fn fglMatchOne(pattern: string, path: string, case_sensitive: bool): bool {
     if (case_sensitive) {
         return globMatch(pattern, path);
     }
-    let pbuf: [512]u8 = [0 as u8; 512];
-    let sbuf: [512]u8 = [0 as u8; 512];
-    let plen = fglLowerInto(pattern, pbuf[0..FGL_CASE_BUF_LEN]);
-    let slen = fglLowerInto(path, sbuf[0..FGL_CASE_BUF_LEN]);
-    let pstr: string = pbuf[0..plen];
-    let sstr: string = sbuf[0..slen];
+    let pbuf: [512]u8 = undefined;
+    let sbuf: [512]u8 = undefined;
+    const plen = fglLowerInto(pattern, pbuf[0..FGL_CASE_BUF_LEN]);
+    const slen = fglLowerInto(path, sbuf[0..FGL_CASE_BUF_LEN]);
+    const pstr: string = pbuf[0..plen];
+    const sstr: string = sbuf[0..slen];
     return globMatch(pstr, sstr);
 }
 
@@ -119,12 +198,12 @@ pub fn isDynamicPattern(pattern: string): bool {
     }
     let i: usize = 0;
     while (i < pattern.len) {
-        let b = pattern[i];
-        if (b == 92) { // '\'
+        const cls = FGL_META_LUT[pattern[i] as usize];
+        if ((cls & FGL_CLS_BS) != 0) { // '\'
             i = i + 2;
             continue;
         }
-        if (b == 42 || b == 63 || b == 91 || b == 123 || b == 33) {
+        if ((cls & FGL_CLS_DYNAMIC) != 0) {
             return true;
         }
         i = i + 1;
@@ -137,20 +216,31 @@ pub fn isDynamicPattern(pattern: string): bool {
 pub fn escapePath(path: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
-    while (i < path.len && pos < out.len) {
-        let b = path[i];
-        if (fglIsGlobMeta(b) || b == 92) {
+    const len = path.len;
+    while (i < len && pos < out.len) {
+        const run_start = i;
+        while (i < len && (FGL_META_LUT[path[i] as usize] & (FGL_CLS_META | FGL_CLS_BS)) == 0) {
+            i = i + 1;
+        }
+        if (i > run_start) {
+            const avail = out.len - pos;
+            const run_len = i - run_start;
+            const copy_n = if (run_len < avail) { run_len } else { avail };
+            @memcpy(out[pos .. pos + copy_n], path[run_start .. run_start + copy_n]);
+            pos = pos + copy_n;
+            if (copy_n < run_len || pos >= out.len) {
+                break;
+            }
+        }
+        if (i < len) {
             if (pos + 2 > out.len) {
                 break;
             }
             out[pos] = 92; // '\'
-            out[pos + 1] = b;
+            out[pos + 1] = path[i];
             pos = pos + 2;
-        } else {
-            out[pos] = b;
-            pos = pos + 1;
+            i = i + 1;
         }
-        i = i + 1;
     }
     return pos;
 }
@@ -161,23 +251,37 @@ pub fn escapePath(path: string, out: []u8): usize {
 pub fn convertPathToPattern(path: string, out: []u8): usize {
     let pos: usize = 0;
     let i: usize = 0;
-    while (i < path.len && pos < out.len) {
-        let b = path[i];
-        if (b == 92) { // '\' -> '/'
-            out[pos] = 47;
-            pos = pos + 1;
-        } else if (fglIsGlobMeta(b)) {
-            if (pos + 2 > out.len) {
+    const len = path.len;
+    while (i < len && pos < out.len) {
+        const run_start = i;
+        while (i < len && (FGL_META_LUT[path[i] as usize] & (FGL_CLS_META | FGL_CLS_BS)) == 0) {
+            i = i + 1;
+        }
+        if (i > run_start) {
+            const avail = out.len - pos;
+            const run_len = i - run_start;
+            const copy_n = if (run_len < avail) { run_len } else { avail };
+            @memcpy(out[pos .. pos + copy_n], path[run_start .. run_start + copy_n]);
+            pos = pos + copy_n;
+            if (copy_n < run_len || pos >= out.len) {
                 break;
             }
-            out[pos] = 92; // '\'
-            out[pos + 1] = b;
-            pos = pos + 2;
-        } else {
-            out[pos] = b;
-            pos = pos + 1;
         }
-        i = i + 1;
+        if (i < len) {
+            const b = path[i];
+            if (b == 92) { // '\' -> '/'
+                out[pos] = 47;
+                pos = pos + 1;
+            } else {
+                if (pos + 2 > out.len) {
+                    break;
+                }
+                out[pos] = 92; // '\'
+                out[pos + 1] = b;
+                pos = pos + 2;
+            }
+            i = i + 1;
+        }
     }
     return pos;
 }
@@ -234,7 +338,7 @@ pub struct GlobPatternSet {
 
     /// Evaluates whether `rel_path` matches the pattern set under `_.opts`.
     pub fn matches(rel_path: string, is_dir: bool): bool {
-        let norm = fglNormalizeRelPath(rel_path);
+        const norm = fglNormalizeRelPath(rel_path);
         if (norm.len == 0) {
             return false;
         }

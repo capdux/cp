@@ -1,5 +1,52 @@
 // @cap/http-content-range — Zero-allocation RFC 9110 Content-Range parser & formatter in pure CP
 // Clean-room MIT implementation of crates.io `http-content-range`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUTs, @memcpy, and undefined stack buffers.
+
+type HcrVec16 = @Vector(16, u8);
+
+fn hcrBuildDigitLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = (c - 48) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+fn hcrBuildWsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[32] = 1; // ' '
+    lut[9] = 1;  // '\t'
+    return lut;
+}
+
+const HCR_DIGIT_LUT: [256]u8 = hcrBuildDigitLut();
+const HCR_WS_LUT: [256]u8 = hcrBuildWsLut();
+
+fn hcrFindByte(s: string, target: u8): usize {
+    let i: usize = 0;
+    const len = s.len;
+    const v_t: HcrVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: HcrVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_t)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        if (s[i] == target) { return i; }
+        i += 1;
+    }
+    return len;
+}
 
 pub enum ContentRangeKind {
     Invalid,
@@ -35,29 +82,27 @@ fn hcrParseU64(s: string): u64? {
     let acc: u64 = 0;
     let i: usize = 0;
     while (i < s.len) {
-        const b = s[i];
-        if (b < 48 || b > 57) {
+        const d = HCR_DIGIT_LUT[s[i] as usize];
+        if (d > 9) {
             return null;
         }
-        const digit = (b - 48) as u64;
         if (acc > 1844674407370955161) {
             return null;
         }
-        acc = acc * 10 + digit;
+        acc = acc * 10 + (d as u64);
         i += 1;
     }
     return acc;
 }
 
 fn hcrPush(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const n = if (s.len < avail) { s.len } else { avail };
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
 }
 
 fn hcrPushU64(out: []u8, pos: usize, val: u64): usize {
@@ -92,10 +137,10 @@ pub fn parseContentRange(header: string): ContentRange {
     const invalid = ContentRange { kind: .Invalid, first_byte: 0, last_byte: 0, complete_length: 0 };
     let a: usize = 0;
     let b: usize = header.len;
-    while (a < b && (header[a] == 32 || header[a] == 9)) {
+    while (a < b && HCR_WS_LUT[header[a] as usize] != 0) {
         a += 1;
     }
-    while (b > a && (header[b - 1] == 32 || header[b - 1] == 9)) {
+    while (b > a && HCR_WS_LUT[header[b - 1] as usize] != 0) {
         b -= 1;
     }
     const s = header[a..b];
@@ -108,15 +153,7 @@ pub fn parseContentRange(header: string): ContentRange {
     }
     const rest = s[6..s.len];
     // Find '/'
-    let slash: usize = rest.len;
-    let i: usize = 0;
-    while (i < rest.len) {
-        if (rest[i] == 47) {
-            slash = i;
-            break;
-        }
-        i += 1;
-    }
+    const slash: usize = hcrFindByte(rest, 47);
     if (slash == 0 || slash + 1 >= rest.len) {
         return invalid;
     }
@@ -140,15 +177,7 @@ pub fn parseContentRange(header: string): ContentRange {
     }
 
     // Range form: "<first>-<last>/<size|*>"
-    let dash: usize = range_part.len;
-    let d: usize = 0;
-    while (d < range_part.len) {
-        if (range_part[d] == 45) {
-            dash = d;
-            break;
-        }
-        d += 1;
-    }
+    const dash: usize = hcrFindByte(range_part, 45);
     if (dash == 0 || dash + 1 >= range_part.len) {
         return invalid;
     }

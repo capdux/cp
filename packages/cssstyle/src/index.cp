@@ -1,10 +1,138 @@
 // @cap/cssstyle — Zero-allocation CSS inline style declaration parser & serializer in pure CP
 // Clean-room MIT implementation inspired by npm `cssstyle`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUT, @memcpy, and undefined stack buffers.
 
-import { isSpace, eqIgnoreCase, trim, toLower } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+import { eqIgnoreCase, trim, toLower } from "cap:ascii";
 
 pub const CSS_STYLE_CAP: usize = 64;
+
+type CstVec16 = @Vector(16, u8);
+
+fn cstBuildWsLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[32] = 1; // ' '
+    lut[9] = 1;  // '\t'
+    lut[10] = 1; // '\n'
+    lut[11] = 1; // '\v'
+    lut[12] = 1; // '\f'
+    lut[13] = 1; // '\r'
+    return lut;
+}
+
+const CST_WS_LUT: [256]u8 = cstBuildWsLut();
+
+fn cstIsSpace(b: u8): bool {
+    return CST_WS_LUT[b as usize] != 0;
+}
+
+fn cstFindStar(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_star: CstVec16 = @splat(42);
+    while (i + 16 <= len) {
+        const v: CstVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_star)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == 42) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != 42) {
+        i += 1;
+    }
+    return i;
+}
+
+fn cstFindNameStop(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_col: CstVec16 = @splat(58);  // ':'
+    const v_semi: CstVec16 = @splat(59); // ';'
+    const v_sl: CstVec16 = @splat(47);   // '/'
+    while (i + 16 <= len) {
+        const v: CstVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_col) || @reduce(.Or, v == v_semi) || @reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == 58 || c == 59 || c == 47) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == 58 || c == 59 || c == 47) { return i; }
+        i += 1;
+    }
+    return len;
+}
+
+fn cstFindSemi(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_semi: CstVec16 = @splat(59);
+    while (i + 16 <= len) {
+        const v: CstVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_semi)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == 59) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != 59) {
+        i += 1;
+    }
+    return i;
+}
+
+fn cstFindValSpecial(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_dq: CstVec16 = @splat(34);   // '"'
+    const v_sq: CstVec16 = @splat(39);   // '\''
+    const v_lp: CstVec16 = @splat(40);   // '('
+    const v_rp: CstVec16 = @splat(41);   // ')'
+    const v_sl: CstVec16 = @splat(47);   // '/'
+    const v_semi: CstVec16 = @splat(59); // ';'
+    while (i + 16 <= len) {
+        const v: CstVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_semi) || @reduce(.Or, v == v_dq) || @reduce(.Or, v == v_sq)
+            || @reduce(.Or, v == v_lp) || @reduce(.Or, v == v_rp) || @reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = s[i + k];
+                if (c == 59 || c == 34 || c == 39 || c == 40 || c == 41 || c == 47) { return i + k; }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == 59 || c == 34 || c == 39 || c == 40 || c == 41 || c == 47) { return i; }
+        i += 1;
+    }
+    return len;
+}
+
+fn cstWriteStr(out: []u8, pos: usize, s: string): usize {
+    if (pos >= out.len || s.len == 0) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const n = if (s.len < avail) { s.len } else { avail };
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
+}
 
 /// A single CSS declaration property (`name: value [!important]`).
 pub struct CssProp {
@@ -16,14 +144,24 @@ pub struct CssProp {
 fn cstSkipSpaceAndComments(s: string, pos: usize): usize {
     let i: usize = pos;
     while (i < s.len) {
-        if (isSpace(s[i])) {
+        if (cstIsSpace(s[i])) {
             i += 1;
         } else if (i + 1 < s.len && s[i] == '/' && s[i + 1] == '*') {
             i += 2;
-            while (i + 1 < s.len && !(s[i] == '*' && s[i + 1] == '/')) : (i += 1) {}
-            if (i + 1 < s.len) {
-                i += 2;
-            } else {
+            let closed = false;
+            while (i + 1 < s.len) {
+                i = cstFindStar(s, i);
+                if (i + 1 >= s.len) {
+                    break;
+                }
+                if (s[i + 1] == '/') {
+                    i += 2;
+                    closed = true;
+                    break;
+                }
+                i += 1;
+            }
+            if (!closed) {
                 i = s.len;
             }
         } else {
@@ -65,7 +203,7 @@ fn cstExtractImportant(raw: string): CstParsedValue {
         const tail_start: usize = clean.len - imp_word.len;
         if (eqIgnoreCase(clean[tail_start..clean.len], imp_word)) {
             let bang_pos: usize = tail_start;
-            while (bang_pos > 0 && isSpace(clean[bang_pos - 1])) : (bang_pos -= 1) {}
+            while (bang_pos > 0 && cstIsSpace(clean[bang_pos - 1])) : (bang_pos -= 1) {}
             if (bang_pos > 0 && clean[bang_pos - 1] == '!') {
                 const val: string = cstStripTrailingComments(clean[0..(bang_pos - 1)]);
                 return CstParsedValue {
@@ -88,19 +226,10 @@ pub struct CssStyleDecl {
 
     /// Create an empty `CssStyleDecl`.
     static fn new(): CssStyleDecl {
-        let decl: CssStyleDecl = CssStyleDecl {
+        return CssStyleDecl {
             props: undefined,
             count: 0,
         };
-        let i: usize = 0;
-        while (i < CSS_STYLE_CAP) : (i += 1) {
-            decl.props[i] = CssProp {
-                name: "",
-                value: "",
-                important: false,
-            };
-        }
-        return decl;
     }
 
     /// Number of stored CSS properties.
@@ -124,7 +253,11 @@ pub struct CssStyleDecl {
 
             // Scan property name up to ':', ';', or '/*'
             const name_start: usize = i;
-            while (i < css_text.len && css_text[i] != ':' && css_text[i] != ';') {
+            while (i < css_text.len) {
+                i = cstFindNameStop(css_text, i);
+                if (i >= css_text.len || css_text[i] == ':' || css_text[i] == ';') {
+                    break;
+                }
                 if (i + 1 < css_text.len && css_text[i] == '/' && css_text[i + 1] == '*') {
                     break;
                 }
@@ -141,7 +274,7 @@ pub struct CssStyleDecl {
             }
             if (css_text[i] != ':') {
                 // Malformed declaration: advance to next ';'
-                while (i < css_text.len && css_text[i] != ';') : (i += 1) {}
+                i = cstFindSemi(css_text, i);
                 if (i < css_text.len) {
                     i += 1;
                 }
@@ -155,8 +288,8 @@ pub struct CssStyleDecl {
             let quote: u8 = 0;
             let paren_depth: usize = 0;
             while (i < css_text.len) {
-                const c: u8 = css_text[i];
                 if (quote != 0) {
+                    const c: u8 = css_text[i];
                     if (c == '\\' && i + 1 < css_text.len) {
                         i += 2;
                         continue;
@@ -166,6 +299,11 @@ pub struct CssStyleDecl {
                     }
                     i += 1;
                 } else {
+                    i = cstFindValSpecial(css_text, i);
+                    if (i >= css_text.len) {
+                        break;
+                    }
+                    const c: u8 = css_text[i];
                     if (c == '"' || c == '\'') {
                         quote = c;
                         i += 1;
@@ -286,15 +424,15 @@ pub struct CssStyleDecl {
         let i: usize = 0;
         while (i < _.count) : (i += 1) {
             if (i > 0) {
-                pos = writeStr(" ", out, pos);
+                pos = cstWriteStr(out, pos, " ");
             }
             pos += toLower(_.props[i].name, out[pos..out.len]);
-            pos = writeStr(": ", out, pos);
-            pos = writeStr(_.props[i].value, out, pos);
+            pos = cstWriteStr(out, pos, ": ");
+            pos = cstWriteStr(out, pos, _.props[i].value);
             if (_.props[i].important) {
-                pos = writeStr(" !important", out, pos);
+                pos = cstWriteStr(out, pos, " !important");
             }
-            pos = writeStr(";", out, pos);
+            pos = cstWriteStr(out, pos, ";");
         }
         return pos;
     }

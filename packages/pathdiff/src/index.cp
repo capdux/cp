@@ -1,14 +1,67 @@
 // pathdiff — Zero-heap relative path computation in pure CP
 // Clean-room MIT/Apache-2.0 parity with Rust `pathdiff` crate.
+// Accelerated with 16-lane @Vector(16, u8) SIMD separator scanning, comptime 256-entry LUTs, @memcpy, and undefined stack buffers.
 
-import { isAlpha, toLowerByte, strEq } from "cap:ascii";
-import { writeStr } from "cap:fmt";
+import { strEq } from "cap:ascii";
 import { isValidUtf8 } from "cap:utf8";
 
 pub const PATHDIFF_MAX_SEGS: usize = 64;
 
+type PdVec16 = @Vector(16, u8);
+
+fn pdBuildSepLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[47] = 1; // '/'
+    lut[92] = 1; // '\\'
+    return lut;
+}
+
+fn pdBuildDriveLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 65;
+    while (c <= 90) {
+        lut[c] = (c + 32) as u8;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = c as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const PD_SEP_LUT: [256]u8 = pdBuildSepLut();
+const PD_DRIVE_LUT: [256]u8 = pdBuildDriveLut();
+
 fn pdIsSep(b: u8): bool {
-    return b == 47 || b == 92; // '/' or '\\'
+    return PD_SEP_LUT[b as usize] != 0;
+}
+
+fn pdFindNextSep(path: string, start: usize): usize {
+    let i = start;
+    const len = path.len;
+    const v_slash: PdVec16 = @splat(47);
+    const v_bs: PdVec16 = @splat(92);
+    while (i + 16 <= len) {
+        const v: PdVec16 = path[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_slash) || @reduce(.Or, v == v_bs)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (PD_SEP_LUT[path[i + k] as usize] != 0) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && PD_SEP_LUT[path[i] as usize] == 0) {
+        i += 1;
+    }
+    return i;
 }
 
 struct SegList {
@@ -19,17 +72,20 @@ struct SegList {
 }
 
 fn pdSplitNormalized(path: string): SegList {
-    let arr: [64]string = [""; 64];
+    let arr: [64]string = undefined;
     let drive: u8 = 0;
     let i: usize = 0;
     let is_abs = false;
 
     // Detect Windows drive prefix (e.g. "C:/foo" or "C:\\foo")
-    if (path.len >= 2 && isAlpha(path[0]) && path[1] == 58) { // ':'
-        drive = toLowerByte(path[0]);
-        i = 2;
-        if (i < path.len && pdIsSep(path[i])) {
-            is_abs = true;
+    if (path.len >= 2 && path[1] == 58) { // ':'
+        const drv = PD_DRIVE_LUT[path[0] as usize];
+        if (drv != 0) {
+            drive = drv;
+            i = 2;
+            if (i < path.len && pdIsSep(path[i])) {
+                is_abs = true;
+            }
         }
     } else if (path.len > 0 && pdIsSep(path[0])) {
         is_abs = true;
@@ -44,14 +100,12 @@ fn pdSplitNormalized(path: string): SegList {
             break;
         }
         const start = i;
-        while (i < path.len && !pdIsSep(path[i])) {
-            i += 1;
-        }
+        i = pdFindNextSep(path, i);
         const seg = path[start..i];
-        if (strEq(seg, ".")) {
+        if (seg.len == 1 && seg[0] == 46) {
             continue;
-        } else if (strEq(seg, "..")) {
-            if (cnt > 0 && !strEq(arr[cnt - 1], "..")) {
+        } else if (seg.len == 2 && seg[0] == 46 && seg[1] == 46) {
+            if (cnt > 0 && !(arr[cnt - 1].len == 2 && arr[cnt - 1][0] == 46 && arr[cnt - 1][1] == 46)) {
                 cnt -= 1;
             } else if (!is_abs && cnt < PATHDIFF_MAX_SEGS) {
                 arr[cnt] = "..";
@@ -105,7 +159,10 @@ pub fn normalizePath(path: string, out: []u8): usize? {
         }
         const seg = s.segs[idx];
         if (pos + seg.len > out.len) { return null; }
-        pos = writeStr(seg, out, pos);
+        if (seg.len > 0) {
+            @memcpy(out[pos .. pos + seg.len], seg);
+            pos += seg.len;
+        }
         idx += 1;
     }
     if (pos == 0) {
@@ -135,7 +192,7 @@ pub fn diffPaths(target: string, base: string, out: []u8): usize? {
     // If base still has unresolved leading ".." beyond common prefix, cannot reliably step out
     let bi = common;
     while (bi < b.count) {
-        if (strEq(b.segs[bi], "..")) {
+        if (b.segs[bi].len == 2 && b.segs[bi][0] == 46 && b.segs[bi][1] == 46) {
             return null;
         }
         bi += 1;
@@ -154,7 +211,9 @@ pub fn diffPaths(target: string, base: string, out: []u8): usize? {
         }
         first = false;
         if (pos + 2 > out.len) { return null; }
-        pos = writeStr("..", out, pos);
+        out[pos] = 46;
+        out[pos + 1] = 46;
+        pos += 2;
         ui += 1;
     }
 
@@ -168,7 +227,10 @@ pub fn diffPaths(target: string, base: string, out: []u8): usize? {
         first = false;
         const seg = t.segs[ti];
         if (pos + seg.len > out.len) { return null; }
-        pos = writeStr(seg, out, pos);
+        if (seg.len > 0) {
+            @memcpy(out[pos .. pos + seg.len], seg);
+            pos += seg.len;
+        }
         ti += 1;
     }
 
