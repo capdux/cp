@@ -1,16 +1,77 @@
 // packages/@cap/slugify/src/index.cp
 // Zero-allocation URL slug generator with UTF-8 Latin diacritic folding.
 // MIT clean-room pure CP implementation.
+// Accelerated with comptime 256-entry LUTs, 16-lane @Vector(16, u8) SIMD scanning, and @memcpy.
+
+type SlVec16 = @Vector(16, u8);
+
+fn slBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 65 && c <= 90) {
+            lut[c] = (c + 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+fn slBuildAlnumLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = 1;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = 2;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = 1;
+        c += 1;
+    }
+    return lut;
+}
+
+const SL_LOWER_LUT: [256]u8 = slBuildLowerLut();
+const SL_ALNUM_LUT: [256]u8 = slBuildAlnumLut();
 
 fn slToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
+    return SL_LOWER_LUT[c as usize];
 }
 
 fn slIsAsciiAlnum(c: u8): bool {
-    return (c >= ('a' as u8) && c <= ('z' as u8)) || (c >= ('A' as u8) && c <= ('Z' as u8)) || (c >= ('0' as u8) && c <= ('9' as u8));
+    return SL_ALNUM_LUT[c as usize] != 0;
+}
+
+/// Scan ahead over a contiguous run of already-lowercase ASCII alphanumerics (`a-z`, `0-9`) using 16-lane SIMD.
+fn slScanLowerAlnumRun(s: string, start: usize, max_end: usize): usize {
+    let i = start;
+    const v_0: SlVec16 = @splat('0' as u8);
+    const v_9: SlVec16 = @splat('9' as u8);
+    const v_a: SlVec16 = @splat('a' as u8);
+    const v_z: SlVec16 = @splat('z' as u8);
+    while (i + 16 <= max_end) {
+        const v: SlVec16 = s[i .. i + 16][0..16].*;
+        const is_digit = (v >= v_0) & (v <= v_9);
+        const is_lower = (v >= v_a) & (v <= v_z);
+        if (!@reduce(.And, is_digit | is_lower)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < max_end && SL_ALNUM_LUT[s[i] as usize] == 1) {
+        i += 1;
+    }
+    return i;
 }
 
 /// Fold a Latin-1 Supplement or Latin Extended-A Unicode code point (`U+00C0..U+017F`)
@@ -111,7 +172,8 @@ pub fn slugifyWithSep(input: string, sep: u8, lowercase: bool, out: []u8): usize
         const b0 = input[i];
 
         if (b0 < (0x80 as u8)) {
-            if (slIsAsciiAlnum(b0)) {
+            const cls = SL_ALNUM_LUT[b0 as usize];
+            if (cls != 0) {
                 if (pendingSep && pos > 0) {
                     if (pos >= out.len) {
                         break;
@@ -123,8 +185,19 @@ pub fn slugifyWithSep(input: string, sep: u8, lowercase: bool, out: []u8): usize
                 if (pos >= out.len) {
                     break;
                 }
+                if (cls == 1) {
+                    const rem_in = input.len - i;
+                    const rem_out = out.len - pos;
+                    const max_copy = if (rem_in < rem_out) rem_in else rem_out;
+                    const run_end = slScanLowerAlnumRun(input, i, i + max_copy);
+                    const n = run_end - i;
+                    @memcpy(out[pos .. pos + n], input[i..run_end]);
+                    pos += n;
+                    i = run_end;
+                    continue;
+                }
                 if (lowercase) {
-                    out[pos] = slToLower(b0);
+                    out[pos] = SL_LOWER_LUT[b0 as usize];
                 } else {
                     out[pos] = b0;
                 }
@@ -225,12 +298,13 @@ pub fn isValidSlug(s: string): bool {
                 return false;
             }
             prevDash = true;
-        } else if ((c >= ('a' as u8) && c <= ('z' as u8)) || (c >= ('0' as u8) && c <= ('9' as u8))) {
+            i += 1;
+        } else if (SL_ALNUM_LUT[c as usize] == 1) {
             prevDash = false;
+            i = slScanLowerAlnumRun(s, i, s.len);
         } else {
             return false;
         }
-        i += 1;
     }
     return true;
 }

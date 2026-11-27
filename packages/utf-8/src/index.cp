@@ -1,5 +1,29 @@
 // @cap/utf-8 — Zero-copy incremental streaming UTF-8 decoder & RFC 3629 validator
 // Ported from crates.io:utf-8 (https://github.com/SimonSapin/rust-utf8)
+// Accelerated with 16-lane @Vector(16, u8) SIMD ASCII fast-path, comptime 256-entry LUT, and @memcpy.
+
+type U8dVec16 = @Vector(16, u8);
+
+fn u8dBuildLeadLenLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let i: usize = 0;
+    while (i < 256) {
+        if (i < 0x80) {
+            lut[i] = 1;
+        } else if (i >= 0xC2 && i <= 0xDF) {
+            lut[i] = 2;
+        } else if (i >= 0xE0 && i <= 0xEF) {
+            lut[i] = 3;
+        } else if (i >= 0xF0 && i <= 0xF4) {
+            lut[i] = 4;
+        }
+        i += 1;
+    }
+    return lut;
+}
+
+const U8D_LEAD_LEN_LUT: [256]u8 = u8dBuildLeadLenLut();
 
 pub enum Utf8DecodeStatus {
     Ok,
@@ -15,11 +39,7 @@ pub struct Utf8ChunkResult {
 }
 
 fn u8dExpectedLen(b0: u8): usize {
-    if (b0 < 0x80) return 1;
-    if (b0 >= 0xC2 && b0 <= 0xDF) return 2;
-    if (b0 >= 0xE0 && b0 <= 0xEF) return 3;
-    if (b0 >= 0xF0 && b0 <= 0xF4) return 4;
-    return 0;
+    return U8D_LEAD_LEN_LUT[b0 as usize] as usize;
 }
 
 fn u8dIsValidSecond(b0: u8, b1: u8): bool {
@@ -36,14 +56,13 @@ fn u8dIsValidCont(b0: u8, idx: usize, b: u8): bool {
 }
 
 fn u8dWriteSlice(out: []u8, pos: usize, src: []const u8): usize {
-    let i: usize = 0;
-    let w: usize = pos;
-    while (i < src.len && w < out.len) {
-        out[w] = src[i];
-        w += 1;
-        i += 1;
+    if (pos >= out.len || src.len == 0) {
+        return pos;
     }
-    return w;
+    const avail = out.len - pos;
+    const copy_len = if (src.len < avail) src.len else avail;
+    @memcpy(out[pos .. pos + copy_len], src[0..copy_len]);
+    return pos + copy_len;
 }
 
 fn u8dWriteReplacement(out: []u8, pos: usize): usize {
@@ -61,7 +80,19 @@ fn u8dWriteReplacement(out: []u8, pos: usize): usize {
 /// and incomplete trailing multi-byte sequences.
 pub fn decodeUtf8Chunk(input: []const u8): Utf8ChunkResult {
     let i: usize = 0;
+    const v_80: U8dVec16 = @splat(0x80 as u8);
     while (i < input.len) {
+        // 16-lane SIMD fast-path for pure 7-bit ASCII runs
+        while (i + 16 <= input.len) {
+            const v: U8dVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v >= v_80)) {
+                break;
+            }
+            i += 16;
+        }
+        if (i >= input.len) {
+            break;
+        }
         const b0: u8 = input[i];
         if (b0 < 0x80) {
             i += 1;

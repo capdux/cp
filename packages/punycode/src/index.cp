@@ -1,6 +1,9 @@
 // packages/@cap/punycode/src/index.cp
 // Zero-allocation RFC 3492 Punycode (IDNA xn--...) encoder and decoder.
 // MIT clean-room pure CP implementation.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUTs, and @memcpy.
+
+type PcVec16 = @Vector(16, u8);
 
 pub const BASE: u32 = 36;
 pub const TMIN: u32 = 1;
@@ -9,6 +12,31 @@ pub const SKEW: u32 = 38;
 pub const DAMP: u32 = 700;
 pub const INITIAL_BIAS: u32 = 72;
 pub const INITIAL_N: u32 = 128;
+
+const PC_ENC_DIGITS = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+fn pcBuildDecDigitLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [36; 256];
+    let c: usize = 97;
+    while (c <= 122) {
+        lut[c] = (c - 97) as u8;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = (c - 65) as u8;
+        c += 1;
+    }
+    c = 48;
+    while (c <= 57) {
+        lut[c] = (c - 48 + 26) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const PC_DEC_DIGIT_LUT: [256]u8 = pcBuildDecDigitLut();
 
 fn pcToLower(c: u8): u8 {
     if (c >= ('A' as u8) && c <= ('Z' as u8)) {
@@ -24,10 +52,42 @@ fn pcIsXnPrefix(s: []const u8): bool {
     return pcToLower(s[0]) == ('x' as u8) && pcToLower(s[1]) == ('n' as u8) && s[2] == ('-' as u8) && s[3] == ('-' as u8);
 }
 
+fn pcFindDot(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_dot: PcVec16 = @splat('.' as u8);
+    while (i + 16 <= len) {
+        const v: PcVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_dot)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == ('.' as u8)) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != ('.' as u8)) {
+        i += 1;
+    }
+    return i;
+}
+
 /// Returns true if all bytes in `s` are 7-bit ASCII (`< 0x80`).
 pub fn isAsciiOnly(s: string): bool {
     let i: usize = 0;
-    while (i < s.len) {
+    const len = s.len;
+    const v_80: PcVec16 = @splat(0x80 as u8);
+    while (i + 16 <= len) {
+        const v: PcVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v >= v_80)) {
+            return false;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (s[i] >= (0x80 as u8)) {
             return false;
         }
@@ -54,23 +114,11 @@ fn pcAdapt(delta_in: u32, numpoints: u32, firsttime: bool): u32 {
 }
 
 fn pcEncodeDigit(d: u32): u8 {
-    if (d < (26 as u32)) {
-        return ('a' as u8) + (d as u8);
-    }
-    return ('0' as u8) + ((d - (26 as u32)) as u8);
+    return PC_ENC_DIGITS[d as usize];
 }
 
 fn pcDecodeDigit(c: u8): u32 {
-    if (c >= ('a' as u8) && c <= ('z' as u8)) {
-        return (c - ('a' as u8)) as u32;
-    }
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return (c - ('A' as u8)) as u32;
-    }
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return ((c - ('0' as u8)) as u32) + (26 as u32);
-    }
-    return BASE;
+    return PC_DEC_DIGIT_LUT[c as usize] as u32;
 }
 
 fn pcThreshold(k: u32, bias: u32): u32 {
@@ -376,11 +424,9 @@ fn pcWriteSlice(out: []u8, pos: *usize, src: []const u8): bool {
     if (pos.* + src.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos.*] = src[i];
-        pos.* += 1;
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(out[pos.* .. pos.* + src.len], src);
+        pos.* += src.len;
     }
     return true;
 }
@@ -395,10 +441,7 @@ pub fn toAsciiDomain(utf8_domain: string, out: []u8): i64 {
     let pos: usize = 0;
 
     while (pos <= utf8_domain.len) {
-        let dot = pos;
-        while (dot < utf8_domain.len && utf8_domain[dot] != ('.' as u8)) {
-            dot += 1;
-        }
+        const dot = pcFindDot(utf8_domain, pos);
         const label = utf8_domain[pos..dot];
 
         if (isAsciiOnly(label)) {
@@ -439,10 +482,7 @@ pub fn toUnicodeDomain(ascii_domain: string, out: []u8): i64 {
     let pos: usize = 0;
 
     while (pos <= ascii_domain.len) {
-        let dot = pos;
-        while (dot < ascii_domain.len && ascii_domain[dot] != ('.' as u8)) {
-            dot += 1;
-        }
+        const dot = pcFindDot(ascii_domain, pos);
         const label = ascii_domain[pos..dot];
 
         if (pcIsXnPrefix(label)) {

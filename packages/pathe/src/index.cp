@@ -1,5 +1,25 @@
 // @cap/pathe — Zero-allocation universal POSIX-normalized path utilities
 // Clean-room MIT implementation modeled on npm `pathe` (UnJS).
+// Accelerated with comptime 256-entry LUT, 16-lane @Vector(16, u8) SIMD scanning/compare, and @memcpy.
+
+type PthVec16 = @Vector(16, u8);
+
+fn pthBuildSchemeLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 48;
+    while (c <= 57) { lut[c] = 1; c += 1; }
+    c = 65;
+    while (c <= 90) { lut[c] = 1; c += 1; }
+    c = 97;
+    while (c <= 122) { lut[c] = 1; c += 1; }
+    lut['+' as usize] = 1;
+    lut['-' as usize] = 1;
+    lut['.' as usize] = 1;
+    return lut;
+}
+
+const PTH_SCHEME_LUT: [256]u8 = pthBuildSchemeLut();
 
 fn pthIsSep(b: u8): bool {
     return b == '/' || b == '\\';
@@ -10,7 +30,50 @@ fn pthIsAlpha(b: u8): bool {
 }
 
 fn pthIsSchemeChar(b: u8): bool {
-    return pthIsAlpha(b) || (b >= '0' && b <= '9') || b == '+' || b == '-' || b == '.';
+    return PTH_SCHEME_LUT[b as usize] != 0;
+}
+
+fn pthFindSep(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_sl: PthVec16 = @splat('/' as u8);
+    const v_bs: PthVec16 = @splat('\\' as u8);
+    while (i + 16 <= len) {
+        const v: PthVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl) || @reduce(.Or, v == v_bs)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (pthIsSep(s[i + k])) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && !pthIsSep(s[i])) : (i += 1) {}
+    return i;
+}
+
+fn pthFindSlash(s: string, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const v_sl: PthVec16 = @splat('/' as u8);
+    while (i + 16 <= len) {
+        const v: PthVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_sl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == '/') {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != '/') : (i += 1) {}
+    return i;
 }
 
 fn pthHasDrivePrefix(s: string): bool {
@@ -37,18 +100,26 @@ fn pthPush(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn pthPushSlice(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        p = pthPush(out, p, s[i]);
+    if (pos >= out.len || s.len == 0) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(out[pos .. pos + n], s[0..n]);
+    return pos + n;
 }
 
 fn pthStrEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
-    while (i < a.len) : (i += 1) {
+    const len = a.len;
+    while (i + 16 <= len) {
+        const va: PthVec16 = a[i .. i + 16][0..16].*;
+        const vb: PthVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va != vb)) return false;
+        i += 16;
+    }
+    while (i < len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
     return true;
@@ -108,7 +179,7 @@ pub fn normalize(path: string, out: []u8): usize {
         while (i < path.len && pthIsSep(path[i])) : (i += 1) {}
         if (i >= path.len) break;
         const start = i;
-        while (i < path.len && !pthIsSep(path[i])) : (i += 1) {}
+        i = pthFindSep(path, i);
         const slen = i - start;
 
         if (slen == 1 && path[start] == '.') {
@@ -307,7 +378,7 @@ fn pthSplitSegments(s: string, starts: []usize, lens: []usize): usize {
         while (i < s.len && s[i] == '/') : (i += 1) {}
         if (i >= s.len) break;
         const start = i;
-        while (i < s.len && s[i] != '/') : (i += 1) {}
+        i = pthFindSlash(s, i);
         starts[count] = start;
         lens[count] = i - start;
         count += 1;

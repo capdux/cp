@@ -1,5 +1,30 @@
 // @cap/etag — Zero-allocation RFC 9110 HTTP ETag Generator, Parser & Conditional Matcher
 // Clean-room MIT implementation in pure CP.
+// Accelerated with comptime 256-entry LUT, 16-lane @Vector(16, u8) SIMD validation/compare, and @memcpy.
+
+type EtgVec16 = @Vector(16, u8);
+
+const ETG_HEX_LOWER = "0123456789abcdef";
+
+fn etgBuildValidLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    // RFC 9110 etagc = %x21 / %x23-7E / obs-text (%x80-FF)
+    lut[0x21] = 1;
+    let c: usize = 0x23;
+    while (c <= 0x7E) {
+        lut[c] = 1;
+        c += 1;
+    }
+    c = 0x80;
+    while (c < 256) {
+        lut[c] = 1;
+        c += 1;
+    }
+    return lut;
+}
+
+const ETG_VALID_LUT: [256]u8 = etgBuildValidLut();
 
 pub struct EntityTag {
     pub weak: bool,
@@ -11,11 +36,7 @@ fn etgIsSpace(b: u8) -> bool {
 }
 
 fn etgIsEtagChar(b: u8) -> bool {
-    // RFC 9110 etagc = %x21 / %x23-7E / obs-text (%x80-FF)
-    if (b == 0x21) { return true; }
-    if (b >= 0x23 && b <= 0x7E) { return true; }
-    if (b >= 0x80) { return true; }
-    return false;
+    return ETG_VALID_LUT[b as usize] != 0;
 }
 
 fn etgStrEq(a: string, b: string) -> bool {
@@ -23,7 +44,16 @@ fn etgStrEq(a: string, b: string) -> bool {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
+    const len = a.len;
+    while (i + 16 <= len) {
+        const va: EtgVec16 = a[i .. i + 16][0..16].*;
+        const vb: EtgVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va != vb)) {
+            return false;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (a[i] != b[i]) {
             return false;
         }
@@ -58,6 +88,16 @@ pub fn parseEtag(input: string, out: *EntityTag) -> bool {
     const inner_start = a + 1;
     const inner_end = b - 1;
     let i = inner_start;
+    const v_20: EtgVec16 = @splat(0x20 as u8);
+    const v_22: EtgVec16 = @splat(0x22 as u8);
+    const v_7f: EtgVec16 = @splat(0x7F as u8);
+    while (i + 16 <= inner_end) {
+        const v: EtgVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v <= v_20) || @reduce(.Or, v == v_22) || @reduce(.Or, v == v_7f)) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < inner_end) {
         if (!etgIsEtagChar(input[i])) {
             return false;
@@ -89,11 +129,9 @@ pub fn formatEtag(weak: bool, tag: string, out: []u8) -> usize {
     }
     out[w] = 34; // '"'
     w += 1;
-    let i: usize = 0;
-    while (i < tag.len) {
-        out[w] = tag[i];
-        w += 1;
-        i += 1;
+    if (tag.len > 0) {
+        @memcpy(out[w .. w + tag.len], tag);
+        w += tag.len;
     }
     out[w] = 34; // '"'
     w += 1;
@@ -114,10 +152,7 @@ pub fn weakEqual(a: EntityTag, b: EntityTag) -> bool {
 }
 
 fn etgHexLower(nibble: u8) -> u8 {
-    if (nibble < 10) {
-        return 48 + nibble;
-    }
-    return 87 + nibble; // 'a' = 97 = 87 + 10
+    return ETG_HEX_LOWER[(nibble & 0x0F) as usize];
 }
 
 fn etgWriteHexU64(val: u64, out: []u8, start: usize) -> usize {

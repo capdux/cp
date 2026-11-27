@@ -1,13 +1,16 @@
 // @cap/querystring — Zero-allocation URL query string parser & stringifier for CP
 // Clean-room MIT parity with Node.js `querystring` & npm `query-string` v9.
 // Composes `@cap/percent-encoding` for RFC/WHATWG URL encoding & form decoding.
+// Accelerated with 16-lane @Vector(16, u8) SIMD byte/delimiter scanning.
 
-import { strEq, findByte } from "cap:ascii";
+import { strEq } from "cap:ascii";
 import {
     componentSet,
     percentEncode,
     percentDecodePlus,
 } from "../../percent-encoding/src/index.cp";
+
+type QstVec16 = @Vector(16, u8);
 
 /// A raw key-value entry extracted from a URL query string.
 pub struct QueryEntry {
@@ -16,33 +19,53 @@ pub struct QueryEntry {
 }
 
 fn qstFindByte(s: string, start: usize, end: usize, target: u8): usize {
-    let idx = findByte(s[0..end], target, start);
-    if (idx != null) {
-        return idx.?;
+    let i = start;
+    const v_t: QstVec16 = @splat(target);
+    while (i + 16 <= end) {
+        const v: QstVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_t)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < end) {
+        if (s[i] == target) {
+            return i;
+        }
+        i += 1;
     }
     return end;
 }
 
 fn qstNeedsDecode(s: string): bool {
     let i: usize = 0;
-    while (i < s.len) {
+    const len = s.len;
+    const v_pct: QstVec16 = @splat(0x25 as u8);
+    const v_plus: QstVec16 = @splat(0x2B as u8);
+    while (i + 16 <= len) {
+        const v: QstVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_pct) || @reduce(.Or, v == v_plus)) {
+            return true;
+        }
+        i += 16;
+    }
+    while (i < len) {
         if (s[i] == (0x25 as u8) || s[i] == (0x2B as u8)) { // '%' or '+'
             return true;
         }
-        i = i + 1;
+        i += 1;
     }
     return false;
 }
 
 fn qstHasSlashBefore(s: string, end: usize): bool {
-    let i: usize = 0;
-    while (i < end) {
-        if (s[i] == (0x2F as u8)) { // '/'
-            return true;
-        }
-        i = i + 1;
-    }
-    return false;
+    return qstFindByte(s, 0, end, 0x2F as u8) < end;
 }
 
 /// Percent-encode a query key or value into `out` via `@cap/percent-encoding`.
