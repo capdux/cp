@@ -1,52 +1,88 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # timeago.js
+
+Zero-allocation deterministic relative time formatter (EN/ZH, Long/Short/Compact) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:timeago.js` ([https://github.com/hustcc/timeago.js](https://github.com/hustcc/timeago.js))（原库名 `timeago.js` → CP 包名 `timeago.js`）
 
-Zero-allocation deterministic relative time formatter for CP — clean-room MIT parity with npm `timeago.js` / `date-fns/formatDistance` and Rust `chrono-humanize` / `timeago`.
+| Metadata | Value |
+| --- | --- |
+| Package | `timeago.js` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配、确定性的 CP 相对时间格式化引擎，不依赖任何系统时钟调用，支持中英文（`En` / `Zh`）与长短紧凑多风格（`Long` / `Short` / `formatCompact`），精准处理单复数与过去/未来时间差（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add timeago.js
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `TimeagoLocale` | `pub enum TimeagoLocale: u8 { En, Zh }` | 语言枚举（英文 / 中文） |
-| `TimeagoStyle` | `pub enum TimeagoStyle: u8 { Long, Short }` | 风格枚举（完整 / 简短） |
-| `formatTimeago` | `(delta_sec: i64, locale: TimeagoLocale, style: TimeagoStyle, out: []u8) -> string` | 按有符号秒差格式化相对时间（负数=过去，正数=未来） |
-| `formatBetween` | `(target_sec: i64, now_sec: i64, locale: TimeagoLocale, style: TimeagoStyle, out: []u8) -> string` | 计算 `target_sec - now_sec` 并格式化 |
-| `formatTimeagoEn` | `(delta_sec: i64, out: []u8) -> string` | 英文 Long 快捷封装（如 `"5 minutes ago"`, `"in 3 hours"`, `"just now"`） |
-| `formatTimeagoZh` | `(delta_sec: i64, out: []u8) -> string` | 中文 Long 快捷封装（如 `"5 分钟前"`, `"3 小时后"`, `"刚刚"`） |
-| `formatCompact` | `(delta_sec: i64, out: []u8) -> string` | 监控/日志极简格式（`"now"`, `"-5m"`, `"+2h"`, `"-3d"`, `"-1y"`） |
-
-## Usage / 使用示例
-
 ```cp
 import {
     TimeagoLocale,
     TimeagoStyle,
-    formatTimeago,
-    formatBetween,
-    formatTimeagoEn,
-    formatTimeagoZh,
-    formatCompact,
+    TimeUnit,
+    ScaledDelta,
+    absU64,
+    appendByte,
+    appendStr,
+    appendU64,
 } from "timeago.js";
-
-let buf: [64]u8 = undefined;
-const en = formatTimeagoEn(-300, buf[0..64]);        // "5 minutes ago"
-const zh = formatTimeagoZh(10800, buf[0..64]);       // "3 小时后"
-const cli = formatCompact(-172800, buf[0..64]);      // "-2d"
-const diff = formatBetween(1700000000, 1700003600, TimeagoLocale.En, TimeagoStyle.Short, buf[0..64]); // "1h ago"
 ```
 
-## License
+## Core API
 
-MIT
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `TimeagoLocale` | `En, Zh` |
+| `enum` | `TimeagoStyle` | `Long, Short` |
+| `enum` | `TimeUnit` | `Second, Minute, Hour, Day, Week, Month, Year` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ScaledDelta` | `class` | Fields: `value: u64, unit: TimeUnit` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `absU64` | `(n: i64): u64` | Invokes `absU64` and returns `u64`. |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `appendStr` | `(out: []u8, pos: usize, s: string): usize` | Invokes `appendStr` and returns `usize`. |
+| `appendU64` | `(out: []u8, pos: usize, val: u64): usize` | Invokes `appendU64` and returns `usize`. |
+| `scaleDelta` | `(abs_sec: u64): ScaledDelta` | Invokes `scaleDelta` and returns `ScaledDelta`. |
+| `enLongUnit` | `(unit: TimeUnit, plural: bool): string` | Invokes `enLongUnit` and returns `string`. |
+| `enShortUnit` | `(unit: TimeUnit): string` | Invokes `enShortUnit` and returns `string`. |
+| `zhLongUnit` | `(unit: TimeUnit): string` | Invokes `zhLongUnit` and returns `string`. |
+| `zhShortUnit` | `(unit: TimeUnit): string` | Invokes `zhShortUnit` and returns `string`. |
+| `formatTimeago` | `(delta_sec: i64, locale: TimeagoLocale, style: TimeagoStyle, out: []u8): string` | Serializes/formats data via `formatTimeago` returning `string`. |
+| `formatBetween` | `(target_sec: i64, now_sec: i64, locale: TimeagoLocale, style: TimeagoStyle, out: []u8): string` | Serializes/formats data via `formatBetween` returning `string`. |
+| `formatTimeagoEn` | `(delta_sec: i64, out: []u8): string` | Serializes/formats data via `formatTimeagoEn` returning `string`. |
+| `formatTimeagoZh` | `(delta_sec: i64, out: []u8): string` | Serializes/formats data via `formatTimeagoZh` returning `string`. |
+| `formatCompact` | `(delta_sec: i64, out: []u8): string` | Serializes/formats data via `formatCompact` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { appendStr } from "timeago.js";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = appendStr(out_buf[0..256], 0, "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

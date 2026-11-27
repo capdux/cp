@@ -1,14 +1,50 @@
-# compressible@2.0.18 (Agent Quickref)
+# compressible — AI Agent Quick Ref
 
-> Zero-allocation HTTP Content-Type compressibility checker | License: MIT
-> Import: `import { ... } from "compressible";` | Full types: `src/index.d.cp`
+Zero-allocation HTTP Content-Type compressibility checker (`v2.0.18`, `MIT`)
 
-## Functions
-- `export fn cmprIsSpace(b: u8): bool;`
-- `export fn cmprToLower(b: u8): u8;`
-- `export fn cmprEqlIgnoreCase(a: string, b: string): bool;`
-- `export fn cmprHasPrefixIgnoreCase(s: string, prefix: string): bool;`
-- `export fn cmprHasSuffixIgnoreCase(s: string, suffix: string): bool;`
-- `export fn cmprFindSlash(s: string): usize;`
-- `export fn stripContentTypeParams(ct: string): string;`
-- `export fn isCompressible(content_type: string): bool;`
+## Import
+
+```cp
+import {
+    cmprIsSpace,
+    cmprToLower,
+    cmprEqlIgnoreCase,
+    cmprHasPrefixIgnoreCase,
+    cmprHasSuffixIgnoreCase,
+    cmprFindSlash,
+    stripContentTypeParams,
+    isCompressible,
+} from "compressible";
+```
+
+## API Signatures
+
+```cp
+fn cmprIsSpace(b: u8): bool;
+fn cmprToLower(b: u8): u8;
+fn cmprEqlIgnoreCase(a: string, b: string): bool;
+fn cmprHasPrefixIgnoreCase(s: string, prefix: string): bool;
+fn cmprHasSuffixIgnoreCase(s: string, suffix: string): bool;
+fn cmprFindSlash(s: string): usize;
+fn stripContentTypeParams(ct: string): string;
+fn isCompressible(content_type: string): bool;
+```
+
+## Minimal Usage
+
+```cp
+import { isCompressible } from "compressible";
+
+pub fn main() {
+    let result = isCompressible("example");
+    _ = result;
+}
+```
+
+## Borrowing, Errors & Pitfalls
+
+- **Canonical import**: Always import directly from `"compressible"`; install via `cap add compressible`.
+- **Zero-copy lifetimes**: Returned `string` slices may borrow from input arguments; keep source strings alive while reading results.
+- **Full declarations**: Inspect [`src/index.d.cp`](./src/index.d.cp) for complete field layouts, methods, and exact parameter types.
+- **Compile check**: Validate integration with `cpc check` before building; avoid `any` or implicit casts.
+- **Control flow syntax**: Enclose `if (...)` / `while (...)` conditions in parentheses per CP syntax rules.

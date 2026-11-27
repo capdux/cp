@@ -1,61 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # convert_case
+
+Zero-allocation 14-style string case converter (crates.io convert_case v0.6 parity) composing heck-case for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:convert_case` ([https://github.com/rutrum/convert-case](https://github.com/rutrum/convert-case))（原库名 `convert_case` → CP 包名 `convert_case`）
 
-Zero-allocation 14-style string case conversion engine for CP — clean-room MIT parity with crates.io `convert_case` v0.6.
+| Metadata | Value |
+| --- | --- |
+| Package | `convert_case` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Composes [`heck`](../heck) for Unicode-aware word boundary detection and the 8 core styles with zero code duplication, adding `flatcase`, `UPPERFLATCASE`, `lower words`, `UPPER WORDS`, `aLtErNaTiNg cAsE`, and `COBOL-CASE`.
+## Installation & Import
 
-## Installation
-
-```json
-{
-  "dependencies": {
-    "convert_case": "1.0.0"
-  }
-}
+```bash
+cap add convert_case
 ```
-
-## Quick Start
 
 ```cp
 import {
-    CASE_SNAKE,
-    CASE_COBOL,
-    CASE_ALTERNATING,
-    convertCase,
+    ccvReplaceUnderscoreWithSpace,
+    ccvStripUnderscores,
     toFlatCase,
+    toUpperFlatCase,
+    toLowerWords,
+    toUpperWords,
+    toAlternatingCase,
+    convertCase,
 } from "convert_case";
-
-let buf: [128]u8 = undefined;
-const n1 = convertCase("XMLHttpRequest", CASE_SNAKE, buf[0..]);       // "xml_http_request"
-const n2 = convertCase("helloWorld", CASE_COBOL, buf[0..]);           // "HELLO-WORLD"
-const n3 = convertCase("hello_world", CASE_ALTERNATING, buf[0..]);    // "hElLo WoRlD"
-const n4 = toFlatCase("Hello-World", buf[0..]);                       // "helloworld"
 ```
 
-## Supported Styles (0–13)
+## Core API
 
-| Constant | Value | Example (`"hello_world"`) |
+### Functions
+
+| Function | Signature | Description |
 | --- | --- | --- |
-| `CASE_UPPER` | `0` | `HELLO WORLD` |
-| `CASE_LOWER` | `1` | `hello world` |
-| `CASE_TITLE` | `2` | `Hello World` |
-| `CASE_CAMEL` | `3` | `helloWorld` |
-| `CASE_PASCAL` | `4` | `HelloWorld` |
-| `CASE_SNAKE` | `5` | `hello_world` |
-| `CASE_UPPER_SNAKE` | `6` | `HELLO_WORLD` |
-| `CASE_KEBAB` | `7` | `hello-world` |
-| `CASE_UPPER_KEBAB` | `8` | `HELLO-WORLD` |
-| `CASE_COBOL` | `9` | `HELLO-WORLD` |
-| `CASE_TRAIN` | `10` | `Hello-World` |
-| `CASE_FLAT` | `11` | `helloworld` |
-| `CASE_UPPER_FLAT` | `12` | `HELLOWORLD` |
-| `CASE_ALTERNATING` | `13` | `hElLo WoRlD` |
+| `ccvReplaceUnderscoreWithSpace` | `(out: []u8, len: usize)` | Executes `ccvReplaceUnderscoreWithSpace` in-place. |
+| `ccvStripUnderscores` | `(out: []u8, len: usize): usize` | Invokes `ccvStripUnderscores` and returns `usize`. |
+| `toFlatCase` | `(src: string, out: []u8): usize` | Invokes `toFlatCase` and returns `usize`. |
+| `toUpperFlatCase` | `(src: string, out: []u8): usize` | Invokes `toUpperFlatCase` and returns `usize`. |
+| `toLowerWords` | `(src: string, out: []u8): usize` | Invokes `toLowerWords` and returns `usize`. |
+| `toUpperWords` | `(src: string, out: []u8): usize` | Invokes `toUpperWords` and returns `usize`. |
+| `toAlternatingCase` | `(src: string, out: []u8): usize` | Invokes `toAlternatingCase` and returns `usize`. |
+| `convertCase` | `(src: string, style: u8, out: []u8): usize` | Invokes `convertCase` and returns `usize`. |
 
-## License
+## Minimal Example
 
-MIT
+```cp
+import { toFlatCase } from "convert_case";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = toFlatCase("example", out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

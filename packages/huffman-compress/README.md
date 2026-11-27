@@ -1,41 +1,48 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # huffman-compress
+
+Zero-allocation RFC 1951 Canonical Huffman prefix encoder & decoder with 256-symbol alphabet, 16-bit length limiting, and MSB-first bitstream framing (Rust huffman-compress parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:huffman-compress` ([https://github.com/sozu-proxy/huffman-compress](https://github.com/sozu-proxy/huffman-compress))（原库名 `huffman-compress` → CP 包名 `huffman-compress`）
 
-零堆分配的 CP RFC 1951 规范霍夫曼（Canonical Huffman）前缀编码器与解码器 — 洁净室 MIT 实现，对标 Rust `huffman-compress` 与 RFC 1951 §3.2.2，支持全 256 符号表与 16 位限长。
+| Metadata | Value |
+| --- | --- |
+| Package | `huffman-compress` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation RFC 1951 Canonical Huffman prefix encoder & decoder for CP — clean-room MIT parity with Rust `huffman-compress` and RFC 1951.
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add huffman-compress
 ```
 
-## API 参考 / API Reference
+```cp
+import { HuffmanCodec } from "huffman-compress";
+```
 
-- **`HuffmanCodec`**（256 符号表，最大码长 `MAX_CODE_BITS = 16`）：
-  - `fromFrequencies(freqs: []const u32) -> HuffmanCodec`（从频次数组构建限长规范霍夫曼码表）
-  - `fromCodeLengths(lengths: []const u8) -> HuffmanCodec`（RFC 1951 仅凭码长重建规范码表）
-  - `codeLength(sym: u8) -> u8`、`codeBits(sym: u8) -> u16`
-  - `encode(src: []const u8, dst: []u8) -> i64`（4 字节大端原长度头 + MSB-first 位流，错误返回 `-1`）
-  - `decode(src: []const u8, dst: []u8) -> i64`（精确按原长度解码，畸形/截断/缓冲不足返回 `-1`）
+## Core API
 
-## 使用示例 / Usage
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `HuffmanCodec` | `class` | Fields: `code_len: [MAX_SYMBOLS]u8, codes: [MAX_SYMBOLS]u16, symbol_count: usize` · Methods: `empty, fromCodeLengths, fromFrequencies, codeLength, codeBits, encode, +1 more` |
+
+## Minimal Example
 
 ```cp
 import { HuffmanCodec } from "huffman-compress";
 
-let freqs: [256]u32 = undefined;
-// ... populate freqs from input ...
-const codec = HuffmanCodec.fromFrequencies(freqs[0..256]);
-const enc_len = codec.encode(src, enc_buf);
-const dec_len = codec.decode(enc_buf[0..(enc_len as usize)], dec_buf);
+pub fn main() {
+    // Refer to src/index.d.cp for HuffmanCodec fields and methods
+}
 ```
 
-## License
+## CP Zero-Heap & Borrow-Safety Highlights
 
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

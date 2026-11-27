@@ -1,29 +1,74 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `retry-after`
+# retry-after
+
+Zero-heap RFC 9110 HTTP Retry-After header parser and formatter (delay-seconds & HTTP-date) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:retry-after` ([https://github.com/jwilm/retry-after](https://github.com/jwilm/retry-after))
 
-Zero-heap RFC 9110 HTTP `Retry-After` header parser and formatter in pure CP. Supports both `delay-seconds` (e.g. `"120"`) and IMF-fixdate `HTTP-date` (e.g. `"Wed, 21 Oct 2015 07:28:00 GMT"`), with deterministic wait-duration calculation for HTTP `429 Too Many Requests` and `503 Service Unavailable`.
+| Metadata | Value |
+| --- | --- |
+| Package | `retry-after` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP RFC 9110 `Retry-After` 响应头解析与格式化器，支持延迟秒数与 IMF-fixdate HTTP 日期双格式，适用于 API 429/503 限流退避与网关重试。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add retry-after
 ```
 
-## API
+```cp
+import {
+    RetryAfter,
+    parseUint,
+    parseMonth,
+    isLeapYear,
+    daysInMonth,
+    daysFromCivil,
+    parseHttpDate,
+    parseRetryAfter,
+} from "retry-after";
+```
 
-| Function | Description |
-| --- | --- |
-| `parseRetryAfter(header)` | Parse `delay-seconds` or `HTTP-date` into `RetryAfter` |
-| `waitSeconds(ra, now_epoch_sec)` | Compute non-negative wait duration in seconds (`-1` if invalid) |
-| `parseHttpDate(date_str)` | Parse RFC 9110 IMF-fixdate into Unix epoch seconds |
-| `formatDelaySeconds(seconds, dst)` | Format `delay-seconds` header value into buffer |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RetryAfter` | `class` | Fields: `kind: u8, delay_seconds: u64, epoch_seconds: i64, valid: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseUint` | `(s: &[]u8): i64` | Parses input via `parseUint` and returns `i64`. |
+| `parseMonth` | `(s: &[]u8): i32` | Parses input via `parseMonth` and returns `i32`. |
+| `isLeapYear` | `(y: i64): bool` | Checks predicate `isLeapYear` and returns `bool`. |
+| `daysInMonth` | `(y: i64, m: i32): i32` | Invokes `daysInMonth` and returns `i32`. |
+| `daysFromCivil` | `(y_in: i64, m_in: i64, d: i64): i64` | Invokes `daysFromCivil` and returns `i64`. |
+| `parseHttpDate` | `(s: &[]u8): i64` | Parses input via `parseHttpDate` and returns `i64`. |
+| `parseRetryAfter` | `(header: &[]u8): RetryAfter` | Parses input via `parseRetryAfter` and returns `RetryAfter`. |
+| `waitSeconds` | `(ra: RetryAfter, now_epoch_sec: i64): i64` | Invokes `waitSeconds` and returns `i64`. |
+| `formatDelaySeconds` | `(seconds: u64, dst: []u8): i64` | Serializes/formats data via `formatDelaySeconds` returning `i64`. |
+
+## Minimal Example
+
+```cp
+import { parseUint } from "retry-after";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = parseUint(out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

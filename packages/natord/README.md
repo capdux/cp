@@ -1,22 +1,60 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # natord
+
+Zero-heap arbitrary-precision human natural sort comparator, case-insensitive comparator, and in-place sorter.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:natord` ([https://github.com/lifthrasiir/rust-natord](https://github.com/lifthrasiir/rust-natord))（原库名 `natord` → CP 包名 `natord`）
 
-Zero-heap arbitrary-precision human natural sort comparator and in-place sorter in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `natord` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- `compareNatural(a, b)` & `compareNaturalIgnoreCase(a, b)`: overflow-free arbitrary-length numeric run comparison (`"file2.txt" < "file10.txt"`, `"v1.2" < "v1.10"`)
-- `isSortedNatural(items)`: O(N) sorted-order check
-- `sortNatural(items)`: zero-heap in-place Ciura Shell sort
-
-## Usage
+```bash
+cap add natord
+```
 
 ```cp
-import { compareNatural, sortNatural } from "natord";
-
-const cmp = compareNatural("file2.txt", "file10.txt"); // -1
+import {
+    compareImpl,
+    compareNatural,
+    compareNaturalIgnoreCase,
+    isSortedNatural,
+    sortNatural,
+} from "natord";
 ```
+
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `compareImpl` | `(a: string, b: string, ignore_case: bool): i32` | Invokes `compareImpl` and returns `i32`. |
+| `compareNatural` | `(a: string, b: string): i32` | Invokes `compareNatural` and returns `i32`. |
+| `compareNaturalIgnoreCase` | `(a: string, b: string): i32` | Invokes `compareNaturalIgnoreCase` and returns `i32`. |
+| `isSortedNatural` | `(items: &[]string): bool` | Checks predicate `isSortedNatural` and returns `bool`. |
+| `sortNatural` | `(items: []string)` | Executes `sortNatural` in-place. |
+
+## Minimal Example
+
+```cp
+import { isSortedNatural } from "natord";
+
+pub fn main() {
+    let result = isSortedNatural(/* items: &[]string */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

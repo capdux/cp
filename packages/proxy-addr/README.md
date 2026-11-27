@@ -1,32 +1,78 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # proxy-addr
+
+Pure CP zero-allocation reverse-proxy client IP resolver and trusted proxy chain validator (npm proxy-addr parity)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:proxy-addr` ([https://github.com/jshttp/proxy-addr](https://github.com/jshttp/proxy-addr))
 
-Pure CP, zero-allocation reverse-proxy client IP resolver and trusted proxy chain validator (parity with npm `proxy-addr`).
+| Metadata | Value |
+| --- | --- |
+| Package | `proxy-addr` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Built-in Trust Presets**:
-  - `isLoopback`: `127.0.0.0/8`, `::1`, `::ffff:127.0.0.1`
-  - `isLinkLocal`: `169.254.0.0/16`, `fe80::/10`
-  - `isUniqueLocal`: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`
-  - `isTrustedBuiltin(ip, preset)`: `0=none`, `1=loopback`, `2=linklocal`, `3=uniquelocal`, `4=all_private`
-- **Zero-Copy XFF Parsing**: `parseXffAddresses` returns nearest-to-farthest `IpSpan` entries into `X-Forwarded-For`
-- **Reverse Hop Resolution**: `resolveClientIp` walks backward from `remote_addr` through trusted proxies (with optional `max_hops` cap) to prevent `X-Forwarded-For` spoofing
-
-## Usage
-
-```cp
-import { resolveClientIp, TRUST_ALL_PRIVATE } from "proxy-addr";
-
-let out: [64]u8 = undefined;
-let n = resolveClientIp("10.0.0.1", "203.0.113.5, 172.16.0.2", TRUST_ALL_PRIVATE, 0, out[0..64]);
-// out[0..n] == "203.0.113.5"
+```bash
+cap add proxy-addr
 ```
 
-## License
+```cp
+import {
+    IpSpan,
+    PaIpv4,
+    PaIpv6Info,
+    paTrimBounds,
+    paStripV4Mapped,
+    paParseIpv4,
+    paParseIpv6Info,
+    isLoopback,
+} from "proxy-addr";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `IpSpan` | `class` | Fields: `start: usize, len: usize` |
+| `PaIpv4` | `class` | Fields: `ok: bool, o0: u8, o1: u8, o2: u8, o3: u8` |
+| `PaIpv6Info` | `class` | Fields: `ok: bool, is_loopback: bool, first_word: u16` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `paTrimBounds` | `(s: string): IpSpan` | Invokes `paTrimBounds` and returns `IpSpan`. |
+| `paStripV4Mapped` | `(s: string): string` | Invokes `paStripV4Mapped` and returns `string`. |
+| `paParseIpv4` | `(s: string): PaIpv4` | Invokes `paParseIpv4` and returns `PaIpv4`. |
+| `paParseIpv6Info` | `(s: string): PaIpv6Info` | Invokes `paParseIpv6Info` and returns `PaIpv6Info`. |
+| `isLoopback` | `(ip: string): bool` | Checks predicate `isLoopback` and returns `bool`. |
+| `isLinkLocal` | `(ip: string): bool` | Checks predicate `isLinkLocal` and returns `bool`. |
+| `isUniqueLocal` | `(ip: string): bool` | Checks predicate `isUniqueLocal` and returns `bool`. |
+| `isTrustedBuiltin` | `(ip: string, preset: u8): bool` | Checks predicate `isTrustedBuiltin` and returns `bool`. |
+| `parseXffAddresses` | `(remote_addr: string, xff_header: string, out: []IpSpan): usize` | Parses input via `parseXffAddresses` and returns `usize`. |
+| `paCopyToOut` | `(src: string, out: []u8): usize` | Invokes `paCopyToOut` and returns `usize`. |
+| `resolveClientIp` | `(remote_addr: string, xff_header: string, trust_preset: u8, max_hops: usize, out: []u8): usize` | Invokes `resolveClientIp` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { isLoopback } from "proxy-addr";
+
+pub fn main() {
+    let result = isLoopback("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

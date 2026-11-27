@@ -1,40 +1,80 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # argparse
+
+Zero-allocation Python-style CLI argument parser supporting short/long flags, counts, bundling, and required checks for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:argparse` ([https://github.com/nodeca/argparse](https://github.com/nodeca/argparse))
 
-Zero-allocation Python-style CLI argument parser for CP — clean-room Python-2.0 parity with npm `argparse` v2 (377M+/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `argparse` |
+| Version | `1.0.0` |
+| License | `Python-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 Python 风格命令行参数解析器，支持 `Store` / `StoreTrue` / `StoreFalse` / `Count` 动作、短标志组合（`-ab`、`-vvv`）、长选项（`--output=file`、`--output file`）、`--` 终止选项解析、位置参数绑定及必填参数校验。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add argparse
 ```
 
-## API
+```cp
+import {
+    ArgAction,
+    ArgDef,
+    ArgSlot,
+    ParseResult,
+    ArgParser,
+    argpStrEq,
+    argpStripDashes,
+    argpFindEq,
+} from "argparse";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `ArgAction` | `enum` | `Store`, `StoreTrue`, `StoreFalse`, `Count` |
-| `ArgDef` | `struct` | Argument definition (`short_flag`, `long_name`, `dest`, `action`, `required`, `default_val`, `is_positional`) |
-| `ArgParser` | `struct` | Parser supporting up to 32 defs: `ArgParser.init()`, `.addArgument(*_, def)`, `.parseArgs(argv)` |
-| `ParseResult` | `struct` | Result with `ok`, `err_code`, `.getString(dest)`, `.getBool(dest)`, `.getCount(dest)`, `.positionalCount()`, `.positionalAt(idx)` |
+| `enum` | `ArgAction` | `Store, StoreTrue, StoreFalse, Count` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ArgDef` | `class` | Fields: `short_flag: u8, long_name: string, dest: string, action: ArgAction, required: bool, default_val: string, +1 more` |
+| `ArgSlot` | `class` | Fields: `dest: string, action: ArgAction, has_str: bool, str_val: string, bool_val: bool, count_val: u32, +1 more` |
+| `ParseResult` | `class` | Fields: `ok: bool, err_code: i32, slot_count: usize, slots: [32]ArgSlot, pos_count: usize, positionals: [32]string` · Methods: `getString, getBool, getCount, positionalCount, positionalAt` |
+| `ArgParser` | `class` | Fields: `def_count: usize, defs: [32]ArgDef` · Methods: `init, addArgument, parseArgs` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `argpStrEq` | `(a: string, b: string): bool` | Invokes `argpStrEq` and returns `bool`. |
+| `argpStripDashes` | `(s: string): string` | Invokes `argpStripDashes` and returns `string`. |
+| `argpFindEq` | `(s: string): usize?` | Invokes `argpFindEq` and returns `usize?`. |
+| `argpResolveDest` | `(def: ArgDef): string` | Invokes `argpResolveDest` and returns `string`. |
+| `argpFindLong` | `(defs: &[]ArgDef, name: string): usize?` | Invokes `argpFindLong` and returns `usize?`. |
+| `argpFindShort` | `(defs: &[]ArgDef, ch: u8): usize?` | Invokes `argpFindShort` and returns `usize?`. |
+
+## Minimal Example
 
 ```cp
-import { ArgParser, ArgDef } from "argparse";
+import { argpStrEq } from "argparse";
 
-let parser = ArgParser.init();
-* = parser.addArgument(ArgDef{
-    short_flag: 'v', long_name: "--verbose", dest: "verbose",
-    action: .Count, required: false, default_val: "", is_positional: false,
-});
-const args: [1]string = ["-vvv"];
-const res = parser.parseArgs(args[0..1]);
-const level = res.getCount("verbose"); // 3
+pub fn main() {
+    let result = argpStrEq("example", "example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

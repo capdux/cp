@@ -1,45 +1,76 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # sha1
+
+Zero-allocation FIPS 180-4 SHA-1 cryptographic hash streaming implementation (Rust sha1 crate parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:sha1` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `sha1` → CP 包名 `sha1`）
 
-Zero-allocation FIPS 180-4 SHA-1 cryptographic hash streaming implementation for CP — clean-room MIT parity with Rust `sha1` v0.10 (crates.io #35).
+| Metadata | Value |
+| --- | --- |
+| Package | `sha1` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 FIPS 180-4 SHA-1 密码学杂凑流式实现，支持分块流式更新、重置复用、原始 20 字节输出与 40 字节十六进制输出。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add sha1
 ```
 
-## API
+```cp
+import {
+    Sha1Hasher,
+    sha1Add32,
+    sha1Add5,
+    sha1Rotl1,
+    sha1Rotl5,
+    sha1Rotl30,
+    sha1ReadBe32,
+    sha1WriteBe32,
+} from "sha1";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `SHA1_DIGEST_LEN` | `usize = 20` | SHA-1 digest length in bytes |
-| `SHA1_BLOCK_LEN` | `usize = 64` | SHA-1 compression block size in bytes |
-| `Sha1Hasher.new` | `() -> Sha1Hasher` | Create a new streaming SHA-1 hasher |
-| `Sha1Hasher.update` | `(*_, data: []u8)` | Feed raw bytes into the hasher |
-| `Sha1Hasher.updateStr` | `(*_, s: string)` | Feed string bytes into the hasher |
-| `Sha1Hasher.finalize` | `(*_, out20: []u8)` | Finalize and write 20-byte digest |
-| `Sha1Hasher.finalizeHex` | `(*_, out40: []u8) -> usize` | Finalize and write 40-byte lowercase hex digest |
-| `Sha1Hasher.reset` | `(*_)` | Reset hasher to initial FIPS 180-4 state |
-| `sha1Bytes` | `(data: []u8, out20: []u8)` | One-shot SHA-1 for byte slices |
-| `sha1Hex` | `(s: string, out40: []u8) -> usize` | One-shot lowercase hex SHA-1 for strings |
+| `Sha1Hasher` | `class` | Fields: `h0: u32, h1: u32, h2: u32, h3: u32, h4: u32, buf: [64]u8, +2 more` · Methods: `new, reset, compressBuf, update, updateStr, finalize, +1 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `sha1Add32` | `(a: u32, b: u32): u32` | Invokes `sha1Add32` and returns `u32`. |
+| `sha1Add5` | `(a: u32, b: u32, c: u32, d: u32, e: u32): u32` | Invokes `sha1Add5` and returns `u32`. |
+| `sha1Rotl1` | `(x: u32): u32` | Invokes `sha1Rotl1` and returns `u32`. |
+| `sha1Rotl5` | `(x: u32): u32` | Invokes `sha1Rotl5` and returns `u32`. |
+| `sha1Rotl30` | `(x: u32): u32` | Invokes `sha1Rotl30` and returns `u32`. |
+| `sha1ReadBe32` | `(b: []u8, off: usize): u32` | Invokes `sha1ReadBe32` and returns `u32`. |
+| `sha1WriteBe32` | `(out: []u8, off: usize, v: u32)` | Executes `sha1WriteBe32` in-place. |
+| `sha1HexDigit` | `(nibble: u8): u8` | Invokes `sha1HexDigit` and returns `u8`. |
+| `sha1Bytes` | `(data: []u8, out20: []u8)` | Executes `sha1Bytes` in-place. |
+| `sha1Hex` | `(s: string, out40: []u8): usize` | Invokes `sha1Hex` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { Sha1Hasher, sha1Hex } from "sha1";
+import { sha1Hex } from "sha1";
 
-let hex: [40]u8 = undefined;
-const n = sha1Hex("abc", hex[0..40]); // "a9993e364706816aba3e25717850c26c9cd0d89d"
-
-let h = Sha1Hasher.new();
-h.updateStr("hello ");
-h.updateStr("world");
-* = h.finalizeHex(hex[0..40]);
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = sha1Hex("example", out_buf[0..256]);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

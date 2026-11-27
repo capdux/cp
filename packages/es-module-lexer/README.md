@@ -1,38 +1,87 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # es-module-lexer
+
+Zero-allocation ES module static/dynamic import and export lexer for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:es-module-lexer` ([https://github.com/guybedford/es-module-lexer](https://github.com/guybedford/es-module-lexer))
 
-Zero-allocation ES module static/dynamic import and export lexer for CP — clean-room MIT parity with npm `es-module-lexer` (308M+/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `es-module-lexer` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 ES Module 词法分析器，精准跳过注释与字符串字面量，提取静态 `import`、副作用 `import`、动态 `import()`、`import.meta`、`export const/let/var/function/class/async function`、`export default`、`export { a as b } from` 及 `export * from`，并支持 `isFacade` 重导出门面模块判定。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add es-module-lexer
 ```
 
-## API
+```cp
+import {
+    ImportKind,
+    ImportSpecifier,
+    ExportSpecifier,
+    EsmParseResult,
+    EsmlSpan,
+    esmlIsWs,
+    esmlIsIdentStart,
+    esmlIsIdentPart,
+} from "es-module-lexer";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `ImportKind` | `enum` | `Static`, `Dynamic`, `ImportMeta` |
-| `ImportSpecifier` | `struct` | Import span (`kind`, `spec_start`, `spec_end`, `stmt_start`, `stmt_end`, `.specifier(src)`) |
-| `ExportSpecifier` | `struct` | Export span (`name_start`, `name_end`, `local_start`, `local_end`, `.name(src)`, `.localName(src)`) |
-| `EsmParseResult` | `struct` | Parse summary (`import_count`, `export_count`, `facade`, `has_module_syntax`) |
-| `parseEsm` | `(src: string, imports_out: []ImportSpecifier, exports_out: []ExportSpecifier): EsmParseResult` | Lex ESM imports and exports into caller buffers |
-| `isFacade` | `(src: string): bool` | Returns `true` if module contains only import/re-export statements |
+| `enum` | `ImportKind` | `Static, Dynamic, ImportMeta` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ImportSpecifier` | `class` | Fields: `kind: ImportKind, spec_start: usize, spec_end: usize, stmt_start: usize, stmt_end: usize` · Methods: `specifier` |
+| `ExportSpecifier` | `class` | Fields: `name_start: usize, name_end: usize, local_start: usize, local_end: usize` · Methods: `name, localName` |
+| `EsmParseResult` | `class` | Fields: `import_count: usize, export_count: usize, facade: bool, has_module_syntax: bool` |
+| `EsmlSpan` | `class` | Fields: `start: usize, end: usize, ok: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `esmlIsWs` | `(c: u8): bool` | Invokes `esmlIsWs` and returns `bool`. |
+| `esmlIsIdentStart` | `(c: u8): bool` | Invokes `esmlIsIdentStart` and returns `bool`. |
+| `esmlIsIdentPart` | `(c: u8): bool` | Invokes `esmlIsIdentPart` and returns `bool`. |
+| `esmlStrEq` | `(a: string, b: string): bool` | Invokes `esmlStrEq` and returns `bool`. |
+| `esmlSkipWsAndComments` | `(src: string, start: usize): usize` | Invokes `esmlSkipWsAndComments` and returns `usize`. |
+| `esmlScanString` | `(src: string, start: usize): EsmlSpan` | Invokes `esmlScanString` and returns `EsmlSpan`. |
+| `esmlSkipTemplate` | `(src: string, start: usize): usize` | Invokes `esmlSkipTemplate` and returns `usize`. |
+| `esmlScanIdent` | `(src: string, start: usize): EsmlSpan` | Invokes `esmlScanIdent` and returns `EsmlSpan`. |
+| `esmlPrevNonWsChar` | `(src: string, pos: usize): u8` | Invokes `esmlPrevNonWsChar` and returns `u8`. |
+| `esmlPushImport` | `(out: []ImportSpecifier, count: usize, kind: ImportKind, spec_start: usize, spec_end: usize, stmt_start: usize, stmt_end: usize): usize` | Invokes `esmlPushImport` and returns `usize`. |
+| `esmlPushExport` | `(out: []ExportSpecifier, count: usize, name_start: usize, name_end: usize, local_start: usize, local_end: usize): usize` | Invokes `esmlPushExport` and returns `usize`. |
+| `parseEsm` | `(src: string, imports_out: []ImportSpecifier, exports_out: []ExportSpecifier): EsmParseResult` | Parses input via `parseEsm` and returns `EsmParseResult`. |
+| `isFacade` | `(src: string): bool` | Checks predicate `isFacade` and returns `bool`. |
+
+## Minimal Example
 
 ```cp
-import { parseEsm, isFacade, ImportSpecifier, ExportSpecifier } from "es-module-lexer";
+import { parseEsm } from "es-module-lexer";
 
-const code = "import { a } from './a.js'; export { b as c } from './b.js';";
-let imps: [8]ImportSpecifier = undefined;
-let exps: [8]ExportSpecifier = undefined;
-const res = parseEsm(code, imps[0..8], exps[0..8]); // import_count=2, export_count=1, facade=true
+pub fn main() {
+    let result = parseEsm("example", /* imports_out: []ImportSpecifier */, /* exports_out: []ExportSpecifier */);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

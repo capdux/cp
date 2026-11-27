@@ -1,42 +1,50 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # bitstream-io
+
+Zero-allocation MSB-first & LSB-first BitReader and BitWriter supporting 0..64-bit reads/writes, peek, byte alignment, and H.264/HEVC Exp-Golomb coding (Rust bitstream-io parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bitstream-io` ([https://github.com/tuffy/bitstream-io](https://github.com/tuffy/bitstream-io))（原库名 `bitstream-io` → CP 包名 `bitstream-io`）
 
-零堆分配的 CP MSB-first / LSB-first 双模式位级流式读写器 — 洁净室 MIT 实现，对标 Rust `bitstream-io`，支持任意 0..64 位跨字节读写、无损 `peekBits`、字节对齐与 H.264/HEVC Exp-Golomb 指数哥伦布编解码。
+| Metadata | Value |
+| --- | --- |
+| Package | `bitstream-io` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation MSB-first & LSB-first `BitReader` and `BitWriter` for CP — clean-room MIT parity with Rust `bitstream-io`.
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add bitstream-io
 ```
 
-## API 参考 / API Reference
-
-- **`BitReadResult`**：`{ value: u64, ok: bool }`
-- **`BitReader`**：`initMsb(buf)`, `initLsb(buf)`, `bitsRemaining()`, `bitPosition()`, `readBit(*_)`, `readBits(*_, count)`, `peekBits(count)`, `skipBits(*_, count)`, `alignToByte(*_)`, `readUe(*_)`
-- **`BitWriter`**：`initMsb(buf)`, `initLsb(buf)`, `bitsWritten()`, `bytesUsed()`, `writeBit(*_, bit)`, `writeBits(*_, value, count)`, `alignToByte(*_)`, `writeUe(*_, value)`
-
-## 使用示例 / Usage
-
 ```cp
-import { BitWriter, BitReader } from "bitstream-io";
-
-let buf: [16]u8 = undefined;
-let w = BitWriter.initMsb(buf[0..16]);
-* = w.writeBits(5 as u64, 3 as u8);
-* = w.writeUe(42 as u64);
-* = w.alignToByte();
-
-let r = BitReader.initMsb(buf[0..w.bytesUsed()]);
-const a = r.readBits(3 as u8); // value=5, ok=true
-const b = r.readUe();          // value=42, ok=true
+import { BitReadResult, BitReader, BitWriter } from "bitstream-io";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BitReadResult` | `class` | Fields: `value: u64, ok: bool` |
+| `BitReader` | `class` | Fields: `buf: &[]u8, bit_pos: usize, msb_first: bool` · Methods: `initMsb, initLsb, bitPosition, bitsRemaining, readBitAt, readBit, +5 more` |
+| `BitWriter` | `class` | Fields: `buf: []u8, bit_pos: usize, msb_first: bool` · Methods: `initMsb, initLsb, bitsWritten, bytesUsed, writeBit, writeBits, +2 more` |
+
+## Minimal Example
+
+```cp
+import { BitReadResult } from "bitstream-io";
+
+pub fn main() {
+    // Refer to src/index.d.cp for BitReadResult fields and methods
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

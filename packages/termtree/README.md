@@ -1,43 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # termtree
+
+Zero-allocation CLI tree structure renderer with Unicode/ASCII glyph palettes and fixed-capacity arena (Rust termtree parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:termtree` ([https://github.com/rust-cli/termtree](https://github.com/rust-cli/termtree))
 
-Zero-allocation CLI tree structure renderer with Unicode & ASCII glyph palettes for CP — clean-room MIT parity with Rust `termtree` (233M+ downloads on crates.io).
+| Metadata | Value |
+| --- | --- |
+| Package | `termtree` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配命令行树状结构渲染器（定容 64 节点静态池 + 非递归先序 DFS 渲染），内置 Unicode 框线与 ASCII 兼容字符集，适用于依赖树、目录树、AST 调试视图与 CLI 诊断输出。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add termtree
 ```
 
-## API
+```cp
+import {
+    GlyphPalette,
+    TermTreeNode,
+    TermTreeArena,
+    ttrAppendBytes,
+    ttrAppendByte,
+} from "termtree";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `GlyphPalette` | `unicode()`, `ascii()` | Box-drawing glyph sets (`├── `, `└── `, `│   `, `    `) |
-| `TermTreeArena` | `init()`, `newRoot(*_, label) -> usize`, `addChild(*_, parent, label) -> i32` | 64-node fixed-capacity tree arena |
-| `render` | `(root: usize, out: []u8) -> usize` | Renders tree using default Unicode glyphs |
-| `renderWithGlyphs` | `(root: usize, g: GlyphPalette, out: []u8) -> usize` | Renders tree using a custom `GlyphPalette` |
-| `nodeCount` | `() -> usize` | Total allocated nodes in arena |
-| `maxDepth` | `(root: usize) -> usize` | Maximum tree depth starting at `root` (1-based) |
+| `GlyphPalette` | `class` | Fields: `middle_item: string, last_item: string, middle_skip: string, last_skip: string` · Methods: `unicode, ascii` |
+| `TermTreeNode` | `class` | Fields: `label: string, first_child: i32, last_child: i32, next_sibling: i32` |
+| `TermTreeArena` | `class` | Fields: `nodes: [64]TermTreeNode, count: usize` · Methods: `init, newRoot, addChild, nodeCount, maxDepth, renderWithGlyphs, +1 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ttrAppendBytes` | `(out: []u8, pos: usize, src: string): usize?` | Invokes `ttrAppendBytes` and returns `usize?`. |
+| `ttrAppendByte` | `(out: []u8, pos: usize, b: u8): usize?` | Invokes `ttrAppendByte` and returns `usize?`. |
+
+## Minimal Example
 
 ```cp
-import { TermTreeArena, GlyphPalette } from "termtree";
+import { ttrAppendBytes } from "termtree";
 
-let tree = TermTreeArena.init();
-const root = tree.newRoot("root");
-const a = tree.addChild(root, "alpha");
-* = tree.addChild(usize(a), "a1");
-* = tree.addChild(root, "beta");
-
-let buf: [512]u8 = undefined;
-const n = tree.render(root, buf[0..512]);
-const m = tree.renderWithGlyphs(root, GlyphPalette.ascii(), buf[0..512]);
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = ttrAppendBytes(out_buf[0..256], 0, "example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

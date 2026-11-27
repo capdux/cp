@@ -1,17 +1,55 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # bitvec
+
+Zero-heap arbitrary-length bit vector with popcount, find-first-one, bitwise ops and shifts (clean-room CP implementation of crates.io bitvec)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bitvec` ([https://github.com/ferrilab/bitvec](https://github.com/ferrilab/bitvec))
 
-零堆分配的 CP 原生定长位向量库（支持最多 512 位），Clean-Room MIT 实现对标 crates.io Top 210 包 `bitvec`（6 亿+ 下载）。
+| Metadata | Value |
+| --- | --- |
+| Package | `bitvec` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- 8 × `u64` 紧凑存储，O(1) 位读写 `get`/`set`/`toggle`/`push`/`pop`
-- 字级位运算 `andWith`/`orWith`/`xorWith`/`notAll`、快速 `countOnes`/`countZeros`/`any`/`all`/`firstOne`/`lastOne` 与二进制字符串格式化 `toBinStr`
+```bash
+cap add bitvec
+```
 
-## 致谢
+```cp
+import { BitVec512, bvPopcountU64 } from "bitvec";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`ferrilab/bitvec`](https://github.com/ferrilab/bitvec)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BitVec512` | `class` | Fields: `words: [8]u64, bit_len: usize` · Methods: `new, withLen, len, capacity, isEmpty, clear, +16 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `bvPopcountU64` | `(x: u64): usize` | Invokes `bvPopcountU64` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { bvPopcountU64 } from "bitvec";
+
+pub fn main() {
+    let result = bvPopcountU64(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

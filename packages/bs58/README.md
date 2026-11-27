@@ -1,43 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # bs58
+
+Zero-allocation Base58 encoder/decoder supporting Bitcoin, Ripple, and Flickr alphabets with leading-zero preservation (Rust bs58 / npm bs58 parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bs58` ([https://github.com/Nullus157/bs58-rs](https://github.com/Nullus157/bs58-rs))
 
-零堆分配的 CP Base58 多字母表编解码引擎 — 洁净室 MIT 实现，对标 Rust `bs58` 与 npm `bs58`，完整支持 Bitcoin、Ripple、Flickr 三套标准字母表，广泛用于 Solana、Bitcoin、IPFS/CID 与分布式节点 ID。
+| Metadata | Value |
+| --- | --- |
+| Package | `bs58` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation Base58 multi-alphabet encoder/decoder (`Bitcoin`, `Ripple`, `Flickr`) for CP — clean-room MIT parity with Rust `bs58` and npm `bs58`.
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add bs58
 ```
 
-## API 参考 / API Reference
-
-| 符号 / Symbol | 说明 / Description |
-| --- | --- |
-| `Base58Alphabet` | 枚举：`Bitcoin` / `Ripple` / `Flickr` |
-| `encodeBase58(input, out)` | 使用 Bitcoin 默认字母表编码 |
-| `decodeBase58(encoded, out)` | 使用 Bitcoin 默认字母表解码 |
-| `encodeBase58With(input, alpha, out)` | 使用指定字母表编码 |
-| `decodeBase58With(encoded, alpha, out)` | 使用指定字母表解码 |
-| `isValidBase58(encoded, alpha)` | 校验字符串是否全部属于指定 Base58 字母表 |
-
-## 使用示例 / Usage
-
 ```cp
-import { encodeBase58, decodeBase58, Base58Alphabet, encodeBase58With } from "bs58";
-
-let buf: [128]u8 = undefined;
-const enc = encodeBase58("Hello World!", buf[0..128]).?; // "2NEpo7TZRRrLZSi2U"
-
-let dec_buf: [128]u8 = undefined;
-const raw = decodeBase58(enc, dec_buf[0..128]).?;        // "Hello World!"
+import {
+    Base58Alphabet,
+    alphabetChars,
+    charIndex,
+    isValidBase58,
+    encodeBase58With,
+    decodeBase58With,
+    encodeBase58,
+    decodeBase58,
+} from "bs58";
 ```
 
-## License
+## Core API
 
-MIT
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `Base58Alphabet` | `Bitcoin, Ripple, Flickr` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `alphabetChars` | `(alpha: Base58Alphabet): string` | Invokes `alphabetChars` and returns `string`. |
+| `charIndex` | `(alphabet: string, c: u8): i8` | Invokes `charIndex` and returns `i8`. |
+| `isValidBase58` | `(encoded: string, alpha: Base58Alphabet): bool` | Checks predicate `isValidBase58` and returns `bool`. |
+| `encodeBase58With` | `(input: string, alpha: Base58Alphabet, out: []u8): string?` | Serializes/formats data via `encodeBase58With` returning `string?`. |
+| `decodeBase58With` | `(encoded: string, alpha: Base58Alphabet, out: []u8): string?` | Parses input via `decodeBase58With` and returns `string?`. |
+| `encodeBase58` | `(input: string, out: []u8): string?` | Serializes/formats data via `encodeBase58` returning `string?`. |
+| `decodeBase58` | `(encoded: string, out: []u8): string?` | Parses input via `decodeBase58` and returns `string?`. |
+
+## Minimal Example
+
+```cp
+import { isValidBase58 } from "bs58";
+
+pub fn main() {
+    let result = isValidBase58("example", /* alpha: Base58Alphabet */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

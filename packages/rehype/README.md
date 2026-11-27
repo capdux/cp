@@ -1,46 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # rehype
+
+Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer (npm rehype/hast parity) composing escape-html for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:rehype` ([https://github.com/rehypejs/rehype](https://github.com/rehypejs/rehype))（原库名 `rehype` → CP 包名 `rehype`）
 
-Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer for CP — clean-room MIT parity with npm `rehype` / `hast`. Composes `escape-html` with zero duplication.
+| Metadata | Value |
+| --- | --- |
+| Package | `rehype` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 HTML AST 构建与 HTML5 序列化库（对标 npm `rehype` / `hast`），复用 `escape-html` 自动转义文本与属性值防止 XSS，支持全部 14 个 HTML5 void 元素与纯文本提取。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add rehype
 ```
 
-## Dependencies / 跨包复用
+```cp
+import {
+    HastAttr,
+    HastNode,
+    HastTree,
+    rhWriteByte,
+    isVoidElement,
+    rhMakeNode,
+    rhSerializeHtml,
+    rhExtractText,
+} from "rehype";
+```
 
-- `escape-html`: 单遍零堆分配 HTML 实体转义（`<`, `>`, `&`, `"`, `'`）
+## Core API
 
-## API
+### Data Structures
 
-| Symbol | Signature | Description |
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `HAST_*` | `HAST_ROOT (0)` / `HAST_ELEMENT (1)` / `HAST_TEXT (2)` / `HAST_COMMENT (3)` / `HAST_DOCTYPE (4)` | HAST node kind constants |
-| `isVoidElement` | `(tag: string): bool` | Detect all 14 HTML5 void elements (`area`, `base`, `br`, `col`, `embed`, `hr`, `img`, `input`, `link`, `meta`, `param`, `source`, `track`, `wbr`) |
-| `HastTree` | `struct` + `.new` / `.addElement` / `.addText` / `.addComment` / `.addDoctype` / `.setAttr` / `.toHtml` / `.toText` / `.nodeCount` / `.countByTag` | Fixed-pool zero-alloc HAST tree (up to 64 nodes + 64 attributes) |
+| `HastAttr` | `class` | Fields: `name: [48]u8, name_len: usize, value: [192]u8, value_len: usize, next_attr: i32` |
+| `HastNode` | `class` | Fields: `kind: u8, text: [256]u8, text_len: usize, first_child: i32, last_child: i32, next_sibling: i32, +2 more` |
+| `HastTree` | `class` | Fields: `nodes: [64]HastNode, node_len: usize, attrs: [64]HastAttr, attr_len: usize` · Methods: `new, addElement, addText, addComment, addDoctype, setAttr, +4 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `rhWriteByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `rhWriteByte` and returns `usize`. |
+| `isVoidElement` | `(tag: string): bool` | Checks predicate `isVoidElement` and returns `bool`. |
+| `rhMakeNode` | `(kind: u8, text: string): HastNode` | Invokes `rhMakeNode` and returns `HastNode`. |
+| `rhSerializeHtml` | `(nodes: &[]HastNode, attrs: &[]HastAttr, node_id: usize, out: []u8, pos: usize, depth: usize): usize` | Invokes `rhSerializeHtml` and returns `usize`. |
+| `rhExtractText` | `(nodes: &[]HastNode, node_id: usize, out: []u8, pos: usize, depth: usize): usize` | Invokes `rhExtractText` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { HastTree } from "rehype";
+import { isVoidElement } from "rehype";
 
-let tree = HastTree.new();
-tree.addDoctype(0);
-const html = tree.addElement(0, "html");
-const body = tree.addElement(html as usize, "body");
-const p = tree.addElement(body as usize, "p");
-tree.setAttr(p as usize, "class", "lead");
-tree.addText(p as usize, "Hello <CP> & World!");
-
-let out: [512]u8 = undefined;
-const n = tree.toHtml(out[0..512]);
-// <!doctype html><html><body><p class="lead">Hello &lt;CP&gt; &amp; World!</p></body></html>
+pub fn main() {
+    let result = isVoidElement("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

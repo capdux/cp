@@ -1,19 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # pretty-format
+
+Zero-heap pure CP structured value pretty-printer with indentation, compact mode, and max-depth protection (clean-room MIT implementation of npm pretty-format)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pretty-format` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest))
 
-零堆分配的纯 CP 结构化值格式化打印库，Clean-Room MIT 实现对标 npm Top 45 包 `pretty-format`（周下载 1 亿+）。
+| Metadata | Value |
+| --- | --- |
+| Package | `pretty-format` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- **零堆写入器**：`PrettyWriter` 基于固定 2048 字节栈缓冲，零动态内存分配
-- **丰富原语支持**：内置 `writeNull`、`writeBool`、`writeInt`、`writeFloat`、`writeString`（支持 `\n`/`\r`/`\t`/`\"`/`\\` 转义）、`writeSymbol`、`writeFunction`
-- **多行与紧凑模式**：支持 `indent` 缩进层级、`print_basic_prototype` 原型前缀与 `min` 单行紧凑模式
-- **深度保护**：超过 `max_depth` 时自动截断并输出 `"[Object]"` / `"[Array]"`，安全屏蔽深层写入
+```bash
+cap add pretty-format
+```
 
-## 致谢
+```cp
+import {
+    PrettyOptions,
+    PrettyWriter,
+    pfmtWriteByte,
+    pfmtWriteSpaces,
+    pfmtWriteF64,
+    pfmtWriteStringLiteral,
+    formatStringLiteral,
+    formatPrimitiveInt,
+} from "pretty-format";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`jestjs/jest` (`pretty-format`)](https://github.com/jestjs/jest/tree/main/packages/pretty-format)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `PrettyOptions` | `class` | Fields: `indent: usize, max_depth: usize, min: bool, escape_string: bool, print_basic_prototype: bool` · Methods: `defaults, compact` |
+| `PrettyWriter` | `class` | Fields: `opts: PrettyOptions, buf: [2048]u8, len: usize, depth: usize, item_counts: [32]usize, truncated_depth: usize` · Methods: `new, defaultWriter, clear, isTruncated, writeNull, writeUndefined, +12 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `pfmtWriteByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `pfmtWriteByte` and returns `usize`. |
+| `pfmtWriteSpaces` | `(out: []u8, pos: usize, count: usize): usize` | Invokes `pfmtWriteSpaces` and returns `usize`. |
+| `pfmtWriteF64` | `(out: []u8, pos: usize, val: f64): usize` | Invokes `pfmtWriteF64` and returns `usize`. |
+| `pfmtWriteStringLiteral` | `(out: []u8, pos: usize, s: string, escape_string: bool): usize` | Invokes `pfmtWriteStringLiteral` and returns `usize`. |
+| `formatStringLiteral` | `(s: string, escape: bool, out: []u8): usize` | Serializes/formats data via `formatStringLiteral` returning `usize`. |
+| `formatPrimitiveInt` | `(v: i64, out: []u8): usize` | Serializes/formats data via `formatPrimitiveInt` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { formatStringLiteral } from "pretty-format";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatStringLiteral("example", false, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

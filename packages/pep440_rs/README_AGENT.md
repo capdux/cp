@@ -1,24 +1,62 @@
-# pep440_rs@1.0.0 (Agent Quickref)
+# pep440_rs — AI Agent Quick Ref
 
-> Zero-heap PEP 440 Python version parser, total-order comparator, and specifier matcher in pure CP (modeled after Astral pep440_rs) | License: MIT OR Apache-2.0
-> Import: `import { ... } from "pep440_rs";` | Full types: `src/index.d.cp`
+Zero-heap PEP 440 Python version parser, total-order comparator, and specifier matcher in pure CP (modeled after Astral pep440_rs) (`v1.0.0`, `MIT OR Apache-2.0`)
 
-## Types & Constants
-- `export enum PreKind`
+## Import
 
-## Functions
-- `export fn pepInvalid(): Pep440Version;`
-- `export fn pepIsDigit(c: u8): bool;`
-- `export fn pepIsSpace(c: u8): bool;`
-- `export fn pepToLower(c: u8): u8;`
-- `export fn pepIsSep(c: u8): bool;`
-- `export fn pepMatchWord(s: string, pos: usize, end: usize, word: string): bool;`
-- `export fn pepReadU32(s: string, pos: usize, end: usize): PepNumRes;`
-- `export fn parsePep440(s: string): Pep440Version;`
-- `export fn pepCmpU32(a: u32, b: u32): i32;`
-- `export fn pepPreRank(k: PreKind): i32;`
-- `export fn pepStageRank(v: Pep440Version): i32;`
-- `export fn comparePep440(a: Pep440Version, b: Pep440Version): i32;`
-- `export fn pepPrefixMatch(v: Pep440Version, target: Pep440Version, prefix_len: u8): bool;`
-- `export fn pepMatchSingle(v: Pep440Version, raw: string): bool;`
-- `export fn matchesSpecifier(ver: string, spec: string): bool;`
+```cp
+import {
+    PreKind,
+    Pep440Version,
+    PepNumRes,
+    pepInvalid,
+    pepIsDigit,
+    pepIsSpace,
+    pepToLower,
+    pepIsSep,
+} from "pep440_rs";
+```
+
+## Core Types & Constants
+
+```cp
+enum PreKind { None, Alpha, Beta, Rc }
+class Pep440Version { valid: bool, epoch: u32, release: [4]u32, release_len: u8, /* +6 fields */ }
+class PepNumRes { ok: bool, val: u32, next: usize }
+```
+
+## API Signatures
+
+```cp
+fn pepInvalid(): Pep440Version;
+fn pepIsDigit(c: u8): bool;
+fn pepIsSpace(c: u8): bool;
+fn pepToLower(c: u8): u8;
+fn pepIsSep(c: u8): bool;
+fn pepMatchWord(s: string, pos: usize, end: usize, word: string): bool;
+fn pepReadU32(s: string, pos: usize, end: usize): PepNumRes;
+fn parsePep440(s: string): Pep440Version;
+fn pepCmpU32(a: u32, b: u32): i32;
+fn pepPreRank(k: PreKind): i32;
+fn pepStageRank(v: Pep440Version): i32;
+fn comparePep440(a: Pep440Version, b: Pep440Version): i32;
+fn pepPrefixMatch(v: Pep440Version, target: Pep440Version, prefix_len: u8): bool;
+fn pepMatchSingle(v: Pep440Version, raw: string): bool;
+fn matchesSpecifier(ver: string, spec: string): bool;
+```
+
+## Minimal Usage
+
+```cp
+import { parsePep440 } from "pep440_rs";
+
+pub fn main() {
+    let result = parsePep440("example");
+    _ = result;
+}
+```
+
+## Borrowing, Errors & Pitfalls
+
+- **Canonical import**: Always import directly from `"pep440_rs"`; install via `cap add pep440_rs`.
+- **Zero-copy lifetimes**: Returned `string` slices may borrow from input arguments; keep source strings alive while reading results.

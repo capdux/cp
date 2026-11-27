@@ -1,75 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `raw-body`
+# raw-body
+
+Zero-allocation HTTP request body byte-limit enforcer, Content-Length verifier, streaming chunk accumulator, and RFC 3629 UTF-8 validator for CP (clean-room parity with npm raw-body)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:raw-body` ([https://github.com/stream-utils/raw-body](https://github.com/stream-utils/raw-body))
 
-Zero-allocation HTTP request body byte-limit enforcer, `Content-Length` verifier, streaming chunk accumulator, and strict RFC 3629 UTF-8 validator for CP. Clean-room MIT implementation inspired by npm `raw-body` v3.
+| Metadata | Value |
+| --- | --- |
+| Package | `raw-body` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation**: Accumulates streaming HTTP body chunks directly into a caller-provided `out: []u8` buffer.
-- **Fast-fail size protection**: Rejects oversized declared `Content-Length` (`checkDeclaredLength() -> 413`) and overflowing chunks (`pushChunk() -> 413`) before copying.
-- **Content-Length & UTF-8 verification**: Validates exact received length (`400`) and strict RFC 3629 UTF-8 (`400`, rejecting overlong encodings, UTF-16 surrogates, and truncated sequences) on `finish()`.
-- **Human-readable byte limits**: `parseByteLimit` parses `"100kb"`, `"1mb"`, `"512b"`, `"1.5kb"`, `"1024"`, etc.
-
-## API
-
-### Error Codes
-
-- `RAW_OK: u16 = 0`
-- `RAW_ERR_TOO_LARGE: u16 = 413`
-- `RAW_ERR_LENGTH_MISMATCH: u16 = 400`
-- `RAW_ERR_INVALID_UTF8: u16 = 400`
-- `RAW_ERR_ABORTED: u16 = 499`
-
-### Structs & Methods
-
-- `RawBodyOptions { limit: usize, expected_len: usize, has_expected_len: bool, validate_utf8: bool }`
-  - `RawBodyOptions.defaultOpts()` (100 KiB limit)
-  - `RawBodyOptions.withLimit(limit: usize)`
-- `RawBodyResult { status: u16, bytes_written: usize }`
-  - `isOk(): bool`
-- `RawBodyReader`
-  - `RawBodyReader.new(opts: RawBodyOptions)`
-  - `checkDeclaredLength(): u16`
-  - `pushChunk(*_, chunk: []const u8, out: []u8): u16`
-  - `abort(*_): u16`
-  - `finish(*_, out: []const u8): RawBodyResult`
-  - `receivedBytes(): usize`
-
-### Functions
-
-- `parseByteLimit(spec: string): usize?`
-- `isValidUtf8(data: []const u8): bool`
-
-## Example
+```bash
+cap add raw-body
+```
 
 ```cp
 import {
-    RAW_OK,
     RawBodyOptions,
+    RawBodyResult,
     RawBodyReader,
-    parseByteLimit
+    rwbIsCont,
+    rwbUnitMultiplier,
+    isValidUtf8,
+    parseByteLimit,
 } from "raw-body";
-
-let lim = parseByteLimit("100kb");
-let opts = RawBodyOptions {
-    limit: lim ?? 102400,
-    expected_len: 11,
-    has_expected_len: true,
-    validate_utf8: true
-};
-let reader = RawBodyReader.new(opts);
-let buf: [256]u8 = undefined;
-
-reader.pushChunk("hello ", buf[0..256]);
-reader.pushChunk("world", buf[0..256]);
-let res = reader.finish(buf[0..256]);
-// res.status == RAW_OK, res.bytes_written == 11, buf[0..11] == "hello world"
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RawBodyOptions` | `class` | Fields: `limit: usize, expected_len: usize, has_expected_len: bool, validate_utf8: bool` · Methods: `defaultOpts, withLimit` |
+| `RawBodyResult` | `class` | Fields: `status: u16, bytes_written: usize` · Methods: `isOk` |
+| `RawBodyReader` | `class` | Fields: `opts: RawBodyOptions, received: usize, failed_status: u16, finished: bool` · Methods: `new, checkDeclaredLength, pushChunk, abort, finish, receivedBytes` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `rwbIsCont` | `(b: u8): bool` | Invokes `rwbIsCont` and returns `bool`. |
+| `rwbUnitMultiplier` | `(unit: string): u64` | Invokes `rwbUnitMultiplier` and returns `u64`. |
+| `isValidUtf8` | `(data: &[]u8): bool` | Checks predicate `isValidUtf8` and returns `bool`. |
+| `parseByteLimit` | `(spec: string): usize?` | Parses input via `parseByteLimit` and returns `usize?`. |
+
+## Minimal Example
+
+```cp
+import { parseByteLimit } from "raw-body";
+
+pub fn main() {
+    let result = parseByteLimit("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

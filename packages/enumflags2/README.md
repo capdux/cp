@@ -1,78 +1,56 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `enumflags2`
+# enumflags2
+
+Zero-allocation 64-bit type-safe enum bitflags set with valid-mask protection for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:enumflags2` ([https://github.com/meithecatte/enumflags2](https://github.com/meithecatte/enumflags2))
 
-Zero-allocation 64-bit type-safe enum bitflags set with `valid_mask` protection for CP (clean-room MIT, inspired by `enumflags2` v0.7).
+| Metadata | Value |
+| --- | --- |
+| Package | `enumflags2` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero Heap Allocations**: Compact 16-byte value type (`bits: u64`, `valid_mask: u64`).
-- **Invalid-Bit Protection**: Every constructor, mutator, and set operation enforces `valid_mask`, preventing out-of-range bit injection.
-- **Strict & Truncating Construction**: `fromBitsStrict` rejects unknown bits (`null`), while `fromBitsTruncate` silently masks them off.
-- **Full Set Algebra**: `unionFlags`, `intersectFlags`, `differenceFlags`, `symmetricDifferenceFlags`, and `complement`.
-- **O(1) Bit Cursor Iteration**: `nextFlag(start_bit)` finds the next set bit index `>= start_bit` in `0..=63`.
-
-## API
+```bash
+cap add enumflags2
+```
 
 ```cp
-pub struct BitFlags64 {
-    pub bits: u64,
-    pub valid_mask: u64,
+import { BitFlags64, ef2Popcount64, ef2Ctz64 } from "enumflags2";
+```
 
-    pub static fn empty(valid_mask: u64): BitFlags64
-    pub static fn all(valid_mask: u64): BitFlags64
-    pub static fn fromBitsTruncate(bits: u64, valid_mask: u64): BitFlags64
-    pub static fn fromBitsStrict(bits: u64, valid_mask: u64): BitFlags64?
+## Core API
 
-    pub fn raw(): u64
-    pub fn len(): usize
-    pub fn isEmpty(): bool
-    pub fn isAll(): bool
-    pub fn contains(flag: u64): bool
-    pub fn intersects(flag: u64): bool
+### Data Structures
 
-    pub fn insert(*_, flag: u64)
-    pub fn remove(*_, flag: u64)
-    pub fn toggle(*_, flag: u64)
-    pub fn set(*_, flag: u64, enabled: bool)
-    pub fn clear(*_)
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BitFlags64` | `class` | Fields: `bits: u64, valid_mask: u64` · Methods: `empty, all, fromBitsTruncate, fromBitsStrict, raw, len, +15 more` |
 
-    pub fn unionFlags(other: BitFlags64): BitFlags64
-    pub fn intersectFlags(other: BitFlags64): BitFlags64
-    pub fn differenceFlags(other: BitFlags64): BitFlags64
-    pub fn symmetricDifferenceFlags(other: BitFlags64): BitFlags64
-    pub fn complement(): BitFlags64
+### Functions
 
-    pub fn nextFlag(start_bit: u8): u8?
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ef2Popcount64` | `(val: u64): usize` | Invokes `ef2Popcount64` and returns `usize`. |
+| `ef2Ctz64` | `(val: u64): u8` | Invokes `ef2Ctz64` and returns `u8`. |
+
+## Minimal Example
+
+```cp
+import { ef2Popcount64 } from "enumflags2";
+
+pub fn main() {
+    let result = ef2Popcount64(0);
+    _ = result;
 }
 ```
 
-## Usage
+## CP Zero-Heap & Borrow-Safety Highlights
 
-```cp
-import { BitFlags64 } from "enumflags2";
-
-const READ: u64 = 1 << 0;
-const WRITE: u64 = 1 << 1;
-const EXEC: u64 = 1 << 2;
-const ALL_PERMS: u64 = READ | WRITE | EXEC;
-
-fn example() {
-    let perms = BitFlags64.empty(ALL_PERMS);
-    perms.insert(READ | WRITE);
-    const has_read = perms.contains(READ); // true
-    const inv = perms.complement();        // EXEC only
-
-    let cur: u8 = 0;
-    while (bit := perms.nextFlag(cur)) {
-        cur = bit + 1;
-    }
-}
-```
-
-## License
-
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

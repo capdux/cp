@@ -1,60 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `pluralize` — Zero-Allocation English Pluralization & Ordinal Engine
+# pluralize
+
+Zero-allocation English pluralization, singularization, irregular/uncountable dictionary, count formatting & ordinal engine for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pluralize` ([https://github.com/plurals/pluralize](https://github.com/plurals/pluralize))
 
-> Clean-room pure-CP implementation modeled after npm `pluralize`, `inflection`, and Rust `pluralizer` | License: MIT
+| Metadata | Value |
+| --- | --- |
+| Package | `pluralize` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Overview / 概述
-
-`pluralize` is a zero-dependency, zero-heap-allocation English inflection library for CP. It includes a 56-pair irregular noun dictionary, a 36-word uncountable noun table, regular English plural/singular transformation rules, automatic case-style preservation (`child`/`Child`/`CHILD`), count formatting (`"1 item"`, `"3 items"`), and English ordinals (`"1st"`, `"11th"`, `"21st"`).
-
-`pluralize` 是纯 CP 零依赖、零堆分配的英语单复数与序数词变形引擎，内置 56 组高频不规则名词词典、36 个不可数名词表、规则英语单复数互转、智能大小写还原、数量词格式化及序数词生成。
-
-## Installation / 安装
+## Installation & Import
 
 ```bash
 cap add pluralize
 ```
 
-## API Reference / 导出 API
-
-| Signature | Description / 说明 |
-| :--- | :--- |
-| `plural(word: []const u8, out: []u8): []const u8` | Pluralize an English noun, preserving case / 转复数并保持大小写 |
-| `singular(word: []const u8, out: []u8): []const u8` | Singularize an English noun, preserving case / 转单数并保持大小写 |
-| `isPlural(word: []const u8): bool` | Check whether `word` is plural / 判断是否为复数 |
-| `isSingular(word: []const u8): bool` | Check whether `word` is singular / 判断是否为单数 |
-| `isUncountable(word: []const u8): bool` | Check whether `word` is uncountable / 判断是否为不可数名词 |
-| `pluralizeCount(word: []const u8, count: i64, out: []u8): []const u8` | Format `"<count> <word>"` with proper inflection / 数量+单复数格式化 |
-| `ordinal(n: i64, out: []u8): []const u8` | Format English ordinal (`1st`, `2nd`, `3rd`, `11th`, `21st`) / 序数词格式化 |
-
-## Quick Start / 使用示例
-
 ```cp
 import {
-    plural,
-    singular,
-    isPlural,
-    isSingular,
+    isVowelLower,
+    detectCaseStyle,
+    copySlice,
+    writeWithCase,
+    writeStemAndSuffix,
+    inList,
     isUncountable,
-    pluralizeCount,
-    ordinal,
+    plural,
 } from "pluralize";
+```
 
-fn demoPluralize() {
-    let buf: [64]u8 = undefined;
+## Core API
 
-    const p1 = plural("child", &buf);           // "children"
-    const p2 = plural("CITY", &buf);            // "CITIES"
-    const s1 = singular("Analyses", &buf);      // "Analysis"
-    const c1 = pluralizeCount("item", 1, &buf); // "1 item"
-    const c2 = pluralizeCount("item", 3, &buf); // "3 items"
-    const o1 = ordinal(21, &buf);               // "21st"
-    const u1 = isUncountable("information");    // true
+### Functions
 
-    * = p1; * = p2; * = s1; * = c1; * = c2; * = o1; * = u1;
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isVowelLower` | `(c: u8): bool` | Checks predicate `isVowelLower` and returns `bool`. |
+| `detectCaseStyle` | `(word: &[]u8): u8` | Invokes `detectCaseStyle` and returns `u8`. |
+| `copySlice` | `(out: []u8, src: &[]u8): &[]u8` | Invokes `copySlice` and returns `&[]u8`. |
+| `writeWithCase` | `(out: []u8, src_lower: &[]u8, style: u8): &[]u8` | Invokes `writeWithCase` and returns `&[]u8`. |
+| `writeStemAndSuffix` | `(out: []u8, stem: &[]u8, suffix_lower: &[]u8, all_upper: bool): &[]u8` | Invokes `writeStemAndSuffix` and returns `&[]u8`. |
+| `inList` | `(lower: &[]u8, list: &[]&[]u8): bool` | Invokes `inList` and returns `bool`. |
+| `isUncountable` | `(word: &[]u8): bool` | Checks predicate `isUncountable` and returns `bool`. |
+| `plural` | `(word: &[]u8, out: []u8): &[]u8` | Invokes `plural` and returns `&[]u8`. |
+| `singular` | `(word: &[]u8, out: []u8): &[]u8` | Invokes `singular` and returns `&[]u8`. |
+| `isPlural` | `(word: &[]u8): bool` | Checks predicate `isPlural` and returns `bool`. |
+| `isSingular` | `(word: &[]u8): bool` | Checks predicate `isSingular` and returns `bool`. |
+| `pluralizeCount` | `(word: &[]u8, count: i64, out: []u8): &[]u8` | Invokes `pluralizeCount` and returns `&[]u8`. |
+| `ordinal` | `(n: i64, out: []u8): &[]u8` | Invokes `ordinal` and returns `&[]u8`. |
+
+## Minimal Example
+
+```cp
+import { isVowelLower } from "pluralize";
+
+pub fn main() {
+    let result = isVowelLower(0);
+    _ = result;
 }
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

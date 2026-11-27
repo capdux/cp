@@ -1,18 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # ignore
+
+Zero-heap .gitignore specification rule engine (clean-room CP implementation of npm ignore)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ignore` ([https://github.com/kaelzhang/node-ignore](https://github.com/kaelzhang/node-ignore))
 
-零堆分配的 CP 原生 `.gitignore` 规范规则引擎，Clean-Room MIT 实现对标 npm 顶流包 `ignore`（2.5 亿+/周下载），跨包复用 `minimatch` 与 `normalize-path`。
+| Metadata | Value |
+| --- | --- |
+| Package | `ignore` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- 严格遵循 Git `.gitignore` 规范：`#` 注释、`!` 否定重包含、前导 `/` 锚定、尾随 `/` 仅目录匹配与子路径继承、Windows 反斜杠自动归一化
-- `IgnoreMatcher.addLines(content)` 一次性加载完整 `.gitignore` 文本
-- `ignores(path)` 与 `filter(paths, out_indices)` 零堆过滤
+```bash
+cap add ignore
+```
 
-## 致谢
+```cp
+import {
+    IgnoreRule,
+    IgnoreMatcher,
+    igTrimRightSpaces,
+    igHasInnerSlash,
+    igRuleMatches,
+    igMatchSingle,
+} from "ignore";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`kaelzhang/node-ignore`](https://github.com/kaelzhang/node-ignore)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `IgnoreRule` | `class` | Fields: `pat: [128]u8, pat_len: usize, negated: bool, dir_only: bool, anchored: bool` |
+| `IgnoreMatcher` | `class` | Fields: `rules: [64]IgnoreRule, count: usize, ignore_case: bool` · Methods: `new, newCaseInsensitive, ruleCount, addRule, addLines, ignores, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `igTrimRightSpaces` | `(s: string): usize` | Invokes `igTrimRightSpaces` and returns `usize`. |
+| `igHasInnerSlash` | `(s: string, start: usize, end: usize): bool` | Invokes `igHasInnerSlash` and returns `bool`. |
+| `igRuleMatches` | `(rule: IgnoreRule, rel_path: string, is_dir: bool, case_insensitive: bool): bool` | Invokes `igRuleMatches` and returns `bool`. |
+| `igMatchSingle` | `(pat: &[]u8, anchored: bool, path: string, case_insensitive: bool): bool` | Invokes `igMatchSingle` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { igTrimRightSpaces } from "ignore";
+
+pub fn main() {
+    let result = igTrimRightSpaces("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

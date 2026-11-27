@@ -1,30 +1,65 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `sitemap`
+# sitemap
+
+Zero-heap Sitemaps.org 0.9 XML sitemap & sitemapindex generator and validator in pure CP (modeled after npm sitemap)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:sitemap` ([https://github.com/ekalinin/sitemap.js](https://github.com/ekalinin/sitemap.js))
 
-Zero-heap Sitemaps.org 0.9 XML sitemap (`<urlset>`) and sitemap index (`<sitemapindex>`) generator in pure CP, modeled after npm `sitemap` (8.82M/wk). Features strict XML entity escaping, optional `<lastmod>`, `<changefreq>`, `<priority>`, and overflow-safe streaming writes.
+| Metadata | Value |
+| --- | --- |
+| Package | `sitemap` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP Sitemaps.org 0.9 XML 站点地图生成器，对标 npm `sitemap`（882 万/周下载），支持 `<urlset>` 与 `<sitemapindex>` 生成、严格 XML 实体转义（防注入）与缓冲区溢出保护。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add sitemap
 ```
 
-## API
+```cp
+import {
+    SitemapUrl,
+    SitemapWriter,
+    SitemapIndexWriter,
+    freqName,
+    isValidPriorityTenths,
+} from "sitemap";
+```
 
-| Type / Method | Description |
-| --- | --- |
-| `SitemapWriter.init(buf)` | Start a `<urlset>` XML document in caller buffer |
-| `addUrl(entry: SitemapUrl)` | Append `<url>` with escaped `<loc>`, optional `<lastmod>`, `<changefreq>`, `<priority>` |
-| `finish()` | Close `</urlset>` and return total bytes written (`-1` on overflow) |
-| `SitemapIndexWriter.init(buf)` | Start a `<sitemapindex>` XML document |
-| `addSitemap(loc, lastmod)` | Append a `<sitemap>` entry |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SitemapUrl` | `class` | Fields: `loc: &[]u8, lastmod: &[]u8, changefreq: u8, priority_tenths: i8` |
+| `SitemapWriter` | `class` | Fields: `buf: []u8, pos: usize, url_count: usize, closed: bool, overflow: bool` · Methods: `init, writeRaw, writeXmlEscaped, addUrl, finish, urlCount, +2 more` |
+| `SitemapIndexWriter` | `class` | Fields: `buf: []u8, pos: usize, entry_count: usize, closed: bool, overflow: bool` · Methods: `init, writeRaw, writeXmlEscaped, addSitemap, finish, entryCount, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `freqName` | `(f: u8): &[]u8` | Invokes `freqName` and returns `&[]u8`. |
+| `isValidPriorityTenths` | `(p: i8): bool` | Checks predicate `isValidPriorityTenths` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { isValidPriorityTenths } from "sitemap";
+
+pub fn main() {
+    let result = isValidPriorityTenths(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

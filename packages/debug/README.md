@@ -1,45 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # debug
+
+Zero-allocation namespace debug log filter, glob exclusion engine, deterministic ANSI coloring, and diff-ms formatter for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:debug` ([https://github.com/debug-js/debug](https://github.com/debug-js/debug))
 
-Zero-allocation namespace debug log filter, glob exclusion engine, deterministic ANSI coloring, and diff-ms formatter for CP — clean-room MIT parity with npm `debug`.
+| Metadata | Value |
+| --- | --- |
+| Package | `debug` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 命名空间调试日志过滤与格式化引擎，完整支持 npm `DEBUG` 环境变量语法（逗号/空格分隔、任意 `*` 通配符、`-` 前缀排除优先）、确定性 ANSI 配色与 `+ms`/`+s`/`+m`/`+h` 耗时差格式化（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add debug
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `DebugFilter` | `pub struct { raw_pattern: string }` | 过滤器封装，提供 `DebugFilter.from(pattern)` 与 `isEnabled(ns)` |
-| `DebugLogger` | `pub struct { namespace, color_code, last_ms, enabled }` | 命名空间日志器封装，提供 `DebugLogger.create(pattern, ns)` 与 `formatLine(...)` |
-| `isNamespaceEnabled` | `(pattern: string, namespace: string) -> bool` | 零堆 glob 通配匹配与 `-` 排除优先判定 |
-| `selectColor` | `(namespace: string) -> u8` | 确定性哈希映射至标准 ANSI SGR 色码（`31..36`） |
-| `formatDiffMs` | `(diff_ms: i64, out: []u8) -> string` | 耗时差格式化（`+0ms`, `+42ms`, `+2s`, `+3m`, `+1h`） |
-| `formatDebugLine` | `(ns: string, msg: string, diff_ms: i64, use_color: bool, out: []u8) -> string` | 输出无色或带 ANSI 色彩的标准调试日志行 |
-
-## Usage / 使用示例
-
 ```cp
-import { DebugFilter, DebugLogger, isNamespaceEnabled, formatDebugLine } from "debug";
-
-const filter = DebugFilter.from("http:*,db:*,-http:verbose");
-const ok = filter.isEnabled("http:req");       // true
-const skip = filter.isEnabled("http:verbose"); // false
-
-let buf: [256]u8 = undefined;
-const line = formatDebugLine("http:req", "GET /api", 12, false, buf[0..256]);
-// => "http:req GET /api +12ms"
+import {
+    DebugFilter,
+    DebugLogger,
+    isSep,
+    globMatch,
+    appendByte,
+    appendStr,
+    appendU64,
+    isNamespaceEnabled,
+} from "debug";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `DebugFilter` | `class` | Fields: `raw_pattern: string` · Methods: `from, isEnabled` |
+| `DebugLogger` | `class` | Fields: `namespace: string, color_code: u8, last_ms: i64, enabled: bool` · Methods: `create, formatLine` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isSep` | `(c: u8): bool` | Checks predicate `isSep` and returns `bool`. |
+| `globMatch` | `(pat: string, text: string): bool` | Invokes `globMatch` and returns `bool`. |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `appendStr` | `(out: []u8, pos: usize, s: string): usize` | Invokes `appendStr` and returns `usize`. |
+| `appendU64` | `(out: []u8, pos: usize, val: u64): usize` | Invokes `appendU64` and returns `usize`. |
+| `isNamespaceEnabled` | `(pattern: string, namespace: string): bool` | Checks predicate `isNamespaceEnabled` and returns `bool`. |
+| `selectColor` | `(namespace: string): u8` | Invokes `selectColor` and returns `u8`. |
+| `formatDiffMs` | `(diff_ms: i64, out: []u8): string` | Serializes/formats data via `formatDiffMs` returning `string`. |
+| `formatDebugLine` | `(ns: string, msg: string, diff_ms: i64, use_color: bool, out: []u8): string` | Serializes/formats data via `formatDebugLine` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { isNamespaceEnabled } from "debug";
+
+pub fn main() {
+    let result = isNamespaceEnabled("example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

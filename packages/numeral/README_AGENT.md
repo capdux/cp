@@ -1,21 +1,56 @@
-# numeral@1.0.0 (Agent Quickref)
+# numeral — AI Agent Quick Ref
 
-> Zero-allocation human-readable number formatting (grouped thousands, EN/ZH compact suffixes, percentages, strict Roman numerals, and English words) for CP | License: MIT
-> Import: `import { ... } from "numeral";` | Full types: `src/index.d.cp`
+Zero-allocation human-readable number formatting (grouped thousands, EN/ZH compact suffixes, percentages, strict Roman numerals, and English words) for CP (`v1.0.0`, `MIT`)
 
-## Functions
-- `export fn appendByte(out: []u8, pos: usize, c: u8): usize;`
-- `export fn absU64(n: i64): u64;`
-- `export fn formatGrouped(n: i64, sep: u8, out: []u8): string;`
-- `export fn writeCompactScaled(abs: u64, unit: u64, suffix: string, next_threshold: u64, next_suffix: string, negative: bool, out: []u8): string;`
-- `export fn formatCompactEn(n: i64, out: []u8): string;`
-- `export fn formatCompactZh(n: i64, out: []u8): string;`
-- `export fn formatPercent(ratio: f64, decimals: u8, out: []u8): string;`
-- `export fn toRoman(n: u16, out: []u8): string;`
-- `export fn romanCharVal(c: u8): u16;`
-- `export fn fromRoman(s: string): u16?;`
-- `export fn onesWord(n: u64): string;`
-- `export fn tensWord(n: u64): string;`
-- `export fn appendUnder1000(v: u64, out: []u8, start_pos: usize): usize;`
-- `export fn appendScaleGroup(chunk: u64, label: string, out: []u8, start_pos: usize, has_prev: bool): usize;`
-- `export fn toEnglishWords(n: i64, out: []u8): string;`
+## Import
+
+```cp
+import {
+    appendByte,
+    absU64,
+    formatGrouped,
+    writeCompactScaled,
+    formatCompactEn,
+    formatCompactZh,
+    formatPercent,
+    toRoman,
+} from "numeral";
+```
+
+## API Signatures
+
+```cp
+fn appendByte(out: []u8, pos: usize, c: u8): usize;
+fn absU64(n: i64): u64;
+fn formatGrouped(n: i64, sep: u8, out: []u8): string;
+fn writeCompactScaled(abs: u64, unit: u64, suffix: string, next_threshold: u64, next_suffix: string, negative: bool, out: []u8): string;
+fn formatCompactEn(n: i64, out: []u8): string;
+fn formatCompactZh(n: i64, out: []u8): string;
+fn formatPercent(ratio: f64, decimals: u8, out: []u8): string;
+fn toRoman(n: u16, out: []u8): string;
+fn romanCharVal(c: u8): u16;
+fn fromRoman(s: string): u16?;
+fn onesWord(n: u64): string;
+fn tensWord(n: u64): string;
+fn appendUnder1000(v: u64, out: []u8, start_pos: usize): usize;
+fn appendScaleGroup(chunk: u64, label: string, out: []u8, start_pos: usize, has_prev: bool): usize;
+fn toEnglishWords(n: i64, out: []u8): string;
+```
+
+## Minimal Usage
+
+```cp
+import { fromRoman } from "numeral";
+
+pub fn main() {
+    let result = fromRoman("example");
+    _ = result;
+}
+```
+
+## Borrowing, Errors & Pitfalls
+
+- **Canonical import**: Always import directly from `"numeral"`; install via `cap add numeral`.
+- **Caller-owned buffers**: Pre-allocate stack buffers (`let mut buf: [N]u8 = undefined;`) and pass slices `buf[0..N]` to `[]u8` parameters.
+- **Zero-copy lifetimes**: Returned `string` slices may borrow from input arguments; keep source strings alive while reading results.
+- **Optionals (`T?`)**: Unwrap nullable results using `??` fallback or `if (val) |v| { ... }`.

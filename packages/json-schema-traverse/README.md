@@ -1,37 +1,90 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # json-schema-traverse
+
+Zero-allocation JSON Schema traversal engine with RFC 6901 JSON Pointer generation for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:json-schema-traverse` ([https://github.com/epoberezkin/json-schema-traverse](https://github.com/epoberezkin/json-schema-traverse))
 
-Zero-allocation JSON Schema traversal engine with RFC 6901 JSON Pointer generation for CP — clean-room MIT parity with npm `json-schema-traverse` (477M+/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `json-schema-traverse` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 JSON Schema 递归遍历引擎，完整支持 `properties`、`patternProperties`、`items`（对象与数组元组）、`additionalProperties`、`allOf`/`anyOf`/`oneOf`/`not` 及 `$defs`/`definitions`，自动生成符合 RFC 6901 规范的 JSON Pointer（含 `~0`/`~1` 转义）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add json-schema-traverse
 ```
 
-## API
+```cp
+import {
+    SchemaNodeKind,
+    SchemaVisitEvent,
+    JstvSpan,
+    JstvTraverseState,
+    jstvIsWs,
+    jstvSkipWs,
+    jstvScanString,
+    jstvScanValue,
+} from "json-schema-traverse";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `SchemaNodeKind` | `enum` | `Root`, `Property`, `Items`, `AdditionalProperties`, `AllOf`, `AnyOf`, `OneOf`, `Not`, `Defs` |
-| `SchemaVisitEvent` | `struct` | Visit event with `pointer_buf`, `pointer_len`, `kind`, `schema_start`, `schema_end`, `depth`, `.pointer()`, `.schemaSlice(src)` |
-| `traverseJsonSchema` | `(schema_json: string, out: []SchemaVisitEvent): usize` | Recursively traverse schema into caller buffer and return event count |
-| `countSchemaNodes` | `(schema_json: string): usize` | Count total schema nodes including root without allocating |
-| `findSubschemaByPointer` | `(schema_json: string, pointer: string): string?` | Locate subschema JSON slice by RFC 6901 JSON Pointer |
+| `enum` | `SchemaNodeKind` | `Root, Property, Items, AdditionalProperties, AllOf, AnyOf, OneOf, Not ...` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SchemaVisitEvent` | `class` | Fields: `pointer_start: usize, pointer_end: usize, pointer_buf: [128]u8, pointer_len: usize, kind: SchemaNodeKind, schema_start: usize, +2 more` · Methods: `pointer, schemaSlice` |
+| `JstvSpan` | `class` | Fields: `start: usize, end: usize, ok: bool` |
+| `JstvTraverseState` | `class` | Fields: `src: string, out: []SchemaVisitEvent, written: usize, total: usize, target_ptr: string, find_mode: bool, +3 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `jstvIsWs` | `(b: u8): bool` | Invokes `jstvIsWs` and returns `bool`. |
+| `jstvSkipWs` | `(src: string, start: usize): usize` | Invokes `jstvSkipWs` and returns `usize`. |
+| `jstvScanString` | `(src: string, start: usize): JstvSpan` | Invokes `jstvScanString` and returns `JstvSpan`. |
+| `jstvScanValue` | `(src: string, start: usize): JstvSpan` | Invokes `jstvScanValue` and returns `JstvSpan`. |
+| `jstvStrEq` | `(a: string, b: string): bool` | Invokes `jstvStrEq` and returns `bool`. |
+| `jstvCopyBuf` | `(src: [128]u8, len: usize): [128]u8` | Invokes `jstvCopyBuf` and returns `[128]u8`. |
+| `jstvAppendByte` | `(buf: &mut [128]u8, cur_len: usize, b: u8): usize` | Invokes `jstvAppendByte` and returns `usize`. |
+| `jstvAppendEscapedSegment` | `(buf: &mut [128]u8, cur_len: usize, seg: string): usize` | Invokes `jstvAppendEscapedSegment` and returns `usize`. |
+| `jstvAppendIndexSegment` | `(buf: &mut [128]u8, cur_len: usize, idx: usize): usize` | Invokes `jstvAppendIndexSegment` and returns `usize`. |
+| `jstvEmitEvent` | `(st: &mut JstvTraverseState, ptr_buf: [128]u8, ptr_len: usize, kind: SchemaNodeKind, schema_start: usize, schema_end: usize, depth: usize)` | Executes `jstvEmitEvent` in-place. |
+| `jstvWalkMapKeyword` | `(st: &mut JstvTraverseState, obj_start: usize, obj_end: usize, base_buf: [128]u8, base_len: usize, kw: string, kind: SchemaNodeKind, depth: usize)` | Executes `jstvWalkMapKeyword` in-place. |
+| `jstvWalkArrayKeyword` | `(st: &mut JstvTraverseState, arr_start: usize, arr_end: usize, base_buf: [128]u8, base_len: usize, kw: string, kind: SchemaNodeKind, depth: usize)` | Executes `jstvWalkArrayKeyword` in-place. |
+| `jstvWalkSchema` | `(st: &mut JstvTraverseState, schema_start: usize, schema_end: usize, ptr_buf: [128]u8, ptr_len: usize, kind: SchemaNodeKind, depth: usize)` | Executes `jstvWalkSchema` in-place. |
+| `traverseJsonSchema` | `(schema_json: string, out: []SchemaVisitEvent): usize` | Invokes `traverseJsonSchema` and returns `usize`. |
+| `countSchemaNodes` | `(schema_json: string): usize` | Invokes `countSchemaNodes` and returns `usize`. |
+| `findSubschemaByPointer` | `(schema_json: string, pointer: string): string?` | Queries/retrieves data via `findSubschemaByPointer` returning `string?`. |
+
+## Minimal Example
 
 ```cp
-import { traverseJsonSchema, findSubschemaByPointer, SchemaVisitEvent } from "json-schema-traverse";
+import { jstvSkipWs } from "json-schema-traverse";
 
-const schema = "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"}}}";
-let events: [16]SchemaVisitEvent = undefined;
-const n = traverseJsonSchema(schema, events[0..16]); // 2 ("", "/properties/name")
-const sub = findSubschemaByPointer(schema, "/properties/name"); // "{\"type\":\"string\"}"
+pub fn main() {
+    let result = jstvSkipWs("example", 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

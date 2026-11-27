@@ -1,35 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # potential_utf
+
+Zero-allocation potentially-ill-formed UTF-8, UTF-16, and Unicode scalar value wrappers (ICU4X potential_utf parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:potential_utf` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))
 
-Zero-allocation potentially-ill-formed UTF-8, UTF-16, and Unicode scalar value wrappers for CP — clean-room parity with ICU4X `potential_utf` (627M+ downloads on crates.io, Unicode-3.0).
+| Metadata | Value |
+| --- | --- |
+| Package | `potential_utf` |
+| Version | `1.0.0` |
+| License | `Unicode-3.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配潜在非法 UTF-8 / UTF-16 / Unicode 码点安全包装库，完整支持 RFC 3629 严格校验、最长合法前缀提取、Unicode Maximal Subpart 容错替换（`U+FFFD`）与 UTF-16 代理对解码。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add potential_utf
 ```
 
-## API
+```cp
+import {
+    PotentialUtf8,
+    PotentialUtf16,
+    PotentialCodePoint,
+    putfIsCont,
+    putfValidSeqLen,
+    putfMaximalSubpart,
+    putfEncodeScalar,
+    putfWriteReplacement,
+} from "potential_utf";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `PotentialUtf8` | `fromBytes`, `fromStr`, `asBytes`, `len`, `isEmpty`, `isValidUtf8`, `toValidPrefix`, `decodeLossy(out)` | Potentially-ill-formed UTF-8 byte slice wrapper |
-| `PotentialUtf16` | `fromSlice`, `asSlice`, `len`, `isEmpty`, `isValidUtf16`, `toUtf8Lossy(out)` | Potentially-ill-formed UTF-16 code unit slice wrapper |
-| `PotentialCodePoint` | `fromU32`, `toU32`, `isValidScalar`, `toCharOrReplacement`, `encodeUtf8Lossy(out)` | Potentially-invalid 32-bit Unicode scalar value wrapper |
+| `PotentialUtf8` | `class` | Fields: `bytes: &[]u8` · Methods: `fromBytes, fromStr, asBytes, len, isEmpty, isValidUtf8, +2 more` |
+| `PotentialUtf16` | `class` | Fields: `units: &[]u16` · Methods: `fromSlice, asSlice, len, isEmpty, isValidUtf16, toUtf8Lossy` |
+| `PotentialCodePoint` | `class` | Fields: `raw: u32` · Methods: `fromU32, toU32, isValidScalar, toCharOrReplacement, encodeUtf8Lossy` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `putfIsCont` | `(b: u8): bool` | Mutates or appends state via `putfIsCont`. |
+| `putfValidSeqLen` | `(bytes: &[]u8, pos: usize): usize` | Mutates or appends state via `putfValidSeqLen`. |
+| `putfMaximalSubpart` | `(bytes: &[]u8, pos: usize): usize` | Mutates or appends state via `putfMaximalSubpart`. |
+| `putfEncodeScalar` | `(scalar: u32, out: []u8, w: usize): usize` | Mutates or appends state via `putfEncodeScalar`. |
+| `putfWriteReplacement` | `(out: []u8, w: usize): usize` | Mutates or appends state via `putfWriteReplacement`. |
+
+## Minimal Example
 
 ```cp
-import { PotentialUtf8, PotentialUtf16, PotentialCodePoint } from "potential_utf";
+import { putfIsCont } from "potential_utf";
 
-const s = PotentialUtf8.fromStr("hello");
-const ok = s.isValidUtf8();
-const cp = PotentialCodePoint.fromU32(0xD800 as u32);
-const safe = cp.toCharOrReplacement(); // 0xFFFD
+pub fn main() {
+    let result = putfIsCont(0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

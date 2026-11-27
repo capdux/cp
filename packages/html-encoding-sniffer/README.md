@@ -1,36 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # html-encoding-sniffer
+
+Zero-allocation WHATWG HTML 13.2.3.2 byte stream encoding sniffer and label normalizer (npm html-encoding-sniffer parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:html-encoding-sniffer` ([https://github.com/jsdom/html-encoding-sniffer](https://github.com/jsdom/html-encoding-sniffer))（原库名 `html-encoding-sniffer` → CP 包名 `html-encoding-sniffer`）
 
-Zero-allocation WHATWG HTML §13.2.3.2 encoding sniffer for CP — clean-room MIT implementation inspired by jsdom `html-encoding-sniffer`.
+| Metadata | Value |
+| --- | --- |
+| Package | `html-encoding-sniffer` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 WHATWG HTML 字节流编码嗅探器（对标 `html-encoding-sniffer`），严格遵循 BOM → 传输层 `Content-Type` → 前 1024 字节 `<meta charset>` / `<meta http-equiv="content-type">`（跳过 HTML 注释）→ 默认编码回退的四级优先级，并内置 WHATWG Encoding Standard 别名规范化。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add html-encoding-sniffer
 ```
 
-## API
+```cp
+import {
+    SniffOptions,
+    hesToLower,
+    hesEqIgnoreCase,
+    hesIsAsciiWs,
+    hesTrimAsciiWs,
+    hesStartsWithIgnoreCase,
+    normalizeEncodingLabel,
+    hesMapMetaEncoding,
+} from "html-encoding-sniffer";
+```
 
-### Structs & Functions / 核心类型与函数
+## Core API
 
-| Symbol | Signature / Fields | Description |
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `SniffOptions` | `struct { transport_layer_encoding: string, default_encoding: string }` | Transport-layer charset hint and fallback encoding (defaults to `"windows-1252"`) |
-| `sniffHtmlEncoding` | `(bytes: []const u8, opts: SniffOptions): string` | Sniff HTML byte stream encoding per WHATWG HTML §13.2.3.2 |
-| `normalizeEncodingLabel` | `(label: string): string` | Normalize WHATWG encoding label aliases (e.g. `utf8` → `UTF-8`, `latin1` → `windows-1252`, `gb2312` → `GBK`) |
+| `SniffOptions` | `class` | Fields: `transport_layer_encoding: string, default_encoding: string` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hesToLower` | `(ch: u8): u8` | Invokes `hesToLower` and returns `u8`. |
+| `hesEqIgnoreCase` | `(a: string, b: string): bool` | Invokes `hesEqIgnoreCase` and returns `bool`. |
+| `hesIsAsciiWs` | `(ch: u8): bool` | Invokes `hesIsAsciiWs` and returns `bool`. |
+| `hesTrimAsciiWs` | `(s: string): string` | Invokes `hesTrimAsciiWs` and returns `string`. |
+| `hesStartsWithIgnoreCase` | `(bytes: &[]u8, pos: usize, needle: string): bool` | Invokes `hesStartsWithIgnoreCase` and returns `bool`. |
+| `normalizeEncodingLabel` | `(label: string): string` | Invokes `normalizeEncodingLabel` and returns `string`. |
+| `hesMapMetaEncoding` | `(label: string): string` | Invokes `hesMapMetaEncoding` and returns `string`. |
+| `hesExtractCharsetFromContent` | `(content: string): string` | Invokes `hesExtractCharsetFromContent` and returns `string`. |
+| `hesPrescanMeta` | `(bytes: &[]u8): string` | Invokes `hesPrescanMeta` and returns `string`. |
+| `sniffHtmlEncoding` | `(bytes: &[]u8, opts: SniffOptions): string` | Invokes `sniffHtmlEncoding` and returns `string`. |
+
+## Minimal Example
 
 ```cp
-import { SniffOptions, sniffHtmlEncoding, normalizeEncodingLabel } from "html-encoding-sniffer";
+import { hesEqIgnoreCase } from "html-encoding-sniffer";
 
-const html = "<html><head><meta charset=\"utf-8\"></head></html>";
-const enc = sniffHtmlEncoding(html, SniffOptions{ transport_layer_encoding: "", default_encoding: "" });
-// enc == "UTF-8"
+pub fn main() {
+    let result = hesEqIgnoreCase("example", "example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

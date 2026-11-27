@@ -1,48 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # cbc
+
+Zero-allocation pure CP AES-128-CBC and AES-256-CBC block cipher mode with PKCS#7 padding (RustCrypto cbc parity)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cbc` ([https://github.com/RustCrypto/block-modes](https://github.com/RustCrypto/block-modes))
 
-Zero-allocation pure CP implementation of AES-128-CBC and AES-256-CBC block cipher mode of operation with PKCS#7 padding and strict padding validation — clean-room parity with RustCrypto `cbc` (157.0M+ downloads on crates.io, MIT).
+| Metadata | Value |
+| --- | --- |
+| Package | `cbc` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 AES-128-CBC / AES-256-CBC 块加密模式实现，直接复用 `aes` 底层分组密码原语，支持整块无填充（通过 NIST SP 800-38A F.2.1 / F.2.5 官方测试向量验证）与标准 PKCS#7 填充及严格去填充校验。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add cbc
 ```
 
-## API
+```cp
+import {
+    cbcmReadBlock,
+    cbcmWriteBlock,
+    cbcmXorBlock,
+    cbcmValidatePkcs7,
+    aes128CbcEncryptBlocks,
+    aes128CbcDecryptBlocks,
+    aes128CbcEncryptPkcs7,
+    aes128CbcDecryptPkcs7,
+} from "cbc";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
 | --- | --- | --- |
-| `aes128CbcEncryptBlocks` | `(key: [16]u8, iv: [16]u8, plaintext: []const u8, out: []u8): usize` | AES-128-CBC whole-block encryption (no padding) |
-| `aes128CbcDecryptBlocks` | `(key: [16]u8, iv: [16]u8, ciphertext: []const u8, out: []u8): usize` | AES-128-CBC whole-block decryption (no padding) |
-| `aes128CbcEncryptPkcs7` | `(key: [16]u8, iv: [16]u8, plaintext: []const u8, out: []u8): usize` | AES-128-CBC encryption with PKCS#7 padding |
-| `aes128CbcDecryptPkcs7` | `(key: [16]u8, iv: [16]u8, ciphertext: []const u8, out: []u8): i64` | AES-128-CBC decryption with strict PKCS#7 validation (`-1` on error) |
-| `aes256CbcEncryptBlocks` | `(key: [32]u8, iv: [16]u8, plaintext: []const u8, out: []u8): usize` | AES-256-CBC whole-block encryption (no padding) |
-| `aes256CbcDecryptBlocks` | `(key: [32]u8, iv: [16]u8, ciphertext: []const u8, out: []u8): usize` | AES-256-CBC whole-block decryption (no padding) |
-| `aes256CbcEncryptPkcs7` | `(key: [32]u8, iv: [16]u8, plaintext: []const u8, out: []u8): usize` | AES-256-CBC encryption with PKCS#7 padding |
-| `aes256CbcDecryptPkcs7` | `(key: [32]u8, iv: [16]u8, ciphertext: []const u8, out: []u8): i64` | AES-256-CBC decryption with strict PKCS#7 validation (`-1` on error) |
+| `cbcmReadBlock` | `(src: &[]u8, offset: usize): [16]u8` | Invokes `cbcmReadBlock` and returns `[16]u8`. |
+| `cbcmWriteBlock` | `(dst: []u8, offset: usize, blk: [16]u8)` | Executes `cbcmWriteBlock` in-place. |
+| `cbcmXorBlock` | `(a: [16]u8, b: [16]u8): [16]u8` | Invokes `cbcmXorBlock` and returns `[16]u8`. |
+| `cbcmValidatePkcs7` | `(lastBlock: [16]u8): i64` | Invokes `cbcmValidatePkcs7` and returns `i64`. |
+| `aes128CbcEncryptBlocks` | `(key: [16]u8, iv: [16]u8, plaintext: &[]u8, out: []u8): usize` | Invokes `aes128CbcEncryptBlocks` and returns `usize`. |
+| `aes128CbcDecryptBlocks` | `(key: [16]u8, iv: [16]u8, ciphertext: &[]u8, out: []u8): usize` | Invokes `aes128CbcDecryptBlocks` and returns `usize`. |
+| `aes128CbcEncryptPkcs7` | `(key: [16]u8, iv: [16]u8, plaintext: &[]u8, out: []u8): usize` | Invokes `aes128CbcEncryptPkcs7` and returns `usize`. |
+| `aes128CbcDecryptPkcs7` | `(key: [16]u8, iv: [16]u8, ciphertext: &[]u8, out: []u8): i64` | Invokes `aes128CbcDecryptPkcs7` and returns `i64`. |
+| `aes256CbcEncryptBlocks` | `(key: [32]u8, iv: [16]u8, plaintext: &[]u8, out: []u8): usize` | Invokes `aes256CbcEncryptBlocks` and returns `usize`. |
+| `aes256CbcDecryptBlocks` | `(key: [32]u8, iv: [16]u8, ciphertext: &[]u8, out: []u8): usize` | Invokes `aes256CbcDecryptBlocks` and returns `usize`. |
+| `aes256CbcEncryptPkcs7` | `(key: [32]u8, iv: [16]u8, plaintext: &[]u8, out: []u8): usize` | Invokes `aes256CbcEncryptPkcs7` and returns `usize`. |
+| `aes256CbcDecryptPkcs7` | `(key: [32]u8, iv: [16]u8, ciphertext: &[]u8, out: []u8): i64` | Invokes `aes256CbcDecryptPkcs7` and returns `i64`. |
 
-## Usage / 使用示例
+## Minimal Example
 
 ```cp
-import { aes128CbcEncryptPkcs7, aes128CbcDecryptPkcs7 } from "cbc";
+import { cbcmReadBlock } from "cbc";
 
-const key: [16]u8 = @as([16]u8, [
-    0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
-]);
-const iv: [16]u8 = @as([16]u8, [
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-]);
-let ct: [32]u8 = undefined;
-let pt: [32]u8 = undefined;
-const ctLen = aes128CbcEncryptPkcs7(key, iv, "hello cbc", ct[0..32]);
-const ptLen = aes128CbcDecryptPkcs7(key, iv, ct[0..ctLen], pt[0..32]);
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = cbcmReadBlock(out_buf[0..256], 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

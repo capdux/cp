@@ -1,43 +1,74 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # reading-time
+
+Zero-allocation bilingual EN/CJK document statistics, reading-time estimator, and LLM token estimator for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:reading-time` ([https://github.com/ngryman/reading-time](https://github.com/ngryman/reading-time))（原库名 `reading-time` → CP 包名 `reading-time`）
 
-Zero-allocation bilingual English & CJK document statistics, reading-time estimator, and LLM token estimator for CP — clean-room MIT parity with npm `reading-time` and `word-count`.
+| Metadata | Value |
+| --- | --- |
+| Package | `reading-time` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 中英文混合文档统计与阅读时长估算引擎，一次遍历即可输出字节数、字符数、英文词数、CJK 字数、行数、非空行数、段落数、句子数、预估阅读秒/分钟以及 LLM Token 估算数，适用于 CMS、知识库与 AI RAG 流水线（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add reading-time
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `TextStats` | `pub struct { bytes, chars, ascii_words, cjk_chars, total_words, lines, non_empty_lines, paragraphs, sentences, est_reading_sec, est_reading_min, est_llm_tokens: usize }` | 文档统计结果结构体 |
-| `analyzeText` | `(text: string) -> TextStats` | 默认速度（英文 200 WPM / 中文 350 字/分）分析文档 |
-| `analyzeTextWithWpm` | `(text: string, en_wpm: usize, cjk_cpm: usize) -> TextStats` | 按自定义中英文阅读速度分析文档 |
-| `formatReadingTime` | `(stats: TextStats, zh: bool, out: []u8) -> string` | 格式化阅读时长（如 `"3 min read"` / `"约 3 分钟读完"`、不足 1 分钟输出 `"< 1 min read"` / `"不足 1 分钟"`） |
-
-## Usage / 使用示例
-
 ```cp
-import { analyzeText, analyzeTextWithWpm, formatReadingTime } from "reading-time";
-
-const doc = "CP 是一门高性能系统语言。It compiles to native Zig!";
-const stats = analyzeText(doc);
-// stats.ascii_words == 6, stats.cjk_chars == 10, stats.total_words == 16, stats.sentences == 2
-
-let buf: [64]u8 = undefined;
-const label_en = formatReadingTime(stats, false, buf[0..64]); // "< 1 min read"
-const label_zh = formatReadingTime(stats, true, buf[0..64]);  // "不足 1 分钟"
+import {
+    TextStats,
+    DecodedChar,
+    decodeUtf8,
+    isCjkChar,
+    isWordCoreChar,
+    isWsCp,
+    isSentenceEnd,
+    analyzeTextWithWpm,
+} from "reading-time";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `TextStats` | `class` | Fields: `bytes: usize, chars: usize, ascii_words: usize, cjk_chars: usize, total_words: usize, lines: usize, +6 more` · Methods: `empty` |
+| `DecodedChar` | `class` | Fields: `cp: u32, len: usize` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `decodeUtf8` | `(s: string, pos: usize): DecodedChar` | Parses input via `decodeUtf8` and returns `DecodedChar`. |
+| `isCjkChar` | `(cp: u32): bool` | Checks predicate `isCjkChar` and returns `bool`. |
+| `isWordCoreChar` | `(cp: u32): bool` | Checks predicate `isWordCoreChar` and returns `bool`. |
+| `isWsCp` | `(cp: u32): bool` | Checks predicate `isWsCp` and returns `bool`. |
+| `isSentenceEnd` | `(cp: u32): bool` | Checks predicate `isSentenceEnd` and returns `bool`. |
+| `analyzeTextWithWpm` | `(text: string, en_wpm: usize, cjk_cpm: usize): TextStats` | Invokes `analyzeTextWithWpm` and returns `TextStats`. |
+| `analyzeText` | `(text: string): TextStats` | Invokes `analyzeText` and returns `TextStats`. |
+| `formatReadingTime` | `(stats: TextStats, zh: bool, out: []u8): string` | Serializes/formats data via `formatReadingTime` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { decodeUtf8 } from "reading-time";
+
+pub fn main() {
+    let result = decodeUtf8("example", 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

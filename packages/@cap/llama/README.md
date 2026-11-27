@@ -1,51 +1,89 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# @cap/llama
+
+llama.cpp (b12676) local LLM inference engine for CP via official prebuilt dynamic library
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **c++** [`llama.cpp`](https://github.com/ggml-org/llama.cpp)（`MIT`）（原库名 `llama.cpp`，CP 包名 `@cap/llama`）。
 
-# `@cap/llama`
+| Metadata | Value |
+| --- | --- |
+| Package | `@cap/llama` |
+| Version | `1.0.12676` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-High-performance local LLM inference engine for CP, powered by **`ggml-org/llama.cpp` (`b12676`, MIT License)** using official prebuilt dynamic libraries (`sys.llama.prebuilt`) with zero local C++ build time.
-
-## Architecture
-
-- **Prebuilt Dynamic Libraries**: Links directly against official `libllama.so` + `libggml*.so` (`prebuilt/<os>-<arch>/`), preserving `SONAME` symlinks (`libllama.so -> libllama.so.1 -> libllama.so.1.0.0`, `libggml.so*`, `libggml-base.so*`) and dynamic CPU backend plugins (`libggml-cpu-*.so`). `cap run` injects `LD_LIBRARY_PATH` / `DYLD_LIBRARY_PATH` automatically.
-- **Thin C ABI Shim (`c/llama_ffi.c`)**: ~45-line bridge isolating CP from version-sensitive `llama_model_params` struct layout, compiled in <0.2s into `libllama_shim.a`.
-- **Zero-Leak RAII (`src/index.cp`)**: Provides `LlamaBackend`, `LlamaModel`, `systemInfo()`, `supportsMmap()`, `supportsMlock()`, `supportsGpuOffload()`, `maxDevices()`, and `timeUs()` with deterministic `~init()` cleanup.
-
-## Downloading Official Prebuilt Binaries
-
-Official prebuilt shared libraries are distributed via GitHub Releases of [`ggml-org/llama.cpp`](https://github.com/ggml-org/llama.cpp/releases/tag/b12676) (MIT License) and are excluded from Git tracking (`prebuilt/` is gitignored):
-
-- Release Tag: `b12676`
-- Linux x86_64 Archive: `https://github.com/ggml-org/llama.cpp/releases/download/b12676/llama-b12676-bin-ubuntu-x64.tar.gz`
-
-Example setup on Linux x86_64:
+## Installation & Import
 
 ```bash
-curl -fSL -o /tmp/llama.tar.gz \
-  https://github.com/ggml-org/llama.cpp/releases/download/b12676/llama-b12676-bin-ubuntu-x64.tar.gz
-tar -xzf /tmp/llama.tar.gz -C /tmp
-mkdir -p prebuilt/linux-x86_64
-cp -a /tmp/llama-b12676/libllama.so* /tmp/llama-b12676/libggml*.so* prebuilt/linux-x86_64/
-find prebuilt/linux-x86_64 -maxdepth 1 -type f -name "*.so*" -exec strip --strip-unneeded {} +
+cap add @cap/llama
 ```
-
-## Quick Start
 
 ```cp
-import { LlamaBackend, systemInfo, supportsMmap, supportsGpuOffload, maxDevices, timeUs } from "@cap/llama";
-import std from "std";
+import {
+    LlamaError,
+    LlamaBackend,
+    LlamaModel,
+    cp_llama_backend_init,
+    cp_llama_backend_free,
+    cp_llama_max_devices,
+    cp_llama_supports_mmap,
+    cp_llama_supports_mlock,
+} from "@cap/llama";
+```
 
-pub fn main(): void! {
-    let backend = LlamaBackend.init();
-    std.debug.print("active={} maxDevices={} mmap={} gpu={} timeUs={}\n", .{
-        backend.isActive(),
-        maxDevices(),
-        supportsMmap(),
-        supportsGpuOffload(),
-        timeUs(),
-    });
-    std.debug.print("systemInfo: {s}\n", .{systemInfo()});
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `error` | `LlamaError` | `LoadModelFailed, OutOfMemory` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `LlamaBackend` | `class` | Fields: `active: bool` · Methods: `init, isActive, __cp_deinit` |
+| `LlamaModel` | `class` | Fields: `model_ptr: *auto!?` · Methods: `load, isValid, __cp_deinit` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cp_llama_backend_init` | `()` | Executes `cp_llama_backend_init` in-place. |
+| `cp_llama_backend_free` | `()` | Executes `cp_llama_backend_free` in-place. |
+| `cp_llama_max_devices` | `(): usize` | Invokes `cp_llama_max_devices` and returns `usize`. |
+| `cp_llama_supports_mmap` | `(): i32` | Invokes `cp_llama_supports_mmap` and returns `i32`. |
+| `cp_llama_supports_mlock` | `(): i32` | Invokes `cp_llama_supports_mlock` and returns `i32`. |
+| `cp_llama_supports_gpu_offload` | `(): i32` | Invokes `cp_llama_supports_gpu_offload` and returns `i32`. |
+| `cp_llama_time_us` | `(): i64` | Invokes `cp_llama_time_us` and returns `i64`. |
+| `cp_llama_print_system_info` | `(): [*:0]&u8!` | Invokes `cp_llama_print_system_info` and returns `[*:0]&u8!`. |
+| `cp_llama_load_model` | `(path: [*:0]&u8!, n_gpu_layers: i32): *auto!?` | Invokes `cp_llama_load_model` and returns `*auto!?`. |
+| `cp_llama_free_model` | `(m: *auto!?)` | Executes `cp_llama_free_model` in-place. |
+| `systemInfo` | `(): string` | Invokes `systemInfo` and returns `string`. |
+| `supportsMmap` | `(): bool` | Invokes `supportsMmap` and returns `bool`. |
+| `supportsMlock` | `(): bool` | Invokes `supportsMlock` and returns `bool`. |
+| `supportsGpuOffload` | `(): bool` | Invokes `supportsGpuOffload` and returns `bool`. |
+| `maxDevices` | `(): usize` | Invokes `maxDevices` and returns `usize`. |
+| `timeUs` | `(): i64` | Invokes `timeUs` and returns `i64`. |
+
+## Minimal Example
+
+```cp
+import { cp_llama_max_devices } from "@cap/llama";
+
+pub fn main() {
+    let result = cp_llama_max_devices();
+    _ = result;
 }
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-overhead native binding**: Direct CP FFI to the underlying native C library without GC pauses or dynamic runtime wrappers.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Deterministic resource cleanup**: Native handles provide RAII `__cp_deinit` or explicit `defer` release functions to prevent leaks.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

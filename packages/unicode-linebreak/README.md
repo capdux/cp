@@ -1,35 +1,77 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # unicode-linebreak
+
+Zero-allocation pure CP UAX #14 Unicode line break opportunity detector (unicode-linebreak parity)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-linebreak` ([https://github.com/axelf4/unicode-linebreak](https://github.com/axelf4/unicode-linebreak))
 
-Zero-allocation pure CP UAX #14 Unicode line break opportunity detector — clean-room parity with `unicode-linebreak` (138.7M+ downloads on crates.io, Apache-2.0).
+| Metadata | Value |
+| --- | --- |
+| Package | `unicode-linebreak` |
+| Version | `1.0.0` |
+| License | `Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 UAX #14 Unicode 断行点检测器，支持 `\n`/`\r\n` 强制断行、空格/连字符后断行、CJK 汉字间允许断行、禁止在 U+00A0 不间断空格与左括号 `(`/`[` 后及右标点 `)`/`,`/`.` 前断行，末尾必出 `Mandatory` 断行。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add unicode-linebreak
 ```
 
-## API
+```cp
+import {
+    BreakKind,
+    LineBreak,
+    UlbrDecoded,
+    ulbrDecodeUtf8,
+    ulbrClassify,
+    ulbrEvalBreak,
+    findLineBreaks,
+    countLineBreaks,
+} from "unicode-linebreak";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `BreakKind` | `enum { Mandatory, Allowed }` | Mandatory vs allowed line break |
-| `LineBreak` | `struct { offset: usize; kind: BreakKind; }` | Byte offset and kind of a break opportunity |
-| `findLineBreaks` | `(utf8: string, out: []LineBreak): usize` | Write UAX #14 break points into `out` |
-| `countLineBreaks` | `(utf8: string): usize` | Count total UAX #14 break points in `utf8` |
+| `enum` | `BreakKind` | `Mandatory, Allowed` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `LineBreak` | `class` | Fields: `offset: usize, kind: BreakKind` |
+| `UlbrDecoded` | `class` | Fields: `cp: u32, len: usize` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ulbrDecodeUtf8` | `(s: string, pos: usize): UlbrDecoded` | Invokes `ulbrDecodeUtf8` and returns `UlbrDecoded`. |
+| `ulbrClassify` | `(cp: u32): u8` | Invokes `ulbrClassify` and returns `u8`. |
+| `ulbrEvalBreak` | `(prev: u8, prevNonSp: u8, curr: u8): u8` | Invokes `ulbrEvalBreak` and returns `u8`. |
+| `findLineBreaks` | `(utf8: string, out: []LineBreak): usize` | Queries/retrieves data via `findLineBreaks` returning `usize`. |
+| `countLineBreaks` | `(utf8: string): usize` | Invokes `countLineBreaks` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { LineBreak, BreakKind, findLineBreaks, countLineBreaks } from "unicode-linebreak";
+import { ulbrDecodeUtf8 } from "unicode-linebreak";
 
-let breaks: [16]LineBreak = undefined;
-const n = findLineBreaks("hello world", breaks[0..16]);
-// breaks[0] = { offset: 6, kind: Allowed }, breaks[1] = { offset: 11, kind: Mandatory }
+pub fn main() {
+    let result = ulbrDecodeUtf8("example", 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

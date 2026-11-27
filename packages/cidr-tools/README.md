@@ -1,38 +1,82 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # cidr-tools
+
+Zero-allocation IPv4 CIDR parser, formatter, overlap/containment checker, merge, and exclude engine (npm cidr-tools / ip-cidr parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cidr-tools` ([https://github.com/silverwind/cidr-tools](https://github.com/silverwind/cidr-tools))
 
-Zero-allocation IPv4 CIDR block set-algebra engine (`parse`, `format`, `contains`, `overlaps`, `mergeCidrs`, `excludeCidr`) for CP — clean-room MIT parity with npm `cidr-tools` and `ip-cidr`.
+| Metadata | Value |
+| --- | --- |
+| Package | `cidr-tools` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 IPv4 CIDR 块集合运算引擎，支持相邻/重叠路由自动最小前缀聚合与安全组差集排除，适用于云防火墙、WAF 黑白名单与路由表优化。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add cidr-tools
 ```
 
-## API
+```cp
+import {
+    Cidr4,
+    Range64,
+    invalidCidr,
+    pow2_64,
+    prefixMask,
+    parseIpv4,
+    parseCidr4,
+    appendU8Dec,
+} from "cidr-tools";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `Cidr4` | `struct { network: u32, prefix: u8, valid: bool }` | Canonical IPv4 CIDR block |
-| `parseIpv4` / `parseCidr4` | `(s: []const u8) -> i64 / Cidr4` | Strict parser (rejects leading zeros & `> 255`; bare IP defaults to `/32`) |
-| `formatCidr4` | `(c: Cidr4, dst: []u8) -> usize` | Format `"a.b.c.d/prefix"` |
-| `cidrStart` / `cidrEnd` / `cidrHostCount` | `(c: Cidr4) -> u32 / u64` | Block boundaries & address count (handles `/0`..`/32`) |
-| `containsIp` / `containsCidr` / `overlaps` | `-> bool` | Containment & overlap predicates |
-| `mergeCidrs` | `(inputs: []const Cidr4, out: []Cidr4) -> usize` | Merge overlapping/adjacent blocks into minimal canonical CIDRs |
-| `excludeCidr` | `(base: Cidr4, remove: Cidr4, out: []Cidr4) -> usize` | Subtract `remove` from `base` into minimal canonical CIDRs |
+| `Cidr4` | `class` | Fields: `network: u32, prefix: u8, valid: bool` |
+| `Range64` | `class` | Fields: `lo: u64, hi: u64` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `invalidCidr` | `(): Cidr4` | Invokes `invalidCidr` and returns `Cidr4`. |
+| `pow2_64` | `(n: u8): u64` | Invokes `pow2_64` and returns `u64`. |
+| `prefixMask` | `(prefix: u8): u32` | Invokes `prefixMask` and returns `u32`. |
+| `parseIpv4` | `(s: &[]u8): i64` | Parses input via `parseIpv4` and returns `i64`. |
+| `parseCidr4` | `(s: &[]u8): Cidr4` | Parses input via `parseCidr4` and returns `Cidr4`. |
+| `appendU8Dec` | `(dst: []u8, pos: usize, v_in: u8): usize` | Invokes `appendU8Dec` and returns `usize`. |
+| `formatCidr4` | `(c: Cidr4, dst: []u8): usize` | Serializes/formats data via `formatCidr4` returning `usize`. |
+| `cidrHostCount` | `(c: Cidr4): u64` | Invokes `cidrHostCount` and returns `u64`. |
+| `cidrStart` | `(c: Cidr4): u32` | Invokes `cidrStart` and returns `u32`. |
+| `cidrEnd` | `(c: Cidr4): u32` | Invokes `cidrEnd` and returns `u32`. |
+| `containsIp` | `(c: Cidr4, ip: u32): bool` | Invokes `containsIp` and returns `bool`. |
+| `containsCidr` | `(outer: Cidr4, inner: Cidr4): bool` | Invokes `containsCidr` and returns `bool`. |
+| `overlaps` | `(a: Cidr4, b: Cidr4): bool` | Invokes `overlaps` and returns `bool`. |
+| `emitRangeCidrs` | `(lo_in: u64, hi: u64, out: []Cidr4, pos_in: usize): usize` | Invokes `emitRangeCidrs` and returns `usize`. |
+| `mergeCidrs` | `(inputs: &[]Cidr4, out: []Cidr4): usize` | Invokes `mergeCidrs` and returns `usize`. |
+| `excludeCidr` | `(base: Cidr4, remove: Cidr4, out: []Cidr4): usize` | Invokes `excludeCidr` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { Cidr4, parseCidr4, mergeCidrs, excludeCidr } from "cidr-tools";
+import { parseIpv4 } from "cidr-tools";
 
-const pair: [2]Cidr4 = [parseCidr4("192.168.1.0/25"), parseCidr4("192.168.1.128/25")];
-let merged: [4]Cidr4 = undefined;
-const n = mergeCidrs(pair[0..2], merged[0..4]); // 1 block: 192.168.1.0/24
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = parseIpv4(out_buf[0..256]);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,35 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # rand_distr
+
+Zero-heap probability distribution samplers (Uniform, Normal Box-Muller, Exponential, Bernoulli, WeightedIndex) built on xoshiro256 (clean-room port of Rust rand_distr)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rand_distr` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand))（原库名 `rand_distr` → CP 包名 `rand_distr`）
 
-Clean-room MIT, zero-heap probability distribution samplers for CP — modeled on crates.io `rand_distr` v0.4 and built on [`rand_xoshiro`](../rand_xoshiro/README.md).
+| Metadata | Value |
+| --- | --- |
+| Package | `rand_distr` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation & pure CP**: self-contained `ln`, `sqrt`, and `cos` math helpers with zero external C/Zig math dependencies.
-- **Deterministic PRNG Integration**: directly reuses `rand_xoshiro`'s `Xoshiro256` engine and `nextF64`.
-- **Distributions**:
-  - `UniformRange`: continuous uniform `[low, high)`
-  - `NormalDistr`: Gaussian `N(mean, std_dev^2)` via Box-Muller transform
-  - `ExpDistr`: exponential `Exp(lambda)` via inverse transform `-ln(1 - u) / lambda`
-  - `BernoulliDistr`: boolean trial `Bernoulli(p)`
-  - `WeightedIndex`: zero-heap discrete weighted sampling over up to 16 weights
+```bash
+cap add rand_distr
+```
 
-## Dependencies
+```cp
+import {
+    UniformRange,
+    NormalDistr,
+    ExpDistr,
+    BernoulliDistr,
+    WeightedIndex,
+    rdstAbs,
+    rdstSqrt,
+    rdstLn,
+} from "rand_distr";
+```
 
-- `rand_xoshiro` `1.0.0`
+## Core API
 
-## API
+### Data Structures
 
-- `UniformRange { low: f64, high: f64 }` (`new`, `sample`)
-- `NormalDistr { mean: f64, std_dev: f64 }` (`new`, `sample`)
-- `ExpDistr { lambda: f64 }` (`new`, `sample`)
-- `BernoulliDistr { p: f64 }` (`new`, `sample`)
-- `WeightedIndex { cumulative: [16]f64, count: usize, total: f64 }` (`fromWeights`, `sample`)
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `UniformRange` | `class` | Fields: `low: f64, high: f64` · Methods: `new, sample` |
+| `NormalDistr` | `class` | Fields: `mean: f64, std_dev: f64` · Methods: `new, sample` |
+| `ExpDistr` | `class` | Fields: `lambda: f64` · Methods: `new, sample` |
+| `BernoulliDistr` | `class` | Fields: `p: f64` · Methods: `new, sample` |
+| `WeightedIndex` | `class` | Fields: `cumulative: [16]f64, count: usize, total: f64` · Methods: `fromWeights, sample` |
 
-## License
+### Functions
 
-MIT
+| Function | Signature | Description |
+| --- | --- | --- |
+| `rdstAbs` | `(x: f64): f64` | Invokes `rdstAbs` and returns `f64`. |
+| `rdstSqrt` | `(x: f64): f64` | Invokes `rdstSqrt` and returns `f64`. |
+| `rdstLn` | `(x: f64): f64` | Invokes `rdstLn` and returns `f64`. |
+| `rdstCos` | `(angle: f64): f64` | Invokes `rdstCos` and returns `f64`. |
+| `rdstOpen01` | `(rng: &mut Xoshiro256): f64` | Invokes `rdstOpen01` and returns `f64`. |
+
+## Minimal Example
+
+```cp
+import { rdstAbs } from "rand_distr";
+
+pub fn main() {
+    let result = rdstAbs(0.0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

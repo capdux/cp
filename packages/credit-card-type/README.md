@@ -1,64 +1,84 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # credit-card-type
+
+Zero-allocation payment card BIN network detector, Luhn validator, formatter, and PCI-DSS masker for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:credit-card-type` ([https://github.com/braintree/credit-card-type](https://github.com/braintree/credit-card-type))（原库名 `credit-card-type` → CP 包名 `credit-card-type`）
 
-Zero-allocation payment card BIN network detector, Luhn validator, formatter, and PCI-DSS masker for CP — clean-room MIT parity with npm `credit-card-type` (4M/wk) and `card-validator` (3M/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `credit-card-type` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配支付卡 BIN 组织识别、Luhn 模 10 校验、标准分组格式化与 PCI-DSS 脱敏引擎。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add credit-card-type
 ```
 
-## Supported Card Networks / 支持的卡组织
-
-| Network | BIN Ranges | Valid Lengths | CVV / CID | Formatting |
-| --- | --- | --- | --- | --- |
-| `Visa` | `4` | 13, 16, 19 | 3 | `4-4-4-4` |
-| `Mastercard` | `51-55`, `2221-2720` | 16 | 3 | `4-4-4-4` |
-| `Amex` | `34`, `37` | 15 | 4 | `4-6-5` |
-| `UnionPay` | `62` | 16-19 | 3 | `4-4-4-4` |
-| `Jcb` | `3528-3589` | 16-19 | 3 | `4-4-4-4` |
-| `Discover` | `6011`, `644-649`, `65` | 16-19 | 3 | `4-4-4-4` |
-| `DinersClub` | `300-305`, `36`, `38-39` | 14, 16 | 3 | `4-4-4-4` |
-| `Maestro` | `50`, `56-58`, `6304`, `67` | 12-19 | 3 | `4-4-4-4` |
-
-## API
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `CardNetwork` | `enum { Visa, Mastercard, Amex, UnionPay, Jcb, Discover, DinersClub, Maestro, Unknown }` | Payment card network enum |
-| `CardInfo` | `struct { network, digit_count, valid_length, luhn_ok, is_valid, cvv_len }` | Full inspection result |
-| `luhnValid` | `(raw: string) -> bool` | Strip spaces/hyphens and verify Luhn mod-10 checksum |
-| `inspectCard` | `(raw: string) -> CardInfo` | Detect BIN network, validate length & Luhn, and return CVV length |
-| `networkName` | `(n: CardNetwork) -> string` | Human-readable display name of card network |
-| `formatCardNumber` | `(raw: string, out: []u8) -> string` | Format digits (`4-6-5` for Amex, `4-4-4-4` for others) |
-| `maskCardPci` | `(raw: string, out: []u8) -> string` | PCI-DSS compliant masking (first 6 + last 4, or last 4 for short PANs) |
-
-## Usage / 使用示例
-
 ```cp
 import {
     CardNetwork,
-    inspectCard,
-    networkName,
-    formatCardNumber,
-    maskCardPci,
+    CardInfo,
+    ExtractResult,
+    extractDigits,
+    prefixNum,
+    detectNetwork,
+    checkValidLength,
+    networkCvvLen,
 } from "credit-card-type";
-
-const info = inspectCard("3782-822463-10005");
-// info.network == CardNetwork.Amex, info.is_valid == true, info.cvv_len == 4
-
-let fmtBuf: [32]u8 = undefined;
-const formatted = formatCardNumber("378282246310005", fmtBuf[0..32]);
-// "3782 822463 10005"
-
-let maskBuf: [32]u8 = undefined;
-const masked = maskCardPci("4111-1111-1111-1111", maskBuf[0..32]);
-// "411111******1111"
 ```
+
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `CardNetwork` | `Visa, Mastercard, Amex, UnionPay, Jcb, Discover, DinersClub, Maestro ...` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `CardInfo` | `class` | Fields: `network: CardNetwork, digit_count: usize, valid_length: bool, luhn_ok: bool, is_valid: bool, cvv_len: u8` |
+| `ExtractResult` | `class` | Fields: `count: usize, ok: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `extractDigits` | `(raw: string, out: &mut [MAX_CARD_DIGITS]u8): ExtractResult` | Invokes `extractDigits` and returns `ExtractResult`. |
+| `prefixNum` | `(digits: &mut [MAX_CARD_DIGITS]u8, count: usize, len: usize): u32` | Invokes `prefixNum` and returns `u32`. |
+| `detectNetwork` | `(digits: &mut [MAX_CARD_DIGITS]u8, count: usize): CardNetwork` | Invokes `detectNetwork` and returns `CardNetwork`. |
+| `checkValidLength` | `(net: CardNetwork, len: usize): bool` | Validates input with `checkValidLength` returning `bool`. |
+| `networkCvvLen` | `(net: CardNetwork): u8` | Invokes `networkCvvLen` and returns `u8`. |
+| `checkLuhnDigits` | `(digits: &mut [MAX_CARD_DIGITS]u8, count: usize): bool` | Validates input with `checkLuhnDigits` returning `bool`. |
+| `luhnValid` | `(raw: string): bool` | Invokes `luhnValid` and returns `bool`. |
+| `inspectCard` | `(raw: string): CardInfo` | Invokes `inspectCard` and returns `CardInfo`. |
+| `networkName` | `(n: CardNetwork): string` | Invokes `networkName` and returns `string`. |
+| `formatCardNumber` | `(raw: string, out: []u8): string` | Serializes/formats data via `formatCardNumber` returning `string`. |
+| `maskCardPci` | `(raw: string, out: []u8): string` | Invokes `maskCardPci` and returns `string`. |
+
+## Minimal Example
+
+```cp
+import { formatCardNumber } from "credit-card-type";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatCardNumber("example", out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

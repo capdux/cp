@@ -1,23 +1,54 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # slash
+
+Zero-allocation Windows backslash <-> POSIX forward-slash path normalizer preserving extended-length (\\?\) paths for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:slash` ([https://github.com/sindresorhus/slash](https://github.com/sindresorhus/slash))
 
-Zero-allocation Windows backslash <-> POSIX forward-slash path converter for CP (npm `slash` parity).
+| Metadata | Value |
+| --- | --- |
+| Package | `slash` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation**: writes directly into caller-supplied `[]u8` buffers.
-- **Extended-length path safe**: preserves Windows `\\?\` paths verbatim per npm `slash` spec.
-- **Bidirectional & inspection**: `slash`, `toBackslash`, `isExtendedLengthPath`, and `countSeparators`.
-
-## Usage
+```bash
+cap add slash
+```
 
 ```cp
-import { slash } from "slash";
-
-let buf: [64]u8 = undefined;
-const n = slash("foo\\bar\\baz.cp", buf[0..64]); // "foo/bar/baz.cp"
+import { isExtendedLengthPath, slash, toBackslash, countSeparators } from "slash";
 ```
+
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isExtendedLengthPath` | `(path: string): bool` | Checks predicate `isExtendedLengthPath` and returns `bool`. |
+| `slash` | `(path: string, out: []u8): usize` | Invokes `slash` and returns `usize`. |
+| `toBackslash` | `(path: string, out: []u8): usize` | Invokes `toBackslash` and returns `usize`. |
+| `countSeparators` | `(path: string): usize` | Invokes `countSeparators` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { isExtendedLengthPath } from "slash";
+
+pub fn main() {
+    let result = isExtendedLengthPath("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

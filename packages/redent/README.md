@@ -1,38 +1,53 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # redent
+
+Zero-allocation strip-and-reindent multiline string utility (npm redent parity) composing strip-indent and indent-string for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:redent` ([https://github.com/sindresorhus/redent](https://github.com/sindresorhus/redent))
 
-Zero-allocation strip-and-reindent multiline string utility for CP — clean-room MIT parity with npm `redent`. Composes `strip-indent` and `indent-string` with zero duplication.
+| Metadata | Value |
+| --- | --- |
+| Package | `redent` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配多行文本重缩进库（对标 npm `redent`），组合复用 `strip-indent`（剥离公共最小缩进）与 `indent-string`（重新按指定缩进单元与次数缩进）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add redent
 ```
 
-## Dependencies / 跨包复用
+```cp
+import { redentWithIndent, redent } from "redent";
+```
 
-- `strip-indent`: 剥离公共最小前导空白
-- `indent-string`: 对各行重新施加自定义缩进单元与空行控制
+## Core API
 
-## API
+### Functions
 
-| Symbol | Signature | Description |
+| Function | Signature | Description |
 | --- | --- | --- |
-| `redent` | `(s: string, count: usize, out: []u8): usize` | Strips common indentation and re-indents non-empty lines by `count` spaces |
-| `redentWithIndent` | `(s: string, count: usize, indent: string, include_empty_lines: bool, out: []u8): usize` | Strips common indentation and re-indents with custom `indent` unit and blank-line policy |
+| `redentWithIndent` | `(s: string, count: usize, indent: string, include_empty_lines: bool, out: []u8): usize` | Invokes `redentWithIndent` and returns `usize`. |
+| `redent` | `(s: string, count: usize, out: []u8): usize` | Invokes `redent` and returns `usize`. |
 
-## Usage / 使用示例
+## Minimal Example
 
 ```cp
-import { redent, redentWithIndent } from "redent";
+import { redent } from "redent";
 
-let buf: [128]u8 = undefined;
-const n1 = redent("\n    foo\n      bar\n", 2, buf[0..128]); // "\n  foo\n    bar\n"
-const n2 = redentWithIndent("    a\n\n    b", 1, "\t", true, buf[0..128]); // "\ta\n\t\n\tb"
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = redent("example", 0, out_buf[0..256]);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

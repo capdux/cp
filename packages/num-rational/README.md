@@ -1,56 +1,56 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `num-rational`
+# num-rational
+
+Zero-allocation exact rational number (Ratio64) arithmetic library with canonical reduction via num-integer for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-rational` ([https://github.com/rust-num/num-rational](https://github.com/rust-num/num-rational))
 
-Zero-allocation exact 64-bit rational number (`Ratio64`) arithmetic library for CP (clean-room MIT, inspired by Rust `num-rational` v0.4).
+| Metadata | Value |
+| --- | --- |
+| Package | `num-rational` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Dependencies (Zero Duplication)
+## Installation & Import
 
-- `num-integer`: reuses `gcdU64`, `divFloor`, and `divCeil` for canonical reduction and rounding.
-
-## Invariants
-
-Every `Ratio64` produced by the public API is guaranteed to be in canonical reduced form:
-- `denom > 0`
-- `gcd(|numer|, denom) == 1`
-- Zero is uniquely represented as `0 / 1`
-
-## API
+```bash
+cap add num-rational
+```
 
 ```cp
-pub struct Ratio64 {
-    pub numer: i64,
-    pub denom: i64,
+import { Ratio64, nratAbsU64, nratReduce } from "num-rational";
+```
 
-    pub static fn new(numer: i64, denom: i64): Ratio64?
-    pub static fn fromInt(n: i64): Ratio64
-    pub static fn zero(): Ratio64
-    pub static fn one(): Ratio64
+## Core API
 
-    pub fn isInteger(): bool
-    pub fn isZero(): bool
-    pub fn isPositive(): bool
-    pub fn isNegative(): bool
+### Data Structures
 
-    pub fn add(other: Ratio64): Ratio64
-    pub fn sub(other: Ratio64): Ratio64
-    pub fn mul(other: Ratio64): Ratio64
-    pub fn div(other: Ratio64): Ratio64?
-    pub fn recip(): Ratio64?
-    pub fn neg(): Ratio64
-    pub fn abs(): Ratio64
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Ratio64` | `class` | Fields: `numer: i64, denom: i64` · Methods: `new, fromInt, zero, one, isInteger, isZero, +14 more` |
 
-    pub fn cmp(other: Ratio64): i32
-    pub fn eq(other: Ratio64): bool
-    pub fn floor(): i64
-    pub fn ceil(): i64
-    pub fn toF64(): f64
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `nratAbsU64` | `(v: i64): u64` | Invokes `nratAbsU64` and returns `u64`. |
+| `nratReduce` | `(numer: i64, denom: i64): Ratio64` | Invokes `nratReduce` and returns `Ratio64`. |
+
+## Minimal Example
+
+```cp
+import { nratAbsU64 } from "num-rational";
+
+pub fn main() {
+    let result = nratAbsU64(0);
+    _ = result;
 }
 ```
 
-## License
+## CP Zero-Heap & Borrow-Safety Highlights
 
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

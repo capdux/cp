@@ -1,53 +1,74 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # hostile
+
+Zero-allocation POSIX/Windows /etc/hosts parser, case-insensitive forward/family/reverse lookup, and canonical formatter (hostile / Rust hostsfile parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:hostile` ([https://github.com/feross/hostile](https://github.com/feross/hostile))（原库名 `hostile` → CP 包名 `hostile`）
 
-零堆分配的 POSIX / Windows `/etc/hosts` 文件解析、域名正反向查表与规范化生成引擎 — 洁净室 MIT 实现，对标 npm `hostile` 与 Rust `hostsfile`。
+| Metadata | Value |
+| --- | --- |
+| Package | `hostile` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation POSIX / Windows `/etc/hosts` parser, case-insensitive forward/family/reverse lookup, and canonical formatter for CP — clean-room MIT parity with npm `hostile` and Rust `hostsfile`.
-
-## 特性 / Features
-
-- **完整 `/etc/hosts` 语法 / Full Hosts Syntax**：支持 LF/CRLF、跳过空行与整行/行尾 `#` 注释、自动展开单行多别名（如 `127.0.0.1 localhost api.local`）。
-- **IPv4 与 IPv6 双栈 / Dual-Stack IPv4 & IPv6**：支持 `::1` 与带作用域地址 `fe80::1%lo0`，自动标注 `is_ipv6`。
-- **正反向与按协议族查表 / Forward, Family & Reverse Lookup**：提供 `lookupIp`、`lookupIpByFamily`（区分 IPv4/IPv6）与 `reverseLookup`。
-- **零堆分配 / Zero Heap Allocation**：所有 `HostEntry` 字符串直接零拷贝切片自输入缓冲区，`formatHosts` 写入调用方 `out: []u8`。
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add hostile
 ```
 
-## API 参考 / API Reference
-
-| 符号 / Symbol | 说明 / Description |
-| --- | --- |
-| `HostEntry` | `{ ip: string, hostname: string, is_ipv6: bool }` |
-| `HostsTable` | `{ entries: [64]HostEntry, count: usize }` + `entryAt(i)` |
-| `parseHosts(content)` | 解析 `/etc/hosts` 文本为 `HostsTable` |
-| `lookupIp(table, hostname)` | 大小写不敏感查首条匹配 IP |
-| `lookupIpByFamily(table, hostname, ipv6)` | 按协议族（IPv4/IPv6）查找匹配 IP |
-| `reverseLookup(table, ip)` | 按 IP 反查主域名 |
-| `formatHosts(table, out)` | 对齐并合并连续同 IP 别名，输出标准 `/etc/hosts` 格式 |
-
-## 使用示例 / Usage
-
 ```cp
-import { parseHosts, lookupIp, lookupIpByFamily, reverseLookup, formatHosts } from "hostile";
-
-const table = parseHosts("127.0.0.1 localhost api.local\n::1 localhost\n");
-const v4 = lookupIpByFamily(table, "LOCALHOST", false).?; // "127.0.0.1"
-const v6 = lookupIpByFamily(table, "localhost", true).?;  // "::1"
-const host = reverseLookup(table, "127.0.0.1").?;         // "localhost"
-
-let buf: [512]u8 = undefined;
-const rendered = formatHosts(table, buf[0..512]);
+import {
+    HostEntry,
+    HostsTable,
+    isBlank,
+    parseHosts,
+    lookupIp,
+    lookupIpByFamily,
+    reverseLookup,
+    pushByte,
+} from "hostile";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `HostEntry` | `class` | Fields: `ip: string, hostname: string, is_ipv6: bool` · Methods: `empty` |
+| `HostsTable` | `class` | Fields: `entries: [MAX_HOST_ENTRIES]HostEntry, count: usize` · Methods: `empty, entryAt` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isBlank` | `(c: u8): bool` | Checks predicate `isBlank` and returns `bool`. |
+| `parseHosts` | `(content: string): HostsTable` | Parses input via `parseHosts` and returns `HostsTable`. |
+| `lookupIp` | `(table: HostsTable, hostname: string): string?` | Queries/retrieves data via `lookupIp` returning `string?`. |
+| `lookupIpByFamily` | `(table: HostsTable, hostname: string, ipv6: bool): string?` | Queries/retrieves data via `lookupIpByFamily` returning `string?`. |
+| `reverseLookup` | `(table: HostsTable, ip: string): string?` | Invokes `reverseLookup` and returns `string?`. |
+| `pushByte` | `(out: []u8, pos: usize, b: u8): usize` | Mutates or appends state via `pushByte`. |
+| `formatHosts` | `(table: HostsTable, out: []u8): string` | Serializes/formats data via `formatHosts` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { parseHosts } from "hostile";
+
+pub fn main() {
+    let result = parseHosts("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

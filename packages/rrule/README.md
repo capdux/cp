@@ -1,54 +1,78 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # rrule
+
+Zero-allocation RFC 5545 iCalendar RRULE parser, validator & formatter (npm rrule v2 parity) composing unicase for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:rrule` ([https://github.com/jkbrzt/rrule](https://github.com/jkbrzt/rrule))（原库名 `rrule` → CP 包名 `rrule`）
 
-Zero-allocation RFC 5545 iCalendar RRULE parser, validator, and canonical formatter for CP — clean-room MIT parity with npm `rrule` v2. Composes `unicase` for case-insensitive key and enum matching.
+| Metadata | Value |
+| --- | --- |
+| Package | `rrule` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 RFC 5545 iCalendar 重复规则（RRULE）解析与格式化引擎（对标 npm `rrule` v2），跨包复用 `unicase` 实现大小写无关的键名与枚举匹配。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add rrule
 ```
 
-## Dependencies / 跨包复用
-
-- `unicase`: 复用 `eqAscii` 进行 RFC 5545 键名（`FREQ`/`INTERVAL`/`BYDAY` 等）与枚举值大小写无关匹配
-
-## API
-
-### Frequency & Weekday Constants / 频率与星期掩码常量
-
-- Frequencies: `FREQ_YEARLY (0)`, `FREQ_MONTHLY (1)`, `FREQ_WEEKLY (2)`, `FREQ_DAILY (3)`, `FREQ_HOURLY (4)`, `FREQ_MINUTELY (5)`, `FREQ_SECONDLY (6)`
-- Weekday Bitmasks: `DAY_SU (1)`, `DAY_MO (2)`, `DAY_TU (4)`, `DAY_WE (8)`, `DAY_TH (16)`, `DAY_FR (32)`, `DAY_SA (64)`
-
-### Struct & Functions / 核心类型与函数
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `RRule` | `struct { valid: bool, freq: u8, interval: u32, count: u32, has_count: bool, until: string, byday_mask: u8, bymonth_mask: u16, wkst: u8 }` | Parsed recurrence rule |
-| `parseRRule` | `(input: string): RRule` | Parse optional `RRULE:` prefix + `FREQ`/`INTERVAL`/`COUNT`/`UNTIL`/`BYDAY`/`BYMONTH`/`WKST`; strictly rejects missing `FREQ` or `COUNT`+`UNTIL` conflict |
-| `formatRRule` | `(r: RRule, out: []u8): usize` | Serialize valid `RRule` to canonical RFC 5545 string |
-| `matchesWeekday` | `(r: RRule, dow: u8): bool` | Check if weekday `dow` (`0=Sun..6=Sat`) matches `BYDAY` mask |
-| `isValidRRule` | `(input: string): bool` | Validate an RFC 5545 RRULE string |
-
-## Usage / 使用示例
-
 ```cp
 import {
-    parseRRule,
-    formatRRule,
-    matchesWeekday,
+    RRule,
+    rrlInvalid,
+    rrlParsePosU32,
+    rrlParseFreq,
+    rrlParseDayCode,
+    rrlParseByDayItem,
+    rrlParse2Digits,
+    rrlIsValidUntil,
 } from "rrule";
-
-const r = parseRRule("RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR;COUNT=10");
-const isMon = matchesWeekday(r, 1); // true
-
-let buf: [128]u8 = undefined;
-const n = formatRRule(r, buf[0..128]);
-// "FREQ=WEEKLY;INTERVAL=2;COUNT=10;BYDAY=MO,WE,FR"
 ```
+
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RRule` | `class` | Fields: `valid: bool, freq: u8, interval: u32, count: u32, has_count: bool, until: string, +3 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `rrlInvalid` | `(): RRule` | Invokes `rrlInvalid` and returns `RRule`. |
+| `rrlParsePosU32` | `(s: string): u32` | Invokes `rrlParsePosU32` and returns `u32`. |
+| `rrlParseFreq` | `(v: string): u8` | Invokes `rrlParseFreq` and returns `u8`. |
+| `rrlParseDayCode` | `(code: string): u8` | Invokes `rrlParseDayCode` and returns `u8`. |
+| `rrlParseByDayItem` | `(item: string): u8` | Invokes `rrlParseByDayItem` and returns `u8`. |
+| `rrlParse2Digits` | `(s: string, pos: usize): u32` | Invokes `rrlParse2Digits` and returns `u32`. |
+| `rrlIsValidUntil` | `(v: string): bool` | Invokes `rrlIsValidUntil` and returns `bool`. |
+| `parseRRule` | `(input: string): RRule` | Parses input via `parseRRule` and returns `RRule`. |
+| `rrlFreqName` | `(freq: u8): string` | Invokes `rrlFreqName` and returns `string`. |
+| `rrlDayName` | `(mask: u8): string` | Invokes `rrlDayName` and returns `string`. |
+| `formatRRule` | `(r: RRule, out: []u8): usize` | Serializes/formats data via `formatRRule` returning `usize`. |
+| `matchesWeekday` | `(r: RRule, dow: u8): bool` | Invokes `matchesWeekday` and returns `bool`. |
+| `isValidRRule` | `(input: string): bool` | Checks predicate `isValidRRule` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { parseRRule } from "rrule";
+
+pub fn main() {
+    let result = parseRRule("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,67 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `parseurl`
+# parseurl
+
+Zero-allocation high-speed HTTP request URL pathname/query zero-copy splitter and path safety checker for CP (clean-room parity with Express parseurl)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:parseurl` ([https://github.com/pillarjs/parseurl](https://github.com/pillarjs/parseurl))
 
-Zero-allocation high-speed HTTP request URL pathname/query zero-copy splitter and path safety validator for CP. Clean-room MIT implementation inspired by Express `parseurl`.
+| Metadata | Value |
+| --- | --- |
+| Package | `parseurl` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Single-pass O(N) zero-copy parsing**: Splits origin-form (`/api/v1/users?page=2&sort=asc#top`) and absolute-form (`http://host:8080/a/b?x=1`) request URLs into `pathname`, `search`, `query`, `hash`, and `path` slices without heap allocation.
-- **RFC-accurate pathname decoding**: `decodePathname` decodes `%XX` sequences while preserving literal `+` characters (unlike form query decoding).
-- **Path traversal & null-byte protection**: `isSafeRequestPath` rejects `\0` (`%00`), `\` (`%5C`), and `..` (`%2E%2E`) traversal segments while permitting benign dots like `/files/a..b.txt`.
-- **On-demand query parameter extraction**: Delegates to `querystring` (`pickQueryParam` / `unescapeQuery`) with zero duplication.
-
-## API
-
-### `ParsedRequestUrl`
-
-```cp
-pub struct ParsedRequestUrl {
-    pub href: string,
-    pub path: string,
-    pub pathname: string,
-    pub search: string,
-    pub query: string,
-    pub hash: string,
-    pub has_query: bool,
-
-    pub static fn empty(): ParsedRequestUrl
-}
+```bash
+cap add parseurl
 ```
-
-### Functions
-
-- `parseRequestUrl(raw_url: string): ParsedRequestUrl` — Single-pass zero-copy splitter for origin-form and absolute-form HTTP request URLs.
-- `decodePathname(pathname: string, out: []u8): usize` — Percent-decodes a pathname into `out`, preserving literal `+`.
-- `isSafeRequestPath(pathname: string): bool` — Validates that a pathname has no null bytes, backslashes, or `..` traversal segments (both raw and percent-encoded).
-- `getRequestQueryParam(raw_url: string, key: string, out: []u8): usize?` — Extracts and decodes a query parameter by key via `querystring`.
-- `decodeQueryValue(raw: string, out: []u8): usize` — Decodes a query value (`+` -> space and `%XX`) via `querystring`.
-
-## Example
 
 ```cp
 import {
+    ParsedRequestUrl,
+    purlIsAlpha,
+    purlIsSchemeChar,
+    purlHexVal,
+    purlFindOriginEnd,
     parseRequestUrl,
     decodePathname,
     isSafeRequestPath,
-    getRequestQueryParam
 } from "parseurl";
-
-let u = parseRequestUrl("/api/v1/users?page=2&sort=asc#top");
-// u.pathname == "/api/v1/users"
-// u.search   == "?page=2&sort=asc"
-// u.query    == "page=2&sort=asc"
-// u.hash     == "#top"
-// u.path     == "/api/v1/users?page=2&sort=asc"
-
-let buf: [64]u8 = undefined;
-let page_len = getRequestQueryParam(u.href, "page", buf[0..64]);
-// page_len == 1, buf[0..1] == "2"
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ParsedRequestUrl` | `class` | Fields: `href: string, path: string, pathname: string, search: string, query: string, hash: string, +1 more` · Methods: `empty` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `purlIsAlpha` | `(b: u8): bool` | Invokes `purlIsAlpha` and returns `bool`. |
+| `purlIsSchemeChar` | `(b: u8): bool` | Invokes `purlIsSchemeChar` and returns `bool`. |
+| `purlHexVal` | `(ch: u8): u8` | Invokes `purlHexVal` and returns `u8`. |
+| `purlFindOriginEnd` | `(raw_url: string): usize` | Invokes `purlFindOriginEnd` and returns `usize`. |
+| `parseRequestUrl` | `(raw_url: string): ParsedRequestUrl` | Parses input via `parseRequestUrl` and returns `ParsedRequestUrl`. |
+| `decodePathname` | `(pathname: string, out: []u8): usize` | Parses input via `decodePathname` and returns `usize`. |
+| `isSafeRequestPath` | `(pathname: string): bool` | Checks predicate `isSafeRequestPath` and returns `bool`. |
+| `getRequestQueryParam` | `(raw_url: string, key: string, out: []u8): usize?` | Queries/retrieves data via `getRequestQueryParam` returning `usize?`. |
+| `decodeQueryValue` | `(raw: string, out: []u8): usize` | Parses input via `decodeQueryValue` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { parseRequestUrl } from "parseurl";
+
+pub fn main() {
+    let result = parseRequestUrl("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

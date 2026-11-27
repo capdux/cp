@@ -1,10 +1,18 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI 智能体速查](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)
 
 # raw-body
 
-> 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
-
 Zero-allocation HTTP request body byte-limit enforcer, Content-Length verifier, streaming chunk accumulator, and RFC 3629 UTF-8 validator for CP (clean-room parity with npm raw-body)
+
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:raw-body` ([https://github.com/stream-utils/raw-body](https://github.com/stream-utils/raw-body))
+
+| 元信息 | 值 |
+| --- | --- |
+| 包名 | `raw-body` |
+| 版本 | `1.0.0` |
+| 许可证 | `MIT` |
+| 类型声明 | [`src/index.d.cp`](./src/index.d.cp) |
 
 ## 安装与导入
 
@@ -13,15 +21,51 @@ cap add raw-body
 ```
 
 ```cp
-import { isValidUtf8 } from "raw-body";
+import {
+    RawBodyOptions,
+    RawBodyResult,
+    RawBodyReader,
+    rwbIsCont,
+    rwbUnitMultiplier,
+    isValidUtf8,
+    parseByteLimit,
+} from "raw-body";
 ```
 
-## 核心导出 API
+## 核心 API
 
-- `export fn isValidUtf8(data: &[]u8): bool;`
-- `export fn parseByteLimit(spec: string): usize?;`
+### 数据结构
 
-<!-- cap-source-attribution -->
-## 上游来源与许可证说明
+| 类型名 | 种类 | 字段与方法 |
+| --- | --- | --- |
+| `RawBodyOptions` | `class` | 字段: `limit: usize, expected_len: usize, has_expected_len: bool, validate_utf8: bool` · 方法: `defaultOpts, withLimit` |
+| `RawBodyResult` | `class` | 字段: `status: u16, bytes_written: usize` · 方法: `isOk` |
+| `RawBodyReader` | `class` | 字段: `opts: RawBodyOptions, received: usize, failed_status: u16, finished: bool` · 方法: `new, checkDeclaredLength, pushChunk, abort, finish, receivedBytes` |
 
-- **上游生态**：`npm` (`raw-body@1.0.0`)，许可证：MIT
+### 函数列表
+
+| 函数名 | 签名 | 说明 |
+| --- | --- | --- |
+| `rwbIsCont` | `(b: u8): bool` | 调用 `rwbIsCont` 并返回 `bool`。 |
+| `rwbUnitMultiplier` | `(unit: string): u64` | 调用 `rwbUnitMultiplier` 并返回 `u64`。 |
+| `isValidUtf8` | `(data: &[]u8): bool` | 执行 `isValidUtf8` 条件判定，返回 `bool`。 |
+| `parseByteLimit` | `(spec: string): usize?` | 通过 `parseByteLimit` 解析输入数据，返回 `usize?`。 |
+
+## 最小调用示例
+
+```cp
+import { parseByteLimit } from "raw-body";
+
+pub fn main() {
+    let result = parseByteLimit("example");
+    _ = result;
+}
+```
+
+## CP 零堆与借用安全亮点
+
+- **纯 CP 零堆分配**：基于栈结构体与切片视图完成计算，无隐式堆内存分配与垃圾回收抖动。
+- **调用方自有输出缓冲区**：接受 `[]u8` 缓冲区参数的接口直接就地写入，内存上限完全确定。
+- **零拷贝字符串切片**：输入与返回的字符串直接借用调用方切片内存，避免无谓拷贝。
+- **显式错误联合与可选类型**：采用 `!T` 与 `T?` 替代运行时异常，错误传播清晰可控。
+- **编译期借用与类型安全**：由 `cpc` 编译期静态检查可变借用（`&mut`）与不可变借用边界。

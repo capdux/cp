@@ -1,34 +1,54 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # titleize
+
+Zero-allocation string title-case formatter (npm titleize v3 parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:titleize` ([https://github.com/sindresorhus/titleize](https://github.com/sindresorhus/titleize))
 
-Zero-allocation string title-case formatter for CP — clean-room MIT parity with npm `titleize` v3.
+| Metadata | Value |
+| --- | --- |
+| Package | `titleize` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配标题大小写转换库（对标 npm `titleize` v3），将空白或标点后的每个单词首字母大写、单词内部字母小写，并提供首字符大写工具 `upperCaseFirst`。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add titleize
 ```
 
-## API
+```cp
+import { titIsWordChar, upperCaseFirst, titleize } from "titleize";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
 | --- | --- | --- |
-| `titleize` | `(input: string, out: []u8): usize` | Capitalizes each word's leading letter and lowercases interior letters |
-| `upperCaseFirst` | `(input: string, out: []u8): usize` | Uppercases the first character and preserves the remaining characters |
+| `titIsWordChar` | `(c: u8): bool` | Invokes `titIsWordChar` and returns `bool`. |
+| `upperCaseFirst` | `(input: string, out: []u8): usize` | Invokes `upperCaseFirst` and returns `usize`. |
+| `titleize` | `(input: string, out: []u8): usize` | Invokes `titleize` and returns `usize`. |
 
-## Usage / 使用示例
+## Minimal Example
 
 ```cp
-import { titleize, upperCaseFirst } from "titleize";
+import { upperCaseFirst } from "titleize";
 
-let buf: [128]u8 = undefined;
-const n1 = titleize("unicorns and rainbows", buf[0..128]); // "Unicorns And Rainbows"
-const n2 = titleize("FOO-BAR", buf[0..128]);               // "Foo-Bar"
-const n3 = upperCaseFirst("helloWorld", buf[0..128]);      // "HelloWorld"
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = upperCaseFirst("example", out_buf[0..256]);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

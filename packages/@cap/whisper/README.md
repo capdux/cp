@@ -1,50 +1,85 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# @cap/whisper
+
+whisper.cpp (v1.9.6) local speech-to-text (ASR) engine for CP via prebuilt dynamic library
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **c++** [`whisper.cpp`](https://github.com/ggml-org/whisper.cpp)（`MIT`）（原库名 `whisper.cpp`，CP 包名 `@cap/whisper`）。
 
-# `@cap/whisper`
+| Metadata | Value |
+| --- | --- |
+| Package | `@cap/whisper` |
+| Version | `1.9.6` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-High-performance local speech-to-text (ASR) engine for CP, powered by **`ggml-org/whisper.cpp` (`v1.9.6`, MIT License)** using prebuilt dynamic libraries (`sys.whisper.prebuilt`) with zero local C++ build time for consumers.
-
-## Architecture
-
-- **Prebuilt Dynamic Libraries**: Links directly against `libwhisper.so` + `libggml*.so` (`prebuilt/<os>-<arch>/`), preserving `SONAME` symlinks (`libwhisper.so -> libwhisper.so.1 -> libwhisper.so.1.9.6`, `libggml.so*`, `libggml-base.so*`, `libggml-cpu.so*`). `cap run` injects `LD_LIBRARY_PATH` / `DYLD_LIBRARY_PATH` automatically.
-- **Thin C ABI Shim (`c/whisper_ffi.c`)**: ~45-line bridge isolating CP from version-sensitive `whisper_context_params` struct layout, compiled in <0.2s into `libwhisper_shim.a`.
-- **Zero-Leak RAII (`src/index.cp`)**: Provides `WhisperContext` (with `initFromFile`, `isValid`, `nVocab`, and deterministic `~init()` cleanup), `versionString()`, `systemInfo()`, `langMaxId()`, `langId(code)`, and `langStr(id)`.
-
-## Building Prebuilt Binaries (Linux x86_64)
-
-`prebuilt/` is excluded from Git tracking. To build `libwhisper.so` and `libggml*.so` from upstream [`ggml-org/whisper.cpp`](https://github.com/ggml-org/whisper.cpp/releases/tag/v1.9.6) (`v1.9.6`, MIT License):
+## Installation & Import
 
 ```bash
-git clone --depth 1 --branch v1.9.6 https://github.com/ggml-org/whisper.cpp.git /tmp/whisper.cpp
-cmake -S /tmp/whisper.cpp -B /tmp/whisper.cpp/build -G Ninja \
-  -DBUILD_SHARED_LIBS=ON \
-  -DWHISPER_BUILD_TESTS=OFF \
-  -DWHISPER_BUILD_EXAMPLES=OFF \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DGGML_NATIVE=OFF
-cmake --build /tmp/whisper.cpp/build -j$(nproc)
-mkdir -p prebuilt/linux-x86_64
-cp -a /tmp/whisper.cpp/build/src/libwhisper.so* /tmp/whisper.cpp/build/ggml/src/libggml*.so* prebuilt/linux-x86_64/
-find prebuilt/linux-x86_64 -maxdepth 1 -type f -name "*.so*" -exec strip --strip-unneeded {} +
+cap add @cap/whisper
 ```
-
-## Quick Start
 
 ```cp
-import { WhisperContext, versionString, systemInfo, langMaxId, langId, langStr } from "@cap/whisper";
-import std from "std";
+import {
+    WhisperError,
+    WhisperContext,
+    cp_whisper_version,
+    cp_whisper_print_system_info,
+    cp_whisper_lang_max_id,
+    cp_whisper_lang_id,
+    cp_whisper_lang_str,
+    cp_whisper_init_from_file,
+} from "@cap/whisper";
+```
 
-pub fn main(): void! {
-    std.debug.print("version={s} langMaxId={} zh={} en={} lang0={s}\n", .{
-        versionString(),
-        langMaxId(),
-        langId("zh"),
-        langId("en"),
-        langStr(0),
-    });
-    std.debug.print("systemInfo: {s}\n", .{systemInfo()});
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `error` | `WhisperError` | `InitFailed, OutOfMemory` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `WhisperContext` | `class` | Fields: `ctx_ptr: *auto!?` · Methods: `initFromFile, isValid, nVocab, __cp_deinit` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cp_whisper_version` | `(): [*:0]&u8!` | Invokes `cp_whisper_version` and returns `[*:0]&u8!`. |
+| `cp_whisper_print_system_info` | `(): [*:0]&u8!` | Invokes `cp_whisper_print_system_info` and returns `[*:0]&u8!`. |
+| `cp_whisper_lang_max_id` | `(): i32` | Invokes `cp_whisper_lang_max_id` and returns `i32`. |
+| `cp_whisper_lang_id` | `(lang: [*:0]&u8!): i32` | Invokes `cp_whisper_lang_id` and returns `i32`. |
+| `cp_whisper_lang_str` | `(id: i32): [*:0]&u8!` | Invokes `cp_whisper_lang_str` and returns `[*:0]&u8!`. |
+| `cp_whisper_init_from_file` | `(path: [*:0]&u8!): *auto!?` | Invokes `cp_whisper_init_from_file` and returns `*auto!?`. |
+| `cp_whisper_free` | `(ctx: *auto!?)` | Executes `cp_whisper_free` in-place. |
+| `cp_whisper_n_vocab` | `(ctx: *auto!?): i32` | Invokes `cp_whisper_n_vocab` and returns `i32`. |
+| `versionString` | `(): string` | Invokes `versionString` and returns `string`. |
+| `systemInfo` | `(): string` | Invokes `systemInfo` and returns `string`. |
+| `langMaxId` | `(): i32` | Invokes `langMaxId` and returns `i32`. |
+| `langId` | `(code: string): i32` | Invokes `langId` and returns `i32`. |
+| `langStr` | `(id: i32): string` | Invokes `langStr` and returns `string`. |
+
+## Minimal Example
+
+```cp
+import { langId } from "@cap/whisper";
+
+pub fn main() {
+    let result = langId("example");
+    _ = result;
 }
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-overhead native binding**: Direct CP FFI to the underlying native C library without GC pauses or dynamic runtime wrappers.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Deterministic resource cleanup**: Native handles provide RAII `__cp_deinit` or explicit `defer` release functions to prevent leaks.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

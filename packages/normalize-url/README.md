@@ -1,45 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # normalize-url
+
+Zero-allocation URL normalization utility (npm normalize-url parity) composing prepend-http for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:normalize-url` ([https://github.com/sindresorhus/normalize-url](https://github.com/sindresorhus/normalize-url))
 
-Zero-allocation URL normalization utility for CP — clean-room MIT parity with npm `normalize-url`. Composes `prepend-http` with zero duplication.
+| Metadata | Value |
+| --- | --- |
+| Package | `normalize-url` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 URL 规范化库（对标 npm `normalize-url`），跨包复用 `prepend-http`，支持自动补全协议、协议与主机名小写化、去除默认端口（`http:80` / `https:443` / `ftp:21`）、去除 `www.`、折叠路径重复 `//`、解析 `.`/`..`、按需去除尾部 `/` 与 `#hash`。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add normalize-url
 ```
 
-## Dependencies / 跨包复用
+```cp
+import {
+    NormalizeUrlOptions,
+    NurlSegment,
+    defaultNormalizeUrlOptions,
+    nurlWriteByte,
+    nurlWriteLower,
+    nurlFindSchemeSep,
+    nurlIsDefaultPort,
+    nurlNormalizePath,
+} from "normalize-url";
+```
 
-- `prepend-http`: 自动补全协议与协议相对 URL 检测
+## Core API
 
-## API
+### Data Structures
 
-| Symbol | Signature | Description |
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `NormalizeUrlOptions` | `struct { default_https, strip_www, strip_hash, remove_trailing_slash, remove_default_port, normalize_protocol }` | Normalization options struct |
-| `defaultNormalizeUrlOptions` | `(): NormalizeUrlOptions` | Returns default options (`default_https: false`, `strip_www: true`, `strip_hash: false`, `remove_trailing_slash: true`, `remove_default_port: true`, `normalize_protocol: true`) |
-| `normalizeUrl` | `(url: string, out: []u8): usize` | Normalizes `url` with default options into `out` |
-| `normalizeUrlWithOptions` | `(url: string, opts: NormalizeUrlOptions, out: []u8): usize` | Normalizes `url` with custom `NormalizeUrlOptions` into `out` |
+| `NormalizeUrlOptions` | `class` | Fields: `default_https: bool, strip_www: bool, strip_hash: bool, remove_trailing_slash: bool, remove_default_port: bool, normalize_protocol: bool` |
+| `NurlSegment` | `class` | Fields: `start: usize, end: usize` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `defaultNormalizeUrlOptions` | `(): NormalizeUrlOptions` | Invokes `defaultNormalizeUrlOptions` and returns `NormalizeUrlOptions`. |
+| `nurlWriteByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `nurlWriteByte` and returns `usize`. |
+| `nurlWriteLower` | `(out: []u8, pos: usize, s: string): usize` | Invokes `nurlWriteLower` and returns `usize`. |
+| `nurlFindSchemeSep` | `(s: string): usize` | Invokes `nurlFindSchemeSep` and returns `usize`. |
+| `nurlIsDefaultPort` | `(scheme: string, port: string): bool` | Invokes `nurlIsDefaultPort` and returns `bool`. |
+| `nurlNormalizePath` | `(raw_path: string, remove_trailing_slash: bool, has_query_or_hash: bool, out: []u8, start_pos: usize): usize` | Invokes `nurlNormalizePath` and returns `usize`. |
+| `normalizeUrlWithOptions` | `(url: string, opts: NormalizeUrlOptions, out: []u8): usize` | Invokes `normalizeUrlWithOptions` and returns `usize`. |
+| `normalizeUrl` | `(url: string, out: []u8): usize` | Invokes `normalizeUrl` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { normalizeUrl, normalizeUrlWithOptions, defaultNormalizeUrlOptions } from "normalize-url";
+import { nurlWriteLower } from "normalize-url";
 
-let buf: [256]u8 = undefined;
-const n1 = normalizeUrl("HTTP://WWW.Example.COM:80/foo//bar/../baz/", buf[0..256]);
-// "http://example.com/foo/baz"
-
-let opts = defaultNormalizeUrlOptions();
-opts.default_https = true;
-opts.strip_hash = true;
-const n2 = normalizeUrlWithOptions("www.sindresorhus.com/a/./b/#top", opts, buf[0..256]);
-// "https://sindresorhus.com/a/b"
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = nurlWriteLower(out_buf[0..256], 0, "example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

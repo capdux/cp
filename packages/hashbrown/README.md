@@ -1,18 +1,66 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # hashbrown
+
+Zero-heap SwissTable-style control-byte hash map and hash set (clean-room CP implementation of crates.io #1 hashbrown)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:hashbrown` ([https://github.com/rust-lang/hashbrown](https://github.com/rust-lang/hashbrown))
 
-零堆分配的 CP 原生 SwissTable 风格控制字节哈希表与集合，Clean-Room MIT 实现对标 crates.io **全站第 1 名**包 `hashbrown`（32.6 亿+ 下载），跨包复用 `@sindresorhus/fnv1a`。
+| Metadata | Value |
+| --- | --- |
+| Package | `hashbrown` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- 1 字节 H2 控制标签数组（`0x80` 空槽 / `0xFE` 墓碑 / `0x00..0x7F` H2 哈希指纹）高速缓存友好探测
-- `HashMapU64`（128 槽、75% 负载上限 96 项）：O(1) `insert`/`get`/`containsKey`/`remove`/`clear`
-- `HashSetU64`：基于 `HashMapU64` 的零重复集合封装
+```bash
+cap add hashbrown
+```
 
-## 致谢
+```cp
+import {
+    HbGetResult,
+    HbInsertResult,
+    HashMapU64,
+    HashSetU64,
+    hbHashU64,
+    hbH2,
+} from "hashbrown";
+```
 
-Clean-Room MIT 实现，架构灵感对标开源生态 [`rust-lang/hashbrown`](https://github.com/rust-lang/hashbrown)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `HbGetResult` | `class` | Fields: `found: bool, value: i64` |
+| `HbInsertResult` | `class` | Fields: `ok: bool, replaced: bool, old_value: i64` |
+| `HashMapU64` | `class` | Fields: `ctrl: [128]u8, keys: [128]u64, vals: [128]i64, used: usize` · Methods: `new, len, capacity, isEmpty, clear, findSlot, +4 more` |
+| `HashSetU64` | `class` | Fields: `inner: HashMapU64` · Methods: `new, len, isEmpty, clear, insert, contains, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hbHashU64` | `(key: u64): u64` | Invokes `hbHashU64` and returns `u64`. |
+| `hbH2` | `(h: u64): u8` | Invokes `hbH2` and returns `u8`. |
+
+## Minimal Example
+
+```cp
+import { hbHashU64 } from "hashbrown";
+
+pub fn main() {
+    let result = hbHashU64(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

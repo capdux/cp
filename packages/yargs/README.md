@@ -1,44 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # yargs
+
+Zero-allocation CLI application framework (npm yargs v17 parity) composing yargs-parser, cliui, and y18n for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:yargs` ([https://github.com/yargs/yargs](https://github.com/yargs/yargs))
 
-Zero-allocation CLI application framework for CP — clean-room MIT parity with npm `yargs` v17. Composes `yargs-parser`, `cliui`, and `y18n` with zero duplication.
+| Metadata | Value |
+| --- | --- |
+| Package | `yargs` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配命令行框架（对标 npm `yargs` v17），完整串联 `yargs-parser`（参数解析与驼峰/连字符键映射）、`cliui`（多列帮助排版引擎）与 `y18n`（国际化提示与报错文案）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add yargs
 ```
 
-## Dependencies / 跨包复用
+```cp
+import {
+    OptionSpec,
+    CommandSpec,
+    YargsResult,
+    YargsApp,
+    ygStrEq,
+    ygAppendBytes,
+    ygAppendByte,
+    ygCopyBuf,
+} from "yargs";
+```
 
-- `yargs-parser`: 命令行参数解析、短组合标志、`--` 透传与驼峰/连字符键查询
-- `cliui`: 多列终端排版与自动换行帮助菜单
-- `y18n`: 内置多语言标题、类型标签与必填校验错误格式化
+## Core API
 
-## API
+### Data Structures
 
-| Symbol | Signature | Description |
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `OptionSpec` | `struct` + `.boolOpt` / `.intOpt` / `.strOpt` | Option schema with short alias, type, default & required flag |
-| `CommandSpec` | `struct { name: string, desc: string }` | Subcommand definition |
-| `YargsResult` | `struct` | Parsed CLI result (`args`, `command`, `show_help`, `show_version`, `ok`, `error_msg`) |
-| `YargsApp` | `struct` + `.new` / `.usage` / `.command` / `.option` / `.parse` / `.renderHelp` | Full CLI app builder, validator & help renderer |
+| `OptionSpec` | `class` | Fields: `name: string, alias_ch: u8, desc: string, kind: u8, required: bool, default_str: string, +2 more` · Methods: `boolOpt, intOpt, strOpt` |
+| `CommandSpec` | `class` | Fields: `name: string, desc: string` |
+| `YargsResult` | `class` | Fields: `args: ParsedArgs, command: [64]u8, command_len: usize, show_help: bool, show_version: bool, ok: bool, +2 more` · Methods: `hasCommand, commandName, errorMessage, has, getBool, getInt, +5 more` |
+| `YargsApp` | `class` | Fields: `script_name: string, usage_text: string, version_str: string, commands: [16]CommandSpec, cmd_count: usize, options: [24]OptionSpec, +2 more` · Methods: `new, usage, command, option, setTranslation, parse, +1 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ygStrEq` | `(a: string, b: string): bool` | Invokes `ygStrEq` and returns `bool`. |
+| `ygAppendBytes` | `(dst: []u8, pos: usize, s: string): usize` | Invokes `ygAppendBytes` and returns `usize`. |
+| `ygAppendByte` | `(dst: []u8, pos: usize, b: u8): usize` | Invokes `ygAppendByte` and returns `usize`. |
+| `ygCopyBuf` | `(dst: []u8, src: string): usize` | Invokes `ygCopyBuf` and returns `usize`. |
+| `ygInsertEntry` | `(parsed: &mut ParsedArgs, name: string, kind: u8, bool_val: bool, int_val: i64, str_val: string)` | Executes `ygInsertEntry` in-place. |
+
+## Minimal Example
 
 ```cp
-import { YargsApp, OptionSpec } from "yargs";
+import { ygStrEq } from "yargs";
 
-let app = YargsApp.new("cap-cli", "1.0.0");
-app.command("serve", "Start HTTP server");
-app.option(OptionSpec.intOpt("port", 'p' as u8, "Listen port", 3000, false));
-
-const argv: [3]string = ["serve", "-p", "8080"];
-const res = app.parse(argv[0..3]); // command == "serve", port == 8080
+pub fn main() {
+    let result = ygStrEq("example", "example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

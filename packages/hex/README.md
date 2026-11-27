@@ -1,42 +1,70 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # hex
+
+Zero-allocation hexadecimal encoder/decoder, fixed-width integer hex formatter, and canonical HexDump utility for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:hex` ([https://github.com/KokaKiwi/rust-hex](https://github.com/KokaKiwi/rust-hex))
 
-Zero-allocation hexadecimal encoder/decoder, fixed-width `u32`/`u64` hex formatters, and canonical 16-bytes/line HexDump utility for CP — clean-room MIT parity with Rust `hex`.
+| Metadata | Value |
+| --- | --- |
+| Package | `hex` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 十六进制编解码与 HexDump 调试引擎，支持大小写编码、严格解码与 `0x`/`0X` 前缀、定长 32/64 位整数十六进制格式化以及经典 16 字节/行 Hex+ASCII 调试转储（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add hex
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `encodeHex` / `encodeHexUpper` | `(input: string, out: []u8) -> string` | 小写 / 大写十六进制编码 |
-| `decodeHex` | `(hex_str: string, out: []u8) -> string?` | 严格解码（校验偶数长度、合法字符集与缓冲区容量） |
-| `decodeHexPrefixed` | `(hex_str: string, out: []u8) -> string?` | 支持可选 `0x`/`0X` 前缀的十六进制解码 |
-| `isValidHex` | `(s: string) -> bool` | 校验字符串是否为合法偶数长度十六进制 |
-| `encodeU32Hex` / `encodeU64Hex` | `(v, out: []u8) -> string` | 定长 8 / 16 字符大端小写十六进制编码 |
-| `hexDump` | `(data: string, out: []u8) -> string` | 16 字节/行 Canonical Hex+ASCII 调试转储 |
-
-## Usage / 使用示例
-
 ```cp
-import { encodeHex, decodeHexPrefixed, encodeU32Hex, hexDump } from "hex";
-
-let buf: [128]u8 = undefined;
-const enc = encodeHex("Hello", buf[0..128]);                // "48656c6c6f"
-const dec = decodeHexPrefixed("0x48656c6c6f", buf[0..128]); // "Hello"
-const u32h = encodeU32Hex(0x00ff12ab, buf[0..128]);         // "00ff12ab"
+import {
+    appendByte,
+    encodeHex,
+    encodeHexUpper,
+    isValidHex,
+    decodeHex,
+    decodeHexPrefixed,
+    encodeU32Hex,
+    encodeU64Hex,
+} from "hex";
 ```
 
-## License
+## Core API
 
-MIT
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `encodeHex` | `(input: string, out: []u8): string` | Serializes/formats data via `encodeHex` returning `string`. |
+| `encodeHexUpper` | `(input: string, out: []u8): string` | Serializes/formats data via `encodeHexUpper` returning `string`. |
+| `isValidHex` | `(s: string): bool` | Checks predicate `isValidHex` and returns `bool`. |
+| `decodeHex` | `(hex_str: string, out: []u8): string?` | Parses input via `decodeHex` and returns `string?`. |
+| `decodeHexPrefixed` | `(hex_str: string, out: []u8): string?` | Parses input via `decodeHexPrefixed` and returns `string?`. |
+| `encodeU32Hex` | `(v: u32, out: []u8): string` | Serializes/formats data via `encodeU32Hex` returning `string`. |
+| `encodeU64Hex` | `(v: u64, out: []u8): string` | Serializes/formats data via `encodeU64Hex` returning `string`. |
+| `hexDump` | `(data: string, out: []u8): string` | Invokes `hexDump` and returns `string`. |
+
+## Minimal Example
+
+```cp
+import { encodeHex } from "hex";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = encodeHex("example", out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

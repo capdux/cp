@@ -1,35 +1,74 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # foldhash
+
+Zero-allocation 64x64->128-bit folded-multiply non-cryptographic hasher with Fast and Quality modes (Rust foldhash parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:foldhash` ([https://github.com/orlp/foldhash](https://github.com/orlp/foldhash))
 
-Zero-allocation 64×64→128-bit folded-multiply non-cryptographic hasher with Fast & Quality modes for CP — clean-room MIT parity with Rust `foldhash` (895M downloads, default hasher in `hashbrown` 0.15+).
+| Metadata | Value |
+| --- | --- |
+| Package | `foldhash` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配高速抗碰撞非加密哈希引擎，基于纯 64 位整数拆半实现的精确 128-bit 折叠乘法 `foldedMultiply(x, y) = lo ^ hi`，提供 Fast（内存哈希表极速模式）与 Quality（双轮雪崩高熵模式）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add foldhash
 ```
 
-## API
+```cp
+import {
+    FoldHasher,
+    makeU64,
+    addWrap64,
+    foldedMultiply,
+    byteShift64,
+    initFoldSeed,
+    initAccum,
+    hashBytesFast,
+} from "foldhash";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `foldedMultiply` | `(x: u64, y: u64) -> u64` | Exact 64×64→128-bit multiply returning `lo ^ hi` |
-| `FoldHasher` | `initFast(seed)`, `initQuality(seed)`, `writeU8`, `writeU32`, `writeU64`, `writeBytes`, `finish() -> u64` | Streaming sponge-buffered hasher |
-| `hashBytesFast` | `(data: []const u8, seed: u64) -> u64` | One-shot Fast byte-slice hash |
-| `hashBytesQuality` | `(data: []const u8, seed: u64) -> u64` | One-shot Quality byte-slice hash |
-| `hashU64` | `(v: u64, seed: u64) -> u64` | One-shot `u64` hash |
+| `FoldHasher` | `class` | Fields: `accum: u64, sponge: u64, sponge_len: u8, fold_seed: u64, quality: bool, total_len: u64` · Methods: `initFast, initQuality, writeU8, writeU32, writeU64, writeBytes, +1 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `makeU64` | `(hi: u32, lo: u32): u64` | Invokes `makeU64` and returns `u64`. |
+| `addWrap64` | `(a: u64, b: u64): u64` | Mutates or appends state via `addWrap64`. |
+| `foldedMultiply` | `(x: u64, y: u64): u64` | Invokes `foldedMultiply` and returns `u64`. |
+| `byteShift64` | `(idx: u8): u64` | Invokes `byteShift64` and returns `u64`. |
+| `initFoldSeed` | `(seed: u64): u64` | Constructs/initializes an instance via `initFoldSeed`. |
+| `initAccum` | `(seed: u64): u64` | Constructs/initializes an instance via `initAccum`. |
+| `hashBytesFast` | `(data: &[]u8, seed: u64): u64` | Checks predicate `hashBytesFast` and returns `bool`. |
+| `hashBytesQuality` | `(data: &[]u8, seed: u64): u64` | Checks predicate `hashBytesQuality` and returns `bool`. |
+| `hashU64` | `(v: u64, seed: u64): u64` | Checks predicate `hashU64` and returns `bool`. |
+
+## Minimal Example
 
 ```cp
-import { FoldHasher, hashBytesFast, hashBytesQuality, foldedMultiply } from "foldhash";
+import { hashBytesFast } from "foldhash";
 
-const h1 = hashBytesFast("hello world", 42 as u64);
-const h2 = hashBytesQuality("hello world", 42 as u64);
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = hashBytesFast(out_buf[0..256], 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

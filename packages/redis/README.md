@@ -1,25 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# redis
+
+Zero-allocation Redis / Valkey / Sentinel connection URL parser (redis://, rediss://, unix://) and password-redacting formatter for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **crates.io** [`redis`](https://github.com/redis-rs/redis-rs)（`BSD-3-Clause`）（原库名 `redis`，CP 包名 `redis`）。
 
-# redis
+| Metadata | Value |
+| --- | --- |
+| Package | `redis` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation Redis / Valkey / Sentinel connection URL parser (`redis://`, `rediss://`, `redis+unix://`, `unix://`) and password-redacting formatter for CP.
+## Installation & Import
 
-## Features
-
-- **Zero heap allocation**: zero-copy `RedisConfig` slicing and caller-supplied `[]u8` formatting buffer.
-- **Full connection syntax**: TLS (`rediss://`), Redis 6+ ACL (`user:pass@`), password-only (`:pass@`), bracketed IPv6 (`[::1]:6380`), Unix domain sockets (`redis+unix://`, `unix://`), `/db` path, and `?db=N` query override.
-- **Safe log redaction**: `formatRedisUrl(cfg, true, out)` replaces credentials with `***` to prevent secret leakage.
-
-## Usage
+```bash
+cap add redis
+```
 
 ```cp
-import { parseRedisUrl, formatRedisUrl } from "redis";
-
-const cfg = parseRedisUrl("rediss://alice:s3cr3t@cache.internal:6380/3");
-let buf: [128]u8 = undefined;
-const n = formatRedisUrl(cfg, true, buf[0..128]);
-// "rediss://alice:***@cache.internal:6380/3"
+import {
+    RedisConfig,
+    ruStartsWithIgnoreCase,
+    ruParseStrictU16,
+    ruWrite,
+    ruWriteU16,
+    parseRedisUrl,
+    formatRedisUrl,
+} from "redis";
 ```
+
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RedisConfig` | `class` | Fields: `tls: bool, is_unix: bool, host: string, port: u16, username: string, password: string, +3 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ruStartsWithIgnoreCase` | `(s: string, prefix: string): bool` | Invokes `ruStartsWithIgnoreCase` and returns `bool`. |
+| `ruParseStrictU16` | `(s: string): u16?` | Invokes `ruParseStrictU16` and returns `u16?`. |
+| `ruWrite` | `(out: []u8, pos: &mut usize, src: string): bool` | Invokes `ruWrite` and returns `bool`. |
+| `ruWriteU16` | `(out: []u8, pos: &mut usize, val: u16): bool` | Invokes `ruWriteU16` and returns `bool`. |
+| `parseRedisUrl` | `(url: string): RedisConfig` | Parses input via `parseRedisUrl` and returns `RedisConfig`. |
+| `formatRedisUrl` | `(cfg: RedisConfig, redact_password: bool, out: []u8): usize` | Serializes/formats data via `formatRedisUrl` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { parseRedisUrl } from "redis";
+
+pub fn main() {
+    let result = parseRedisUrl("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

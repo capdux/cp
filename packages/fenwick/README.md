@@ -1,38 +1,55 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # fenwick
+
+Zero-allocation Binary Indexed Tree (Fenwick Tree) with O(log N) prefix/range sums and binary-lifting lowerBound for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:fenwick` ([https://github.com/pwoolcoc/fenwick](https://github.com/pwoolcoc/fenwick))
 
-Zero-allocation Binary Indexed Tree (Fenwick Tree) with O(log N) prefix/range sums, O(N) linear construction, and O(log N) binary-lifting `lowerBound` for CP — clean-room MIT parity with Rust `fenwick`.
+| Metadata | Value |
+| --- | --- |
+| Package | `fenwick` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配树状数组（最大容量 256），支持 O(log N) 前缀和/区间和查询、单点增量/赋值更新与 O(log N) 二分提升排名统计，适用于实时指标统计、频率直方图、限流与顺序统计。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add fenwick
 ```
 
-## API
+```cp
+import { FenwickTree, lowbit } from "fenwick";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `FenwickTree.init` | `(len: usize) -> FenwickTree` | Create zeroed tree (clamped to 256) |
-| `FenwickTree.fromSlice` | `(values: []const i64) -> FenwickTree` | O(N) linear-time construction |
-| `len` / `total` / `reset` | `()` | Size, full sum, and zero reset |
-| `add` / `set` / `get` | `(idx: usize, ...)` | 0-based point update and query |
-| `prefixSum` / `rangeSum` | `(start, end_exclusive) -> i64` | Half-open `[0, end)` and `[start, end)` sums |
-| `lowerBound` | `(target: i64) -> usize` | O(log N) binary-lifting smallest `idx` with `prefixSum(idx + 1) >= target` |
+| `FenwickTree` | `class` | Fields: `tree: [TREE_LEN]i64, length: usize` · Methods: `init, fromSlice, len, add, prefixSum, rangeSum, +5 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `lowbit` | `(x: usize): usize` | Invokes `lowbit` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { FenwickTree } from "fenwick";
+import { lowbit } from "fenwick";
 
-const weights: [4]i64 = [2, 3, 5, 10];
-let ft = FenwickTree.fromSlice(weights[0..4]);
-const sum = ft.rangeSum(1 as usize, 3 as usize); // 8
-const k = ft.lowerBound(6 as i64);               // 2 (prefixSum(3) == 10 >= 6)
+pub fn main() {
+    let result = lowbit(0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

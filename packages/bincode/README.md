@@ -1,42 +1,64 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # bincode
+
+Zero-allocation bincode v2 compact binary serializer & zero-copy decoder (LE varint, ZigZag signed ints, length-prefixed strings, Option, fixed LE integers — Rust bincode parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bincode` ([https://github.com/bincode-org/bincode](https://github.com/bincode-org/bincode))
 
-零堆分配的 CP 紧凑二进制序列化与零拷贝反序列化引擎 — 洁净室 MIT 实现，对标 Rust crates.io #381 `bincode` v2（3.91 亿+ 总下载），专为高性能 RPC 与持久化打造。
+| Metadata | Value |
+| --- | --- |
+| Package | `bincode` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation bincode v2 compact binary serializer & zero-copy decoder for CP — clean-room MIT parity with Rust `bincode` v2 (391M+ downloads).
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add bincode
 ```
 
-## API 参考 / API Reference
-
-- **`BincodeEncoder`**：`init(out)`, `asSlice()`, `encodeBool`, `encodeU64` (v2 varint), `encodeI64` (ZigZag + varint), `encodeStr`, `encodeOptStr`, `encodeFixedU32`, `encodeFixedU64`
-- **`BincodeDecoder`**：`init(data)`, `remaining()`, `atEnd()`, `decodeBool`, `decodeU64`, `decodeI64`, `decodeStr`（零拷贝）, `decodeOptStr` (`OptStrResult`), `decodeFixedU32`, `decodeFixedU64`
-
-## 使用示例 / Usage
-
 ```cp
-import { BincodeEncoder, BincodeDecoder } from "bincode";
-
-let buf: [128]u8 = undefined;
-let enc = BincodeEncoder.init(buf[0..128]);
-* = enc.encodeU64(42 as u64);
-* = enc.encodeI64(-100);
-* = enc.encodeStr("cap-rpc");
-
-let decoder = BincodeDecoder.init(enc.asSlice());
-const id = decoder.decodeU64().?;     // 42
-const delta = decoder.decodeI64().?;  // -100
-const tag = decoder.decodeStr().?;    // "cap-rpc"
+import {
+    OptStrResult,
+    BincodeEncoder,
+    BincodeDecoder,
+    zigzagEncode,
+    zigzagDecode,
+} from "bincode";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `OptStrResult` | `class` | Fields: `ok: bool, has_value: bool, value: string` |
+| `BincodeEncoder` | `class` | Fields: `out: []u8, pos: usize, overflow: bool` · Methods: `init, asSlice, writeByte, encodeBool, encodeFixedU32, encodeFixedU64, +4 more` |
+| `BincodeDecoder` | `class` | Fields: `data: string, pos: usize` · Methods: `init, remaining, atEnd, decodeBool, decodeFixedU32, decodeFixedU64, +4 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `zigzagEncode` | `(v: i64): u64` | Invokes `zigzagEncode` and returns `u64`. |
+| `zigzagDecode` | `(u: u64): i64` | Invokes `zigzagDecode` and returns `i64`. |
+
+## Minimal Example
+
+```cp
+import { zigzagEncode } from "bincode";
+
+pub fn main() {
+    let result = zigzagEncode(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

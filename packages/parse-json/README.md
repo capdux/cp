@@ -1,46 +1,96 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # parse-json
+
+Zero-allocation RFC 8259 JSON diagnostic validator with line/column locations and codeFrame rendering (npm parse-json v8 parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:parse-json` ([https://github.com/sindresorhus/parse-json](https://github.com/sindresorhus/parse-json))（原库名 `parse-json` → CP 包名 `parse-json`）
 
-Zero-allocation RFC 8259 JSON diagnostic validator with precise line/column reporting and code frame rendering for CP — clean-room MIT implementation inspired by Sindre Sorhus `parse-json` v8.
+| Metadata | Value |
+| --- | --- |
+| Package | `parse-json` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 JSON 诊断验证器（对标 `parse-json` v8），严格执行 RFC 8259 递归下降校验，精准定位首个语法错误的字节偏移与 1-based 行列号，专项识别尾逗号、单引号字符串、未加引号键名、前导零与未转义控制字符，并渲染带 `^` 指示符的 `codeFrame`。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add parse-json
 ```
 
-## API
+```cp
+import {
+    JsonDiagKind,
+    JsonDiagResult,
+    PjsParser,
+    PjsLoc,
+    PjsLineSpan,
+    PjsWriter,
+    pjsIsWs,
+    pjsIsDigit,
+} from "parse-json";
+```
 
-### Enums, Constants & Structs / 核心类型与常量
+## Core API
 
-| Symbol | Description |
-| --- | --- |
-| `JsonDiagKind` | `Ok`, `EmptyInput`, `UnexpectedToken`, `UnexpectedEnd`, `TrailingComma`, `SingleQuotedString`, `UnquotedKey`, `LeadingZero`, `UnescapedControlChar`, `MaxDepthExceeded` |
-| `JsonDiagResult` | `struct { ok: bool, kind: JsonDiagKind, offset: usize, line: usize, column: usize, value_kind: u8 }` |
-| `JSON_VAL_*` | Value kind tags (`NONE=0`, `OBJECT=1`, `ARRAY=2`, `STRING=3`, `NUMBER=4`, `BOOL=5`, `NULL=6`) |
+### Types, Enums & Errors
 
-### Functions / 核心函数
-
-| Symbol | Signature | Description |
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `validateJsonWithDiag` | `(input: string): JsonDiagResult` | Validate RFC 8259 JSON and report precise diagnostic kind, offset, 1-based line and column |
-| `formatJsonError` | `(input: string, diag: JsonDiagResult, filename: string, out: []u8): usize` | Render diagnostic message and `codeFrame` with line numbers and `^` caret into `out` |
+| `enum` | `JsonDiagKind` | `Ok, EmptyInput, UnexpectedToken, UnexpectedEnd, TrailingComma, SingleQuotedString, UnquotedKey, LeadingZero ...` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `JsonDiagResult` | `class` | Fields: `ok: bool, kind: JsonDiagKind, offset: usize, line: usize, column: usize, value_kind: u8` |
+| `PjsParser` | `class` | Fields: `input: string, pos: usize, has_err: bool, err_kind: JsonDiagKind, err_offset: usize` |
+| `PjsLoc` | `class` | Fields: `line: usize, column: usize` |
+| `PjsLineSpan` | `class` | Fields: `found: bool, start: usize, end: usize` |
+| `PjsWriter` | `class` | Fields: `buf: []u8, pos: usize` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `pjsIsWs` | `(ch: u8): bool` | Invokes `pjsIsWs` and returns `bool`. |
+| `pjsIsDigit` | `(ch: u8): bool` | Invokes `pjsIsDigit` and returns `bool`. |
+| `pjsIsHex` | `(ch: u8): bool` | Invokes `pjsIsHex` and returns `bool`. |
+| `pjsIsIdentStart` | `(ch: u8): bool` | Invokes `pjsIsIdentStart` and returns `bool`. |
+| `pjsSkipWs` | `(p: &mut PjsParser)` | Executes `pjsSkipWs` in-place. |
+| `pjsSetErr` | `(p: &mut PjsParser, kind: JsonDiagKind, offset: usize)` | Executes `pjsSetErr` in-place. |
+| `pjsLineCol` | `(input: string, offset: usize): PjsLoc` | Invokes `pjsLineCol` and returns `PjsLoc`. |
+| `pjsParseString` | `(p: &mut PjsParser)` | Executes `pjsParseString` in-place. |
+| `pjsParseNumber` | `(p: &mut PjsParser)` | Executes `pjsParseNumber` in-place. |
+| `pjsExpectKeyword` | `(p: &mut PjsParser, kw: string)` | Executes `pjsExpectKeyword` in-place. |
+| `pjsParseValue` | `(p: &mut PjsParser, depth: usize): u8` | Invokes `pjsParseValue` and returns `u8`. |
+| `validateJsonWithDiag` | `(input: string): JsonDiagResult` | Validates input with `validateJsonWithDiag` returning `JsonDiagResult`. |
+| `pjsDiagMessage` | `(kind: JsonDiagKind): string` | Invokes `pjsDiagMessage` and returns `string`. |
+| `pjsWriteByte` | `(w: &mut PjsWriter, b: u8)` | Executes `pjsWriteByte` in-place. |
+| `pjsWriteStr` | `(w: &mut PjsWriter, s: string)` | Executes `pjsWriteStr` in-place. |
+| `pjsNumWidth` | `(n: usize): usize` | Invokes `pjsNumWidth` and returns `usize`. |
+| `pjsWriteUsize` | `(w: &mut PjsWriter, n: usize)` | Executes `pjsWriteUsize` in-place. |
+| `pjsWriteSpaces` | `(w: &mut PjsWriter, count: usize)` | Executes `pjsWriteSpaces` in-place. |
+| `pjsFindLineSpan` | `(input: string, target_line: usize): PjsLineSpan` | Invokes `pjsFindLineSpan` and returns `PjsLineSpan`. |
+| `pjsWriteFrameLine` | `(w: &mut PjsWriter, input: string, line_no: usize, span: PjsLineSpan, gutter_w: usize, is_err: bool)` | Executes `pjsWriteFrameLine` in-place. |
+| `formatJsonError` | `(input: string, diag: JsonDiagResult, filename: string, out: []u8): usize` | Serializes/formats data via `formatJsonError` returning `usize`. |
+
+## Minimal Example
 
 ```cp
-import { validateJsonWithDiag, formatJsonError, JsonDiagKind } from "parse-json";
+import { validateJsonWithDiag } from "parse-json";
 
-const bad = "{\n  \"a\": 1,\n}";
-const diag = validateJsonWithDiag(bad);
-// diag.ok == false, diag.kind == JsonDiagKind.TrailingComma, diag.line == 2, diag.column == 9
-
-let buf: [512]u8 = undefined;
-const n = formatJsonError(bad, diag, "config.json", buf[0..512]);
+pub fn main() {
+    let result = validateJsonWithDiag("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

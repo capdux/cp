@@ -1,19 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # colorette
+
+Zero-heap pure CP terminal ANSI color formatter with nested close-code recovery (clean-room MIT implementation of npm colorette v2)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:colorette` ([https://github.com/jorgebucaran/colorette](https://github.com/jorgebucaran/colorette))
 
-零堆分配的纯 CP 终端 ANSI 颜色格式化库，Clean-Room MIT 实现对标 npm Top 20 包 `colorette` v2（周下载 1.5 亿+），直接复用 `ansi-styles` 的 `StylePair` 常量，零重复实现。
+| Metadata | Value |
+| --- | --- |
+| Package | `colorette` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- **环境检测**：`isColorSupported(no_color, force_color, term, is_tty)` 完整遵循 `NO_COLOR`、`FORCE_COLOR`、`TERM=dumb` 与 TTY 规则
-- **实例构造**：`ColoretteOptions`、`createColors(use_color)` 与 `createColorsWithOptions(opts)`，支持一键开启或禁用透传
-- **完整样式集**：内置全部 SGR 修饰符、标准/亮前景色与标准/亮背景色方法
-- **嵌套还原**：支持嵌套 close-code 自动还原（含 `bold`/`dim` 的 `\x1b[22m` 特殊还原）与零堆 `[]u8` 缓冲安全截断
+```bash
+cap add colorette
+```
 
-## 致谢
+```cp
+import {
+    ColoretteOptions,
+    Colorette,
+    clrFormatPair,
+    isColorSupported,
+    createColors,
+    createColorsWithOptions,
+} from "colorette";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`jorgebucaran/colorette`](https://github.com/jorgebucaran/colorette)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ColoretteOptions` | `class` | Fields: `use_color: bool` · Methods: `enabled, disabled, fromEnv` |
+| `Colorette` | `class` | Fields: `options: ColoretteOptions` · Methods: `new, fromOptions, isEnabled, formatPair, reset, bold, +40 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `clrFormatPair` | `(use_color: bool, pair: StylePair, replace_with: string, text: string, out: []u8): usize` | Invokes `clrFormatPair` and returns `usize`. |
+| `isColorSupported` | `(no_color: string, force_color: string, term: string, is_tty: bool): bool` | Checks predicate `isColorSupported` and returns `bool`. |
+| `createColors` | `(use_color: bool): Colorette` | Constructs/initializes an instance via `createColors`. |
+| `createColorsWithOptions` | `(opts: ColoretteOptions): Colorette` | Constructs/initializes an instance via `createColorsWithOptions`. |
+
+## Minimal Example
+
+```cp
+import { isColorSupported } from "colorette";
+
+pub fn main() {
+    let result = isColorSupported("example", "example", "example", false);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

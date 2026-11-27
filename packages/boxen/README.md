@@ -1,57 +1,85 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # boxen
+
+Zero-allocation CLI terminal box renderer with 6 Unicode/ASCII border styles, embedded titles, alignment, CJK double-width & ANSI escape awareness (boxen parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:boxen` ([https://github.com/sindresorhus/boxen](https://github.com/sindresorhus/boxen))
 
-零堆分配的 CP CLI 终端边框盒子渲染引擎 — 洁净室 MIT 实现，对标 npm `boxen`。
+| Metadata | Value |
+| --- | --- |
+| Package | `boxen` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation CLI terminal box renderer for CP — clean-room MIT parity with npm `boxen`.
-
-## 特性 / Features
-
-- **6 种边框样式 / 6 Border Styles**：`Single`（`┌─┐│└┘`）、`Double`（`╔═╗║╚╝`）、`Round`（`╭─╮│╰╯`）、`Bold`（`┏━┓┃┗┛`）、`Classic`（`+-+|+-+`）、`SingleDouble`（`╓─╖║╙╜`）。
-- **标题嵌入与对齐 / Embedded Title & Alignment**：支持顶边框嵌入标题（如 `╭─ Status ───╮`），正文与标题均支持 `Left` / `Center` / `Right` 对齐，以及 `padding_x` / `padding_y` / `margin_left`。
-- **CJK 双宽与 ANSI 穿透 / CJK & ANSI Aware**：准确计算中文/全角/Emoji 宽字符宽度（宽度 2）并忽略 ANSI 颜色转义序列（`\x1b[...m`），保证多行右边框像素级对齐。
-- **零堆分配 / Zero Heap Allocation**：全部写入调用方 `out: []u8` 缓冲区。
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add boxen
 ```
 
-## API 参考 / API Reference
+```cp
+import {
+    BorderStyle,
+    TextAlign,
+    BoxOptions,
+    BorderChars,
+    Utf8Step,
+    borderForStyle,
+    decodeUtf8At,
+    codepointWidth,
+} from "boxen";
+```
 
-| 符号 / Symbol | 说明 / Description |
-| --- | --- |
-| `BorderStyle` | 枚举：`Single` / `Double` / `Round` / `Bold` / `Classic` / `SingleDouble` |
-| `TextAlign` | 枚举：`Left` / `Center` / `Right` |
-| `BoxOptions` | `{ style, text_align, padding_x, padding_y, margin_left, title, title_align }` + `defaults()` |
-| `renderBox(text, opts, out)` | 使用自定义选项渲染终端盒子 |
-| `box(text, out)` | 使用默认单线边框快速渲染 |
-| `titledBox(title, text, style, out)` | 快速渲染带顶边框标题的盒子 |
-| `displayWidth(s)` | 计算单行终端显示宽度（CJK 宽 2、忽略 ANSI 转义） |
+## Core API
 
-## 使用示例 / Usage
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `BorderStyle` | `Single, Double, Round, Bold, Classic, SingleDouble` |
+| `enum` | `TextAlign` | `Left, Center, Right` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BoxOptions` | `class` | Fields: `style: BorderStyle, text_align: TextAlign, padding_x: u8, padding_y: u8, margin_left: u8, title: string, +1 more` · Methods: `defaults` |
+| `BorderChars` | `class` | Fields: `tl: string, top: string, tr: string, left: string, right: string, bl: string, +2 more` |
+| `Utf8Step` | `class` | Fields: `cp: u32, width: usize` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `borderForStyle` | `(style: BorderStyle): BorderChars` | Invokes `borderForStyle` and returns `BorderChars`. |
+| `decodeUtf8At` | `(s: string, i: usize): Utf8Step` | Parses input via `decodeUtf8At` and returns `Utf8Step`. |
+| `codepointWidth` | `(cp: u32): usize` | Invokes `codepointWidth` and returns `usize`. |
+| `displayWidth` | `(s: string): usize` | Invokes `displayWidth` and returns `usize`. |
+| `pushByte` | `(out: []u8, pos: usize, b: u8): usize` | Mutates or appends state via `pushByte`. |
+| `pushStr` | `(out: []u8, pos: usize, s: string): usize` | Mutates or appends state via `pushStr`. |
+| `pushRepeat` | `(out: []u8, pos: usize, s: string, count: usize): usize` | Mutates or appends state via `pushRepeat`. |
+| `pushSpaces` | `(out: []u8, pos: usize, count: usize): usize` | Mutates or appends state via `pushSpaces`. |
+| `renderBox` | `(text: string, opts: BoxOptions, out: []u8): string` | Invokes `renderBox` and returns `string`. |
+| `box` | `(text: string, out: []u8): string` | Invokes `box` and returns `string`. |
+| `titledBox` | `(title: string, text: string, style: BorderStyle, out: []u8): string` | Invokes `titledBox` and returns `string`. |
+
+## Minimal Example
 
 ```cp
-import { box, titledBox, renderBox, BoxOptions, BorderStyle, TextAlign } from "boxen";
+import { decodeUtf8At } from "boxen";
 
-let buf: [1024]u8 = undefined;
-const out = titledBox("Status", "CP Runtime Ready!\nAll 100+ packages active", BorderStyle.Round, buf[0..1024]);
+pub fn main() {
+    let result = decodeUtf8At("example", 0);
+    _ = result;
+}
 ```
 
-输出效果 / Output:
+## CP Zero-Heap & Borrow-Safety Highlights
 
-```text
-╭─ Status ─────────────────╮
-│ CP Runtime Ready!        │
-│ All 100+ packages active │
-╰──────────────────────────╯
-```
-
-## License
-
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,36 +1,66 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `unicode-properties`
+# unicode-properties
+
+Zero-allocation Unicode character properties, UAX #31 identifier validation (XID_Start/XID_Continue), White_Space, Default_Ignorable, and UTS #51 Emoji classification in pure CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-properties` ([https://github.com/unicode-rs/unicode-properties](https://github.com/unicode-rs/unicode-properties))
 
-Zero-allocation Unicode character properties, UAX #31 identifier validation (`XID_Start` / `XID_Continue`), `White_Space`, `Default_Ignorable_Code_Point`, and UTS #51 Emoji classification in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `unicode-properties` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## API
+## Installation & Import
 
-- `isXidStart(cp: u32): bool` — Unicode `XID_Start` (ASCII letters, Latin Extended, Greek, Cyrillic, CJK Unified Ideographs, Hiragana, Katakana, Hangul, etc.)
-- `isXidContinue(cp: u32): bool` — Unicode `XID_Continue` (`XID_Start` + digits `0-9` + `_` + combining marks + connector punctuation)
-- `isUnicodeWhitespace(cp: u32): bool` — Exact match for all 25 Unicode `White_Space` codepoints (`U+0009..U+000D`, `U+0020`, `U+0085`, `U+00A0`, `U+1680`, `U+2000..U+200A`, `U+2028`, `U+2029`, `U+202F`, `U+205F`, `U+3000`)
-- `isEmoji(cp: u32): bool` — UTS #51 `Emoji` property
-- `isEmojiPresentation(cp: u32): bool` — UTS #51 `Emoji_Presentation` property (default colorful emoji presentation)
-- `isDefaultIgnorable(cp: u32): bool` — Unicode `Default_Ignorable_Code_Point` (`U+00AD`, `U+200B..U+200F`, `U+FEFF`, `U+FE00..U+FE0F`, etc.)
-- `isValidIdentifier(s: string): bool` — Strict UTF-8 validation for Unicode identifiers (`_` or `XID_Start`, followed by `XID_Continue*`)
-
-## Example
+```bash
+cap add unicode-properties
+```
 
 ```cp
 import {
+    decodeUtf8Strict,
     isXidStart,
     isXidContinue,
     isUnicodeWhitespace,
-    isEmoji,
     isEmojiPresentation,
+    isEmoji,
     isDefaultIgnorable,
     isValidIdentifier,
 } from "unicode-properties";
-
-const ok = isValidIdentifier("变量_αβ1"); // true
-const ws = isUnicodeWhitespace(0x3000 as u32); // true (ideographic space)
-const rocket = isEmojiPresentation(0x1F680 as u32); // true (🚀)
 ```
+
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `decodeUtf8Strict` | `(s: string, pos: usize, next_pos: &mut usize): u32` | Parses input via `decodeUtf8Strict` and returns `u32`. |
+| `isXidStart` | `(cp: u32): bool` | Checks predicate `isXidStart` and returns `bool`. |
+| `isXidContinue` | `(cp: u32): bool` | Checks predicate `isXidContinue` and returns `bool`. |
+| `isUnicodeWhitespace` | `(cp: u32): bool` | Checks predicate `isUnicodeWhitespace` and returns `bool`. |
+| `isEmojiPresentation` | `(cp: u32): bool` | Checks predicate `isEmojiPresentation` and returns `bool`. |
+| `isEmoji` | `(cp: u32): bool` | Checks predicate `isEmoji` and returns `bool`. |
+| `isDefaultIgnorable` | `(cp: u32): bool` | Checks predicate `isDefaultIgnorable` and returns `bool`. |
+| `isValidIdentifier` | `(s: string): bool` | Checks predicate `isValidIdentifier` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { decodeUtf8Strict } from "unicode-properties";
+
+pub fn main() {
+    let result = decodeUtf8Strict("example", 0, /* next_pos: &mut usize */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

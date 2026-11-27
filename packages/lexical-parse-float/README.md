@@ -1,34 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # lexical-parse-float
+
+Zero-allocation pure CP strict floating-point and radix integer string parser (rust-lexical lexical-parse-float / lexical-parse-integer / lexical-util parity)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:lexical-parse-float` ([https://github.com/Alexhuszagh/rust-lexical](https://github.com/Alexhuszagh/rust-lexical))
 
-Zero-allocation pure CP strict floating-point and radix integer string parser — clean-room parity with `rust-lexical` (`lexical-parse-float`, `lexical-parse-integer`, and `lexical-util`, 158.3M+ downloads on crates.io, MIT).
+| Metadata | Value |
+| --- | --- |
+| Package | `lexical-parse-float` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配严格数值字符串解析器，支持带符号浮点数、科学计数法（`e`/`E`）、`inf`/`-inf`/`nan` 特殊值、2..36 进制有符号整数解析与严格 `i64` 溢出校验，并拒绝空串与尾随垃圾字符。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add lexical-parse-float
 ```
 
-## API
+```cp
+import {
+    ParseFloatResult,
+    ParseIntResult,
+    lexpToLower,
+    lexpEqIgnoreCase,
+    lexpDecodeDigit,
+    lexpScalePow10,
+    parseFloat,
+    parseIntRadix,
+} from "lexical-parse-float";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `ParseFloatResult` | `struct { ok: bool; value: f64; consumed: usize; }` | Floating-point parse result |
-| `ParseIntResult` | `struct { ok: bool; value: i64; consumed: usize; }` | Signed integer parse result |
-| `parseFloat` | `(s: string): ParseFloatResult` | Strictly parse `f64` (sign, decimal, scientific, `inf`/`nan`) |
-| `parseIntRadix` | `(s: string, radix: u32): ParseIntResult` | Strictly parse `i64` in radix `2..=36` with overflow protection |
+| `ParseFloatResult` | `class` | Fields: `ok: bool, value: f64, consumed: usize` |
+| `ParseIntResult` | `class` | Fields: `ok: bool, value: i64, consumed: usize` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `lexpToLower` | `(c: u8): u8` | Invokes `lexpToLower` and returns `u8`. |
+| `lexpEqIgnoreCase` | `(a: string, b: string): bool` | Invokes `lexpEqIgnoreCase` and returns `bool`. |
+| `lexpDecodeDigit` | `(c: u8): i32` | Invokes `lexpDecodeDigit` and returns `i32`. |
+| `lexpScalePow10` | `(val_in: f64, exp10: i32): f64` | Invokes `lexpScalePow10` and returns `f64`. |
+| `parseFloat` | `(s: string): ParseFloatResult` | Parses input via `parseFloat` and returns `ParseFloatResult`. |
+| `parseIntRadix` | `(s: string, radix: u32): ParseIntResult` | Parses input via `parseIntRadix` and returns `ParseIntResult`. |
+
+## Minimal Example
 
 ```cp
-import { parseFloat, parseIntRadix } from "lexical-parse-float";
+import { parseFloat } from "lexical-parse-float";
 
-const f = parseFloat("-3.14159e2");
-const i = parseIntRadix("ff", 16);
+pub fn main() {
+    let result = parseFloat("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

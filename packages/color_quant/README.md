@@ -1,35 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # color_quant
+
+Zero-allocation pure CP 256-color palette quantizer and nearest-color mapper (image-rs color_quant parity)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:color_quant` ([https://github.com/image-rs/color_quant](https://github.com/image-rs/color_quant))
 
-Zero-allocation pure CP 256-color palette quantizer, 6x6x6 Web-safe + grayscale uniform palette builder, 3-3-2 histogram quantizer, and nearest-color pixel mapper — clean-room parity with `image-rs/color_quant` (173.6M+ downloads on crates.io, MIT).
+| Metadata | Value |
+| --- | --- |
+| Package | `color_quant` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 256 色图像调色板量化器，提供标准 6×6×6 Web-safe + 40 级灰度 256 色调色板、3-3-2 量化桶聚合与均值代表色提取，以及欧氏距离平方最小最近色索引映射。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add color_quant
 ```
 
-## API
+```cp
+import {
+    Rgb8,
+    ColorPalette,
+    clqtEmptyPalette,
+    clqtBucketIndex,
+    buildUniformPalette,
+    quantizeHistogram,
+    mapPixelsToPalette,
+} from "color_quant";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `Rgb8` | `struct { r: u8; g: u8; b: u8; }` | 24-bit RGB color |
-| `ColorPalette` | `struct { colors: [256]Rgb8; len: usize; fn nearestIndex(px: Rgb8): u8 }` | Fixed-capacity 256-color palette with nearest-color lookup |
-| `buildUniformPalette` | `(): ColorPalette` | Build 6x6x6 Web-safe + 40-step grayscale 256-color palette |
-| `quantizeHistogram` | `(pixels: []const Rgb8, max_colors: usize): ColorPalette` | 3-3-2 bucket histogram quantization with mean representative colors |
-| `mapPixelsToPalette` | `(pixels: []const Rgb8, pal: ColorPalette, out_indices: []u8): usize` | Map RGB pixels to palette indices |
+| `Rgb8` | `class` | Fields: `r: u8, g: u8, b: u8` |
+| `ColorPalette` | `class` | Fields: `colors: [256]Rgb8, len: usize` · Methods: `nearestIndex` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `clqtEmptyPalette` | `(): ColorPalette` | Invokes `clqtEmptyPalette` and returns `ColorPalette`. |
+| `clqtBucketIndex` | `(px: Rgb8): usize` | Invokes `clqtBucketIndex` and returns `usize`. |
+| `buildUniformPalette` | `(): ColorPalette` | Invokes `buildUniformPalette` and returns `ColorPalette`. |
+| `quantizeHistogram` | `(pixels: &[]Rgb8, max_colors: usize): ColorPalette` | Invokes `quantizeHistogram` and returns `ColorPalette`. |
+| `mapPixelsToPalette` | `(pixels: &[]Rgb8, pal: ColorPalette, out_indices: []u8): usize` | Invokes `mapPixelsToPalette` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { Rgb8, buildUniformPalette, quantizeHistogram, mapPixelsToPalette } from "color_quant";
+import { clqtEmptyPalette } from "color_quant";
 
-const pal = buildUniformPalette();
-const idx = pal.nearestIndex(Rgb8{ r: 255, g: 0, b: 0 });
+pub fn main() {
+    let result = clqtEmptyPalette();
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

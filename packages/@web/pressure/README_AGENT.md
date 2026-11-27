@@ -1,17 +1,57 @@
-# @web/pressure@1.0.0 (Agent Quickref)
+# @web/pressure — AI Agent Quick Ref
 
-> Official overload protection, body limit (413), load shedding (503), and K8s /healthz /readyz probes for cap:web | License: MIT
-> Import: `import { ... } from "@web/pressure";` | Full types: `src/index.d.cp`
+Official overload protection, body limit (413), load shedding (503), and K8s /healthz /readyz probes for cap:web (`v1.0.0`, `MIT`)
 
-## Functions
-- `export fn pressureSetReady(ready: bool);`
-- `export fn pressureSetInflightForTest(n: u32);`
-- `export fn pressureShedCount(): u64;`
-- `export fn pressureResetStats();`
-- `export fn pressStrEql(a: string, b: string): bool;`
-- `export fn pressureOnRequest(ctx: &mut Context): bool;`
-- `export fn pressureOnAfter(ctx: &mut Context, resp: &mut Response);`
-- `export fn handleHealthz(ctx: &mut Context): Response;`
-- `export fn handleReadyz(ctx: &mut Context): Response;`
-- `export fn createPressurePlugin(cfg: PressureConfig): Plugin;`
-- `export fn registerPressure(app: &mut App, cfg: PressureConfig): &mut App;`
+## Import
+
+```cp
+import {
+    PressureConfig,
+    pressureSetReady,
+    pressureSetInflightForTest,
+    pressureShedCount,
+    pressureResetStats,
+    pressStrEql,
+    pressureOnRequest,
+    pressureOnAfter,
+} from "@web/pressure";
+```
+
+## Core Types & Constants
+
+```cp
+class PressureConfig { max_body_bytes: usize, max_inflight: u32, retry_after_secs: string, health_path: string, /* +1 fields */ }
+```
+
+## API Signatures
+
+```cp
+fn pressureSetReady(ready: bool);
+fn pressureSetInflightForTest(n: u32);
+fn pressureShedCount(): u64;
+fn pressureResetStats();
+fn pressStrEql(a: string, b: string): bool;
+fn pressureOnRequest(ctx: &mut Context): bool;
+fn pressureOnAfter(ctx: &mut Context, resp: &mut Response);
+fn handleHealthz(ctx: &mut Context): Response;
+fn handleReadyz(ctx: &mut Context): Response;
+fn createPressurePlugin(cfg: PressureConfig): Plugin;
+fn registerPressure(app: &mut App, cfg: PressureConfig): &mut App;
+```
+
+## Minimal Usage
+
+```cp
+import { pressStrEql } from "@web/pressure";
+
+pub fn main() {
+    let result = pressStrEql("example", "example");
+    _ = result;
+}
+```
+
+## Borrowing, Errors & Pitfalls
+
+- **Canonical import**: Always import directly from `"@web/pressure"`; install via `cap add @web/pressure`.
+- **Zero-copy lifetimes**: Returned `string` slices may borrow from input arguments; keep source strings alive while reading results.
+- **Mutable borrows**: Parameters typed `&mut T` require mutable bindings (`let mut x = ...`).

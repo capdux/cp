@@ -1,44 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # num-iter
+
+Zero-heap stepped numeric range iterators for signed and unsigned 64-bit integers with overflow-safe inclusive/exclusive bounds (clean-room port of Rust num-iter)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-iter` ([https://github.com/rust-num/num-iter](https://github.com/rust-num/num-iter))
 
-Clean-room MIT, zero-heap stepped numeric range iterators for CP — modeled on crates.io #140 `num-iter` v0.1 (850M+ downloads) and reusing `num-integer` (`divCeil`, `divFloor`).
+| Metadata | Value |
+| --- | --- |
+| Package | `num-iter` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation**: stack-only iterator structs with caller-buffer collection (`collectRangeStep`).
-- **Signed & unsigned stepped ranges**: supports positive and negative steps for `i64` (`RangeStep`, `RangeStepInclusive`) and positive steps for `u64` (`RangeStepU64`).
-- **Overflow-safe boundaries**: safely terminates when advancing across `i64::MAX`, `i64::MIN`, or `u64::MAX` without trapping.
-- **O(1) `remaining()` & `nth(n)`**: computes exact remaining element count via `num-integer` `divCeil` / `divFloor` and skips directly in constant time.
-
-## API
-
-### Types
-- `RangeStep`: half-open `[start, stop)` signed iterator (`next()`, `remaining()`, `isDone()`, `nth(n)`)
-- `RangeStepInclusive`: closed `[start, stop]` signed iterator (`next()`, `remaining()`, `isDone()`)
-- `RangeStepU64`: half-open `[start, stop)` unsigned iterator (`next()`, `remaining()`, `isDone()`, `nth(n)`)
-
-### Functions
-- `rangeStep(start: i64, stop: i64, step: i64): RangeStep`
-- `rangeStepInclusive(start: i64, stop: i64, step: i64): RangeStepInclusive`
-- `rangeStepU64(start: u64, stop: u64, step: u64): RangeStepU64`
-- `collectRangeStep(r: *RangeStep, out: []i64): usize`
-
-## Usage
-
-```typescript
-import { rangeStep, rangeStepInclusive, collectRangeStep } from "num-iter";
-
-let r = rangeStep(0, 10, 3); // yields 0, 3, 6, 9
-let buf: [8]i64 = [0, 0, 0, 0, 0, 0, 0, 0];
-let n = collectRangeStep(&r, buf[0..8]); // n == 4
-
-let inc = rangeStepInclusive(10, 0, -5); // yields 10, 5, 0
+```bash
+cap add num-iter
 ```
 
-## License
+```cp
+import {
+    RangeStep,
+    RangeStepInclusive,
+    RangeStepU64,
+    nitrAbsI64,
+    nitrCheckedAddI64,
+    nitrDiffU64,
+    nitrAdvanceSigned,
+    rangeStep,
+} from "num-iter";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RangeStep` | `class` | Fields: `state: i64, stop: i64, step: i64, done: bool` · Methods: `isDone, remaining, next, nth` |
+| `RangeStepInclusive` | `class` | Fields: `state: i64, stop: i64, step: i64, done: bool` · Methods: `isDone, remaining, next` |
+| `RangeStepU64` | `class` | Fields: `state: u64, stop: u64, step: u64, done: bool` · Methods: `isDone, remaining, next, nth` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `nitrAbsI64` | `(v: i64): u64` | Invokes `nitrAbsI64` and returns `u64`. |
+| `nitrCheckedAddI64` | `(a: i64, b: i64): i64?` | Invokes `nitrCheckedAddI64` and returns `i64?`. |
+| `nitrDiffU64` | `(hi: i64, lo: i64): u64` | Invokes `nitrDiffU64` and returns `u64`. |
+| `nitrAdvanceSigned` | `(state: i64, step: i64, n: usize): i64` | Invokes `nitrAdvanceSigned` and returns `i64`. |
+| `rangeStep` | `(start: i64, stop: i64, step: i64): RangeStep` | Invokes `rangeStep` and returns `RangeStep`. |
+| `rangeStepInclusive` | `(start: i64, stop: i64, step: i64): RangeStepInclusive` | Invokes `rangeStepInclusive` and returns `RangeStepInclusive`. |
+| `rangeStepU64` | `(start: u64, stop: u64, step: u64): RangeStepU64` | Invokes `rangeStepU64` and returns `RangeStepU64`. |
+| `collectRangeStep` | `(r: &mut RangeStep, out: []i64): usize` | Invokes `collectRangeStep` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { nitrAbsI64 } from "num-iter";
+
+pub fn main() {
+    let result = nitrAbsI64(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

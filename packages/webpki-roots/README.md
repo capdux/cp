@@ -1,27 +1,76 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `webpki-roots`
+# webpki-roots
+
+Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store reusing x509-cert and spki (webpki-roots parity) in pure CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:webpki-roots` ([https://github.com/rustls/webpki-roots](https://github.com/rustls/webpki-roots))
 
-Zero-allocation Mozilla NSS / WebPKI root CA trust anchor catalog and dynamic trust store in pure CP (`webpki-roots` parity). Reuses `x509-cert` (`X509Certificate`, `X509Name`) and `spki` (`encodeSpkiDer`, `fingerprintSpki`).
+| Metadata | Value |
+| --- | --- |
+| Package | `webpki-roots` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Constants
+## Installation & Import
 
-- `MOZILLA_ROOT_COUNT` (`20`) — Built-in authoritative Mozilla NSS / WebPKI root CA entries (ISRG Root X1/X2, DigiCert Global Root G2/G3, GlobalSign Root CA/R46, USERTrust RSA, Sectigo R46, Baltimore CyberTrust, Google Trust Services GTS Root R1/R4, Amazon Root CA 1/2, SSL.com, Entrust G2, QuoVadis, COMODO, Starfield G2, GoDaddy G2, Cloudflare Origin ECC)
-- `TRUST_STORE_CAPACITY` (`32`) — Fixed-capacity zero-allocation store limit
-- Key algorithm tags: `KEY_ALG_UNKNOWN` (`0`), `KEY_ALG_RSA` (`1`), `KEY_ALG_P256` (`2`), `KEY_ALG_P384` (`3`), `KEY_ALG_ED25519` (`4`)
+```bash
+cap add webpki-roots
+```
 
-## API
+```cp
+import {
+    TrustAnchorInfo,
+    TrustAnchorResult,
+    TrustAnchorStore,
+    wrStrEq,
+    wrBytesEqStr,
+    wrIsDigit,
+    wrParseCertNotAfterYear,
+    wrMakeRoot,
+} from "webpki-roots";
+```
 
-- `TrustAnchorInfo` — Root CA metadata (`name`, `org`, `country`, `key_alg`, `spki_fingerprint`, `not_after_year`, plus `isValidAtYear(year)` and `matchesIssuer(issuer: X509Name)`)
-- `TrustAnchorStore.withMozillaDefaults()` / `TrustAnchorStore.empty()` — Initializes store with 20 default roots or empty
-- `store.addAnchor(anchor: TrustAnchorInfo): bool` — Appends custom/private root CA with capacity checking
-- `store.count(): usize` / `store.at(idx: usize): TrustAnchorInfo`
-- `store.findByCn(cn: string): TrustAnchorResult` — Exact Common Name lookup
-- `store.findByOrg(org: string): TrustAnchorResult` / `store.countByOrg(org: string): usize` — Organization lookup
-- `store.isTrustedIssuer(cert: X509Certificate): bool` — Checks if an X.509 certificate's issuer matches any trust anchor
-- `store.verifyIssuerTrusted(cert: X509Certificate, current_year: u16): bool` — Verifies trusted issuer and checks anchor + certificate expiration year
-- `mozillaRootAt(idx: usize): TrustAnchorInfo` / `lookupMozillaRootByCn(cn: string): TrustAnchorResult`
-- `certSpkiFingerprint(cert: X509Certificate): u64` — Computes 64-bit SPKI FNV-1a fingerprint via `spki`
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `TrustAnchorInfo` | `class` | Fields: `name: string, org: string, country: string, key_alg: u8, spki_fingerprint: u64, not_after_year: u16` · Methods: `empty, init, isEmpty, isValidAtYear, matchesIssuer` |
+| `TrustAnchorResult` | `class` | Fields: `found: bool, anchor: TrustAnchorInfo` |
+| `TrustAnchorStore` | `class` | Fields: `anchors: [32]TrustAnchorInfo, len: usize` · Methods: `empty, withMozillaDefaults, count, capacity, at, addAnchor, +5 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `wrStrEq` | `(a: string, b: string): bool` | Invokes `wrStrEq` and returns `bool`. |
+| `wrBytesEqStr` | `(b: &[]u8, s: string): bool` | Invokes `wrBytesEqStr` and returns `bool`. |
+| `wrIsDigit` | `(ch: u8): bool` | Invokes `wrIsDigit` and returns `bool`. |
+| `wrParseCertNotAfterYear` | `(cert: X509Certificate): u16` | Invokes `wrParseCertNotAfterYear` and returns `u16`. |
+| `wrMakeRoot` | `(name: string, org: string, country: string, key_alg: u8, not_after_year: u16): TrustAnchorInfo` | Invokes `wrMakeRoot` and returns `TrustAnchorInfo`. |
+| `mozillaRootAt` | `(idx: usize): TrustAnchorInfo` | Invokes `mozillaRootAt` and returns `TrustAnchorInfo`. |
+| `lookupMozillaRootByCn` | `(cn: string): TrustAnchorResult` | Queries/retrieves data via `lookupMozillaRootByCn` returning `TrustAnchorResult`. |
+| `certSpkiFingerprint` | `(cert: X509Certificate): u64` | Invokes `certSpkiFingerprint` and returns `u64`. |
+| `wrEmptyAnchors` | `(): [32]TrustAnchorInfo` | Invokes `wrEmptyAnchors` and returns `[32]TrustAnchorInfo`. |
+
+## Minimal Example
+
+```cp
+import { wrStrEq } from "webpki-roots";
+
+pub fn main() {
+    let result = wrStrEq("example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

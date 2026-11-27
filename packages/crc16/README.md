@@ -1,31 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `crc16`
+# crc16
+
+Zero-heap industrial CRC-16 checksums (CCITT-FALSE, XMODEM, MODBUS, KERMIT, ARC/IBM, USB) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:crc16` ([https://github.com/mrhooray/crc-rs](https://github.com/mrhooray/crc-rs))
 
-Zero-heap industrial CRC-16 checksum engine in pure CP supporting CCITT-FALSE, XMODEM, MODBUS, KERMIT, ARC/IBM, and USB standards, plus custom polynomial configuration and streaming updates.
+| Metadata | Value |
+| --- | --- |
+| Package | `crc16` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP 工业级 CRC-16 校验和引擎，覆盖 CCITT-FALSE、XMODEM、MODBUS、KERMIT、ARC/IBM 与 USB 六大标准，支持自定义多项式与流式分片更新。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add crc16
 ```
 
-## Supported Standards (`"123456789"` Check Vectors)
+```cp
+import {
+    Crc16Hasher,
+    reflectU16,
+    crc16BuildTable,
+    crc16CcittFalse,
+    crc16Xmodem,
+    crc16Modbus,
+    crc16Kermit,
+    crc16Arc,
+} from "crc16";
+```
 
-| Function | Standard | Check Value |
-| --- | --- | :---: |
-| `crc16CcittFalse(data)` | CRC-16/IBM-3740 (CCITT-FALSE) | `0x29B1` |
-| `crc16Xmodem(data)` | CRC-16/XMODEM | `0x31C3` |
-| `crc16Modbus(data)` | CRC-16/MODBUS | `0x4B37` |
-| `crc16Kermit(data)` | CRC-16/KERMIT | `0x2189` |
-| `crc16Arc(data)` | CRC-16/ARC (IBM) | `0xBB3D` |
-| `crc16Usb(data)` | CRC-16/USB | `0xB4C8` |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Crc16Hasher` | `class` | Fields: `table: [256]u16, poly: u16, init_val: u16, xor_out: u16, ref_in: bool, ref_out: bool, +1 more` · Methods: `initCustom, initCcittFalse, initXmodem, initModbus, initKermit, initArc, +4 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `reflectU16` | `(v: u16): u16` | Invokes `reflectU16` and returns `u16`. |
+| `crc16BuildTable` | `(poly: u16, ref_in: bool): [256]u16` | Invokes `crc16BuildTable` and returns `[256]u16`. |
+| `crc16CcittFalse` | `(data: &[]u8): u16` | Invokes `crc16CcittFalse` and returns `u16`. |
+| `crc16Xmodem` | `(data: &[]u8): u16` | Invokes `crc16Xmodem` and returns `u16`. |
+| `crc16Modbus` | `(data: &[]u8): u16` | Invokes `crc16Modbus` and returns `u16`. |
+| `crc16Kermit` | `(data: &[]u8): u16` | Invokes `crc16Kermit` and returns `u16`. |
+| `crc16Arc` | `(data: &[]u8): u16` | Invokes `crc16Arc` and returns `u16`. |
+| `crc16Usb` | `(data: &[]u8): u16` | Invokes `crc16Usb` and returns `u16`. |
+
+## Minimal Example
+
+```cp
+import { reflectU16 } from "crc16";
+
+pub fn main() {
+    let result = reflectU16(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

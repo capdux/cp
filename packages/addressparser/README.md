@@ -1,49 +1,77 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # addressparser
+
+Zero-allocation RFC 5322 email address and recipient list parser and formatter for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:addressparser` ([https://github.com/nodemailer/addressparser](https://github.com/nodemailer/addressparser))（原库名 `addressparser` → CP 包名 `addressparser`）
 
-Zero-allocation RFC 5322 email address and recipient list parser and formatter for CP — clean-room MIT parity with npm `addressparser` / `email-addresses` (10M/wk) and `nodemailer`.
+| Metadata | Value |
+| --- | --- |
+| Package | `addressparser` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 RFC 5322 邮件地址与收件人列表解析/格式化引擎，全部零拷贝切片，支持最多 32 个逗号分隔收件人。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add addressparser
 ```
 
-## Features / 核心特性
-
-- **Full RFC 5322 Formats**: Plain addresses (`alice@example.com`), angle-bracket format (`Alice Smith <alice@example.com>`), quoted display names with commas or escapes (`"Smith, Alice" <alice@example.com>`), and `(comment)` stripping.
-- **Multi-Recipient Lists**: Quote-aware and comment-aware comma splitting up to 32 recipients with zero heap allocation.
-- **Canonical Formatting**: `formatMailbox` automatically quotes and escapes display names containing RFC 5322 special characters (`,`, `;`, `"`, `\`, `<`, `>`, etc.).
-
-## API
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `MailAddress` | `struct { valid: bool, display_name: string, address: string, local: string, domain: string }` | Zero-copy parsed mailbox result |
-| `AddressList` | `struct { items: [32]MailAddress, count: usize }` | Fixed-capacity recipient list |
-| `parseMailbox` | `(raw: string) -> MailAddress` | Parse and validate a single RFC 5322 mailbox |
-| `parseAddressList` | `(raw: string) -> AddressList` | Parse a comma-separated recipient list |
-| `formatMailbox` | `(m: MailAddress, out: []u8) -> string` | Format a mailbox with automatic quoting/escaping |
-
-## Usage / 使用示例
-
 ```cp
 import {
-    parseMailbox,
-    parseAddressList,
-    formatMailbox,
+    MailAddress,
+    AddressList,
+    invalidMail,
+    stripEdgeComments,
+    isValidLocal,
+    isValidDomain,
+    makeAddrFromSpec,
+    unwrapDisplayName,
 } from "addressparser";
-
-const list = parseAddressList("Alice <a@x.com>, \"Doe, John\" <j@y.org>, plain@z.net");
-// list.count == 3
-
-let out: [128]u8 = undefined;
-const formatted = formatMailbox(list.items[1], out[0..128]);
-// "\"Doe, John\" <j@y.org>"
 ```
+
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `MailAddress` | `class` | Fields: `valid: bool, display_name: string, address: string, local: string, domain: string` |
+| `AddressList` | `class` | Fields: `items: [MAX_ADDRESSES]MailAddress, count: usize` · Methods: `get` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `invalidMail` | `(): MailAddress` | Invokes `invalidMail` and returns `MailAddress`. |
+| `stripEdgeComments` | `(raw: string): string` | Invokes `stripEdgeComments` and returns `string`. |
+| `isValidLocal` | `(local: string): bool` | Checks predicate `isValidLocal` and returns `bool`. |
+| `isValidDomain` | `(domain: string): bool` | Checks predicate `isValidDomain` and returns `bool`. |
+| `makeAddrFromSpec` | `(displayName: string, addrSpec: string): MailAddress` | Invokes `makeAddrFromSpec` and returns `MailAddress`. |
+| `unwrapDisplayName` | `(rawName: string): string` | Invokes `unwrapDisplayName` and returns `string`. |
+| `parseMailbox` | `(raw: string): MailAddress` | Parses input via `parseMailbox` and returns `MailAddress`. |
+| `parseAddressList` | `(raw: string): AddressList` | Parses input via `parseAddressList` and returns `AddressList`. |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `needsQuoting` | `(name: string): bool` | Invokes `needsQuoting` and returns `bool`. |
+| `formatMailbox` | `(m: MailAddress, out: []u8): string` | Serializes/formats data via `formatMailbox` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { isValidLocal } from "addressparser";
+
+pub fn main() {
+    let result = isValidLocal("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

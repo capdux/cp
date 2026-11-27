@@ -1,28 +1,61 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `path-clean`
+# path-clean
+
+Zero-heap lexical POSIX path cleaner following Go filepath.Clean / Rust path-clean semantics in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:path-clean` ([https://github.com/danreeves/path-clean](https://github.com/danreeves/path-clean))（原库名 `path-clean` → CP 包名 `path-clean`）
 
-Zero-heap lexical POSIX path cleaner in pure CP, faithfully following Go `filepath.Clean` and Rust `path-clean` semantics: collapses redundant slashes, removes `.` segments, resolves `a/..`, clamps excess `..` at `/` for absolute paths, preserves leading `..` for relative paths, strips trailing `/` (except root `/`), and normalizes empty paths to `"."`.
+| Metadata | Value |
+| --- | --- |
+| Package | `path-clean` |
+| Version | `1.0.0` |
+| License | `MIT OR Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP 词法路径清洗库，完整对标 `crates.io:path-clean` 与 Go `filepath.Clean` 规则：折叠多余 `/`、消除 `.`、解析 `a/..`、绝对路径多余 `..` 钳位在 `/`、保留相对路径前导 `..`、去除尾部 `/`（根路径 `/` 除外）、空路径归一化为 `"."`。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add path-clean
 ```
 
-## API
+```cp
+import {
+    pclByteAt,
+    pclCleanTwo,
+    cleanPath,
+    cleanJoin,
+    isClean,
+} from "path-clean";
+```
+
+## Core API
+
+### Functions
 
 | Function | Signature | Description |
 | --- | --- | --- |
-| `cleanPath` | `(path: string, out: []u8): usize` | Lexically clean a path into `out`, returning bytes written |
-| `cleanJoin` | `(a: string, b: string, out: []u8): usize` | Join two paths and lexically clean the result into `out` |
-| `isClean` | `(path: string): bool` | Check in O(N) zero-allocation whether `path` is already clean |
+| `pclByteAt` | `(a: string, b: string, has_sep: bool, idx: usize): u8` | Invokes `pclByteAt` and returns `u8`. |
+| `pclCleanTwo` | `(a: string, b: string, has_sep: bool, out: []u8): usize` | Invokes `pclCleanTwo` and returns `usize`. |
+| `cleanPath` | `(path: string, out: []u8): usize` | Invokes `cleanPath` and returns `usize`. |
+| `cleanJoin` | `(a: string, b: string, out: []u8): usize` | Invokes `cleanJoin` and returns `usize`. |
+| `isClean` | `(path: string): bool` | Checks predicate `isClean` and returns `bool`. |
 
-## License
+## Minimal Example
 
-MIT OR Apache-2.0
+```cp
+import { isClean } from "path-clean";
+
+pub fn main() {
+    let result = isClean("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

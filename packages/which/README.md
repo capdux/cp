@@ -1,18 +1,70 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # which
+
+Zero-heap PATH executable candidate resolver for POSIX and Windows (clean-room CP implementation of npm which)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:which` ([https://github.com/npm/node-which](https://github.com/npm/node-which))（原库名 `which` → CP 包名 `which`）
 
-零堆分配的 CP 原生跨平台 `PATH` 可执行文件候选路径解析器，Clean-Room MIT 实现对标 npm Top 20 包 `which`（2 亿+/周下载），跨包复用 `normalize-path`。
+| Metadata | Value |
+| --- | --- |
+| Package | `which` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- `WhichIterator.newPosix(cmd, path_env)`：按 `:` 切分并归一化每个 `PATH` 目录生成候选路径
-- `WhichIterator.newWindows(cmd, path_env, pathext)`：支持 `;` 分隔、引号剥离与 `PATHEXT`（`.EXE;.CMD;.BAT;.COM`）自动展开
-- `isExplicitPath`、`hasPathExt`、`countPathDirs`、`pathDirAt` 零堆工具函数
+```bash
+cap add which
+```
 
-## 致谢
+```cp
+import {
+    WhichIterator,
+    whEqIgnoreCase,
+    isExplicitPath,
+    countPathDirs,
+    pathDirAt,
+    hasPathExt,
+    formatCandidatePath,
+} from "which";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`npm/node-which`](https://github.com/npm/node-which)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `WhichIterator` | `class` | Fields: `cmd: string, path_env: string, pathext: string, delim: u8, dir_idx: usize, dir_count: usize, +3 more` · Methods: `newPosix, newWindows, next` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `whEqIgnoreCase` | `(a: string, b: string): bool` | Invokes `whEqIgnoreCase` and returns `bool`. |
+| `isExplicitPath` | `(cmd: string): bool` | Checks predicate `isExplicitPath` and returns `bool`. |
+| `countPathDirs` | `(path_env: string, delim: u8): usize` | Invokes `countPathDirs` and returns `usize`. |
+| `pathDirAt` | `(path_env: string, delim: u8, idx: usize, out: []u8): usize` | Invokes `pathDirAt` and returns `usize`. |
+| `hasPathExt` | `(cmd: string, pathext: string): bool` | Checks predicate `hasPathExt` and returns `bool`. |
+| `formatCandidatePath` | `(dir: string, cmd: string, ext: string, out: []u8): usize` | Serializes/formats data via `formatCandidatePath` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { isExplicitPath } from "which";
+
+pub fn main() {
+    let result = isExplicitPath("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

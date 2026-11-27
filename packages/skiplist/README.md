@@ -1,32 +1,57 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # skiplist
+
+Zero-allocation static-pool deterministic skip list (O(log N) ordered map, lowerBound, rangeCount, freelist reuse) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:skiplist` ([https://github.com/JP-Ellis/rust-skiplist](https://github.com/JP-Ellis/rust-skiplist))
 
-Zero-allocation static-pool deterministic skip list (`MAX_NODES = 128`, `MAX_LEVEL = 8`) for CP — clean-room MIT parity with Rust `skiplist` and `crossbeam-skiplist`.
+| Metadata | Value |
+| --- | --- |
+| Package | `skiplist` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 确定性静态节点池跳表，内置 xorshift64 确定性层高与 O(1) 空闲节点池复用，提供 O(log N) 有序插入、查询、删除、`first`/`last`、`lowerBound` 与 `rangeCount` 闭区间统计，适用于内存数据库 MemTable、排行榜与有序索引（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add skiplist
 ```
 
-## API Reference / 接口一览
+```cp
+import { SkipEntry, SkipNode, SkipList, emptyNode } from "skiplist";
+```
 
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `SkipEntry` | `pub struct { key: i64, value: i64, found: bool }` | 查询结果结构体 |
-| `SkipList.init` | `() -> SkipList` | 初始化空跳表（128 个可复用节点槽位） |
-| `insert` / `remove` / `clear` | `(*_, ...)` | O(log N) 插入/覆盖更新、删除回收与重置 |
-| `get` / `contains` | `(key: i64) -> SkipEntry / bool` | 精确查找与成员检测 |
-| `first` / `last` / `lowerBound` | `() / (key: i64) -> SkipEntry` | 最小键、最大键与首个 `>= key` 定位 |
-| `rangeCount` | `(min_key: i64, max_key: i64) -> usize` | 统计闭区间 `[min_key, max_key]` 条目数 |
-| `len` / `isEmpty` | 状态查询 | 长度与判空 |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SkipEntry` | `class` | Fields: `key: i64, value: i64, found: bool` · Methods: `none` |
+| `SkipNode` | `class` | Fields: `key: i64, value: i64, level: u8, next: [8]u16` |
+| `SkipList` | `class` | Fields: `nodes: [129]SkipNode, free_stack: [128]u16, free_top: usize, cur_level: u8, count: usize, rng_state: u64` · Methods: `init, len, isEmpty, clear, randomLevel, insert, +8 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `emptyNode` | `(): SkipNode` | Invokes `emptyNode` and returns `SkipNode`. |
+
+## Minimal Example
+
+```cp
+import { emptyNode } from "skiplist";
+
+pub fn main() {
+    let result = emptyNode();
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

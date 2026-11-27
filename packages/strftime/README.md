@@ -1,39 +1,78 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # strftime
+
+Zero-heap POSIX strftime & ISO-8601 date/time formatter for Unix timestamps and broken-down calendar dates
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:strftime` ([https://github.com/samsonjs/strftime](https://github.com/samsonjs/strftime))
 
-Zero-heap POSIX `strftime` and proleptic Gregorian calendar formatter in pure CP (replaces npm `strftime` / `dateformat` [20M/wk]).
+| Metadata | Value |
+| --- | --- |
+| Package | `strftime` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Supports `%Y`, `%y`, `%m`, `%d`, `%e`, `%H`, `%I`, `%M`, `%S`, `%p`, `%P`, `%a`, `%A`, `%b`, `%B`, `%j`, `%w`, `%u`, `%F`, `%T`, `%R`, `%z`, `%Z`, `%n`, `%t`, `%%`.
-
-## Install
+## Installation & Import
 
 ```bash
 cap add strftime
 ```
 
-## Usage
-
 ```cp
-import { formatUnix, formatIso8601Utc, fromUnixSeconds, strftime } from "strftime";
-
-let buf: [128]u8 = undefined;
-const iso = formatIso8601Utc(1700000000, buf[0..128]);
-// "2023-11-14T22:13:20Z"
-
-const cn = formatUnix("%Y-%m-%d %H:%M:%S %z", 1700000000, 28800, buf[0..128]);
-// "2023-11-15 06:13:20 +0800"
+import {
+    DateTime,
+    FmtWriter,
+    isLeapYear,
+    daysInMonth,
+    dayOfYear,
+    fromUnixSeconds,
+    weekdayShort,
+    weekdayFull,
+} from "strftime";
 ```
 
-## API
+## Core API
 
-| Function | Description |
-| --- | --- |
-| `fromUnixSeconds(unix_sec, tz_offset_sec)` | Convert Unix epoch seconds to broken-down `DateTime` |
-| `strftime(fmt, dt, out)` | Format `DateTime` using POSIX `strftime` specifiers |
-| `formatUnix(fmt, unix_sec, tz_offset_sec, out)` | Format Unix timestamp directly |
-| `formatIso8601Utc(unix_sec, out)` | Format UTC timestamp as `YYYY-MM-DDTHH:MM:SSZ` |
-| `isLeapYear(year)` | Proleptic Gregorian leap year test |
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `DateTime` | `class` | Fields: `year: i32, month: u8, day: u8, hour: u8, minute: u8, second: u8, +3 more` |
+| `FmtWriter` | `class` | Fields: `out: []u8, pos: usize` · Methods: `putByte, putStr, putPad2, putPad3, putPad4` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isLeapYear` | `(y: i32): bool` | Checks predicate `isLeapYear` and returns `bool`. |
+| `daysInMonth` | `(y: i32, m: u8): u8` | Invokes `daysInMonth` and returns `u8`. |
+| `dayOfYear` | `(y: i32, m: u8, d: u8): u16` | Invokes `dayOfYear` and returns `u16`. |
+| `fromUnixSeconds` | `(unix_sec: i64, tz_offset_sec: i32): DateTime` | Invokes `fromUnixSeconds` and returns `DateTime`. |
+| `weekdayShort` | `(w: u8): string` | Invokes `weekdayShort` and returns `string`. |
+| `weekdayFull` | `(w: u8): string` | Invokes `weekdayFull` and returns `string`. |
+| `monthShort` | `(m: u8): string` | Invokes `monthShort` and returns `string`. |
+| `monthFull` | `(m: u8): string` | Invokes `monthFull` and returns `string`. |
+| `strftime` | `(fmt: string, dt: DateTime, out: []u8): string` | Invokes `strftime` and returns `string`. |
+| `formatUnix` | `(fmt: string, unix_sec: i64, tz_offset_sec: i32, out: []u8): string` | Serializes/formats data via `formatUnix` returning `string`. |
+| `formatIso8601Utc` | `(unix_sec: i64, out: []u8): string` | Serializes/formats data via `formatIso8601Utc` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { formatUnix } from "strftime";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatUnix("example", 0, 0, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

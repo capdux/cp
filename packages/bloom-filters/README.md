@@ -1,35 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `bloom-filters`
+# bloom-filters
+
+Zero-heap classic Bloom filter in pure CP with Kirsch-Mitzenmacher double hashing
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:bloom-filters` ([https://github.com/Callidon/bloom-filters](https://github.com/Callidon/bloom-filters)) / `crates.io:bloomfilter` ([https://github.com/jedisct1/rust-bloom-filter](https://github.com/jedisct1/rust-bloom-filter))（原库名 `bloom-filters` → CP 包名 `bloom-filters`）
 
-Zero-heap classic Bloom filter in pure CP using Kirsch-Mitzenmacher double hashing (`FNV-1a 64-bit` + `DJB2/Murmur3 fmix64`).
+| Metadata | Value |
+| --- | --- |
+| Package | `bloom-filters` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **100% Zero Heap Allocation**: Operates directly on caller-provided `[]u8` bitset buffers of any size.
-- **Overflow-Free 64-bit Hashing**: Wrapping arithmetic (`+%`, `*%`) safe in both Debug and Release modes.
-- **Kirsch-Mitzenmacher Double Hashing**: Generates `k` independent bit positions from two 64-bit hashes.
-- **Set Union (`merge`) & Diagnostics**: Includes bitwise OR `merge`, `popcount`, `fillRatio`, and `optimalNumHashes`.
-
-## Quick Start
-
-```cp
-import { BloomFilter, optimalNumHashes, popcount, fillRatio } from "bloom-filters";
-
-let bits: [1024]u8 = undefined;
-const k = optimalNumHashes(bits.len * 8, 200);
-let bf = BloomFilter.new(&bits, k);
-
-bf.insert(&bits, "alice@example.com");
-bf.insert(&bits, "bob@example.com");
-
-const hit = bf.contains(&bits, "alice@example.com"); // true
-const ratio = fillRatio(&bits);
+```bash
+cap add bloom-filters
 ```
 
-## License
+```cp
+import {
+    BloomFilter,
+    fnv1a64,
+    djb2Mix64,
+    popcount,
+    fillRatio,
+    optimalNumHashes,
+} from "bloom-filters";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BloomFilter` | `class` | Fields: `num_hashes: u32, bit_count: usize, inserted: u64` · Methods: `new, clear, insertBytes, insert, containsBytes, contains, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `fnv1a64` | `(data: &[]u8): u64` | Invokes `fnv1a64` and returns `u64`. |
+| `djb2Mix64` | `(data: &[]u8): u64` | Invokes `djb2Mix64` and returns `u64`. |
+| `popcount` | `(bits: &[]u8): u64` | Invokes `popcount` and returns `u64`. |
+| `fillRatio` | `(bits: &[]u8): f64` | Invokes `fillRatio` and returns `f64`. |
+| `optimalNumHashes` | `(bit_count: usize, expected_items: usize): u32` | Invokes `optimalNumHashes` and returns `u32`. |
+
+## Minimal Example
+
+```cp
+import { fnv1a64 } from "bloom-filters";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = fnv1a64(out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

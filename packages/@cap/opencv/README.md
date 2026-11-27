@@ -1,57 +1,74 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# @cap/opencv
+
+OpenCV (v4.10.0) core + imgproc computer vision library for CP via prebuilt dynamic libraries
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **c++** [`opencv`](https://github.com/opencv/opencv)（`Apache-2.0`）（包名 `@cap/opencv`）。
 
-# `@cap/opencv`
+| Metadata | Value |
+| --- | --- |
+| Package | `@cap/opencv` |
+| Version | `4.10.0` |
+| License | `Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Lean computer vision binding for CP powered by **OpenCV (`4.10.0`, Apache-2.0 License)** — shipping only the stripped `core` + `imgproc` prebuilt dynamic libraries and a thin C-ABI shim for zero local OpenCV build time.
-
-## Architecture
-
-- **Prebuilt Dynamic Libraries (`prebuilt/<os>-<arch>/`)**: Ships stripped `libopencv_core.so*` and `libopencv_imgproc.so*` (preserving `SONAME` symlinks). Excluded from Git tracking (`prebuilt/` is gitignored).
-- **Thin C-ABI Shim (`c/opencv_ffi.cpp`)**: ~50-line C++17 bridge compiled into `libopencv_shim.a` in <0.5s, exposing pure C entrypoints for `version`, `GaussianBlur`, `Canny`, and `resize`.
-- **Safe CP API (`src/index.cp`)**: Pure CP 4-Gate (`0/0/0/0`) slice-checked wrappers (`version`, `gaussianBlurU8`, `cannyU8`, `resizeU8`).
-
-## Building Minimal OpenCV Prebuilts (Linux x86_64)
+## Installation & Import
 
 ```bash
-curl -fSL https://github.com/opencv/opencv/archive/refs/tags/4.10.0.tar.gz -o /tmp/opencv-4.10.0.tar.gz
-tar -xzf /tmp/opencv-4.10.0.tar.gz -C /tmp
-cmake -S /tmp/opencv-4.10.0 -B /tmp/opencv-build -G Ninja \
-  -DBUILD_LIST=core,imgproc -DBUILD_SHARED_LIBS=ON \
-  -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF \
-  -DBUILD_opencv_apps=OFF -DWITH_IPP=OFF -DWITH_ITT=OFF -DWITH_OPENCL=OFF \
-  -DWITH_CUDA=OFF -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF -DWITH_GTK=OFF \
-  -DWITH_QT=OFF -DWITH_VTK=OFF -DWITH_TBB=OFF -DWITH_OPENEXR=OFF \
-  -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_JPEG=OFF -DWITH_PNG=OFF \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build /tmp/opencv-build -j$(nproc)
-mkdir -p prebuilt/linux-x86_64
-cp -a /tmp/opencv-build/lib/libopencv_core.so* /tmp/opencv-build/lib/libopencv_imgproc.so* prebuilt/linux-x86_64/
-find prebuilt/linux-x86_64 -maxdepth 1 -type f -name "*.so*" -exec strip --strip-unneeded {} +
+cap add @cap/opencv
 ```
-
-## Quick Start
 
 ```cp
-import { version, gaussianBlurU8, cannyU8, resizeU8 } from "@cap/opencv";
-import std from "std";
+import {
+    OpenCvError,
+    cp_cv_version,
+    cp_cv_gaussian_blur_u8,
+    cp_cv_canny_u8,
+    cp_cv_resize_u8,
+    version,
+    gaussianBlurU8,
+    cannyU8,
+} from "@cap/opencv";
+```
 
-pub fn main(): void! {
-    std.debug.print("OpenCV version: {s}\n", .{version()});
-    let img: [256]u8 = undefined;
-    let blur: [256]u8 = undefined;
-    let edges: [256]u8 = undefined;
-    let small: [64]u8 = undefined;
-    // Fill 16x16 step image (left half 0, right half 255)
-    for (y of 0..16) {
-        for (x of 0..16) {
-            img[y * 16 + x] = if (x < 8) 0 else 255;
-        }
-    }
-    try gaussianBlurU8(&img, &blur, 16, 16, 3);
-    try cannyU8(&img, &edges, 16, 16, 50.0, 150.0);
-    try resizeU8(&img, 16, 16, &small, 8, 8);
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `error` | `OpenCvError` | `InvalidDimensions, InvalidKernelSize, InvalidThreshold, BufferTooSmall, OperationFailed` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cp_cv_version` | `(): [*:0]&u8!` | Invokes `cp_cv_version` and returns `[*:0]&u8!`. |
+| `cp_cv_gaussian_blur_u8` | `(src: [*]&u8!, dst: [*]u8!, w: i32, h: i32, ksize: i32): i32` | Invokes `cp_cv_gaussian_blur_u8` and returns `i32`. |
+| `cp_cv_canny_u8` | `(src: [*]&u8!, dst: [*]u8!, w: i32, h: i32, t1: f64, t2: f64): i32` | Invokes `cp_cv_canny_u8` and returns `i32`. |
+| `cp_cv_resize_u8` | `(src: [*]&u8!, sw: i32, sh: i32, dst: [*]u8!, dw: i32, dh: i32): i32` | Invokes `cp_cv_resize_u8` and returns `i32`. |
+| `version` | `(): string` | Invokes `version` and returns `string`. |
+| `gaussianBlurU8` | `(src: &[]u8, dst: []u8, w: i32, h: i32, ksize: i32): !void` | Invokes `gaussianBlurU8` and returns `!void`. |
+| `cannyU8` | `(src: &[]u8, dst: []u8, w: i32, h: i32, t1: f64, t2: f64): !void` | Checks predicate `cannyU8` and returns `bool`. |
+| `resizeU8` | `(src: &[]u8, sw: i32, sh: i32, dst: []u8, dw: i32, dh: i32): !void` | Invokes `resizeU8` and returns `!void`. |
+
+## Minimal Example
+
+```cp
+import { version } from "@cap/opencv";
+
+pub fn main() {
+    let result = version();
+    _ = result;
 }
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-overhead native binding**: Direct CP FFI to the underlying native C library without GC pauses or dynamic runtime wrappers.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,63 +1,86 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `unicode-segmentation`
+# unicode-segmentation
+
+Zero-allocation UAX #29 Unicode extended grapheme cluster and word boundary segmentation for CP (clean-room MIT).
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-segmentation` ([https://github.com/unicode-rs/unicode-segmentation](https://github.com/unicode-rs/unicode-segmentation))
 
-Zero-allocation **UAX #29** Unicode Extended Grapheme Cluster and Word Boundary segmentation engine for CP (clean-room MIT implementation inspired by Rust's `unicode-segmentation`).
+| Metadata | Value |
+| --- | --- |
+| Package | `unicode-segmentation` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero Heap Allocation**: Operates directly on UTF-8 `string` slices and returns lightweight `GraphemeSpan { start, end }` byte-offset views.
-- **Full UTF-8 Decoding**: Handles 1- to 4-byte UTF-8 sequences with safe `U+FFFD` fallback on malformed byte sequences.
-- **UAX #29 Extended Grapheme Clusters**:
-  - CRLF (`\r\n`) single-cluster pairing (GB3)
-  - Combining diacritical marks, Variation Selectors (`U+FE00..U+FE0F`), and Emoji Fitzpatrick skin-tone modifiers (`U+1F3FB..U+1F3FF`) (GB9)
-  - Emoji ZWJ sequences (`👨‍👩‍👧‍👦`, `👩🏽‍💻`, `❤️‍🔥`) via `Extended_Pictographic Extend* ZWJ × Extended_Pictographic` (GB11)
-  - Regional Indicator flag pairs (`🇺🇸🇨🇳`) (GB12/GB13)
-  - Hangul Jamo & precomposed syllable composition (`L`/`V`/`T`/`LV`/`LVT`) (GB6–GB8)
-- **UAX #29 Word Boundary Segmentation**:
-  - `WordIter.next()` returns all word-boundary segments (words, whitespace, punctuation)
-  - `WordIter.nextUnicodeWord()` yields meaningful Unicode words, supporting ASCII/Latin alphanumerics, apostrophe contractions (`don't`), decimals/thousands (`3.14`, `1,000`), and per-character CJK word splitting.
-
-## Usage
-
-```typescript
-import {
-    GraphemeSpan,
-    GraphemeIter,
-    countGraphemes,
-    nthGrapheme,
-    sliceGraphemes,
-    WordIter,
-    countUnicodeWords,
-} from "unicode-segmentation";
-
-const n: usize = countGraphemes("a\r\ne\u0301👨‍👩‍👧‍👦🇺🇸"); // 5
-
-let it = GraphemeIter.new("Hello 🌍!");
-while (true) {
-    const sp = it.next();
-    if (sp == null) { break; }
-    const s = sp.?;
-    // slice is src[s.start..s.end]
-}
-
-const sub = sliceGraphemes("café🚀!", 1, 3); // "afé" (or "fé🚀" depending on index)
-const words: usize = countUnicodeWords("Don't stop at 3.14, 你好!"); // 6
+```bash
+cap add unicode-segmentation
 ```
 
-## API
+```cp
+import {
+    GraphemeSpan,
+    UsegRune,
+    GraphemeIter,
+    WordIter,
+    usegDecodeUtf8,
+    usegIsExtend,
+    usegIsPrepend,
+    usegIsSpacingMark,
+} from "unicode-segmentation";
+```
 
-- `struct GraphemeSpan { start: usize, end: usize }` with `byteLen(): usize`
-- `struct GraphemeIter` with `new(src: string)`, `next(*_): GraphemeSpan?`, `reset(*_)`
-- `countGraphemes(src: string): usize`
-- `nthGrapheme(src: string, idx: usize): GraphemeSpan?`
-- `sliceGraphemes(src: string, start_idx: usize, max_count: usize): GraphemeSpan`
-- `struct WordIter` with `new(src: string)`, `next(*_): GraphemeSpan?`, `nextUnicodeWord(*_): GraphemeSpan?`, `reset(*_)`
-- `countUnicodeWords(src: string): usize`
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `GraphemeSpan` | `class` | Fields: `start: usize, end: usize` · Methods: `byteLen` |
+| `UsegRune` | `class` | Fields: `cp: u32, len: usize` |
+| `GraphemeIter` | `class` | Fields: `src: string, pos: usize` · Methods: `new, next, reset` |
+| `WordIter` | `class` | Fields: `src: string, pos: usize` · Methods: `new, reset, next, nextUnicodeWord` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `usegDecodeUtf8` | `(src: string, offset: usize): UsegRune` | Invokes `usegDecodeUtf8` and returns `UsegRune`. |
+| `usegIsExtend` | `(cp: u32): bool` | Invokes `usegIsExtend` and returns `bool`. |
+| `usegIsPrepend` | `(cp: u32): bool` | Invokes `usegIsPrepend` and returns `bool`. |
+| `usegIsSpacingMark` | `(cp: u32): bool` | Invokes `usegIsSpacingMark` and returns `bool`. |
+| `usegIsControl` | `(cp: u32): bool` | Invokes `usegIsControl` and returns `bool`. |
+| `usegIsExtPic` | `(cp: u32): bool` | Invokes `usegIsExtPic` and returns `bool`. |
+| `usegGraphemeProp` | `(cp: u32): u8` | Invokes `usegGraphemeProp` and returns `u8`. |
+| `usegNextGraphemeEnd` | `(src: string, start: usize): usize` | Invokes `usegNextGraphemeEnd` and returns `usize`. |
+| `countGraphemes` | `(src: string): usize` | Invokes `countGraphemes` and returns `usize`. |
+| `nthGrapheme` | `(src: string, idx: usize): GraphemeSpan?` | Invokes `nthGrapheme` and returns `GraphemeSpan?`. |
+| `sliceGraphemes` | `(src: string, start_idx: usize, max_count: usize): GraphemeSpan` | Invokes `sliceGraphemes` and returns `GraphemeSpan`. |
+| `usegIsCjkWordChar` | `(cp: u32): bool` | Invokes `usegIsCjkWordChar` and returns `bool`. |
+| `usegIsALetter` | `(cp: u32): bool` | Invokes `usegIsALetter` and returns `bool`. |
+| `usegIsNumeric` | `(cp: u32): bool` | Invokes `usegIsNumeric` and returns `bool`. |
+| `usegWordProp` | `(cp: u32): u8` | Invokes `usegWordProp` and returns `u8`. |
+| `usegPeekWordProp` | `(src: string, offset: usize): u8` | Invokes `usegPeekWordProp` and returns `u8`. |
+| `usegIsWordSpan` | `(src: string, start: usize, end: usize): bool` | Invokes `usegIsWordSpan` and returns `bool`. |
+| `countUnicodeWords` | `(src: string): usize` | Invokes `countUnicodeWords` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { usegDecodeUtf8 } from "unicode-segmentation";
+
+pub fn main() {
+    let result = usegDecodeUtf8("example", 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

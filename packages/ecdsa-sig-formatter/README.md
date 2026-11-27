@@ -1,18 +1,67 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # ecdsa-sig-formatter
+
+Zero-allocation ASN.1 DER <-> JOSE IEEE P1363 (r || s) ECDSA signature converter for ES256, ES384, and ES512 in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ecdsa-sig-formatter` ([https://github.com/Brightspace/node-ecdsa-sig-formatter](https://github.com/Brightspace/node-ecdsa-sig-formatter), `Apache-2.0`)
 
-Zero-heap-allocation ASN.1 DER ↔ JOSE IEEE P1363 (`r || s`) ECDSA signature formatter for JWT/JWS (`ES256`, `ES384`, `ES512`) in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `ecdsa-sig-formatter` |
+| Version | `1.0.0` |
+| License | `Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- `EcdsaAlg` enum (`ES256`, `ES384`, `ES512`) and `paramBytes(alg): usize` (`32` / `48` / `66`)
-- `derToJose(der: []const u8, alg: EcdsaAlg, out: []u8): i64` — strictly parses DER `SEQUENCE { INTEGER r, INTEGER s }`, strips positive sign padding, left-pads `r` and `s` to `paramBytes`, and returns `-1` on malformed DER
-- `joseToDer(jose: []const u8, alg: EcdsaAlg, out: []u8): i64` — converts fixed-width `2 * paramBytes` JOSE signatures to canonical DER SEQUENCE, handling leading zero trimming, high-bit `0x00` sign padding, and `0x81` long-form SEQUENCE lengths for `ES512`
+```bash
+cap add ecdsa-sig-formatter
+```
 
-## License
+```cp
+import {
+    EcdsaAlg,
+    paramBytes,
+    esfParseDerInt,
+    esfTrimLeadingZeros,
+    derToJose,
+    joseToDer,
+} from "ecdsa-sig-formatter";
+```
 
-Apache-2.0
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `EcdsaAlg` | `ES256, ES384, ES512` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `paramBytes` | `(alg: EcdsaAlg): usize` | Invokes `paramBytes` and returns `usize`. |
+| `esfParseDerInt` | `(der: &[]u8, pos: usize, limit: usize, param_len: usize, dst: []u8): i64` | Invokes `esfParseDerInt` and returns `i64`. |
+| `esfTrimLeadingZeros` | `(src: &[]u8): usize` | Invokes `esfTrimLeadingZeros` and returns `usize`. |
+| `derToJose` | `(der: &[]u8, alg: EcdsaAlg, out: []u8): i64` | Invokes `derToJose` and returns `i64`. |
+| `joseToDer` | `(jose: &[]u8, alg: EcdsaAlg, out: []u8): i64` | Invokes `joseToDer` and returns `i64`. |
+
+## Minimal Example
+
+```cp
+import { paramBytes } from "ecdsa-sig-formatter";
+
+pub fn main() {
+    let result = paramBytes(/* alg: EcdsaAlg */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,43 +1,56 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # aho-corasick
+
+Zero-allocation Aho-Corasick multi-pattern O(N + Z) automaton with LCRS trie, BFS failure links, and dictionary suffix links (Rust aho-corasick parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:aho-corasick` ([https://github.com/BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick))
 
-Zero-allocation Aho-Corasick multi-pattern O(N + Z) search automaton with LCRS static node pool, BFS failure links, and dictionary suffix links for CP — clean-room MIT parity with Rust `aho-corasick` (1.45B downloads on crates.io).
+| Metadata | Value |
+| --- | --- |
+| Package | `aho-corasick` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 AC 自动机多模式串线性时间搜索引擎（静态 256 节点 LCRS Trie + 64 模式上限），支持全量重叠后缀匹配，适用于日志关键字扫描、敏感词过滤、WAF 规则匹配与入侵检测。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add aho-corasick
 ```
 
-## API
+```cp
+import { AcMatch, AhoCorasick, noMatch } from "aho-corasick";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `AcMatch` | `struct { pattern_id: u16, start: usize, end: usize, found: bool }` | Match span result |
-| `AhoCorasick` | `init()`, `addPattern(*_, pat) -> i32`, `build(*_) -> bool`, `patternCount() -> usize` | Automaton builder |
-| `isMatch` | `(text: []const u8) -> bool` | Fast existence check |
-| `findFirst` | `(text: []const u8) -> AcMatch` | First match with exact `[start, end)` |
-| `findAll` | `(text: []const u8, out: []AcMatch) -> usize` | All overlapping matches written into `out` |
-| `countMatches` | `(text: []const u8) -> usize` | Total count of all overlapping matches |
+| `AcMatch` | `class` | Fields: `pattern_id: u16, start: usize, end: usize, found: bool` |
+| `AhoCorasick` | `class` | Fields: `edge_char: [MAX_NODES]u8, first_child: [MAX_NODES]u16, next_sibling: [MAX_NODES]u16, fail: [MAX_NODES]u16, dict_link: [MAX_NODES]u16, out_pat: [MAX_NODES]i16, +4 more` · Methods: `init, findChild, addPattern, build, patternCount, stepState, +4 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `noMatch` | `(): AcMatch` | Invokes `noMatch` and returns `AcMatch`. |
+
+## Minimal Example
 
 ```cp
-import { AhoCorasick, AcMatch } from "aho-corasick";
+import { noMatch } from "aho-corasick";
 
-let ac = AhoCorasick.init();
-* = ac.addPattern("he");
-* = ac.addPattern("she");
-* = ac.addPattern("his");
-* = ac.addPattern("hers");
-* = ac.build();
-
-let out: [16]AcMatch = undefined;
-const n = ac.findAll("ushers", out[0..16]); // 3 matches: "she", "he", "hers"
+pub fn main() {
+    let result = noMatch();
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

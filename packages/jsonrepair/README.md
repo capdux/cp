@@ -1,34 +1,63 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # jsonrepair
+
+Zero-allocation malformed & LLM-generated JSON repair engine (jsonrepair / dirty-json / Rust llm_json parity: strips markdown fences, fixes single quotes, unquoted keys, trailing commas, Python True/False/None & truncated brackets) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:jsonrepair` ([https://github.com/josdejong/jsonrepair](https://github.com/josdejong/jsonrepair))（原库名 `jsonrepair` → CP 包名 `jsonrepair`）
 
-Zero-allocation malformed & LLM-generated JSON repair engine for CP — clean-room MIT parity with npm `jsonrepair` / `dirty-json` and Rust `llm_json`.
+| Metadata | Value |
+| --- | --- |
+| Package | `jsonrepair` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Install
+## Installation & Import
 
 ```bash
 cap add jsonrepair
 ```
 
-## Repairs Supported
+```cp
+import {
+    isIdentStart,
+    isIdentChar,
+    appendByte,
+    stripMarkdownFence,
+    skipWsAndComments,
+    repairJson,
+} from "jsonrepair";
+```
 
-- Strips Markdown ```` ```json ... ``` ```` code fences from LLM responses
-- Strips `//` line comments and `/* ... */` block comments
-- Converts single-quoted strings (`'hello'`) to valid double-quoted JSON strings
-- Quotes unquoted object keys (`{name: "alice"}` → `{"name":"alice"}`)
-- Removes trailing commas (`[1, 2,]` → `[1,2]`)
-- Normalizes Python/JS literals (`True`/`False`/`None`/`undefined` → `true`/`false`/`null`)
-- Auto-closes truncated brackets/braces from interrupted LLM streams
+## Core API
 
-## Usage
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isIdentStart` | `(c: u8): bool` | Checks predicate `isIdentStart` and returns `bool`. |
+| `isIdentChar` | `(c: u8): bool` | Checks predicate `isIdentChar` and returns `bool`. |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `stripMarkdownFence` | `(raw: string): string` | Invokes `stripMarkdownFence` and returns `string`. |
+| `skipWsAndComments` | `(s: string, start: usize): usize` | Invokes `skipWsAndComments` and returns `usize`. |
+| `repairJson` | `(raw: string, out: []u8): string` | Invokes `repairJson` and returns `string`. |
+
+## Minimal Example
 
 ```cp
-import { repairJson } from "jsonrepair";
+import { stripMarkdownFence } from "jsonrepair";
 
-let out: [512]u8 = undefined;
-const fixed = repairJson("```json\n{user: 'alice', active: True, tags: ['ai',]}\n```", out[0..512]);
-// {"user":"alice","active":true,"tags":["ai"]}
+pub fn main() {
+    let result = stripMarkdownFence("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,46 +1,81 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # string-width
+
+Zero-allocation visual terminal column width calculator (npm string-width v7 parity) composing ansi-strip and unicode-width for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:string-width` ([https://github.com/sindresorhus/string-width](https://github.com/sindresorhus/string-width))
 
-Zero-allocation visual terminal column width calculator for CP — clean-room MIT parity with npm `string-width` v7. Composes `strip-ansi` and `unicode-width` with zero duplication.
+| Metadata | Value |
+| --- | --- |
+| Package | `string-width` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配终端可见列宽计算库（对标 npm `string-width` v7），复用 `strip-ansi`（剥离 ANSI CSI/SGR/OSC 转义序列）与 `unicode-width`（计算 Unicode 15.1 码点与东亚全角/模糊宽度）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add string-width
 ```
 
-## Dependencies / 跨包复用
+```cp
+import {
+    StringWidthOptions,
+    SwDecoded,
+    swDecodeUtf8,
+    swIsRegionalIndicator,
+    swIsSkinToneModifier,
+    swIsTagChar,
+    swBaseCharWidth,
+    swMeasurePlain,
+} from "string-width";
+```
 
-- `strip-ansi`: 零堆分配剥离 ANSI SGR/CSI 样式码与 OSC 8 终端超链接
-- `unicode-width`: 零堆分配计算 ASCII、CJK 全角、Emoji、组合音标与东亚模糊宽字符列宽
+## Core API
 
-## API
+### Data Structures
 
-| Symbol | Signature | Description |
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `StringWidthOptions` | `struct { ambiguous_is_narrow: bool, count_ansi_escape_codes: bool }` + `.defaults()` | Configuration options for width measurement |
-| `stringWidth` | `(input: string): usize` | Visual column width ignoring ANSI codes (handles CJK, Emoji ZWJ, skin-tone modifiers, `U+FE0F`/`U+FE0E`, flag RI pairs, combining marks) |
-| `stringWidthWithOptions` | `(input: string, opts: StringWidthOptions): usize` | Visual column width with custom `ambiguous_is_narrow` & `count_ansi_escape_codes` |
-| `maxLineWidth` | `(multiline: string): usize` | Maximum visual column width across `\n`/`\r\n`-separated lines |
-| `maxLineWidthWithOptions` | `(multiline: string, opts: StringWidthOptions): usize` | Maximum line width with custom options |
-| `padEndVisible` | `(input: string, target_cols: usize, fill_byte: u8, out: []u8): usize` | Right-pad to `target_cols` visual columns preserving ANSI/CJK alignment |
-| `padStartVisible` | `(input: string, target_cols: usize, fill_byte: u8, out: []u8): usize` | Left-pad to `target_cols` visual columns preserving ANSI/CJK alignment |
+| `StringWidthOptions` | `class` | Fields: `ambiguous_is_narrow: bool, count_ansi_escape_codes: bool` · Methods: `defaults` |
+| `SwDecoded` | `class` | Fields: `cp: u32, next_pos: usize` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `swDecodeUtf8` | `(s: string, pos: usize): SwDecoded` | Invokes `swDecodeUtf8` and returns `SwDecoded`. |
+| `swIsRegionalIndicator` | `(cp: u32): bool` | Invokes `swIsRegionalIndicator` and returns `bool`. |
+| `swIsSkinToneModifier` | `(cp: u32): bool` | Invokes `swIsSkinToneModifier` and returns `bool`. |
+| `swIsTagChar` | `(cp: u32): bool` | Invokes `swIsTagChar` and returns `bool`. |
+| `swBaseCharWidth` | `(cp: u32, ambiguous_is_narrow: bool): usize` | Invokes `swBaseCharWidth` and returns `usize`. |
+| `swMeasurePlain` | `(s: string, ambiguous_is_narrow: bool): usize` | Invokes `swMeasurePlain` and returns `usize`. |
+| `swMeasureStrippedChunk` | `(chunk: string, ambiguous_is_narrow: bool): usize` | Invokes `swMeasureStrippedChunk` and returns `usize`. |
+| `stringWidthWithOptions` | `(input: string, opts: StringWidthOptions): usize` | Invokes `stringWidthWithOptions` and returns `usize`. |
+| `stringWidth` | `(input: string): usize` | Invokes `stringWidth` and returns `usize`. |
+| `maxLineWidthWithOptions` | `(multiline: string, opts: StringWidthOptions): usize` | Invokes `maxLineWidthWithOptions` and returns `usize`. |
+| `maxLineWidth` | `(multiline: string): usize` | Invokes `maxLineWidth` and returns `usize`. |
+| `swCopyBytes` | `(dst: []u8, pos: usize, src: string): usize` | Invokes `swCopyBytes` and returns `usize`. |
+| `swFillBytes` | `(dst: []u8, pos: usize, ch: u8, count: usize): usize` | Invokes `swFillBytes` and returns `usize`. |
+| `padEndVisible` | `(input: string, target_cols: usize, fill_byte: u8, out: []u8): usize` | Invokes `padEndVisible` and returns `usize`. |
+| `padStartVisible` | `(input: string, target_cols: usize, fill_byte: u8, out: []u8): usize` | Invokes `padStartVisible` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { stringWidth, maxLineWidth, padEndVisible } from "string-width";
+import { swDecodeUtf8 } from "string-width";
 
-const w1 = stringWidth("你好世界"); // 8
-const w2 = stringWidth("\x1b[31mhello\x1b[0m"); // 5
-const w3 = maxLineWidth("hi\n你好世界\nok"); // 8
-
-let buf: [64]u8 = undefined;
-const n = padEndVisible("\x1b[32m中文\x1b[0m", 8, 32, buf[0..64]); // pads 4 trailing spaces
+pub fn main() {
+    let result = swDecodeUtf8("example", 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,45 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # hashring
+
+Zero-allocation consistent hash ring with virtual nodes, O(log V) binary search routing, and deduplicated replica selection for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:hashring` ([https://github.com/jeromefroe/hashring-rs](https://github.com/jeromefroe/hashring-rs))（原库名 `hashring` → CP 包名 `hashring`）
 
-Zero-allocation consistent hash ring with virtual nodes, `O(log V)` binary-search clockwise routing, and deduplicated replica selection for CP — clean-room MIT parity with Rust `hashring` and npm `hashring`.
+| Metadata | Value |
+| --- | --- |
+| Package | `hashring` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 一致性哈希环引擎，支持最多 32 个物理节点、256 个有序虚拟节点槽位、FNV-1a + SplitMix 雪崩哈希、`O(log V)` 二分顺时针定位与去重多副本容灾路由，适用于分布式缓存分片、多节点 `caprun` Agent 路由与负载均衡（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add hashring
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `RingPoint` / `ReplicaList` | `pub struct` | 环上虚拟节点与去重副本列表（最多 8 个副本，提供 `nodeAt(i)`） |
-| `HashRing.init` | `(vnodes_per_node: u16) -> HashRing` | 初始化空哈希环并设置每节点虚拟节点数 |
-| `addNode` / `removeNode` | `(*_, name: string) -> bool` | 增删物理节点及其全部虚拟节点（保持环有序） |
-| `getNode` | `(key: string) -> string?` | `O(log V)` 二分顺时针定位主节点 |
-| `getReplicas` | `(key: string, max_replicas: usize) -> ReplicaList` | 顺时针返回最多 `max_replicas` 个去重物理副本节点 |
-| `nodeCount` / `vnodeCount` | `() -> usize` | 查询活跃物理节点数与虚拟节点总数 |
-
-## Usage / 使用示例
-
 ```cp
-import { HashRing } from "hashring";
-
-let ring = HashRing.init(8);
-ring.addNode("node-a");
-ring.addNode("node-b");
-ring.addNode("node-c");
-
-const owner = ring.getNode("session:42").?;
-const replicas = ring.getReplicas("session:42", 2);
+import {
+    RingPoint,
+    ReplicaList,
+    HashRing,
+    mulWrap64,
+    avalanche64,
+    fnv1a64Feed,
+    hashKey,
+    hashVnode,
+} from "hashring";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RingPoint` | `class` | Fields: `hash: u64, node_idx: u16` |
+| `ReplicaList` | `class` | Fields: `nodes: [8]string, count: usize` · Methods: `empty, nodeAt` |
+| `HashRing` | `class` | Fields: `nodes: [32]string, node_active: [32]bool, active_nodes: usize, vnodes_per_node: u16, ring: [256]RingPoint, ring_len: usize` · Methods: `init, nodeCount, vnodeCount, addNode, removeNode, lowerBound, +2 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `mulWrap64` | `(a: u64, b: u64): u64` | Invokes `mulWrap64` and returns `u64`. |
+| `avalanche64` | `(x: u64): u64` | Invokes `avalanche64` and returns `u64`. |
+| `fnv1a64Feed` | `(state: u64, b: u8): u64` | Invokes `fnv1a64Feed` and returns `u64`. |
+| `hashKey` | `(key: string): u64` | Checks predicate `hashKey` and returns `bool`. |
+| `hashVnode` | `(name: string, v_idx: u16): u64` | Checks predicate `hashVnode` and returns `bool`. |
+| `eqStr` | `(a: string, b: string): bool` | Invokes `eqStr` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { hashKey } from "hashring";
+
+pub fn main() {
+    let result = hashKey("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,47 +1,86 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # saxes
+
+Zero-allocation streaming SAX XML 1.0 event parser with tag stack validation and entity decoding (npm saxes parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:saxes` ([https://github.com/lddubeau/saxes](https://github.com/lddubeau/saxes))（原库名 `saxes` → CP 包名 `saxes`）
 
-Zero-allocation streaming SAX XML 1.0 event parser with tag balance validation and entity decoding for CP — clean-room ISC implementation inspired by npm `saxes`.
+| Metadata | Value |
+| --- | --- |
+| Package | `saxes` |
+| Version | `1.0.0` |
+| License | `ISC` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配流式 SAX XML 1.0 事件解析器（对标 `saxes`），内置闭合标签栈校验、属性解析、CDATA / 注释 / 处理指令识别，以及命名与数字（十进制/十六进制）XML 实体解码。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add saxes
 ```
 
-## API
+```cp
+import {
+    XmlEventKind,
+    XmlAttr,
+    XmlEvent,
+    SaxesParser,
+    saxEmptyAttrs,
+    saxMakeEvent,
+    saxIsWs,
+    saxIsNameStart,
+} from "saxes";
+```
 
-### Enums & Structs / 核心类型
+## Core API
 
-| Symbol | Description |
-| --- | --- |
-| `XmlEventKind` | `OpenTag`, `CloseTag`, `SelfClosingTag`, `Text`, `Cdata`, `Comment`, `ProcessingInstruction`, `Error` |
-| `XmlAttr` | `struct { name: string, value: string }` |
-| `XmlEvent` | `struct { kind: XmlEventKind, name: string, text: string, attrs: [8]XmlAttr, attr_count: usize }` |
-| `SaxesParser` | Stateful XML 1.0 parser with internal tag nesting stack |
+### Types, Enums & Errors
 
-### Methods / 核心方法
-
-| Method | Signature | Description |
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `SaxesParser.new` | `(): SaxesParser` | Create a new zero-allocation SAX parser |
-| `parseAll` | `(*_, xml: string, out: []XmlEvent): usize` | Parse XML into event buffer and return event count |
-| `isWellFormed` | `(*_, xml: string): bool` | Validate XML 1.0 well-formedness (tag balance, single root, syntax) |
-| `decodeEntities` | `(raw: string, out: []u8): usize` | Decode `&lt;`, `&gt;`, `&amp;`, `&quot;`, `&apos;`, `&#NNN;`, `&#xHHH;` into UTF-8 bytes |
+| `enum` | `XmlEventKind` | `OpenTag, CloseTag, SelfClosingTag, Text, Cdata, Comment, ProcessingInstruction, Error` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `XmlAttr` | `class` | Fields: `name: string, value: string` |
+| `XmlEvent` | `class` | Fields: `kind: XmlEventKind, name: string, text: string, attrs: [8]XmlAttr, attr_count: usize` |
+| `SaxesParser` | `class` | Fields: `stack: [32]string, depth: usize, has_err: bool, root_count: usize` · Methods: `new, parseAll, isWellFormed, decodeEntities` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `saxEmptyAttrs` | `(): [8]XmlAttr` | Invokes `saxEmptyAttrs` and returns `[8]XmlAttr`. |
+| `saxMakeEvent` | `(kind: XmlEventKind, name: string, text: string): XmlEvent` | Invokes `saxMakeEvent` and returns `XmlEvent`. |
+| `saxIsWs` | `(ch: u8): bool` | Invokes `saxIsWs` and returns `bool`. |
+| `saxIsNameStart` | `(ch: u8): bool` | Invokes `saxIsNameStart` and returns `bool`. |
+| `saxIsNameChar` | `(ch: u8): bool` | Invokes `saxIsNameChar` and returns `bool`. |
+| `saxStrEq` | `(a: string, b: string): bool` | Invokes `saxStrEq` and returns `bool`. |
+| `saxStartsWithAt` | `(s: string, pos: usize, prefix: string): bool` | Invokes `saxStartsWithAt` and returns `bool`. |
+| `saxFindSubstrFrom` | `(s: string, start: usize, needle: string): i64` | Invokes `saxFindSubstrFrom` and returns `i64`. |
+| `saxAllWs` | `(s: string): bool` | Invokes `saxAllWs` and returns `bool`. |
+| `saxEmit` | `(out: []XmlEvent, count: usize, ev: XmlEvent): usize` | Invokes `saxEmit` and returns `usize`. |
+| `saxEncodeUtf8` | `(cp: u32, out: []u8, pos: usize): usize` | Invokes `saxEncodeUtf8` and returns `usize`. |
+| `saxHexVal` | `(ch: u8): i32` | Invokes `saxHexVal` and returns `i32`. |
+| `saxDecodeEntitiesImpl` | `(raw: string, out: []u8): usize` | Invokes `saxDecodeEntitiesImpl` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { SaxesParser, XmlEvent, XmlEventKind } from "saxes";
+import { saxMakeEvent } from "saxes";
 
-let parser = SaxesParser.new();
-let events: [16]XmlEvent = undefined;
-const count = parser.parseAll("<book id=\"1\"><title>CP</title></book>", events[0..16]);
-const ok = parser.isWellFormed("<book id=\"1\"><title>CP</title></book>"); // true
+pub fn main() {
+    let result = saxMakeEvent(/* kind: XmlEventKind */, "example", "example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

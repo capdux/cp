@@ -1,31 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # has-flag
+
+Check if CLI argv contains a specific flag (clean-room CP implementation of npm has-flag)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:has-flag` ([https://github.com/sindresorhus/has-flag](https://github.com/sindresorhus/has-flag))
 
-零堆分配的 CP 原生 CLI 标志检测库，Clean-Room MIT 实现对标 npm 顶流包 `has-flag`（2.5亿+/周下载）。
+| Metadata | Value |
+| --- | --- |
+| Package | `has-flag` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- 自动补齐单字符 `-f` 与多字符 `--flag` 前缀，同时兼容显式传入 `-f` / `--flag`
-- 严格遵循 POSIX `--` 选项终止符规则（`--` 之后的参数不再匹配）
-- 支持 `--flag=value` 精确匹配与值提取（`getFlagValue`）
-- 支持 `--flag` / `--no-flag` 后置覆盖布尔开关（`isFlagEnabled`）
-
-## 使用示例
-
-```cp
-import { hasFlag, getFlagValue, isFlagEnabled } from "has-flag";
-
-let args = ["--color", "--level=3", "--", "--ignored"];
-let c = hasFlag("color", args);           // true
-let l = hasFlag("level=3", args);         // true
-let ig = hasFlag("ignored", args);        // false (在 `--` 之后)
-let en = isFlagEnabled("color", args, false); // true
+```bash
+cap add has-flag
 ```
 
-## 致谢
+```cp
+import {
+    hfEq,
+    hfStartsWith,
+    hfMatchesFlag,
+    hfComputePrefixLen,
+    findFlagIndex,
+    hasFlag,
+    getFlagValue,
+    isFlagEnabled,
+} from "has-flag";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`sindresorhus/has-flag`](https://github.com/sindresorhus/has-flag)。
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hfEq` | `(a: string, b: string): bool` | Invokes `hfEq` and returns `bool`. |
+| `hfStartsWith` | `(s: string, prefix: string): bool` | Invokes `hfStartsWith` and returns `bool`. |
+| `hfMatchesFlag` | `(arg: string, flag: string, prefix_len: usize): bool` | Invokes `hfMatchesFlag` and returns `bool`. |
+| `hfComputePrefixLen` | `(flag: string): usize` | Invokes `hfComputePrefixLen` and returns `usize`. |
+| `findFlagIndex` | `(flag: string, argv: &[]string): i64` | Queries/retrieves data via `findFlagIndex` returning `i64`. |
+| `hasFlag` | `(flag: string, argv: &[]string): bool` | Checks predicate `hasFlag` and returns `bool`. |
+| `getFlagValue` | `(flag: string, argv: &[]string, out: []u8): i64` | Queries/retrieves data via `getFlagValue` returning `i64`. |
+| `isFlagEnabled` | `(flag: string, argv: &[]string, default_val: bool): bool` | Checks predicate `isFlagEnabled` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { getFlagValue } from "has-flag";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = getFlagValue("example", /* argv: &[]string */, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

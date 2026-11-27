@@ -1,27 +1,57 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # p-locate
+
+Zero-allocation bounded-concurrency ordered/unordered locator planner (npm p-locate v7 equivalent) for CP, reusing p-limit.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:p-locate` ([https://github.com/sindresorhus/p-locate](https://github.com/sindresorhus/p-locate))
 
-Zero-allocation, Clean-room MIT implementation of `p-locate` v7 bounded-concurrency locator planning for CP, reusing `p-limit`.
+| Metadata | Value |
+| --- | --- |
+| Package | `p-locate` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **`PLocateOptions`**: `{ concurrency: usize, preserve_order: bool }` with `PLocateOptions.defaults()` (`concurrency = 4`, `preserve_order = true`).
-- **`LocateCandidate`**: `{ id: u32, matched: bool, finished: bool }`.
-- **`PLocatePlanner`**: Zero-heap 32-slot locator scheduler backed by `PLimit`:
-  - `PLocatePlanner.new(opts: PLocateOptions): PLocatePlanner?` (rejects `concurrency == 0`)
-  - `addCandidate(*_, id: u32): bool`
-  - `dispatchNext(*_): u32?`
-  - `reportResult(*_, id: u32, matched: bool): u32?`
-  - `isSettled(): bool` / `winnerId(): u32?`
+```bash
+cap add p-locate
+```
 
-## Dependencies
+```cp
+import { PLocateOptions, LocateCandidate, PLocatePlanner, plocEmptyCandidate } from "p-locate";
+```
 
-- `p-limit` (`1.0.0`)
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `PLocateOptions` | `class` | Fields: `concurrency: usize, preserve_order: bool` · Methods: `defaults` |
+| `LocateCandidate` | `class` | Fields: `id: u32, matched: bool, finished: bool` |
+| `PLocatePlanner` | `class` | Fields: `opts: PLocateOptions, limiter: PLimit, items: [32]LocateCandidate, count: usize, settled: bool, has_winner: bool, +1 more` · Methods: `new, defaultPlanner, addCandidate, dispatchNext, reportResult, isSettled, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `plocEmptyCandidate` | `(): LocateCandidate` | Invokes `plocEmptyCandidate` and returns `LocateCandidate`. |
+
+## Minimal Example
+
+```cp
+import { plocEmptyCandidate } from "p-locate";
+
+pub fn main() {
+    let result = plocEmptyCandidate();
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

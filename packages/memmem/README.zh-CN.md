@@ -1,10 +1,18 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI 智能体速查](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)
 
 # memmem
 
-> 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
-
 Zero-allocation byte-substring search engine with precompiled BMH + KMP Finder, rfind, and non-overlapping count (Rust memchr::memmem parity) for CP
+
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`crates.io:memmem` ([https://github.com/BurntSushi/memchr](https://github.com/BurntSushi/memchr))
+
+| 元信息 | 值 |
+| --- | --- |
+| 包名 | `memmem` |
+| 版本 | `1.0.0` |
+| 许可证 | `MIT` |
+| 类型声明 | [`src/index.d.cp`](./src/index.d.cp) |
 
 ## 安装与导入
 
@@ -13,17 +21,49 @@ cap add memmem
 ```
 
 ```cp
-import { find } from "memmem";
+import {
+    Finder,
+    findLongNeedle,
+    find,
+    rfind,
+    contains,
+    count,
+} from "memmem";
 ```
 
-## 核心导出 API
+## 核心 API
 
-- `export fn find(haystack: &[]u8, needle: &[]u8): i64;`
-- `export fn rfind(haystack: &[]u8, needle: &[]u8): i64;`
-- `export fn contains(haystack: &[]u8, needle: &[]u8): bool;`
-- `export fn count(haystack: &[]u8, needle: &[]u8): usize;`
+### 数据结构
 
-<!-- cap-source-attribution -->
-## 上游来源与许可证说明
+| 类型名 | 种类 | 字段与方法 |
+| --- | --- | --- |
+| `Finder` | `class` | 字段: `needle_buf: [MAX_NEEDLE]u8, needle_len: usize, bad_char: [256]usize, lps: [MAX_NEEDLE]u16, is_periodic: bool` · 方法: `init, needleLen, findKmpFrom, findFrom, findIn, countIn` |
 
-- **上游生态**：`crates.io` (`memmem@1.0.0`)，许可证：MIT
+### 函数列表
+
+| 函数名 | 签名 | 说明 |
+| --- | --- | --- |
+| `findLongNeedle` | `(haystack: &[]u8, needle: &[]u8): i64` | 查询或读取目标数据，返回 `i64`。 |
+| `find` | `(haystack: &[]u8, needle: &[]u8): i64` | 查询或读取目标数据，返回 `i64`。 |
+| `rfind` | `(haystack: &[]u8, needle: &[]u8): i64` | 调用 `rfind` 并返回 `i64`。 |
+| `contains` | `(haystack: &[]u8, needle: &[]u8): bool` | 调用 `contains` 并返回 `bool`。 |
+| `count` | `(haystack: &[]u8, needle: &[]u8): usize` | 调用 `count` 并返回 `usize`。 |
+
+## 最小调用示例
+
+```cp
+import { findLongNeedle } from "memmem";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let mut buf_1: [256]u8 = undefined;
+    let result = findLongNeedle(out_buf[0..256], buf_1[0..256]);
+    _ = result;
+}
+```
+
+## CP 零堆与借用安全亮点
+
+- **纯 CP 零堆分配**：基于栈结构体与切片视图完成计算，无隐式堆内存分配与垃圾回收抖动。
+- **调用方自有输出缓冲区**：接受 `[]u8` 缓冲区参数的接口直接就地写入，内存上限完全确定。
+- **编译期借用与类型安全**：由 `cpc` 编译期静态检查可变借用（`&mut`）与不可变借用边界。

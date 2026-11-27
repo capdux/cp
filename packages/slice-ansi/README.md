@@ -1,32 +1,77 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `slice-ansi`
+# slice-ansi
+
+Zero-allocation ANSI-preserving terminal column slicer and truncator with CJK double-width support in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:slice-ansi` ([https://github.com/chalk/slice-ansi](https://github.com/chalk/slice-ansi))
 
-Zero-heap-allocation ANSI-preserving terminal column slicer and truncator in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `slice-ansi` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Reuses [`anstyle-parse`](../anstyle-parse) for VT100/ANSI CSI/OSC/ESC tokenization and SGR parameter parsing, and [`unicode-width`](../unicode-width) for East Asian / CJK double-width and zero-width column measurement.
+## Installation & Import
 
-## Features
-
-- **`ansiVisibleWidth(input)`** — Computes terminal display column width while ignoring ANSI escape sequences and handling CJK double-width characters.
-- **`sliceAnsi(input, begin, end, out)`** — Slices by visible display column range `[begin, end)`, re-emits active SGR styles entering the slice, skips OSC/non-SGR control codes, avoids splitting CJK wide characters, and automatically appends closing/reset codes (`\x1b[39m`, `\x1b[49m`, or `\x1b[0m`).
-- **`sliceAnsiFrom(input, begin, out)`** — Slices from visible column `begin` to the end of `input`.
-- **`truncateAnsi(input, max_cols, ellipsis, out)`** — Truncates to `max_cols` display columns with an ellipsis while keeping ANSI style resets clean.
-
-## Usage
+```bash
+cap add slice-ansi
+```
 
 ```cp
 import {
-    ansiVisibleWidth,
-    sliceAnsi,
-    sliceAnsiFrom,
-    truncateAnsi,
+    SaUtf8Char,
+    SaStyleState,
+    saDecodeUtf8,
+    saWriteByte,
+    saWriteBytes,
+    saWriteU16,
+    saWriteSgrParam,
+    saEmitActiveStyle,
 } from "slice-ansi";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SaUtf8Char` | `class` | Fields: `cp: u32, byte_len: usize` |
+| `SaStyleState` | `class` | Fields: `bold: bool, dim: bool, italic: bool, underline: bool, blink: bool, inverse: bool, +12 more` · Methods: `empty, reset, hasAttr, hasAny, applySgr` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `saDecodeUtf8` | `(s: string, pos: usize): SaUtf8Char` | Invokes `saDecodeUtf8` and returns `SaUtf8Char`. |
+| `saWriteByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `saWriteByte` and returns `usize`. |
+| `saWriteBytes` | `(out: []u8, pos: usize, src: string): usize` | Invokes `saWriteBytes` and returns `usize`. |
+| `saWriteU16` | `(out: []u8, pos: usize, val: u16): usize` | Invokes `saWriteU16` and returns `usize`. |
+| `saWriteSgrParam` | `(out: []u8, pos: usize, first: &mut bool, code: u16): usize` | Invokes `saWriteSgrParam` and returns `usize`. |
+| `saEmitActiveStyle` | `(out: []u8, pos: usize, st: SaStyleState): usize` | Invokes `saEmitActiveStyle` and returns `usize`. |
+| `saEmitCloseStyle` | `(out: []u8, pos: usize, st: SaStyleState): usize` | Invokes `saEmitCloseStyle` and returns `usize`. |
+| `ansiVisibleWidth` | `(input: string): usize` | Invokes `ansiVisibleWidth` and returns `usize`. |
+| `sliceAnsi` | `(input: string, begin: usize, end: usize, out: []u8): usize` | Invokes `sliceAnsi` and returns `usize`. |
+| `sliceAnsiFrom` | `(input: string, begin: usize, out: []u8): usize` | Invokes `sliceAnsiFrom` and returns `usize`. |
+| `truncateAnsi` | `(input: string, max_cols: usize, ellipsis: string, out: []u8): usize` | Invokes `truncateAnsi` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { saDecodeUtf8 } from "slice-ansi";
+
+pub fn main() {
+    let result = saDecodeUtf8("example", 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

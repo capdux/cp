@@ -1,44 +1,57 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # multimap
+
+Zero-allocation insertion-ordered one-to-many string multimap (capacity 128) for HTTP headers, URL query params, tag indexes, and event routing (Rust multimap parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:multimap` ([https://github.com/havarnov/multimap](https://github.com/havarnov/multimap))
 
-零堆分配的 CP 一键多值映射表（保持插入顺序，容量 128） — 洁净室 MIT 实现，对标 Rust crates.io #390 `multimap`（3.81 亿+ 总下载），适用于 HTTP 多值 Header、URL 多值 Query、标签倒排索引与事件路由。
+| Metadata | Value |
+| --- | --- |
+| Package | `multimap` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation insertion-ordered one-to-many string multimap for CP — clean-room MIT parity with Rust `multimap` (381M+ downloads).
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add multimap
 ```
 
-## API 参考 / API Reference
-
-- **`MultiEntry`**：`{ key: string, value: string }`
-- **`MultiMapStr`**（容量 128）：
-  - `init()`, `totalValues()`, `isEmpty()`, `isFull()`, `clear(*_)`, `entryAt(idx)`
-  - `insert(*_, key, value) -> bool`
-  - `getFirst(key)`, `getLast(key)`, `getNth(key, n)`
-  - `countFor(key)`, `containsKey(key)`, `uniqueKeyCount()`
-  - `removeKey(*_, key) -> usize`, `removePair(*_, key, value) -> bool`
-
-## 使用示例 / Usage
-
 ```cp
-import { MultiMapStr } from "multimap";
-
-let hdrs = MultiMapStr.init();
-* = hdrs.insert("Set-Cookie", "sid=abc; HttpOnly");
-* = hdrs.insert("Set-Cookie", "theme=dark");
-* = hdrs.insert("Content-Type", "text/html");
-
-const n = hdrs.countFor("Set-Cookie");     // 2
-const second = hdrs.getNth("Set-Cookie", 1 as usize).?; // "theme=dark"
+import { MultiEntry, MultiMapStr, strEq } from "multimap";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `MultiEntry` | `class` | Fields: `key: string, value: string` |
+| `MultiMapStr` | `class` | Fields: `entries: [MULTIMAP_CAP]MultiEntry, count: usize` · Methods: `init, totalValues, isEmpty, isFull, clear, insert, +9 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `strEq` | `(a: string, b: string): bool` | Invokes `strEq` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { strEq } from "multimap";
+
+pub fn main() {
+    let result = strEq("example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

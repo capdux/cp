@@ -1,24 +1,62 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # file-entry-cache
 
-Zero-heap incremental build and lint file metadata cache in pure CP (also covers `flat-cache`). Tracks file paths, modification timestamps, byte sizes, content hashes, and cached payloads in a fixed 64-slot stack table.
+Zero-heap incremental build and lint file metadata cache in pure CP (covers flat-cache)
 
-## API
+| Metadata | Value |
+| --- | --- |
+| Package | `file-entry-cache` |
+| Version | `10.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-- `FileCacheEntry { path: string, mtime_ms: i64, size: u64, content_hash: u64, payload: string, valid: bool }`
-- `FileEntryCache` (fixed 64-slot capacity):
-  - `FileEntryCache.new(): FileEntryCache`
-  - `set(*_, path, mtime_ms, size, content_hash, payload): bool`
-  - `get(path): FileCacheEntry?`
-  - `hasChanged(path, mtime_ms, size, content_hash): bool`
-  - `remove(*_, path): bool`
-  - `reconcile(*_, existing_paths: []const string): usize`
-  - `len(): usize`
+## Installation & Import
 
-<!-- cap-source-attribution -->
-## Source & License Attribution
+```bash
+cap add file-entry-cache
+```
 
-- **Upstream Ecosystem**: npm (`file-entry-cache@10.0.0`, covers `flat-cache`)
-- **Upstream Repository**: https://github.com/jaredwray/cacheable
-- **License**: MIT (clean-room CP implementation)
+```cp
+import {
+    FileCacheEntry,
+    FileEntryCache,
+    fecStrEq,
+    fecEmptyEntry,
+    fecPathExists,
+} from "file-entry-cache";
+```
+
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `FileCacheEntry` | `class` | Fields: `path: string, mtime_ms: i64, size: u64, content_hash: u64, payload: string, valid: bool` |
+| `FileEntryCache` | `class` | Fields: `entries: [64]FileCacheEntry, count: usize` · Methods: `new, set, get, hasChanged, remove, reconcile, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `fecStrEq` | `(a: string, b: string): bool` | Invokes `fecStrEq` and returns `bool`. |
+| `fecEmptyEntry` | `(): FileCacheEntry` | Invokes `fecEmptyEntry` and returns `FileCacheEntry`. |
+| `fecPathExists` | `(path: string, existing_paths: &[]string): bool` | Invokes `fecPathExists` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { fecStrEq } from "file-entry-cache";
+
+pub fn main() {
+    let result = fecStrEq("example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

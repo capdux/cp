@@ -1,32 +1,50 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # radix_trie
+
+Zero-allocation LCRS static-pool byte prefix tree (Trie) with exact lookup, deletion, prefix count, and longest prefix match (LPM) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:radix_trie` ([https://github.com/michaelsproul/rust_radix_trie](https://github.com/michaelsproul/rust_radix_trie))（原库名 `radix_trie` → CP 包名 `radix_trie`）
 
-Zero-allocation LCRS (Left-Child Right-Sibling) static-pool byte prefix tree (`Trie`) for CP — clean-room MIT parity with Rust `radix_trie` / `qp-trie` and npm `trie-search`.
+| Metadata | Value |
+| --- | --- |
+| Package | `radix_trie` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 静态内存池字节前缀树（`MAX_TRIE_NODES = 512`），采用紧凑左孩子-右兄弟（LCRS）节点表示支持任意 `0..255` 字节键，提供精确插入/查询/删除、前缀存在性检测、前缀词条计数与最长前缀匹配（LPM），适用于 CLI 自动补全、HTTP/RPC 路由表与词典过滤（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add radix_trie
 ```
 
-## API Reference / 接口一览
+```cp
+import { TrieNode, LongestMatch, Trie } from "radix_trie";
+```
 
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `TrieNode` / `LongestMatch` | `pub struct` | LCRS 节点与最长前缀匹配结果结构体 |
-| `Trie.init` | `() -> Trie` | 初始化空前缀树（节点 0 为根） |
-| `insert` / `remove` / `clear` | `(*_, ...)` | 原子插入/覆盖更新、逻辑删除（同步维护 `subtree_words`）与重置 |
-| `get` / `contains` | `(key: []const u8) -> i64 / bool` | 精确查值（不存在返回 `-1`）与存在性判断 |
-| `hasPrefix` / `countWithPrefix` | `(prefix: []const u8) -> bool / usize` | 前缀存在性检测与前缀下存活键计数 |
-| `longestPrefixMatch` | `(text: []const u8) -> LongestMatch` | 最长前缀匹配（LPM） |
-| `len` / `nodeCount` | `() -> usize` | 存活键总数与静态池已分配节点数 |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `TrieNode` | `class` | Fields: `byte: u8, is_end: bool, value: i64, first_child: u16, next_sibling: u16, subtree_words: u16` · Methods: `empty` |
+| `LongestMatch` | `class` | Fields: `matched_len: usize, value: i64, found: bool` · Methods: `none` |
+| `Trie` | `class` | Fields: `nodes: [512]TrieNode, used_nodes: usize, word_count: usize` · Methods: `init, clear, len, nodeCount, findChild, walkPrefix, +7 more` |
+
+## Minimal Example
+
+```cp
+import { TrieNode } from "radix_trie";
+
+pub fn main() {
+    // Refer to src/index.d.cp for TrieNode fields and methods
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

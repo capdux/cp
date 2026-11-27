@@ -1,39 +1,48 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `kleur`
+# kleur
+
+Zero-allocation composable chainable ANSI terminal style builder with nested close/reset recovery for CP (clean-room parity with npm kleur v4)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:kleur` ([https://github.com/lukeed/kleur](https://github.com/lukeed/kleur))
 
-Zero-allocation composable chainable ANSI terminal style builder for CP with nested close and reset recovery. Clean-room MIT implementation inspired by npm `kleur` v4, composing `ansi-styles`.
+| Metadata | Value |
+| --- | --- |
+| Package | `kleur` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Fluent immutable chaining**: Compose up to 8 (`KLEUR_MAX_DEPTH`) modifiers, foreground colors, and background colors with zero heap allocation (`KleurChain.new(true).bold().red().bgYellow().format(text, out)`).
-- **Zero ANSI duplication**: Reuses SGR `StylePair` definitions directly from `ansi-styles`.
-- **Reverse-order closing & nested recovery**: Emits open codes in stack order, closes in reverse order, and automatically restores outer styles when embedded close codes or `\x1b[0m` reset sequences appear inside the input text.
-- **Disabled passthrough**: When `enabled == false` (or `depth == 0`), passes text through verbatim without ANSI escape sequences.
+```bash
+cap add kleur
+```
 
-## API
+```cp
+import { KleurChain } from "kleur";
+```
 
-### `KleurChain`
+## Core API
 
-- Constructors: `KleurChain.new(enabled: bool)`, `KleurChain.on()`, `KleurChain.off()`
-- Modifiers: `reset()`, `bold()`, `dim()`, `italic()`, `underline()`, `inverse()`, `hidden()`, `strikethrough()`
-- Foregrounds: `black()`, `red()`, `green()`, `yellow()`, `blue()`, `magenta()`, `cyan()`, `white()`, `gray()`
-- Backgrounds: `bgBlack()`, `bgRed()`, `bgGreen()`, `bgYellow()`, `bgBlue()`, `bgMagenta()`, `bgCyan()`, `bgWhite()`
-- Execution: `format(text: string, out: []u8): usize`, `depthCount(): usize`, `withStyle(pair: StylePair): KleurChain`
+### Data Structures
 
-## Example
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `KleurChain` | `class` | Fields: `enabled: bool, stack: [8]StylePair, depth: usize` · Methods: `new, on, off, depthCount, withStyle, reset, +25 more` |
+
+## Minimal Example
 
 ```cp
 import { KleurChain } from "kleur";
 
-let out: [128]u8 = undefined;
-let n = KleurChain.on().bold().red().bgYellow().format("ALERT", out[0..128]);
-// out[0..n] == "\x1b[1m\x1b[31m\x1b[43mALERT\x1b[49m\x1b[39m\x1b[22m"
+pub fn main() {
+    // Refer to src/index.d.cp for KleurChain fields and methods
+}
 ```
 
-## License
+## CP Zero-Heap & Borrow-Safety Highlights
 
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,25 +1,64 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # fastest-levenshtein
+
+Zero-heap Levenshtein edit distance, OSA Damerau-Levenshtein transposition distance, normalized similarity, and closest-match lookup.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:fastest-levenshtein` ([https://github.com/ka-weihe/fastest-levenshtein](https://github.com/ka-weihe/fastest-levenshtein)) / `crates.io:levenshtein` ([https://github.com/wooorm/levenshtein-rs](https://github.com/wooorm/levenshtein-rs))（原库名 `fastest-levenshtein` → CP 包名 `fastest-levenshtein`）
 
-Zero-heap Levenshtein edit distance, OSA Damerau-Levenshtein transposition distance, normalized similarity, and closest-match lookup in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `fastest-levenshtein` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- `distance(a, b)`: single rolling-row zero-heap Levenshtein with common prefix/suffix stripping (up to `MAX_LEN = 256`)
-- `damerauDistance(a, b)`: Optimal String Alignment Damerau-Levenshtein supporting adjacent transpositions (`"ca"` vs `"ac"` = 1)
-- `similarity(a, b)`: normalized `0.0..1.0` similarity score
-- `withinDistance(a, b, max_dist)`: fast length-difference pruning
-- `closestIndex(query, candidates, max_dist)`: CLI typo suggestion / nearest-neighbor finder
-
-## Usage
+```bash
+cap add fastest-levenshtein
+```
 
 ```cp
-import { distance, damerauDistance, closestIndex } from "fastest-levenshtein";
-
-const d = distance("kitten", "sitting");      // 3
-const t = damerauDistance("teh", "the");      // 1
+import {
+    absDiff,
+    min3,
+    distance,
+    damerauDistance,
+    similarity,
+    withinDistance,
+    closestIndex,
+} from "fastest-levenshtein";
 ```
+
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `absDiff` | `(a: usize, b: usize): usize` | Invokes `absDiff` and returns `usize`. |
+| `min3` | `(a: usize, b: usize, c: usize): usize` | Invokes `min3` and returns `usize`. |
+| `distance` | `(a: string, b: string): usize` | Invokes `distance` and returns `usize`. |
+| `damerauDistance` | `(a: string, b: string): usize` | Invokes `damerauDistance` and returns `usize`. |
+| `similarity` | `(a: string, b: string): f64` | Invokes `similarity` and returns `f64`. |
+| `withinDistance` | `(a: string, b: string, max_dist: usize): bool` | Invokes `withinDistance` and returns `bool`. |
+| `closestIndex` | `(query: string, candidates: &[]string, max_dist: usize): i64` | Releases native resources allocated by this module. |
+
+## Minimal Example
+
+```cp
+import { distance } from "fastest-levenshtein";
+
+pub fn main() {
+    let result = distance("example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,31 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `base62`
+# base62
+
+Zero-heap URL-safe Base62 (0-9A-Za-z) u64 and arbitrary byte-slice encoder/decoder in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:base62` ([https://github.com/fbernier/base62](https://github.com/fbernier/base62))
 
-Zero-heap URL-safe Base62 (`0-9A-Za-z`) encoder and decoder in pure CP, supporting both `u64` (variable & fixed-width lexicographically sortable padded IDs) and arbitrary byte slices with leading-zero preservation.
+| Metadata | Value |
+| --- | --- |
+| Package | `base62` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP URL 安全 Base62（`0-9A-Za-z`）编解码引擎，对标 Rust/npm `base62`，支持 `u64` 短链/雪花 ID 变长与定宽保序编码，以及任意字节切片（严格保留前导零）双向转换。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add base62
 ```
 
-## API
+```cp
+import {
+    DecodeU64Result,
+    charToVal,
+    isValidBase62,
+    encodeU64,
+    encodeU64Padded,
+    decodeU64,
+    encodeBytes,
+    decodeBytes,
+} from "base62";
+```
 
-| Function | Description |
-| --- | --- |
-| `encodeU64(value, dst)` | Encode `u64` into compact Base62 (`1..11` chars) |
-| `encodeU64Padded(value, width, dst)` | Encode `u64` left-padded with `'0'` for lexicographic sorting |
-| `decodeU64(src)` | Strict Base62 -> `u64` decode with overflow protection |
-| `encodeBytes(src, dst)` | Encode arbitrary byte slice (<= 128 B) preserving leading zeros |
-| `decodeBytes(src, dst)` | Decode Base62 string back to bytes |
-| `isValidBase62(src)` | Validate Base62 alphabet membership |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `DecodeU64Result` | `class` | Fields: `value: u64, ok: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `charToVal` | `(c: u8): i32` | Invokes `charToVal` and returns `i32`. |
+| `isValidBase62` | `(src: &[]u8): bool` | Checks predicate `isValidBase62` and returns `bool`. |
+| `encodeU64` | `(value: u64, dst: []u8): usize` | Serializes/formats data via `encodeU64` returning `usize`. |
+| `encodeU64Padded` | `(value: u64, width: usize, dst: []u8): usize` | Serializes/formats data via `encodeU64Padded` returning `usize`. |
+| `decodeU64` | `(src: &[]u8): DecodeU64Result` | Parses input via `decodeU64` and returns `DecodeU64Result`. |
+| `encodeBytes` | `(src: &[]u8, dst: []u8): i64` | Serializes/formats data via `encodeBytes` returning `i64`. |
+| `decodeBytes` | `(src: &[]u8, dst: []u8): i64` | Parses input via `decodeBytes` and returns `i64`. |
+
+## Minimal Example
+
+```cp
+import { isValidBase62 } from "base62";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = isValidBase62(out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

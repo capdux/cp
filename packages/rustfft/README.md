@@ -1,43 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # rustfft
+
+Zero-allocation in-place radix-2 Cooley-Tukey FFT, IFFT, magnitude spectrum, and Hann/Hamming windowing (Rust rustfft / microfft parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rustfft` ([https://github.com/ejmahler/RustFFT](https://github.com/ejmahler/RustFFT))（原库名 `rustfft` → CP 包名 `rustfft`）
 
-Zero-allocation in-place radix-2 Cooley-Tukey FFT, IFFT, magnitude spectrum, and Hann/Hamming windowing for CP — clean-room MIT parity with Rust `rustfft` and `microfft`.
+| Metadata | Value |
+| --- | --- |
+| Package | `rustfft` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配原地快速傅里叶变换（FFT / IFFT）与信号加窗引擎，零外部依赖内置高精度三角函数，适用于音频 DSP、语音特征提取、振动频谱分析与多项式卷积。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add rustfft
 ```
 
-## API
+```cp
+import {
+    Complex,
+    sqrtF64,
+    sinF64,
+    cosF64,
+    isPowerOfTwo,
+    magnitude,
+    fftInPlace,
+    ifftInPlace,
+} from "rustfft";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `Complex` | `struct { re: f64, im: f64 }` | Complex double-precision sample |
-| `isPowerOfTwo` | `(n: usize) -> bool` | Validate power-of-two transform length |
-| `fftInPlace` | `(buf: []Complex) -> bool` | In-place radix-2 DIT-FFT (`false` if not power-of-two) |
-| `ifftInPlace` | `(buf: []Complex) -> bool` | In-place exact inverse FFT (`1/N` normalized) |
-| `magnitude` | `(c: Complex) -> f64` | Euclidean magnitude `sqrt(re^2 + im^2)` |
-| `applyHannWindow` | `(samples: []f64)` | In-place Hann windowing |
-| `applyHammingWindow` | `(samples: []f64)` | In-place Hamming windowing |
+| `Complex` | `class` | Fields: `re: f64, im: f64` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `sqrtF64` | `(x: f64): f64` | Invokes `sqrtF64` and returns `f64`. |
+| `sinF64` | `(x_in: f64): f64` | Invokes `sinF64` and returns `f64`. |
+| `cosF64` | `(x: f64): f64` | Invokes `cosF64` and returns `f64`. |
+| `isPowerOfTwo` | `(n: usize): bool` | Checks predicate `isPowerOfTwo` and returns `bool`. |
+| `magnitude` | `(c: Complex): f64` | Invokes `magnitude` and returns `f64`. |
+| `fftInPlace` | `(buf: []Complex): bool` | Invokes `fftInPlace` and returns `bool`. |
+| `ifftInPlace` | `(buf: []Complex): bool` | Invokes `ifftInPlace` and returns `bool`. |
+| `applyHannWindow` | `(samples: []f64)` | Executes `applyHannWindow` in-place. |
+| `applyHammingWindow` | `(samples: []f64)` | Executes `applyHammingWindow` in-place. |
+
+## Minimal Example
 
 ```cp
-import { Complex, fftInPlace, ifftInPlace, magnitude } from "rustfft";
+import { isPowerOfTwo } from "rustfft";
 
-let buf: [4]Complex = [
-    Complex{ re: 1.0, im: 0.0 },
-    Complex{ re: 0.0, im: 0.0 },
-    Complex{ re: 0.0, im: 0.0 },
-    Complex{ re: 0.0, im: 0.0 },
-];
-* = fftInPlace(buf[0..4]);
-* = ifftInPlace(buf[0..4]);
+pub fn main() {
+    let result = isPowerOfTwo(0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

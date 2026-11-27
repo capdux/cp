@@ -1,45 +1,79 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `num-integer`
+# num-integer
+
+Zero-allocation integer number theory, overflow-safe GCD/LCM/extended-GCD, floor/ceil division, isqrt/icbrt, and binomial coefficients for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-integer` ([https://github.com/rust-num/num-integer](https://github.com/rust-num/num-integer))
 
-Zero-allocation integer number theory, overflow-safe GCD/LCM/extended-GCD, mathematical floor/ceil division, exact integer roots, and binomial coefficients for CP (clean-room MIT, inspired by Rust `num-integer` v0.1).
+| Metadata | Value |
+| --- | --- |
+| Package | `num-integer` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## API
+## Installation & Import
 
-```cp
-pub struct ExtGcdResult {
-    pub gcd: i64,
-    pub x: i64,
-    pub y: i64,
-}
-
-pub fn gcdU64(a: u64, b: u64): u64
-pub fn lcmU64(a: u64, b: u64): u64
-pub fn extendedGcd(a: i64, b: i64): ExtGcdResult
-pub fn divFloor(a: i64, b: i64): i64
-pub fn modFloor(a: i64, b: i64): i64
-pub fn divCeil(a: i64, b: i64): i64
-pub fn isqrtU64(n: u64): u64
-pub fn icbrtU64(n: u64): u64
-pub fn binomialU64(n: u64, k: u64): u64
-pub fn isEven(n: i64): bool
-pub fn isOdd(n: i64): bool
-pub fn nextMultipleOfU64(n: u64, step: u64): u64
-pub fn prevMultipleOfU64(n: u64, step: u64): u64
+```bash
+cap add num-integer
 ```
 
-## Highlights
+```cp
+import {
+    ExtGcdResult,
+    nintAbsU64,
+    nintDivTruncRem,
+    gcdU64,
+    lcmU64,
+    extendedGcd,
+    divFloor,
+    modFloor,
+} from "num-integer";
+```
 
-- **Zero Heap Allocations**: All functions operate strictly on primitive integer registers.
-- **Overflow-Safe**:
-  - `lcmU64` divides by `gcd` before multiplying.
-  - `binomialU64` cancels common factors via `gcdU64` at every step (computes `C(60, 30)` accurately in `u64`).
-  - `isqrtU64` (bit-by-bit restoring) and `icbrtU64` (bounded binary search up to `2642245`) are 100% exact across the entire `0..=u64::MAX` range.
-  - Signed division (`divFloor`, `modFloor`, `divCeil`, `extendedGcd`) uses `u64` magnitude arithmetic with exact sign restoration.
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ExtGcdResult` | `class` | Fields: `gcd: i64, x: i64, y: i64` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `nintAbsU64` | `(v: i64): u64` | Invokes `nintAbsU64` and returns `u64`. |
+| `nintDivTruncRem` | `(a: i64, b: i64, q_out: &mut i64, r_out: &mut i64)` | Executes `nintDivTruncRem` in-place. |
+| `gcdU64` | `(a: u64, b: u64): u64` | Invokes `gcdU64` and returns `u64`. |
+| `lcmU64` | `(a: u64, b: u64): u64` | Invokes `lcmU64` and returns `u64`. |
+| `extendedGcd` | `(a: i64, b: i64): ExtGcdResult` | Invokes `extendedGcd` and returns `ExtGcdResult`. |
+| `divFloor` | `(a: i64, b: i64): i64` | Invokes `divFloor` and returns `i64`. |
+| `modFloor` | `(a: i64, b: i64): i64` | Invokes `modFloor` and returns `i64`. |
+| `divCeil` | `(a: i64, b: i64): i64` | Invokes `divCeil` and returns `i64`. |
+| `isqrtU64` | `(n: u64): u64` | Checks predicate `isqrtU64` and returns `bool`. |
+| `icbrtU64` | `(n: u64): u64` | Invokes `icbrtU64` and returns `u64`. |
+| `binomialU64` | `(n: u64, k: u64): u64` | Invokes `binomialU64` and returns `u64`. |
+| `isEven` | `(n: i64): bool` | Checks predicate `isEven` and returns `bool`. |
+| `isOdd` | `(n: i64): bool` | Checks predicate `isOdd` and returns `bool`. |
+| `nextMultipleOfU64` | `(n: u64, step: u64): u64` | Invokes `nextMultipleOfU64` and returns `u64`. |
+| `prevMultipleOfU64` | `(n: u64, step: u64): u64` | Invokes `prevMultipleOfU64` and returns `u64`. |
+
+## Minimal Example
+
+```cp
+import { isqrtU64 } from "num-integer";
+
+pub fn main() {
+    let result = isqrtU64(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

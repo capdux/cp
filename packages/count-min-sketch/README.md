@@ -1,38 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # count-min-sketch
+
+Zero-allocation Count-Min Sketch streaming frequency estimator and heavy-hitter detector (Rust count-min-sketch / Redis CMS parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:count-min-sketch` ([https://github.com/amansarda/count-min-sketch](https://github.com/amansarda/count-min-sketch))（原库名 `count-min-sketch` → CP 包名 `count-min-sketch`）
 
-Zero-allocation Count-Min Sketch streaming frequency estimator and heavy-hitter detector for CP — clean-room MIT parity with Rust `count-min-sketch` and Redis `CMS.INCRBY`.
+| Metadata | Value |
+| --- | --- |
+| Package | `count-min-sketch` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配流式频次估算引擎（4 行 × 256 列饱和计数器），严格保证永不低估真实频次，支持分布式节点合并与热点 Key 检测。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add count-min-sketch
 ```
 
-## API
+```cp
+import {
+    CountMinSketch,
+    makeU64,
+    addWrap64,
+    mulWrap64,
+    splitMix64,
+    rowSeed,
+    hashBytesRow,
+    hashU64Row,
+} from "count-min-sketch";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `CountMinSketch` | `init()`, `clear(*_)`, `width() -> usize`, `depth() -> usize`, `totalCount() -> u64` | 4×256 fixed-capacity Count-Min Sketch |
-| `add` / `increment` / `addU64` | `(*_, item/val, count)` | Saturating counter updates |
-| `estimate` / `estimateU64` | `(item/val) -> u32` | Minimum across 4 rows (never underestimates true count) |
-| `merge` | `(*_, other: CountMinSketch)` | Element-wise saturating merge for distributed aggregation |
-| `isHeavyHitter` | `(item: string, threshold_ratio: f64) -> bool` | Detect if estimated share meets or exceeds `threshold_ratio` |
+| `CountMinSketch` | `class` | Fields: `counters: [CMS_CELLS]u32, total: u64` · Methods: `init, clear, width, depth, totalCount, add, +6 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `makeU64` | `(hi: u32, lo: u32): u64` | Invokes `makeU64` and returns `u64`. |
+| `addWrap64` | `(a: u64, b: u64): u64` | Mutates or appends state via `addWrap64`. |
+| `mulWrap64` | `(a: u64, b: u64): u64` | Invokes `mulWrap64` and returns `u64`. |
+| `splitMix64` | `(x_in: u64): u64` | Invokes `splitMix64` and returns `u64`. |
+| `rowSeed` | `(row: usize): u64` | Invokes `rowSeed` and returns `u64`. |
+| `hashBytesRow` | `(s: string, row: usize): usize` | Checks predicate `hashBytesRow` and returns `bool`. |
+| `hashU64Row` | `(val: u64, row: usize): usize` | Checks predicate `hashU64Row` and returns `bool`. |
+| `satAddU32` | `(a: u32, b: u32): u32` | Invokes `satAddU32` and returns `u32`. |
+
+## Minimal Example
 
 ```cp
-import { CountMinSketch } from "count-min-sketch";
+import { hashBytesRow } from "count-min-sketch";
 
-let cms = CountMinSketch.init();
-cms.add("/api/login", 500 as u32);
-cms.increment("/api/health");
-const est = cms.estimate("/api/login");           // >= 500
-const hot = cms.isHeavyHitter("/api/login", 0.5); // true
+pub fn main() {
+    let result = hashBytesRow("example", 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

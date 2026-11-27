@@ -1,30 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `noise`
+# noise
+
+Zero-heap 2D/3D Improved Perlin Noise, Value Noise, and Fractal Brownian Motion (fBm) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:noise` ([https://github.com/Razaekel/noise-rs](https://github.com/Razaekel/noise-rs))
 
-Zero-heap 2D/3D Improved Perlin Noise, Fractal Brownian Motion (fBm), and Ridged Multifractal procedural noise generator in pure CP, modeled after Rust's `noise` crate.
+| Metadata | Value |
+| --- | --- |
+| Package | `noise` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP 程序化噪声引擎，对标 Rust `noise` crate，内置可设种子的 2D/3D 改进 Perlin 梯度噪声、分形布朗运动 `fbm2D` 与山脊分形 `ridged2D`，适用于地形生成、纹理与图形特效。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add noise
 ```
 
-## API
+```cp
+import {
+    PerlinNoise,
+    floorInt,
+    fade,
+    lerp,
+    grad2,
+    grad3,
+    splitmix64,
+} from "noise";
+```
 
-| Method | Description |
-| --- | --- |
-| `PerlinNoise.init(seed)` | Initialize seeded 512-byte permutation table |
-| `noise2D(x, y)` | Deterministic 2D improved Perlin gradient noise |
-| `noise3D(x, y, z)` | Deterministic 3D improved Perlin gradient noise |
-| `fbm2D(x, y, octaves, lacunarity, gain)` | Normalized 2D Fractal Brownian Motion |
-| `ridged2D(x, y, octaves)` | Ridged multifractal 2D noise in `[0, 1]` |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `PerlinNoise` | `class` | Fields: `perm: [512]u8` · Methods: `init, noise2D, noise3D, fbm2D, ridged2D` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `floorInt` | `(x: f64): i64` | Invokes `floorInt` and returns `i64`. |
+| `fade` | `(t: f64): f64` | Invokes `fade` and returns `f64`. |
+| `lerp` | `(a: f64, b: f64, t: f64): f64` | Invokes `lerp` and returns `f64`. |
+| `grad2` | `(hash: u8, x: f64, y: f64): f64` | Invokes `grad2` and returns `f64`. |
+| `grad3` | `(hash: u8, x: f64, y: f64, z: f64): f64` | Invokes `grad3` and returns `f64`. |
+| `splitmix64` | `(state: &mut u64): u64` | Invokes `splitmix64` and returns `u64`. |
+
+## Minimal Example
+
+```cp
+import { floorInt } from "noise";
+
+pub fn main() {
+    let result = floorInt(0.0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

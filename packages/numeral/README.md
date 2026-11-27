@@ -1,56 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # numeral
+
+Zero-allocation human-readable number formatting (grouped thousands, EN/ZH compact suffixes, percentages, strict Roman numerals, and English words) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:numeral` ([https://github.com/adamwdraper/Numeral-js](https://github.com/adamwdraper/Numeral-js)) / `npm:filesize` ([https://github.com/avoidwork/filesize.js](https://github.com/avoidwork/filesize.js))（原库名 `numeral` → CP 包名 `numeral`）
 
-Zero-allocation human-readable number formatting engine for CP — clean-room MIT parity with npm `numeral` / `millify` / `number-to-words` and Rust `num-format`.
+| Metadata | Value |
+| --- | --- |
+| Package | `numeral` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 人类可读数字格式化引擎，支持千分位分组、中英文紧凑缩写（`K/M/B/T`、`万/亿/万亿`）、百分比格式化、严格罗马数字双向转换（`1..3999`）与全范围英文数字拼写（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add numeral
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `formatGrouped` | `(n: i64, sep: u8, out: []u8) -> string` | 千分位分组格式化（支持负数与自定义分隔符，如 `1234567, ','` → `"1,234,567"`） |
-| `formatCompactEn` | `(n: i64, out: []u8) -> string` | 英文紧凑缩写（`K`/`M`/`B`/`T`，如 `1200` → `"1.2K"`、`3500000` → `"3.5M"`） |
-| `formatCompactZh` | `(n: i64, out: []u8) -> string` | 中文紧凑缩写（`万`/`亿`/`万亿`，如 `12500` → `"1.3万"`、`250000000` → `"2.5亿"`） |
-| `formatPercent` | `(ratio: f64, decimals: u8, out: []u8) -> string` | 百分比格式化与四舍五入（如 `0.9995, 2` → `"99.95%"`） |
-| `toRoman` | `(n: u16, out: []u8) -> string` | 整数转标准罗马数字（`1..=3999`，如 `2026` → `"MMXXVI"`） |
-| `fromRoman` | `(s: string) -> u16?` | 严格解析罗马数字（大小写无关，拒绝 `"IIII"`/`"IC"`/`"VV"` 等非法形式） |
-| `toEnglishWords` | `(n: i64, out: []u8) -> string` | 整数转英文拼写（支持 `0`、负数与完整 `i64` 范围） |
-
-## Usage / 使用示例
-
 ```cp
 import {
+    appendByte,
+    absU64,
     formatGrouped,
+    writeCompactScaled,
     formatCompactEn,
     formatCompactZh,
     formatPercent,
     toRoman,
-    fromRoman,
-    toEnglishWords,
 } from "numeral";
-
-let buf: [256]u8 = undefined;
-
-const g = formatGrouped(1234567, ',', buf[0..256]);       // => "1,234,567"
-const en = formatCompactEn(2400000000, buf[0..256]);      // => "2.4B"
-const zh = formatCompactZh(250000000, buf[0..256]);       // => "2.5亿"
-const pct = formatPercent(0.9995, 2, buf[0..256]);        // => "99.95%"
-const rom = toRoman(2026, buf[0..256]);                   // => "MMXXVI"
-const num = fromRoman("MCMXCIV");                         // => 1994 (u16?)
-const words = toEnglishWords(1234, buf[0..256]);          // => "one thousand two hundred thirty-four"
 ```
 
-## License
+## Core API
 
-MIT
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `absU64` | `(n: i64): u64` | Invokes `absU64` and returns `u64`. |
+| `formatGrouped` | `(n: i64, sep: u8, out: []u8): string` | Serializes/formats data via `formatGrouped` returning `string`. |
+| `writeCompactScaled` | `(abs: u64, unit: u64, suffix: string, next_threshold: u64, next_suffix: string, negative: bool, out: []u8): string` | Invokes `writeCompactScaled` and returns `string`. |
+| `formatCompactEn` | `(n: i64, out: []u8): string` | Serializes/formats data via `formatCompactEn` returning `string`. |
+| `formatCompactZh` | `(n: i64, out: []u8): string` | Serializes/formats data via `formatCompactZh` returning `string`. |
+| `formatPercent` | `(ratio: f64, decimals: u8, out: []u8): string` | Serializes/formats data via `formatPercent` returning `string`. |
+| `toRoman` | `(n: u16, out: []u8): string` | Invokes `toRoman` and returns `string`. |
+| `romanCharVal` | `(c: u8): u16` | Invokes `romanCharVal` and returns `u16`. |
+| `fromRoman` | `(s: string): u16?` | Invokes `fromRoman` and returns `u16?`. |
+| `onesWord` | `(n: u64): string` | Invokes `onesWord` and returns `string`. |
+| `tensWord` | `(n: u64): string` | Invokes `tensWord` and returns `string`. |
+| `appendUnder1000` | `(v: u64, out: []u8, start_pos: usize): usize` | Invokes `appendUnder1000` and returns `usize`. |
+| `appendScaleGroup` | `(chunk: u64, label: string, out: []u8, start_pos: usize, has_prev: bool): usize` | Invokes `appendScaleGroup` and returns `usize`. |
+| `toEnglishWords` | `(n: i64, out: []u8): string` | Invokes `toEnglishWords` and returns `string`. |
+
+## Minimal Example
+
+```cp
+import { fromRoman } from "numeral";
+
+pub fn main() {
+    let result = fromRoman("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

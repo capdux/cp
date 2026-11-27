@@ -1,52 +1,97 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # esquery
+
+Zero-allocation ESTree AST CSS-like selector parser and matcher (npm esquery parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:esquery` ([https://github.com/estools/esquery](https://github.com/estools/esquery))（原库名 `esquery` → CP 包名 `esquery`）
 
-Zero-allocation ESTree AST CSS-like selector parser and matcher for CP — clean-room BSD-3-Clause implementation inspired by `esquery` (used by ESLint).
+| Metadata | Value |
+| --- | --- |
+| Package | `esquery` |
+| Version | `1.0.0` |
+| License | `BSD-3-Clause` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 AST CSS-like 选择器解析与匹配引擎（对标 ESLint 核心 `esquery`），支持节点类型、通配符 `*`、属性过滤 `[attr=val]`、复合选择、后代选择 `A B`、直接子代 `A > B`、相邻兄弟 `A + B` 以及多选组合 `A, B`。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add esquery
 ```
 
-## API
+```cp
+import {
+    SelectorKind,
+    AttrOp,
+    AstNodeInfo,
+    SelectorNode,
+    ParsedSelector,
+    EsqParser,
+    EsqIntParse,
+    esqEmptyNode,
+} from "esquery";
+```
 
-### Enums & Structs / 核心类型
+## Core API
 
-| Symbol | Description |
-| --- | --- |
-| `SelectorKind` | `Wildcard`, `NodeType`, `Attribute`, `Compound`, `Descendant`, `Child`, `AdjacentSibling`, `Matches` |
-| `AttrOp` | `Exists`, `Eq`, `NotEq`, `Lt`, `Gt` |
-| `AstNodeInfo` | Flat AST node descriptor (`node_type`, `name`, `operator`, `parent_idx`, `prev_sibling_idx`) |
-| `SelectorNode` | Individual parsed selector AST node stored in fixed-capacity pool |
-| `ParsedSelector` | Zero-allocation parsed selector tree (`ok`, `root`, `count`, `error_pos`, `nodes`) |
+### Types, Enums & Errors
 
-### Functions / 核心函数
-
-| Symbol | Signature | Description |
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `parseSelector` | `(sel: string): ParsedSelector` | Parse CSS-like AST selector string into a fixed-size AST |
-| `matchesSelector` | `(sel: ParsedSelector, nodes: []const AstNodeInfo, idx: usize): bool` | Test whether AST node at `idx` matches `sel` |
-| `queryAll` | `(sel_str: string, nodes: []const AstNodeInfo, out_indices: []usize): usize` | Query all matching node indices into `out_indices` and return match count |
+| `enum` | `SelectorKind` | `Wildcard, NodeType, Attribute, Compound, Descendant, Child, AdjacentSibling, Matches` |
+| `enum` | `AttrOp` | `Exists, Eq, NotEq, Lt, Gt` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `AstNodeInfo` | `class` | Fields: `node_type: string, name: string, operator: string, parent_idx: i32, prev_sibling_idx: i32` |
+| `SelectorNode` | `class` | Fields: `kind: SelectorKind, attr_op: AttrOp, text: string, attr_name: string, attr_val: string, left: i32, +1 more` |
+| `ParsedSelector` | `class` | Fields: `ok: bool, root: i32, count: usize, error_pos: usize, nodes: [64]SelectorNode` |
+| `EsqParser` | `class` | Fields: `src: string, pos: usize, has_err: bool, err_pos: usize, count: usize, nodes: [64]SelectorNode` |
+| `EsqIntParse` | `class` | Fields: `ok: bool, val: i64` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `esqEmptyNode` | `(): SelectorNode` | Invokes `esqEmptyNode` and returns `SelectorNode`. |
+| `esqIsWs` | `(ch: u8): bool` | Invokes `esqIsWs` and returns `bool`. |
+| `esqIsIdentStart` | `(ch: u8): bool` | Invokes `esqIsIdentStart` and returns `bool`. |
+| `esqIsIdentChar` | `(ch: u8): bool` | Invokes `esqIsIdentChar` and returns `bool`. |
+| `esqCanStartSimple` | `(ch: u8): bool` | Invokes `esqCanStartSimple` and returns `bool`. |
+| `esqStrEq` | `(a: string, b: string): bool` | Invokes `esqStrEq` and returns `bool`. |
+| `esqStrCmp` | `(a: string, b: string): i32` | Invokes `esqStrCmp` and returns `i32`. |
+| `esqParseI64` | `(s: string): EsqIntParse` | Invokes `esqParseI64` and returns `EsqIntParse`. |
+| `esqSetErr` | `(p: &mut EsqParser, pos: usize)` | Executes `esqSetErr` in-place. |
+| `esqSkipWs` | `(p: &mut EsqParser): bool` | Invokes `esqSkipWs` and returns `bool`. |
+| `esqAddNode` | `(p: &mut EsqParser, node: SelectorNode): i32` | Invokes `esqAddNode` and returns `i32`. |
+| `esqParseAttr` | `(p: &mut EsqParser): i32` | Invokes `esqParseAttr` and returns `i32`. |
+| `esqParseSimple` | `(p: &mut EsqParser): i32` | Invokes `esqParseSimple` and returns `i32`. |
+| `esqParseCompound` | `(p: &mut EsqParser): i32` | Invokes `esqParseCompound` and returns `i32`. |
+| `esqParseComplex` | `(p: &mut EsqParser): i32` | Invokes `esqParseComplex` and returns `i32`. |
+| `esqParseList` | `(p: &mut EsqParser): i32` | Invokes `esqParseList` and returns `i32`. |
+| `parseSelector` | `(sel: string): ParsedSelector` | Parses input via `parseSelector` and returns `ParsedSelector`. |
+| `esqGetAttrVal` | `(ast_node: AstNodeInfo, attr_name: string): string` | Invokes `esqGetAttrVal` and returns `string`. |
+| `esqMatchAttr` | `(ast_node: AstNodeInfo, sel_node: SelectorNode): bool` | Invokes `esqMatchAttr` and returns `bool`. |
+| `esqMatchRec` | `(sel_nodes: &[]SelectorNode, sel_idx: i32, nodes: &[]AstNodeInfo, idx: usize, depth: usize): bool` | Invokes `esqMatchRec` and returns `bool`. |
+| `matchesSelector` | `(sel: ParsedSelector, nodes: &[]AstNodeInfo, idx: usize): bool` | Invokes `matchesSelector` and returns `bool`. |
+| `queryAll` | `(sel_str: string, nodes: &[]AstNodeInfo, out_indices: []usize): usize` | Invokes `queryAll` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { AstNodeInfo, parseSelector, matchesSelector, queryAll } from "esquery";
+import { parseSelector } from "esquery";
 
-const nodes = [
-    AstNodeInfo{ node_type: "FunctionDeclaration", name: "greet", operator: "", parent_idx: -1, prev_sibling_idx: -1 },
-    AstNodeInfo{ node_type: "CallExpression", name: "", operator: "", parent_idx: 0, prev_sibling_idx: -1 },
-    AstNodeInfo{ node_type: "Identifier", name: "log", operator: "", parent_idx: 1, prev_sibling_idx: -1 },
-];
-
-let out: [8]usize = undefined;
-const count = queryAll("CallExpression > Identifier[name=\"log\"]", nodes[0..3], out[0..8]);
-// count == 1, out[0] == 2
+pub fn main() {
+    let result = parseSelector("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

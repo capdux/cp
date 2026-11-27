@@ -1,35 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # h3o
+
+Zero-heap Uber H3 64-bit hexagonal hierarchical spatial index cell parser, constructor, hierarchy traversal, and area table (clean-room port of Rust h3o)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:h3o` ([https://github.com/HydroniumLabs/h3o](https://github.com/HydroniumLabs/h3o))
 
-Clean-room MIT, zero-heap Uber H3 64-bit hexagonal hierarchical spatial index library for CP — modeled on crates.io `h3o` v0.6.
+| Metadata | Value |
+| --- | --- |
+| Package | `h3o` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation**: 8-byte `H3Cell { bits: u64 }` value type implementing the official 64-bit H3 Cell Index bit layout.
-- **Strict Validation**: validates mode (`1`), reserved bits (`0`), resolution (`0..15`), base cell (`0..121`), active/unused 3-bit digits (`0..6` / `7`), and pentagon deleted K-axis constraints.
-- **Hierarchy & Pentagon Queries**: `resolution`, `baseCell`, `digitAt`, `isPentagon`, `parent`, and `childAt`.
-- **Hex Codec & Area Table**: `toHex`, `parseH3Hex` (with optional `0x` prefix), and `avgHexAreaKm2` for resolutions `0..15`.
+```bash
+cap add h3o
+```
 
-## API
+```cp
+import {
+    H3Cell,
+    h3AllLow63,
+    h3DigitShift,
+    h3IsPentagonBaseCell,
+    h3HexDigitVal,
+    h3HexChar,
+    h3ClearBits,
+    parseH3Hex,
+} from "h3o";
+```
 
-### Types
-- `H3Cell { bits: u64 }`
-  - `H3Cell.fromParts(res: u8, base_cell: u8, digits: [15]u8): H3Cell?`
-  - `H3Cell.fromU64(raw: u64): H3Cell?`
-  - `resolution(): u8`, `baseCell(): u8`, `digitAt(res: u8): u8`
-  - `isPentagon(): bool`
-  - `parent(target_res: u8): H3Cell?`
-  - `childAt(digit: u8): H3Cell?`
-  - `toHex(out: []u8): usize`
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `H3Cell` | `class` | Fields: `bits: u64` · Methods: `fromParts, fromU64, resolution, baseCell, digitAt, isPentagon, +3 more` |
 
 ### Functions
-- `parseH3Hex(hex: string): H3Cell?`
-- `avgHexAreaKm2(res: u8): f64`
 
-## License
+| Function | Signature | Description |
+| --- | --- | --- |
+| `h3AllLow63` | `(): u64` | Invokes `h3AllLow63` and returns `u64`. |
+| `h3DigitShift` | `(r: u8): u6` | Invokes `h3DigitShift` and returns `u6`. |
+| `h3IsPentagonBaseCell` | `(bc: u8): bool` | Invokes `h3IsPentagonBaseCell` and returns `bool`. |
+| `h3HexDigitVal` | `(c: u8): u8` | Invokes `h3HexDigitVal` and returns `u8`. |
+| `h3HexChar` | `(nibble: u8): u8` | Invokes `h3HexChar` and returns `u8`. |
+| `h3ClearBits` | `(val: u64, mask: u64): u64` | Invokes `h3ClearBits` and returns `u64`. |
+| `parseH3Hex` | `(hex: string): H3Cell?` | Parses input via `parseH3Hex` and returns `H3Cell?`. |
+| `avgHexAreaKm2` | `(res: u8): f64` | Invokes `avgHexAreaKm2` and returns `f64`. |
 
-MIT
+## Minimal Example
+
+```cp
+import { parseH3Hex } from "h3o";
+
+pub fn main() {
+    let result = parseH3Hex("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

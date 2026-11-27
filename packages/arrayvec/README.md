@@ -1,45 +1,51 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # arrayvec
+
+Zero-allocation stack-backed fixed-capacity containers: ArrayString64, ArrayString256, ArrayVecI64, ArrayVecU64 with O(1) swapRemove and truncating push (Rust arrayvec parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:arrayvec` ([https://github.com/bluss/arrayvec](https://github.com/bluss/arrayvec))
 
-零堆分配的 CP 栈上定容字符串与定容向量容器 — 洁净室 MIT 实现，对标 Rust crates.io #214 `arrayvec`（7.30 亿+ 总下载），专为无 GC 高并发热路径与协议拼装打造。
+| Metadata | Value |
+| --- | --- |
+| Package | `arrayvec` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation stack-backed fixed-capacity containers (`ArrayString64`, `ArrayString256`, `ArrayVecI64`, `ArrayVecU64`) for CP — clean-room MIT parity with Rust `arrayvec` (730M+ downloads).
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add arrayvec
 ```
 
-## API 参考 / API Reference
-
-- **`ArrayString64`**（64B）与 **`ArrayString256`**（256B）：
-  - `init()`, `fromStr(s)`, `len()`, `capacity()`, `remaining()`, `isEmpty()`, `isFull()`
-  - `tryPushByte(*_, b)`, `tryPushStr(*_, s)`, `pushStrTruncating(*_, s)`, `popByte(*_)`, `truncate(*_, n)`, `clear(*_)`, `asStr()`
-- **`ArrayVecI64`**（64 项）与 **`ArrayVecU64`**（64 项）：
-  - `init()`, `len()`, `isEmpty()`, `isFull()`
-  - `tryPush(*_, v)`, `pop(*_)`, `get(idx)`, `set(*_, idx, v)`, `tryInsert(*_, idx, v)`, `remove(*_, idx)`, `swapRemove(*_, idx)`（O(1)）, `truncate(*_, n)`, `clear(*_)`
-
-## 使用示例 / Usage
-
 ```cp
-import { ArrayString64, ArrayVecU64 } from "arrayvec";
-
-let s = ArrayString64.fromStr("GET ").?;
-* = s.tryPushStr("/api/v1");
-const req = s.asStr(); // "GET /api/v1"
-
-let v = ArrayVecU64.init();
-* = v.tryPush(10 as u64);
-* = v.tryPush(20 as u64);
-* = v.tryPush(30 as u64);
-const removed = v.swapRemove(0 as usize).?; // 10, remaining: [30, 20]
+import { ArrayString64, ArrayString256, ArrayVecI64, ArrayVecU64 } from "arrayvec";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ArrayString64` | `class` | Fields: `buf: [STR64_CAP]u8, count: usize` · Methods: `init, fromStr, len, capacity, remaining, isEmpty, +8 more` |
+| `ArrayString256` | `class` | Fields: `buf: [STR256_CAP]u8, count: usize` · Methods: `init, fromStr, len, capacity, remaining, isEmpty, +8 more` |
+| `ArrayVecI64` | `class` | Fields: `items: [VEC64_CAP]i64, count: usize` · Methods: `init, len, isEmpty, isFull, tryPush, pop, +7 more` |
+| `ArrayVecU64` | `class` | Fields: `items: [VEC64_CAP]u64, count: usize` · Methods: `init, len, isEmpty, isFull, tryPush, pop, +7 more` |
+
+## Minimal Example
+
+```cp
+import { ArrayString64 } from "arrayvec";
+
+pub fn main() {
+    // Refer to src/index.d.cp for ArrayString64 fields and methods
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

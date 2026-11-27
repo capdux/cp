@@ -1,43 +1,67 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # widest-line
+
+Zero-allocation widest visual terminal line width calculator (npm widest-line parity) composing string-width for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:widest-line` ([https://github.com/sindresorhus/widest-line](https://github.com/sindresorhus/widest-line))
 
-Zero-allocation widest visual terminal line width calculator for CP — clean-room MIT parity with npm `widest-line`. Composes `string-width` with zero duplication.
+| Metadata | Value |
+| --- | --- |
+| Package | `widest-line` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配多行文本最大可见列宽计算库（对标 npm `widest-line`），复用 `string-width` 处理 ANSI 转义序列、CJK 全角宽字符与 Emoji 组合序列，并额外提供逐行宽度采集与制表符对齐宽度计算。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add widest-line
 ```
 
-## Dependencies / 跨包复用
+```cp
+import {
+    wlTrimCr,
+    wlLineWidthWithTab,
+    countLines,
+    widestLine,
+    widestLineWithOptions,
+    lineWidths,
+    lineWidthsWithOptions,
+    widestLineWithTab,
+} from "widest-line";
+```
 
-- `string-width`: 零堆分配单行终端可见列宽计算（底层组合 `strip-ansi` 与 `unicode-width`）
+## Core API
 
-## API
+### Functions
 
-| Symbol | Signature | Description |
+| Function | Signature | Description |
 | --- | --- | --- |
-| `widestLine` | `(s: string): usize` | Visual column width of the widest line across `\n`/`\r\n` |
-| `widestLineWithOptions` | `(s: string, opts: StringWidthOptions): usize` | Widest line width with custom `StringWidthOptions` |
-| `lineWidths` | `(s: string, out: []usize): usize` | Writes each line's visual width into `out`, returns total line count (`0` for `""`) |
-| `lineWidthsWithOptions` | `(s: string, opts: StringWidthOptions, out: []usize): usize` | Per-line visual widths with custom `StringWidthOptions` |
-| `widestLineWithTab` | `(s: string, tab_width: usize): usize` | Widest line width expanding `\t` to `tab_width`-aligned tab stops |
-| `countLines` | `(s: string): usize` | Counts lines in `s` (`0` for empty string) |
+| `wlTrimCr` | `(line: string): string` | Invokes `wlTrimCr` and returns `string`. |
+| `wlLineWidthWithTab` | `(line: string, tab_width: usize): usize` | Invokes `wlLineWidthWithTab` and returns `usize`. |
+| `countLines` | `(s: string): usize` | Invokes `countLines` and returns `usize`. |
+| `widestLine` | `(s: string): usize` | Invokes `widestLine` and returns `usize`. |
+| `widestLineWithOptions` | `(s: string, opts: StringWidthOptions): usize` | Invokes `widestLineWithOptions` and returns `usize`. |
+| `lineWidths` | `(s: string, out: []usize): usize` | Invokes `lineWidths` and returns `usize`. |
+| `lineWidthsWithOptions` | `(s: string, opts: StringWidthOptions, out: []usize): usize` | Invokes `lineWidthsWithOptions` and returns `usize`. |
+| `widestLineWithTab` | `(s: string, tab_width: usize): usize` | Invokes `widestLineWithTab` and returns `usize`. |
 
-## Usage / 使用示例
+## Minimal Example
 
 ```cp
-import { widestLine, lineWidths, widestLineWithTab } from "widest-line";
+import { wlTrimCr } from "widest-line";
 
-const w1 = widestLine("hi\n你好世界\r\n\x1b[32mgreen\x1b[0m"); // 8
-const w2 = widestLineWithTab("a\tb\n1234\tx", 4);            // 9
-
-let widths: [4]usize = undefined;
-const n = lineWidths("ab\n中文\n🚀", widths[0..4]); // n = 3, widths = [2, 4, 2]
+pub fn main() {
+    let result = wlTrimCr("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

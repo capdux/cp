@@ -1,57 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # color-name
+
+Zero-allocation 148 W3C CSS Color 4 named colors lookup and exact RGB/HSL/HSV/HEX color space conversion engine for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:color-name` ([https://github.com/colorjs/color-name](https://github.com/colorjs/color-name))（原库名 `color-name` → CP 包名 `color-name`）
 
-Zero-allocation 148 W3C CSS Color 4 named colors lookup and exact RGB ↔ HSL ↔ HSV ↔ HEX color space conversion engine for CP — clean-room MIT parity with npm `color-name` and `color-convert`.
+| Metadata | Value |
+| --- | --- |
+| Package | `color-name` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 颜色名称与色空间转换引擎，完整内置 148 个 W3C CSS Color 4 标准命名颜色（`O(log N)` 二分查找 + 反向查名），提供精确 RGB ↔ HSL ↔ HSV ↔ HEX 互转与 `mixRgb`/`lighten`/`darken` 调色工具（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add color-name
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `Rgb` / `Hsl` / `Hsv` | `pub struct` | RGB (`0..255`), HSL (`h: 0..360, s/l: 0..1`), HSV (`h: 0..360, s/v: 0..1`) |
-| `cssColorCount` | `() -> usize` | 返回内置 W3C CSS Color 4 颜色总数（`148`） |
-| `rgbFromCssName` | `(name: string) -> Rgb?` | 按 CSS 命名查 RGB（大小写无关、忽略首尾空白、二分查找） |
-| `cssNameFromRgb` | `(c: Rgb) -> string?` | 按 RGB 反查 W3C 标准颜色名 |
-| `rgbToHsl` / `hslToRgb` | `(Rgb) -> Hsl` / `(Hsl) -> Rgb` | RGB ↔ HSL 精确色空间互转 |
-| `rgbToHsv` / `hsvToRgb` | `(Rgb) -> Hsv` / `(Hsv) -> Rgb` | RGB ↔ HSV 精确色空间互转 |
-| `rgbToHex` / `hexToRgb` | `(Rgb, []u8) -> string` / `(string) -> Rgb?` | RGB ↔ `#rrggbb` / `#rgb` 编解码 |
-| `mixRgb` | `(a: Rgb, b: Rgb, weight: f64) -> Rgb` | 线性混色（`weight` in `0.0..=1.0`） |
-| `lighten` / `darken` | `(c: Rgb, amount: f64) -> Rgb` | 基于 HSL 亮度增亮 / 压暗 |
-
-## Usage / 使用示例
-
 ```cp
 import {
-    Rgb,
-    rgbFromCssName,
-    cssNameFromRgb,
-    rgbToHsl,
-    hslToRgb,
-    rgbToHex,
-    hexToRgb,
-    mixRgb,
-    lighten,
-    darken,
+    RgbColor,
+    ColorEntry,
+    cnToLower,
+    cnCmpIgnoreCase,
+    colorAt,
+    lookupColor,
+    lookupColorHex,
+    reverseLookupColor,
 } from "color-name";
-
-let hex_buf: [16]u8 = undefined;
-const purple = rgbFromCssName("RebeccaPurple").?; // Rgb{ r: 102, g: 51, b: 153 }
-const hex = rgbToHex(purple, hex_buf[0..16]);     // "#663399"
-const name = cssNameFromRgb(Rgb.from(255, 99, 71)); // "tomato"
-const lighter = lighten(purple, 0.15);
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RgbColor` | `class` | Fields: `r: u8, g: u8, b: u8, found: bool` |
+| `ColorEntry` | `class` | Fields: `name: string, r: u8, g: u8, b: u8` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cnToLower` | `(b: u8): u8` | Invokes `cnToLower` and returns `u8`. |
+| `cnCmpIgnoreCase` | `(a: string, b: string): i8` | Invokes `cnCmpIgnoreCase` and returns `i8`. |
+| `colorAt` | `(index: usize): ColorEntry` | Invokes `colorAt` and returns `ColorEntry`. |
+| `lookupColor` | `(name: string): RgbColor` | Queries/retrieves data via `lookupColor` returning `RgbColor`. |
+| `lookupColorHex` | `(name: string): i32` | Queries/retrieves data via `lookupColorHex` returning `i32`. |
+| `reverseLookupColor` | `(r: u8, g: u8, b: u8): string` | Invokes `reverseLookupColor` and returns `string`. |
+| `isNamedColor` | `(name: string): bool` | Checks predicate `isNamedColor` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { isNamedColor } from "color-name";
+
+pub fn main() {
+    let result = isNamedColor("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

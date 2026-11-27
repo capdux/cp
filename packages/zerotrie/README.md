@@ -1,18 +1,57 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # zerotrie
+
+Zero-allocation compact left-child right-sibling prefix trie (ZeroTrie) for fast static/pooled key-to-u32 lookup and longest-prefix matching in CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:zerotrie` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x)) / `npm:trie-prefix-tree` ([https://github.com/lyndseybrowning/trie-prefix-tree](https://github.com/lyndseybrowning/trie-prefix-tree))
 
-Zero-heap-allocation compact left-child right-sibling prefix trie (`ZeroTrie`) for mapping byte-string keys to `u32` values using caller-provided node pools in pure CP (inspired by ICU4X / Rust `zerotrie`).
+| Metadata | Value |
+| --- | --- |
+| Package | `zerotrie` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- Compact `TrieNode { ch, has_value, value, first_child, next_sibling }` (saves 90%+ memory vs 256-way fanout arrays)
-- Atomic `insert`: verifies remaining pool capacity before allocating nodes
-- `init`, `insert`, `get`, `containsKey`, `hasPrefix`, `longestPrefixMatch` (returns `PrefixMatch { matched_len, value, found }`)
+```bash
+cap add zerotrie
+```
 
-## License
+```cp
+import { TrieNode, PrefixMatch, ZeroTrie, findChild } from "zerotrie";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `TrieNode` | `class` | Fields: `ch: u8, has_value: bool, value: u32, first_child: i32, next_sibling: i32` · Methods: `empty` |
+| `PrefixMatch` | `class` | Fields: `matched_len: usize, value: u32, found: bool` |
+| `ZeroTrie` | `class` | Fields: `node_count: usize, key_count: usize` · Methods: `new, init, insert, get, containsKey, hasPrefix, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `findChild` | `(nodes: &[]TrieNode, parent: usize, ch: u8): i32` | Queries/retrieves data via `findChild` returning `i32`. |
+
+## Minimal Example
+
+```cp
+import { findChild } from "zerotrie";
+
+pub fn main() {
+    let result = findChild(/* nodes: &[]TrieNode */, 0, 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

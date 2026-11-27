@@ -1,58 +1,85 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # wasm-encoder
+
+Zero-allocation WebAssembly 1.0 binary module encoder with LEB128 and standard section builders (Bytecode Alliance wasm-encoder parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:wasm-encoder` ([https://github.com/bytecodealliance/wasm-tools](https://github.com/bytecodealliance/wasm-tools))
 
-Zero-allocation WebAssembly 1.0 binary module encoder with unsigned/signed LEB128 and standard section builders for CP — clean-room parity with Bytecode Alliance `wasm-encoder` (248M+ downloads on crates.io).
+| Metadata | Value |
+| --- | --- |
+| Package | `wasm-encoder` |
+| Version | `1.0.0` |
+| License | `Apache-2.0 WITH LLVM-exception` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 WebAssembly 1.0 二进制模块编码器，内置完整 ULEB128/SLEB128 编码以及 Type、Function、Memory、Export、Code、Custom 段构造器，可直接生成合法 `.wasm` 二进制字节流。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add wasm-encoder
 ```
 
-## API
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `ValType` | `enum: u8 { I32 = 0x7F, I64 = 0x7E, F32 = 0x7D, F64 = 0x7C }` | WebAssembly numeric value types |
-| `ExportKind` | `enum: u8 { Func = 0, Table = 1, Mem = 2, Global = 3 }` | WebAssembly export descriptor kinds |
-| `encodeUleb128` | `(val: u64, out: []u8) -> usize` | Unsigned LEB128 encoder |
-| `encodeSleb128` | `(val: i64, out: []u8) -> usize` | Signed LEB128 encoder |
-| `FuncType` | `struct` + `FuncType.create(params, results)` | Function signature `(params) -> (results)` |
-| `MemType` | `struct` + `MemType.unbounded(min)` / `MemType.bounded(min, max)` | Linear memory limits |
-| `ExportEntry` | `struct { name: string, kind: ExportKind, index: u32 }` | Export section entry |
-| `FuncBody` | `struct` + `FuncBody.simple(code)` / `addLocals(*_, count, vt)` | Function body with optional locals |
-| `WasmModuleBuilder` | `init()`, `addTypeSection`, `addFunctionSection`, `addMemorySection`, `addExportSection`, `addCodeSection`, `addCustomSection`, `finish(out)` | 4096-byte static buffer `.wasm` encoder |
-
-## Usage / 使用示例
-
 ```cp
 import {
-    ValType, ExportKind, FuncType, ExportEntry, FuncBody, WasmModuleBuilder,
-    OP_LOCAL_GET, OP_I32_ADD, OP_END,
+    ValType,
+    ExportKind,
+    FuncType,
+    MemType,
+    ExportEntry,
+    FuncBody,
+    WasmModuleBuilder,
+    wencValTypeByte,
 } from "wasm-encoder";
-
-let m = WasmModuleBuilder.init();
-const params: [2]ValType = [ValType.I32, ValType.I32];
-const results: [1]ValType = [ValType.I32];
-const types: [1]FuncType = [FuncType.create(params[0..2], results[0..1])];
-* = m.addTypeSection(types[0..1]);
-
-const funcs: [1]u32 = [0];
-* = m.addFunctionSection(funcs[0..1]);
-
-const exports: [1]ExportEntry = [ExportEntry{ name: "add", kind: ExportKind.Func, index: 0 }];
-* = m.addExportSection(exports[0..1]);
-
-const code: [6]u8 = [OP_LOCAL_GET, 0, OP_LOCAL_GET, 1, OP_I32_ADD, OP_END];
-const bodies: [1]FuncBody = [FuncBody.simple(code[0..6])];
-* = m.addCodeSection(bodies[0..1]);
-
-let out: [256]u8 = undefined;
-const n = m.finish(out[0..256]);
 ```
+
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `ValType` | `I32, I64, F32, F64` |
+| `enum` | `ExportKind` | `Func, Table, Mem, Global` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `FuncType` | `class` | Fields: `params: [8]ValType, param_count: usize, results: [4]ValType, result_count: usize` · Methods: `create` |
+| `MemType` | `class` | Fields: `min_pages: u32, has_max: bool, max_pages: u32` · Methods: `unbounded, bounded` |
+| `ExportEntry` | `class` | Fields: `name: string, kind: ExportKind, index: u32` |
+| `FuncBody` | `class` | Fields: `local_counts: [8]u32, local_types: [8]ValType, local_group_count: usize, code: &[]u8` · Methods: `simple, addLocals` |
+| `WasmModuleBuilder` | `class` | Fields: `buf: [4096]u8, len: usize, overflow: bool` · Methods: `init, writeSection, addTypeSection, addFunctionSection, addMemorySection, addExportSection, +5 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `wencValTypeByte` | `(vt: ValType): u8` | Invokes `wencValTypeByte` and returns `u8`. |
+| `wencExportKindByte` | `(kind: ExportKind): u8` | Invokes `wencExportKindByte` and returns `u8`. |
+| `wencLow7Signed` | `(v: i64): u8` | Invokes `wencLow7Signed` and returns `u8`. |
+| `encodeUleb128` | `(val: u64, out: []u8): usize` | Serializes/formats data via `encodeUleb128` returning `usize`. |
+| `encodeSleb128` | `(val: i64, out: []u8): usize` | Serializes/formats data via `encodeSleb128` returning `usize`. |
+| `wencAppendByte` | `(dst: []u8, pos: usize, b: u8): usize?` | Invokes `wencAppendByte` and returns `usize?`. |
+| `wencAppendBytes` | `(dst: []u8, pos: usize, src: &[]u8): usize?` | Invokes `wencAppendBytes` and returns `usize?`. |
+| `wencAppendUleb` | `(dst: []u8, pos: usize, val: u64): usize?` | Invokes `wencAppendUleb` and returns `usize?`. |
+
+## Minimal Example
+
+```cp
+import { encodeUleb128 } from "wasm-encoder";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = encodeUleb128(0, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

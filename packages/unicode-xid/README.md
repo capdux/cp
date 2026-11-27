@@ -1,48 +1,76 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `unicode-xid`
+# unicode-xid
+
+Zero-allocation UAX #31 Unicode Identifier (XID_Start / XID_Continue) classification and identifier scanner for CP (clean-room MIT).
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-xid` ([https://github.com/unicode-rs/unicode-xid](https://github.com/unicode-rs/unicode-xid))
 
-Zero-allocation **UAX #31** Unicode Identifier (`XID_Start` / `XID_Continue`) classifier and lexer scanner for CP (clean-room MIT implementation inspired by Rust's `unicode-xid`).
+| Metadata | Value |
+| --- | --- |
+| Package | `unicode-xid` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero Heap Allocation**: Static sorted range tables with O(log N) binary search and single-branch ASCII fast paths.
-- **Unicode 15.1 Script Coverage**: ASCII, Latin-1/Extended, Greek, Cyrillic, Armenian, Hebrew, Arabic, Devanagari, Thai, Hiragana, Katakana, Hangul Syllables/Jamo, CJK Unified Ideographs & Extensions, combining marks, Unicode digits, and connector punctuation.
-- **Strict UTF-8 Validation**: Rejects truncated, overlong, and surrogate UTF-8 sequences when validating or scanning identifiers.
-- **Rust/CP Identifier Rules**: `isIdentStart` supports `'_'` or `XID_Start`; `isValidIdent` and `scanIdentLen` follow `('_' | XID_Start) XID_Continue*`.
-
-## Usage
-
-```typescript
-import {
-    isXidStart,
-    isXidContinue,
-    isIdentStart,
-    isValidIdent,
-    scanIdentLen,
-    isAsciiIdent,
-} from "unicode-xid";
-
-const a: bool = isXidStart(0x03B1);           // 'α' -> true
-const b: bool = isXidContinue(0x0301);        // combining acute -> true
-const c: bool = isIdentStart(0x5F);           // '_' -> true
-const d: bool = isValidIdent("变量_42");       // true
-const e: bool = isAsciiIdent("hello_world");  // true
-const n: usize = scanIdentLen("let αβ1 = 2", 4); // 5 bytes ("αβ1")
+```bash
+cap add unicode-xid
 ```
 
-## API
+```cp
+import {
+    UxidRune,
+    uxidDecodeUtf8Strict,
+    uxidIsExtraStart,
+    uxidBsearchStart,
+    uxidBsearchCont,
+    uxidIsAsciiAlpha,
+    uxidIsAsciiDigit,
+    isXidStart,
+} from "unicode-xid";
+```
 
-- `isXidStart(cp: u32): bool`
-- `isXidContinue(cp: u32): bool`
-- `isIdentStart(cp: u32): bool`
-- `isValidIdent(s: string): bool`
-- `scanIdentLen(s: string, start: usize): usize`
-- `isAsciiIdent(s: string): bool`
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `UxidRune` | `class` | Fields: `cp: u32, len: usize, valid: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `uxidDecodeUtf8Strict` | `(s: string, offset: usize): UxidRune` | Invokes `uxidDecodeUtf8Strict` and returns `UxidRune`. |
+| `uxidIsExtraStart` | `(cp: u32): bool` | Invokes `uxidIsExtraStart` and returns `bool`. |
+| `uxidBsearchStart` | `(cp: u32): bool` | Invokes `uxidBsearchStart` and returns `bool`. |
+| `uxidBsearchCont` | `(cp: u32): bool` | Invokes `uxidBsearchCont` and returns `bool`. |
+| `uxidIsAsciiAlpha` | `(b: u8): bool` | Invokes `uxidIsAsciiAlpha` and returns `bool`. |
+| `uxidIsAsciiDigit` | `(b: u8): bool` | Invokes `uxidIsAsciiDigit` and returns `bool`. |
+| `isXidStart` | `(cp: u32): bool` | Checks predicate `isXidStart` and returns `bool`. |
+| `isXidContinue` | `(cp: u32): bool` | Checks predicate `isXidContinue` and returns `bool`. |
+| `isIdentStart` | `(cp: u32): bool` | Checks predicate `isIdentStart` and returns `bool`. |
+| `isAsciiIdent` | `(s: string): bool` | Checks predicate `isAsciiIdent` and returns `bool`. |
+| `isValidIdent` | `(s: string): bool` | Checks predicate `isValidIdent` and returns `bool`. |
+| `scanIdentLen` | `(s: string, start: usize): usize` | Invokes `scanIdentLen` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { isAsciiIdent } from "unicode-xid";
+
+pub fn main() {
+    let result = isAsciiIdent("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

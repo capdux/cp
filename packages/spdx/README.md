@@ -1,61 +1,97 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# spdx
+
+Zero-allocation SPDX 2.3 license expression parser, validator, and compatibility evaluator for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **crates.io** [`spdx`](https://github.com/EmbarkStudios/spdx)（`MIT OR Apache-2.0`）（包名 `spdx`）。
 
-# spdx
+| Metadata | Value |
+| --- | --- |
+| Package | `spdx` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation SPDX 2.3 open-source license expression parser, validator, and compatibility evaluator for CP — clean-room MIT parity with npm `spdx-expression-parse` (55M/wk), `spdx-satisfies` (30M/wk), and Rust `spdx` (40M).
-
-纯 CP 零堆分配 SPDX 2.3 开源许可证表达式解析、校验与兼容性评估引擎，内置 40+ 高频 SPDX 许可证元数据与递归下降求值器。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add spdx
 ```
 
-## Features / 核心特性
-
-- **40+ Built-in SPDX Licenses**: Covers `MIT`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `Unlicense`, `CC0-1.0`, `Zlib`, `BSL-1.0`, `MPL-2.0`, `LGPL-*`, `GPL-*`, `AGPL-*`, `EUPL-1.2`, `EPL-2.0`, `CDDL-1.0`, `Artistic-2.0`, `BlueOak-1.0.0`, `0BSD`, `PostgreSQL`, `curl`, `FTL`, `WTFPL`, `CC-BY-4.0`, `CC-BY-SA-4.0`, `OpenSSL`, `NCSA`, `Python-2.0`, etc.
-- **Full SPDX 2.3 Precedence**: Recursive-descent parser supporting `WITH` > `AND` > `OR`, nested parentheses `(...)`, `+` suffix (`GPL-2.0+`), `WITH <exception>` (`Apache-2.0 WITH LLVM-exception`), and `LicenseRef-` / `DocumentRef-` references.
-- **Zero Heap Allocation**: Fixed-size stack buffers (`MAX_LICENSES = 32`, `MAX_DEPTH = 32`) with deterministic O(n) single-pass evaluation.
-
-## API
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `LicenseCategory` | `enum { Permissive, WeakCopyleft, StrongCopyleft, NetworkCopyleft, PublicDomain, Unknown }` | License copyleft / permissiveness classification |
-| `LicenseInfo` | `struct { id: string, category: LicenseCategory, isOsiApproved: bool }` | Built-in SPDX license metadata |
-| `SpdxResult` | `struct { valid: bool, allKnown: bool, errorOffset: usize, licenses: [32]string, licenseCount: usize }` | Validation & extracted license list result |
-| `lookupLicense` | `(id: string) -> LicenseInfo?` | Look up category & OSI-approved status (supports `+` suffix) |
-| `validateExpression` | `(expr: string) -> SpdxResult` | Validate SPDX syntax, check known licenses, and extract referenced IDs |
-| `isPermissiveOnly` | `(expr: string) -> bool` | Evaluate whether a permissive/public-domain compliance path exists |
-| `satisfies` | `(expr: string, allowed: []const string) -> bool` | Check if an expression is satisfied by an allowlist of licenses |
-
-## Usage / 使用示例
-
 ```cp
 import {
     LicenseCategory,
-    lookupLicense,
-    validateExpression,
-    isPermissiveOnly,
-    satisfies,
+    EvalMode,
+    LicenseInfo,
+    SpdxResult,
+    Parser,
+    isIdChar,
+    isPermissiveCategory,
+    lookupBaseLicense,
 } from "spdx";
-
-// 1. Metadata lookup
-const mit = lookupLicense("MIT");
-
-// 2. Expression validation & license extraction
-const res = validateExpression("(Apache-2.0 WITH LLVM-exception OR MIT) AND ISC");
-// res.valid == true, res.allKnown == true, res.licenseCount == 3
-
-// 3. Permissive compliance check
-const ok1 = isPermissiveOnly("MIT OR GPL-3.0-only");   // true (can choose MIT)
-const ok2 = isPermissiveOnly("MIT AND GPL-3.0-only");  // false (GPL-3.0-only required)
-
-// 4. Allowlist evaluation
-const allowed: [2]string = ["MIT", "Apache-2.0"];
-const ok3 = satisfies("(Apache-2.0 OR BSD-3-Clause) AND MIT", allowed[0..2]); // true
 ```
+
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `LicenseCategory` | `Permissive, WeakCopyleft, StrongCopyleft, NetworkCopyleft, PublicDomain, Unknown` |
+| `enum` | `EvalMode` | `ValidateOnly, PermissiveOnly, Satisfies` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `LicenseInfo` | `class` | Fields: `id: string, category: LicenseCategory, isOsiApproved: bool` |
+| `SpdxResult` | `class` | Fields: `valid: bool, allKnown: bool, errorOffset: usize, licenses: [MAX_LICENSES]string, licenseCount: usize` · Methods: `getLicense` |
+| `Parser` | `class` | Fields: `src: string, pos: usize, depth: usize, failed: bool, errorOffset: usize, allKnown: bool, +4 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isIdChar` | `(c: u8): bool` | Checks predicate `isIdChar` and returns `bool`. |
+| `isPermissiveCategory` | `(cat: LicenseCategory): bool` | Checks predicate `isPermissiveCategory` and returns `bool`. |
+| `lookupBaseLicense` | `(id: string): LicenseInfo?` | Queries/retrieves data via `lookupBaseLicense` returning `LicenseInfo?`. |
+| `lookupLicense` | `(id: string): LicenseInfo?` | Queries/retrieves data via `lookupLicense` returning `LicenseInfo?`. |
+| `initParser` | `(src: string, mode: EvalMode, allowed: &[]string): Parser` | Constructs/initializes an instance via `initParser`. |
+| `skipSpaces` | `(p: &mut Parser)` | Executes `skipSpaces` in-place. |
+| `failAt` | `(p: &mut Parser, offset: usize): bool` | Invokes `failAt` and returns `bool`. |
+| `isKeyword` | `(tok: string): bool` | Checks predicate `isKeyword` and returns `bool`. |
+| `peekKeyword` | `(p: &mut Parser, kw: string): bool` | Invokes `peekKeyword` and returns `bool`. |
+| `consumeKeyword` | `(p: &mut Parser, kw: string): bool` | Invokes `consumeKeyword` and returns `bool`. |
+| `recordLicense` | `(p: &mut Parser, lic: string)` | Executes `recordLicense` in-place. |
+| `isValidRefId` | `(s: string): bool` | Checks predicate `isValidRefId` and returns `bool`. |
+| `licenseTokenMatches` | `(licBase: string, hasPlus: bool, allowedLic: string): bool` | Invokes `licenseTokenMatches` and returns `bool`. |
+| `matchAllowedEntry` | `(licBase: string, hasPlus: bool, hasExc: bool, exc: string, entry: string): bool` | Invokes `matchAllowedEntry` and returns `bool`. |
+| `evalSimple` | `(p: &mut Parser, licBase: string, hasPlus: bool, hasExc: bool, exc: string, fullLic: string): bool` | Invokes `evalSimple` and returns `bool`. |
+| `parseSimple` | `(p: &mut Parser): bool` | Parses input via `parseSimple` and returns `bool`. |
+| `parsePrimary` | `(p: &mut Parser): bool` | Parses input via `parsePrimary` and returns `bool`. |
+| `parseAnd` | `(p: &mut Parser): bool` | Parses input via `parseAnd` and returns `bool`. |
+| `parseOr` | `(p: &mut Parser): bool` | Parses input via `parseOr` and returns `bool`. |
+| `runParse` | `(p: &mut Parser): bool` | Invokes `runParse` and returns `bool`. |
+| `validateExpression` | `(expr: string): SpdxResult` | Validates input with `validateExpression` returning `SpdxResult`. |
+| `isPermissiveOnly` | `(expr: string): bool` | Checks predicate `isPermissiveOnly` and returns `bool`. |
+| `satisfies` | `(expr: string, allowed: &[]string): bool` | Invokes `satisfies` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { isKeyword } from "spdx";
+
+pub fn main() {
+    let result = isKeyword("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,30 +1,67 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `opentelemetry`
+# opentelemetry
+
+Zero-heap W3C Trace Context (traceparent & tracestate) distributed tracing header parser and formatter in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:opentelemetry` ([https://github.com/open-telemetry/opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust))（原库名 `opentelemetry` → CP 包名 `opentelemetry`）
 
-Zero-heap W3C Trace Context (`traceparent` and `tracestate`) distributed tracing header parser, validator, child span builder, and formatter in pure CP. Strictly enforces lowercase hex, non-zero trace/parent IDs, and version rules per W3C Trace Context Level 1.
+| Metadata | Value |
+| --- | --- |
+| Package | `opentelemetry` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP W3C Trace Context（`traceparent` 与 `tracestate`）分布式链路追踪头解析、校验与构造器，对标 OpenTelemetry，适用于微服务网关与 AI Agent 跨节点追踪。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add opentelemetry
 ```
 
-## API
+```cp
+import {
+    TraceParent,
+    parseHexByteLower,
+    invalidTraceParent,
+    parseTraceParent,
+    makeChild,
+    getTraceState,
+} from "opentelemetry";
+```
 
-| Function / Method | Description |
-| --- | --- |
-| `parseTraceParent(header)` | Strict W3C `traceparent` parser (`00-<32hex>-<16hex>-<2hex>`) |
-| `TraceParent.isSampled()` | Check `0x01` sampled flag |
-| `TraceParent.format(dst)` | Serialize back to exact 55-byte lowercase hex header |
-| `makeChild(parent, new_span_id)` | Derive child span preserving `trace_id` and `trace_flags` |
-| `getTraceState(header, vendor_key)` | Zero-copy vendor value lookup in `tracestate` |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `TraceParent` | `class` | Fields: `version: u8, trace_id: [16]u8, parent_id: [8]u8, trace_flags: u8, valid: bool` · Methods: `isSampled, format` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseHexByteLower` | `(hi: u8, lo: u8): i32` | Parses input via `parseHexByteLower` and returns `i32`. |
+| `invalidTraceParent` | `(): TraceParent` | Invokes `invalidTraceParent` and returns `TraceParent`. |
+| `parseTraceParent` | `(header: &[]u8): TraceParent` | Parses input via `parseTraceParent` and returns `TraceParent`. |
+| `makeChild` | `(parent: TraceParent, new_span_id: [8]u8): TraceParent` | Invokes `makeChild` and returns `TraceParent`. |
+| `getTraceState` | `(header: &[]u8, vendor_key: &[]u8): &[]u8` | Queries/retrieves data via `getTraceState` returning `&[]u8`. |
+
+## Minimal Example
+
+```cp
+import { parseHexByteLower } from "opentelemetry";
+
+pub fn main() {
+    let result = parseHexByteLower(0, 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

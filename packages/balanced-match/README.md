@@ -1,24 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# balanced-match
+
+Zero-allocation nested balanced delimiter matcher (npm balanced-match v3 parity) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **npm** [`balanced-match`](https://github.com/juliangruber/balanced-match)（`MIT`）（包名 `balanced-match`）。
 
-# `balanced-match`
+| Metadata | Value |
+| --- | --- |
+| Package | `balanced-match` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-heap-allocation nested balanced delimiter matcher in pure CP (clean-room MIT implementation inspired by npm `balanced-match` v3).
+## Installation & Import
 
-## Features
-
-- **`balanced(a, b, input): BalancedResult`** — Finds the first balanced delimiter pair `(a, b)` with nested counting, identical open/close support, multi-byte delimiters, and unclosed-opener backtracking.
-- **`balancedRange(a, b, input): [usize, usize]?`** — Returns the `[start, end]` byte offsets of the first balanced match.
-- **`balancedAll(a, b, input, out): usize`** — Iteratively collects sequential top-level balanced matches into a caller-provided slice with zero heap allocation.
-
-## Usage
-
-```cp
-import { BalancedResult, balanced, balancedRange, balancedAll } from "balanced-match";
+```bash
+cap add balanced-match
 ```
 
-## License
+```cp
+import {
+    BalancedResult,
+    bmMakeRange,
+    bmEmptyResult,
+    balancedRange,
+    balanced,
+    balancedAll,
+} from "balanced-match";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BalancedResult` | `class` | Fields: `found: bool, start: usize, end: usize, pre: string, body: string, post: string` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `bmMakeRange` | `(s: usize, e: usize): [usize, usize]` | Invokes `bmMakeRange` and returns `[usize, usize]`. |
+| `bmEmptyResult` | `(): BalancedResult` | Invokes `bmEmptyResult` and returns `BalancedResult`. |
+| `balancedRange` | `(a: string, b: string, input: string): [usize, usize]?` | Invokes `balancedRange` and returns `[usize, usize]?`. |
+| `balanced` | `(a: string, b: string, input: string): BalancedResult` | Invokes `balanced` and returns `BalancedResult`. |
+| `balancedAll` | `(a: string, b: string, input: string, out: []BalancedResult): usize` | Invokes `balancedAll` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { balancedRange } from "balanced-match";
+
+pub fn main() {
+    let result = balancedRange("example", "example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

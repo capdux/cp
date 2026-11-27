@@ -1,30 +1,64 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # sieve-cache
+
+Zero-allocation NSDI'24 SIEVE cache eviction engine with static doubly-linked pool and open-addressing index for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:sieve-cache` ([https://github.com/jedisct1/rust-sieve-cache](https://github.com/jedisct1/rust-sieve-cache))
 
-Zero-allocation NSDI'24 **SIEVE** cache eviction engine for CP — clean-room MIT parity with Rust `sieve-cache` and `quick_cache`.
+| Metadata | Value |
+| --- | --- |
+| Package | `sieve-cache` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP NSDI'24 SIEVE 缓存淘汰引擎，采用静态双向链表池（最大容量 128）与开放寻址哈希索引，命中时不移动链表节点、仅置 `visited = true`，淘汰时由 `hand` 指针快速扫描驱逐，兼具极简结构、高命中率与抗扫描污染能力（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add sieve-cache
 ```
 
-## API Reference / 接口一览
+```cp
+import {
+    SieveNode,
+    SieveCache,
+    emptyNode,
+    mulWrap64,
+    hashSlot,
+} from "sieve-cache";
+```
 
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `SieveCache.init` | `(capacity: usize) -> SieveCache` | 初始化缓存（容量限制在 `1..=128`） |
-| `put` / `get` / `remove` / `clear` | `(*_, ...)` | 插入/更新、命中标记并取值、安全删除与清空重置 |
-| `peek` / `contains` | `(key: u64) -> i64 / bool` | 只读探测，不修改 `visited` 与统计 |
-| `len` / `capacity` / `isEmpty` | 状态查询 | 容量与长度查询 |
-| `hits` / `misses` / `evictions` | `() -> u64` | 命中、未命中与淘汰计数统计 |
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SieveNode` | `class` | Fields: `key: u64, value: i64, visited: bool, in_use: bool, prev: u16, next: u16` |
+| `SieveCache` | `class` | Fields: `nodes: [128]SieveNode, buckets: [256]u16, free_stack: [128]u16, free_top: usize, head: u16, tail: u16, +7 more` · Methods: `init, len, capacity, isEmpty, hits, misses, +14 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `emptyNode` | `(): SieveNode` | Invokes `emptyNode` and returns `SieveNode`. |
+| `mulWrap64` | `(a: u64, b: u64): u64` | Invokes `mulWrap64` and returns `u64`. |
+| `hashSlot` | `(key: u64): usize` | Checks predicate `hashSlot` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { hashSlot } from "sieve-cache";
+
+pub fn main() {
+    let result = hashSlot(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

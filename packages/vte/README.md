@@ -1,19 +1,79 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # vte
+
+Zero-allocation ANSI/VT100 terminal escape sequence state machine parser (Paul Williams model) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:vte` ([https://github.com/alacritty/vte](https://github.com/alacritty/vte))
 
-Zero-heap-allocation ANSI/VT100 terminal escape sequence state machine parser based on the Paul Williams VT500 model in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `vte` |
+| Version | `1.0.0` |
+| License | `Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- `VteActionKind` enum: `Print`, `Execute`, `CsiDispatch`, `OscDispatch`, `EscDispatch`
-- `VteEvent { kind, ch, final_byte, param_count, params: [8]u16, intermediate }`
-- `VteParser` streaming state machine (`Ground`, `Escape`, `CsiEntry`, `CsiParam`, `OscString`, `CsiIgnore`, `OscEsc`)
-- Supports chunked streaming input across arbitrary byte boundaries, C0 control characters (`\r`, `\n`, `\t`, BEL), CSI sequences (SGR `\x1b[31;1m`, CUP `\x1b[10;20H`, DEC private modes `\x1b[?25h`), ESC sequences, and OSC sequences (BEL `\x07` and ST `\x1b\\` terminators)
+```bash
+cap add vte
+```
 
-## License
+```cp
+import {
+    VteActionKind,
+    VteState,
+    VteEvent,
+    VteParser,
+    vtepZeroParams,
+    vtepZeroOsc,
+    vtepIsExecute,
+    vtepAddDigit,
+} from "vte";
+```
 
-Apache-2.0
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `VteActionKind` | `Print, Execute, CsiDispatch, OscDispatch, EscDispatch` |
+| `enum` | `VteState` | `Ground, Escape, CsiEntry, CsiParam, OscString, CsiIgnore, OscEsc` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `VteEvent` | `class` | Fields: `kind: VteActionKind, ch: u8, final_byte: u8, param_count: usize, params: [8]u16, intermediate: u8` |
+| `VteParser` | `class` | Fields: `state: VteState, params: [8]u16, param_count: usize, cur_param: u16, has_param: bool, intermediate: u8, +2 more` · Methods: `new, reset, oscLen, oscByte, clearCsi, pushParam, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `vtepZeroParams` | `(): [8]u16` | Invokes `vtepZeroParams` and returns `[8]u16`. |
+| `vtepZeroOsc` | `(): [64]u8` | Invokes `vtepZeroOsc` and returns `[64]u8`. |
+| `vtepIsExecute` | `(b: u8): bool` | Invokes `vtepIsExecute` and returns `bool`. |
+| `vtepAddDigit` | `(cur: u16, digit: u8): u16` | Invokes `vtepAddDigit` and returns `u16`. |
+| `vtepParseOscCmd` | `(buf: &[]u8, len: usize): u16` | Invokes `vtepParseOscCmd` and returns `u16`. |
+| `vtepHasOscCmd` | `(buf: &[]u8, len: usize): bool` | Invokes `vtepHasOscCmd` and returns `bool`. |
+| `vtepMakeEvent` | `(kind: VteActionKind, ch: u8, final_byte: u8, param_count: usize, params: [8]u16, intermediate: u8): VteEvent` | Invokes `vtepMakeEvent` and returns `VteEvent`. |
+
+## Minimal Example
+
+```cp
+import { vtepZeroParams } from "vte";
+
+pub fn main() {
+    let result = vtepZeroParams();
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

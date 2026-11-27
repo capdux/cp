@@ -1,29 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `icu_locid`
+# icu_locid
+
+Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer reusing tinystr (ICU4X icu_locid parity) in pure CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:icu_locid` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))（原库名 `icu_locid` → CP 包名 `icu_locid`）
 
-Zero-allocation BCP-47 / UTS #35 Unicode Language Identifier parser, canonicalizer, and likely-subtags maximizer in pure CP (ICU4X `icu_locid` / `icu_locale_core` parity). Reuses `tinystr` (`TinyAsciiStr4`, `TinyAsciiStr8`) for stack-inline ASCII subtags and case normalization.
+| Metadata | Value |
+| --- | --- |
+| Package | `icu_locid` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## API
+## Installation & Import
 
-- `LanguageIdentifier` — Stack-inline locale representation (`language: TinyAsciiStr8`, `script: TinyAsciiStr4`, `region: TinyAsciiStr4`, `variants: [4]TinyAsciiStr8`)
-- `LanguageIdentifier.parse(input: string): LocaleParseResult` — Parses `-` or `_` separated BCP-47 tags with strict UTS #35 validation and automatic canonicalization (lower language, Title script, UPPER region, sorted lower variants)
-- `LanguageIdentifier.und(): LanguageIdentifier` — Undetermined locale (`"und"`)
-- `loc.toStr(out: []u8): usize` — Formats canonical hyphenated BCP-47 tag into `out`
-- `loc.eq(other: LanguageIdentifier): bool` — Exact structural equality
-- `loc.matches(other: LanguageIdentifier): bool` — Wildcard/partial subtag compatibility match
-- `loc.isUnd(): bool` — Checks if language subtag is `"und"`
-- `loc.maximizeLikelySubtags(): LanguageIdentifier` — CLDR Add Likely Subtags (`zh -> zh-Hans-CN`, `en -> en-Latn-US`, `ja -> ja-Jpan-JP`, `ko -> ko-Kore-KR`, `ar -> ar-Arab-EG`, `ru -> ru-Cyrl-RU`, etc.)
+```bash
+cap add icu_locid
+```
 
-## Error Codes
+```cp
+import {
+    LanguageIdentifier,
+    LocaleParseResult,
+    locIsSep,
+    locIsDigitByte,
+    locEmptyVariants,
+    locLangEqStr,
+    locRegionEqStr,
+    locValidLanguageSubtag,
+} from "icu_locid";
+```
 
-- `LOCALE_OK` (`0`)
-- `LOCALE_ERR_EMPTY` (`-1`)
-- `LOCALE_ERR_EMPTY_SUBTAG` (`-2`)
-- `LOCALE_ERR_INVALID_LANGUAGE` (`-3`)
-- `LOCALE_ERR_INVALID_SUBTAG` (`-4`)
-- `LOCALE_ERR_TOO_MANY_VARIANTS` (`-5`)
-- `LOCALE_ERR_DUPLICATE_VARIANT` (`-6`)
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `LanguageIdentifier` | `class` | Fields: `language: TinyAsciiStr8, has_script: bool, script: TinyAsciiStr4, has_region: bool, region: TinyAsciiStr4, variant_count: usize, +1 more` · Methods: `und, parse, toStr, isUnd, eq, matches, +1 more` |
+| `LocaleParseResult` | `class` | Fields: `ok: bool, locale: LanguageIdentifier, err: i64` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `locIsSep` | `(ch: u8): bool` | Invokes `locIsSep` and returns `bool`. |
+| `locIsDigitByte` | `(ch: u8): bool` | Invokes `locIsDigitByte` and returns `bool`. |
+| `locEmptyVariants` | `(): [4]TinyAsciiStr8` | Invokes `locEmptyVariants` and returns `[4]TinyAsciiStr8`. |
+| `locLangEqStr` | `(lang: TinyAsciiStr8, lit: string): bool` | Invokes `locLangEqStr` and returns `bool`. |
+| `locRegionEqStr` | `(reg: TinyAsciiStr4, lit: string): bool` | Invokes `locRegionEqStr` and returns `bool`. |
+| `locValidLanguageSubtag` | `(sub: TinyAsciiStr8): bool` | Invokes `locValidLanguageSubtag` and returns `bool`. |
+| `locValidVariantSubtag` | `(sub: TinyAsciiStr8): bool` | Invokes `locValidVariantSubtag` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { locLangEqStr } from "icu_locid";
+
+pub fn main() {
+    let result = locLangEqStr(/* lang: TinyAsciiStr8 */, "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,18 +1,65 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # itoa
+
+Fast zero-heap two-digits-per-step integer-to-ASCII formatter (clean-room CP implementation of crates.io itoa)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:itoa` ([https://github.com/dtolnay/itoa](https://github.com/dtolnay/itoa))
 
-零堆分配的 CP 原生高速整数转字符串库，Clean-Room MIT 实现对标 crates.io Top 35 顶流包 `itoa`（17 亿+ 下载）。
+| Metadata | Value |
+| --- | --- |
+| Package | `itoa` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- 200 字节两位查表法（2 digits/div），将十进制除法次数减半
-- 支持 `formatU64` / `formatI64`（安全处理 `i64::MIN = -9223372036854775808` 无溢出）、`formatU32` / `formatI32` / `formatUsize`
-- 附带 `formatHexU64`（大小写）与 `formatRadixU64`（2..36 任意进制）
+```bash
+cap add itoa
+```
 
-## 致谢
+```cp
+import {
+    formatU64,
+    formatI64,
+    formatU32,
+    formatI32,
+    formatUsize,
+    formatHexU64,
+    formatRadixU64,
+} from "itoa";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`dtolnay/itoa`](https://github.com/dtolnay/itoa)。
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `formatU64` | `(val: u64, out: []u8): usize` | Serializes/formats data via `formatU64` returning `usize`. |
+| `formatI64` | `(val: i64, out: []u8): usize` | Serializes/formats data via `formatI64` returning `usize`. |
+| `formatU32` | `(val: u32, out: []u8): usize` | Serializes/formats data via `formatU32` returning `usize`. |
+| `formatI32` | `(val: i32, out: []u8): usize` | Serializes/formats data via `formatI32` returning `usize`. |
+| `formatUsize` | `(val: usize, out: []u8): usize` | Serializes/formats data via `formatUsize` returning `usize`. |
+| `formatHexU64` | `(val: u64, uppercase: bool, out: []u8): usize` | Serializes/formats data via `formatHexU64` returning `usize`. |
+| `formatRadixU64` | `(val: u64, radix: u8, out: []u8): usize` | Serializes/formats data via `formatRadixU64` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { formatU64 } from "itoa";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatU64(0, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

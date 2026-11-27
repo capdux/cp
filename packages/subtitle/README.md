@@ -1,36 +1,81 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # subtitle
+
+Zero-heap SRT & WebVTT subtitle parser, timecode formatter, cue time-shifter, and SRT<->VTT converter
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:subtitle` ([https://github.com/gsantiago/subtitle.js](https://github.com/gsantiago/subtitle.js))
 
-Zero-heap SRT & WebVTT subtitle parser, timecode formatter, cue time-shifter, and lossless SRT ↔ WebVTT converter in pure CP (replaces npm `subtitle` / `srt-parser-2`).
+| Metadata | Value |
+| --- | --- |
+| Package | `subtitle` |
+| Version | `1.0.1` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Install
+## Installation & Import
 
 ```bash
 cap add subtitle
 ```
 
-## Usage
-
 ```cp
-import { parseSubtitles, shiftCues, formatSubtitles, SubtitleFormat } from "subtitle";
-
-let list = parseSubtitles("1\n00:00:01,000 --> 00:00:04,500\nHello Capdux!\n");
-shiftCues(&list, 1500); // delay by 1.5s
-
-let out: [1024]u8 = undefined;
-const vtt = formatSubtitles(list, SubtitleFormat.WebVtt, out[0..1024]);
+import {
+    SubtitleFormat,
+    Cue,
+    CueList,
+    parseUint,
+    parseTimestampMs,
+    put2,
+    put3,
+    formatTimestampMs,
+} from "subtitle";
 ```
 
-## API
+## Core API
 
-| Function | Description |
-| --- | --- |
-| `parseTimestampMs(raw)` | Parse `HH:MM:SS,mmm`, `HH:MM:SS.mmm`, or `MM:SS.mmm` into milliseconds |
-| `formatTimestampMs(ms, fmt, out)` | Format milliseconds into SRT or WebVTT timestamp |
-| `parseSubtitles(input)` | Parse SRT or WebVTT document into zero-copy `CueList` |
-| `shiftCues(list, offset_ms)` | Shift all cue timestamps forward/backward (clamped at 0) |
-| `formatSubtitles(list, fmt, out)` | Render `CueList` to SRT or WebVTT |
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `SubtitleFormat` | `Srt, WebVtt` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Cue` | `class` | Fields: `index: u32, start_ms: i64, end_ms: i64, text: string` |
+| `CueList` | `class` | Fields: `cues: [64]Cue, count: usize, format: SubtitleFormat` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseUint` | `(s: string): i64?` | Parses input via `parseUint` and returns `i64?`. |
+| `parseTimestampMs` | `(raw: string): i64?` | Parses input via `parseTimestampMs` and returns `i64?`. |
+| `put2` | `(out: []u8, pos: &mut usize, v: i64)` | Mutates or appends state via `put2`. |
+| `put3` | `(out: []u8, pos: &mut usize, v: i64)` | Mutates or appends state via `put3`. |
+| `formatTimestampMs` | `(ms_in: i64, fmt: SubtitleFormat, out: []u8): string` | Serializes/formats data via `formatTimestampMs` returning `string`. |
+| `parseSubtitles` | `(input: string): CueList` | Parses input via `parseSubtitles` and returns `CueList`. |
+| `shiftCues` | `(list: &mut CueList, offset_ms: i64)` | Executes `shiftCues` in-place. |
+| `formatSubtitles` | `(list: CueList, target_fmt: SubtitleFormat, out: []u8): string` | Serializes/formats data via `formatSubtitles` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { parseUint } from "subtitle";
+
+pub fn main() {
+    let result = parseUint("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

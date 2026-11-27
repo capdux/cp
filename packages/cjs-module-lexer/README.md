@@ -1,36 +1,83 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # cjs-module-lexer
+
+Zero-allocation CommonJS static named export and re-export lexer (npm cjs-module-lexer parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cjs-module-lexer` ([https://github.com/nodejs/cjs-module-lexer](https://github.com/nodejs/cjs-module-lexer))（原库名 `cjs-module-lexer` → CP 包名 `cjs-module-lexer`）
 
-Zero-allocation CommonJS static named export and re-export lexer for CP — clean-room MIT implementation inspired by Node.js `cjs-module-lexer`.
+| Metadata | Value |
+| --- | --- |
+| Package | `cjs-module-lexer` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 CommonJS 静态导出与重导出词法扫描器（对标 Node.js 官方 `cjs-module-lexer`），跳过注释与字符串字面量，精准提取 `exports.foo`、`module.exports.bar`、`exports['baz']`、`Object.defineProperty(exports, 'qux', ...)`、`module.exports = { a, b: 1 }` 对象字面量导出，以及 `module.exports = require('./sub')` / `__exportStar(require('./sub'), exports)` 重导出并自动去重。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add cjs-module-lexer
 ```
 
-## API
+```cp
+import {
+    CjsParseResult,
+    CjslLexer,
+    CjslStrRes,
+    cjslIsWs,
+    cjslIsIdentStart,
+    cjslIsIdentChar,
+    cjslStrEq,
+    cjslAddExport,
+} from "cjs-module-lexer";
+```
 
-### Structs & Functions / 核心类型与函数
+## Core API
 
-| Symbol | Signature / Fields | Description |
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `CjsParseResult` | `struct { exports: [32]string, export_count: usize, reexports: [16]string, reexport_count: usize }` | Deduplicated static export names and re-export specifiers |
-| `parseCjs` | `(src: string): CjsParseResult` | Lex CommonJS source and extract named exports & re-exports |
+| `CjsParseResult` | `class` | Fields: `exports: [32]string, export_count: usize, reexports: [16]string, reexport_count: usize` |
+| `CjslLexer` | `class` | Fields: `src: string, pos: usize` |
+| `CjslStrRes` | `class` | Fields: `ok: bool, val: string` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cjslIsWs` | `(ch: u8): bool` | Invokes `cjslIsWs` and returns `bool`. |
+| `cjslIsIdentStart` | `(ch: u8): bool` | Invokes `cjslIsIdentStart` and returns `bool`. |
+| `cjslIsIdentChar` | `(ch: u8): bool` | Invokes `cjslIsIdentChar` and returns `bool`. |
+| `cjslStrEq` | `(a: string, b: string): bool` | Invokes `cjslStrEq` and returns `bool`. |
+| `cjslAddExport` | `(res: &mut CjsParseResult, name: string)` | Executes `cjslAddExport` in-place. |
+| `cjslAddReexport` | `(res: &mut CjsParseResult, spec: string)` | Executes `cjslAddReexport` in-place. |
+| `cjslSkipString` | `(lex: &mut CjslLexer)` | Executes `cjslSkipString` in-place. |
+| `cjslSkipWsAndComments` | `(lex: &mut CjslLexer)` | Executes `cjslSkipWsAndComments` in-place. |
+| `cjslReadIdent` | `(lex: &mut CjslLexer): string` | Invokes `cjslReadIdent` and returns `string`. |
+| `cjslReadStringLit` | `(lex: &mut CjslLexer): CjslStrRes` | Invokes `cjslReadStringLit` and returns `CjslStrRes`. |
+| `cjslMatchRequireCall` | `(lex: &mut CjslLexer): CjslStrRes` | Invokes `cjslMatchRequireCall` and returns `CjslStrRes`. |
+| `cjslSkipPropValue` | `(lex: &mut CjslLexer)` | Executes `cjslSkipPropValue` in-place. |
+| `cjslParseObjectExports` | `(lex: &mut CjslLexer, res: &mut CjsParseResult)` | Executes `cjslParseObjectExports` in-place. |
+| `cjslParseExportsMemberAssign` | `(lex: &mut CjslLexer, res: &mut CjsParseResult)` | Executes `cjslParseExportsMemberAssign` in-place. |
+| `cjslParseDefineProperty` | `(lex: &mut CjslLexer, res: &mut CjsParseResult)` | Executes `cjslParseDefineProperty` in-place. |
+| `cjslParseExportStar` | `(lex: &mut CjslLexer, res: &mut CjsParseResult)` | Executes `cjslParseExportStar` in-place. |
+| `parseCjs` | `(src: string): CjsParseResult` | Parses input via `parseCjs` and returns `CjsParseResult`. |
+
+## Minimal Example
 
 ```cp
 import { parseCjs } from "cjs-module-lexer";
 
-const src = "exports.alpha = 1;\nmodule.exports.beta = 2;\n__exportStar(require('./sub'), exports);";
-const res = parseCjs(src);
-// res.export_count == 2 ("alpha", "beta")
-// res.reexport_count == 1 ("./sub")
+pub fn main() {
+    let result = parseCjs("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

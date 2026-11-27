@@ -1,37 +1,86 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # litrs
+
+Zero-allocation Rust literal lexer, validator, and string unescaper (Rust litrs parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:litrs` ([https://github.com/LukasKalbertodt/litrs](https://github.com/LukasKalbertodt/litrs))
 
-Zero-allocation Rust literal lexer, validator, and string unescaper for CP — clean-room parity with Rust `litrs` (232M+ downloads on crates.io).
+| Metadata | Value |
+| --- | --- |
+| Package | `litrs` |
+| Version | `1.0.0` |
+| License | `MIT OR Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 Rust 字面量词法解析与检验器，完整支持布尔值、十/十六/二/八进制整数（含 `_` 分隔符与类型后缀）、浮点数（含指数与 `f32`/`f64` 后缀）、字符/字节与转义、普通字符串与原始字符串 `r#"..."#` / `br#"..."#`，以及字符串反转义解码。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add litrs
 ```
 
-## API
+```cp
+import {
+    LiteralKind,
+    ParsedLiteral,
+    ltrInvalid,
+    ltrStrEq,
+    ltrIsIdentStart,
+    ltrIsIdentCont,
+    ltrIsValidSuffix,
+    ltrHexVal,
+} from "litrs";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `LiteralKind` | `enum: u8 { Invalid, Bool, Integer, Float, Char, Byte, String, ByteString }` | Classified literal kind |
-| `ParsedLiteral` | `struct { kind, raw, suffix, int_val, bool_val, is_raw_string, hash_count }` | Parsed literal metadata & value |
-| `parseLiteral` | `(src: string) -> ParsedLiteral` | Lexes and validates a Rust literal |
-| `unescapeString` | `(lit_raw: string, out: []u8) -> i64` | Unescapes normal/raw/byte string literals into `out` (`-1` on error) |
+| `enum` | `LiteralKind` | `Invalid, Bool, Integer, Float, Char, Byte, String, ByteString` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ParsedLiteral` | `class` | Fields: `kind: LiteralKind, raw: string, suffix: string, int_val: u64, bool_val: bool, is_raw_string: bool, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ltrInvalid` | `(src: string): ParsedLiteral` | Invokes `ltrInvalid` and returns `ParsedLiteral`. |
+| `ltrStrEq` | `(a: string, b: string): bool` | Invokes `ltrStrEq` and returns `bool`. |
+| `ltrIsIdentStart` | `(c: u8): bool` | Invokes `ltrIsIdentStart` and returns `bool`. |
+| `ltrIsIdentCont` | `(c: u8): bool` | Invokes `ltrIsIdentCont` and returns `bool`. |
+| `ltrIsValidSuffix` | `(s: string): bool` | Invokes `ltrIsValidSuffix` and returns `bool`. |
+| `ltrHexVal` | `(c: u8): i32` | Invokes `ltrHexVal` and returns `i32`. |
+| `ltrDigitVal` | `(c: u8, radix: u64): i32` | Invokes `ltrDigitVal` and returns `i32`. |
+| `ltrParseRawString` | `(src: string, start: usize, kind: LiteralKind): ParsedLiteral` | Invokes `ltrParseRawString` and returns `ParsedLiteral`. |
+| `ltrParseQuotedString` | `(src: string, quote_pos: usize, kind: LiteralKind): ParsedLiteral` | Invokes `ltrParseQuotedString` and returns `ParsedLiteral`. |
+| `ltrParseCharOrByte` | `(src: string, quote_pos: usize, is_byte: bool): ParsedLiteral` | Invokes `ltrParseCharOrByte` and returns `ParsedLiteral`. |
+| `ltrParseNumber` | `(src: string): ParsedLiteral` | Invokes `ltrParseNumber` and returns `ParsedLiteral`. |
+| `parseLiteral` | `(src: string): ParsedLiteral` | Parses input via `parseLiteral` and returns `ParsedLiteral`. |
+| `ltrEncodeUtf8` | `(cp: u32, out: []u8, pos: usize): usize?` | Invokes `ltrEncodeUtf8` and returns `usize?`. |
+| `unescapeString` | `(lit_raw: string, out: []u8): i64` | Invokes `unescapeString` and returns `i64`. |
+
+## Minimal Example
 
 ```cp
-import { parseLiteral, unescapeString, LiteralKind } from "litrs";
+import { parseLiteral } from "litrs";
 
-const lit = parseLiteral("0xFF_00u32"); // kind == Integer, int_val == 65280, suffix == "u32"
-const raw = parseLiteral("r#\"hello\\nworld\"#"); // kind == String, is_raw_string == true, hash_count == 1
-
-let out: [64]u8 = undefined;
-const n = unescapeString("\"hi\\n\\x21\"", out[0..64]); // n == 4 ("hi\n!")
+pub fn main() {
+    let result = parseLiteral("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

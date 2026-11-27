@@ -1,38 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # is-unicode-supported
+
+Zero-allocation pure-logic terminal Unicode support detector (npm is-unicode-supported v2 parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:is-unicode-supported` ([https://github.com/sindresorhus/is-unicode-supported](https://github.com/sindresorhus/is-unicode-supported))
 
-Zero-allocation pure-logic terminal Unicode support detector for CP — clean-room MIT parity with npm `is-unicode-supported` v2.
+| Metadata | Value |
+| --- | --- |
+| Package | `is-unicode-supported` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配、零外部依赖的终端 Unicode 支持检测库（完整对标 npm `is-unicode-supported` v2 逻辑），通过不可变环境快照结构体 `EnvInfo` 实现可测试、跨平台的纯逻辑判定。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add is-unicode-supported
 ```
 
-## API
+```cp
+import {
+    EnvInfo,
+    iusStrEq,
+    isUnicodeSupportedTerm,
+    isUnicodeSupportedTermProgram,
+    isUnicodeSupported,
+    isUnicodeSupportedPlatform,
+    selectFallback,
+} from "is-unicode-supported";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `EnvInfo` | `struct { is_windows, ci, wt_session, terminus_sublime, conemu_task, term_program, term, terminal_emulator }` | Terminal environment snapshot with `.posix()`, `.posixWithTerm(term)`, `.linuxConsole()`, `.windows()`, `.windowsTerminal()`, `.vscodeWindows()` constructors |
-| `isUnicodeSupported` | `(env: EnvInfo): bool` | Full `is-unicode-supported` v2 detection logic |
-| `isUnicodeSupportedTerm` | `(term: string): bool` | Checks known Unicode-capable `TERM` identifiers (`xterm-256color`, `alacritty`, `rxvt-unicode`, `rxvt-unicode-256color`) |
-| `isUnicodeSupportedTermProgram` | `(term_program: string): bool` | Checks known Unicode-capable `TERM_PROGRAM` identifiers (`Terminus-Sublime`, `vscode`) |
-| `isUnicodeSupportedPlatform` | `(is_windows: bool, term: string): bool` | Simplified platform + `TERM` check |
-| `selectFallback` | `(env: EnvInfo, unicode_val: string, ascii_val: string): string` | Returns `unicode_val` if supported, otherwise `ascii_val` |
+| `EnvInfo` | `class` | Fields: `is_windows: bool, ci: bool, wt_session: bool, terminus_sublime: bool, conemu_task: string, term_program: string, +2 more` · Methods: `posix, posixWithTerm, linuxConsole, windows, windowsTerminal, vscodeWindows` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `iusStrEq` | `(a: string, b: string): bool` | Invokes `iusStrEq` and returns `bool`. |
+| `isUnicodeSupportedTerm` | `(term: string): bool` | Checks predicate `isUnicodeSupportedTerm` and returns `bool`. |
+| `isUnicodeSupportedTermProgram` | `(term_program: string): bool` | Checks predicate `isUnicodeSupportedTermProgram` and returns `bool`. |
+| `isUnicodeSupported` | `(env: EnvInfo): bool` | Checks predicate `isUnicodeSupported` and returns `bool`. |
+| `isUnicodeSupportedPlatform` | `(is_windows: bool, term: string): bool` | Checks predicate `isUnicodeSupportedPlatform` and returns `bool`. |
+| `selectFallback` | `(env: EnvInfo, unicode_val: string, ascii_val: string): string` | Invokes `selectFallback` and returns `string`. |
+
+## Minimal Example
 
 ```cp
-import { EnvInfo, isUnicodeSupported, selectFallback } from "is-unicode-supported";
+import { isUnicodeSupportedTerm } from "is-unicode-supported";
 
-const ok1 = isUnicodeSupported(EnvInfo.posix());           // true
-const ok2 = isUnicodeSupported(EnvInfo.linuxConsole());    // false
-const ok3 = isUnicodeSupported(EnvInfo.windowsTerminal()); // true
-const icon = selectFallback(EnvInfo.windows(), "✔", "v");  // "v"
+pub fn main() {
+    let result = isUnicodeSupportedTerm("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

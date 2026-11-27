@@ -1,36 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # memmem
+
+Zero-allocation byte-substring search engine with precompiled BMH + KMP Finder, rfind, and non-overlapping count (Rust memchr::memmem parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:memmem` ([https://github.com/BurntSushi/memchr](https://github.com/BurntSushi/memchr))
 
-Zero-allocation byte-substring search engine with precompiled BMH + KMP `Finder`, reverse search `rfind`, and non-overlapping `count` for CP — clean-room MIT parity with Rust `memchr::memmem` (1.82B downloads on crates.io).
+| Metadata | Value |
+| --- | --- |
+| Package | `memmem` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配字节子串搜索引擎，结合 Boyer-Moore-Horspool 坏字符快跳与 KMP 最坏 O(N+M) 线性防退化算法，支持二进制零字节帧搜索、反向查找与不重叠计数。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add memmem
 ```
 
-## API
+```cp
+import {
+    Finder,
+    findLongNeedle,
+    find,
+    rfind,
+    contains,
+    count,
+} from "memmem";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `find` | `(haystack: []const u8, needle: []const u8) -> i64` | First match index (`0` on empty needle, `-1` if absent) |
-| `rfind` | `(haystack: []const u8, needle: []const u8) -> i64` | Last match index (`haystack.len` on empty needle, `-1` if absent) |
-| `contains` | `(haystack: []const u8, needle: []const u8) -> bool` | Substring existence check |
-| `count` | `(haystack: []const u8, needle: []const u8) -> usize` | Non-overlapping occurrence count |
-| `Finder` | `init(needle)`, `findIn(h)`, `findFrom(h, start)`, `countIn(h)`, `needleLen()` | Precompiled BMH + KMP searcher (up to 256-byte needle) |
+| `Finder` | `class` | Fields: `needle_buf: [MAX_NEEDLE]u8, needle_len: usize, bad_char: [256]usize, lps: [MAX_NEEDLE]u16, is_periodic: bool` · Methods: `init, needleLen, findKmpFrom, findFrom, findIn, countIn` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `findLongNeedle` | `(haystack: &[]u8, needle: &[]u8): i64` | Queries/retrieves data via `findLongNeedle` returning `i64`. |
+| `find` | `(haystack: &[]u8, needle: &[]u8): i64` | Queries/retrieves data via `find` returning `i64`. |
+| `rfind` | `(haystack: &[]u8, needle: &[]u8): i64` | Invokes `rfind` and returns `i64`. |
+| `contains` | `(haystack: &[]u8, needle: &[]u8): bool` | Invokes `contains` and returns `bool`. |
+| `count` | `(haystack: &[]u8, needle: &[]u8): usize` | Invokes `count` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { Finder, find, rfind, count } from "memmem";
+import { findLongNeedle } from "memmem";
 
-const idx = find("hello world world", "world");   // 6
-const last = rfind("hello world world", "world"); // 12
-const n = count("aaaaa", "aa");                   // 2
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let mut buf_1: [256]u8 = undefined;
+    let result = findLongNeedle(out_buf[0..256], buf_1[0..256]);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

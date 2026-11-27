@@ -1,73 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # serde_qs
+
+Zero-allocation nested bracket query string parser & serializer (crates.io serde_qs v0.13 parity) composing percent-encoding for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:serde_qs` ([https://github.com/samscott89/serde_qs](https://github.com/samscott89/serde_qs))（原库名 `serde_qs` → CP 包名 `serde_qs`）
 
-Zero-allocation nested bracket query string parser & serializer for CP — clean-room MIT parity with crates.io `serde_qs` v0.13.
+| Metadata | Value |
+| --- | --- |
+| Package | `serde_qs` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Composes [`percent-encoding`](../percent-encoding) for WHATWG/RFC percent-encoding and form-style (`+` -> space) decoding with zero code duplication.
+## Installation & Import
 
-## Installation
-
-```json
-{
-  "dependencies": {
-    "serde_qs": "1.0.0"
-  }
-}
+```bash
+cap add serde_qs
 ```
-
-## Quick Start
 
 ```cp
 import {
     QsPair,
+    QsPath,
+    sqsKeyEncodeSet,
     parseKeyPath,
     parseQs,
     getQsValueDecoded,
     serializeQs,
 } from "serde_qs";
-
-const path = parseKeyPath("user[address][city]");
-// path.depth == 3, path.segments[0..3] == ["user", "address", "city"]
-
-let pairs: [8]QsPair = undefined;
-const count = parseQs("?user[name]=Alice+Smith&items[0]=rust&tags[]=cp", pairs[0..]);
-
-let valBuf: [128]u8 = undefined;
-const lenOpt = getQsValueDecoded("?user[name]=Alice+Smith", "user[name]", valBuf[0..]);
-// valBuf[0..len] == "Alice Smith"
 ```
 
-## API Reference
+## Core API
 
-### Types
+### Data Structures
 
-- `QsPair { key: string, value: string }` — Raw key-value pair sliced directly from the query string.
-- `QsPath { segments: [8]string, depth: usize }` — Fixed-capacity parsed bracket path (up to 8 nesting levels).
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `QsPair` | `class` | Fields: `key: string, value: string` |
+| `QsPath` | `class` | Fields: `segments: [8]string, depth: usize` |
 
-### `parseKeyPath(key: string): QsPath`
+### Functions
 
-Splits a nested bracket key into segments without heap allocation:
-- `"user[address][city]"` -> `["user", "address", "city"]` (`depth = 3`)
-- `"items[0]"` -> `["items", "0"]` (`depth = 2`)
-- `"tags[]"` -> `["tags", ""]` (`depth = 2`)
-- `"plain"` -> `["plain"]` (`depth = 1`)
+| Function | Signature | Description |
+| --- | --- | --- |
+| `sqsKeyEncodeSet` | `(): AsciiSet` | Invokes `sqsKeyEncodeSet` and returns `AsciiSet`. |
+| `parseKeyPath` | `(key: string): QsPath` | Parses input via `parseKeyPath` and returns `QsPath`. |
+| `parseQs` | `(query: string, out_pairs: []QsPair): usize` | Parses input via `parseQs` and returns `usize`. |
+| `getQsValueDecoded` | `(query: string, target_key: string, out: []u8): usize?` | Queries/retrieves data via `getQsValueDecoded` returning `usize?`. |
+| `serializeQs` | `(pairs: &[]QsPair, out: []u8): usize` | Invokes `serializeQs` and returns `usize`. |
 
-### `parseQs(query: string, out_pairs: []QsPair): usize`
+## Minimal Example
 
-Automatically skips a leading `?`, splits on `&`, and writes raw `QsPair` entries into `out_pairs`. Empty segments are skipped; keys without `=` receive an empty value `""`.
+```cp
+import { parseKeyPath } from "serde_qs";
 
-### `getQsValueDecoded(query: string, target_key: string, out: []u8): usize?`
+pub fn main() {
+    let result = parseKeyPath("example");
+    _ = result;
+}
+```
 
-Finds the first entry matching `target_key` (matching both raw and percent-decoded keys) and writes the decoded value (with `+` converted to space and `%XX` decoded via `percent-encoding`) into `out`. Returns `null` if the key is not found.
+## CP Zero-Heap & Borrow-Safety Highlights
 
-### `serializeQs(pairs: []const QsPair, out: []u8): usize`
-
-Percent-encodes keys and values via `percent-encoding` and joins entries with `&`. Preserves structural `[` and `]` brackets in keys for clean `serde_qs` round-tripping.
-
-## License
-
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,24 +1,59 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `logfmt`
+# logfmt
+
+Zero-allocation logfmt structured key=value log parser and writer (Heroku/Grafana Loki/Kubernetes) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:logfmt` ([https://github.com/csquared/node-logfmt](https://github.com/csquared/node-logfmt))
 
-Zero-heap-allocation `logfmt` structured key=value log parser and writer in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `logfmt` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **`LogfmtRecord.parse`**: Parses `k=v`, quoted escaped strings (`\"`, `\\`, `\n`, `\r`, `\t`), bare boolean flags (`debug` -> `"true"`), and empty values (`err=`) with last-write-wins lookup (`get` / `has`).
-- **`LogfmtWriter`**: Atomic zero-heap serialization for strings (auto-quoting/escaping), signed integers (`writeInt`), and booleans (`writeBool`).
-- **Zero Heap Allocation**: Pure CP, stack-only, no FFI (`MAX_FIELDS = 64`).
-
-## API
-
-```cp
-import { MAX_FIELDS, LogfmtField, LogfmtRecord, LogfmtWriter } from "logfmt";
+```bash
+cap add logfmt
 ```
 
-## License
+```cp
+import { LogfmtField, LogfmtRecord, LogfmtWriter, needsQuotes } from "logfmt";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `LogfmtField` | `class` | Fields: `key_start: usize, key_len: usize, val_start: usize, val_len: usize` |
+| `LogfmtRecord` | `class` | Fields: `key_buf: [512]u8, key_used: usize, val_buf: [1024]u8, val_used: usize, fields: [64]LogfmtField, count: usize` · Methods: `parse, len, has, get` |
+| `LogfmtWriter` | `class` | Fields: `buf: []u8, pos: usize, count: usize` · Methods: `init, writeStr, writeInt, writeBool, written, len` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `needsQuotes` | `(val: &[]u8): bool` | Invokes `needsQuotes` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { needsQuotes } from "logfmt";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = needsQuotes(out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

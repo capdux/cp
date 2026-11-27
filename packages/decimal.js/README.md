@@ -1,35 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # decimal.js
+
+Zero-allocation 128-bit exact decimal & financial arithmetic engine (decimal.js / bignumber.js / rust_decimal parity: exact add/sub/mul/div, 6 rounding modes including Banker's HalfEven, scientific notation parsing) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:decimal.js` ([https://github.com/MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js))（原库名 `decimal.js` → CP 包名 `decimal.js`）
 
-Zero-allocation 128-bit exact decimal & financial arithmetic engine for CP — clean-room MIT parity with npm `decimal.js` / `bignumber.js` and Rust `rust_decimal`.
+| Metadata | Value |
+| --- | --- |
+| Package | `decimal.js` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Install
+## Installation & Import
 
 ```bash
 cap add decimal.js
 ```
 
-## Features
+```cp
+import {
+    RoundingMode,
+    Decimal,
+    pow10,
+    absI128,
+    divRoundI128,
+} from "decimal.js";
+```
 
-- **Zero Floating-Point Drift**: `0.1 + 0.2 == 0.3` exact arithmetic backed by signed 128-bit mantissa (`i128`) + scale (`0..28`).
-- **6 Rounding Modes**: `HalfEven` (Banker's rounding), `HalfUp`, `HalfDown`, `Floor`, `Ceil`, `Trunc`.
-- **Exact String & Scientific Notation Parsing**: handles `"-1234.5678"`, `"1_000_000.25"`, `"1.25e-4"`, `"3e6"`.
-- **Zero-Allocation Formatting**: `format(buf)` and `toFixed(2, RoundingMode.HalfEven, buf)` write directly into caller stack buffers.
+## Core API
 
-## Usage
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `RoundingMode` | `HalfEven, HalfUp, HalfDown, Floor, Ceil, Trunc` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Decimal` | `class` | Fields: `mantissa: i128, scale: u8` · Methods: `zero, one, fromInt, fromParts, parse, isZero, +21 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `pow10` | `(exp: u8): i128` | Invokes `pow10` and returns `i128`. |
+| `absI128` | `(v: i128): i128` | Invokes `absI128` and returns `i128`. |
+| `divRoundI128` | `(num: i128, den: i128, mode: RoundingMode): i128` | Invokes `divRoundI128` and returns `i128`. |
+
+## Minimal Example
 
 ```cp
-import { Decimal, RoundingMode } from "decimal.js";
+import { pow10 } from "decimal.js";
 
-const a = Decimal.parse("0.1")!;
-const b = Decimal.parse("0.2")!;
-const sum = a.add(b); // exact 0.3
-
-let buf: [64]u8 = undefined;
-const text = sum.format(buf[0..64]); // "0.3"
-const money = Decimal.parse("19.995")!.toFixed(2, RoundingMode.HalfUp, buf[0..64]); // "20.00"
+pub fn main() {
+    let result = pow10(0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

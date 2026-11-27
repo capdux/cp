@@ -1,40 +1,85 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # sct
+
+Zero-allocation RFC 6962 Certificate Transparency Signed Certificate Timestamp (SCT) parser and encoder (rustls/sct.rs parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:sct` ([https://github.com/rustls/sct.rs](https://github.com/rustls/sct.rs))
 
-Zero-allocation RFC 6962 Certificate Transparency Signed Certificate Timestamp (SCT) parser and encoder for CP — clean-room parity with `rustls/sct.rs` (362M+ downloads on crates.io, Apache-2.0 OR MIT).
+| Metadata | Value |
+| --- | --- |
+| Package | `sct` |
+| Version | `1.0.0` |
+| License | `Apache-2.0 OR MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 RFC 6962 证书透明度（Certificate Transparency）SCT 线格式解析与序列化库，支持单条 SCT 严格边界解析、TLS 扩展 `SignedCertificateTimestampList` 列表解析与完整往返编码。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add sct
 ```
 
-## API
+```cp
+import {
+    SctVersion,
+    HashAlgorithm,
+    SignatureAlgorithm,
+    SignedCertificateTimestamp,
+    sctInvalid,
+    sctReadBeU16,
+    sctReadBeU64,
+    sctWriteBeU16,
+} from "sct";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `SctVersion` | `V1 = 0`, `Unknown = 255` | RFC 6962 SCT version enum |
-| `HashAlgorithm` | `None`, `Md5`, `Sha1`, `Sha224`, `Sha256`, `Sha384`, `Sha512` | Digitally-signed hash algorithm |
-| `SignatureAlgorithm` | `Anonymous`, `Rsa`, `Dsa`, `Ecdsa`, `Ed25519`, `Ed448` | Digitally-signed signature algorithm |
-| `SignedCertificateTimestamp` | `valid`, `version`, `log_id`, `timestamp_ms`, `extensions`, `hash_alg`, `sig_alg`, `signature` | Parsed SCT view |
-| `parseSct` | `(data: []const u8): SignedCertificateTimestamp` | Parse single RFC 6962 §3.2 SCT |
-| `parseSctList` | `(tls_ext: []const u8, out: []SignedCertificateTimestamp): i64` | Parse RFC 6962 §3.3 TLS extension list |
-| `encodeSct` | `(sct: SignedCertificateTimestamp, out: []u8): usize` | Serialize SCT back to wire bytes |
+| `enum` | `SctVersion` | `V1, Unknown` |
+| `enum` | `HashAlgorithm` | `None, Md5, Sha1, Sha224, Sha256, Sha384, Sha512, Unknown` |
+| `enum` | `SignatureAlgorithm` | `Anonymous, Rsa, Dsa, Ecdsa, Ed25519, Ed448, Unknown` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SignedCertificateTimestamp` | `class` | Fields: `valid: bool, version: SctVersion, log_id: [32]u8, timestamp_ms: u64, extensions: &[]u8, hash_alg: HashAlgorithm, +2 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `sctInvalid` | `(): SignedCertificateTimestamp` | Invokes `sctInvalid` and returns `SignedCertificateTimestamp`. |
+| `sctReadBeU16` | `(b: &[]u8, off: usize): u16` | Invokes `sctReadBeU16` and returns `u16`. |
+| `sctReadBeU64` | `(b: &[]u8, off: usize): u64` | Invokes `sctReadBeU64` and returns `u64`. |
+| `sctWriteBeU16` | `(v: u16, out: []u8, off: usize)` | Executes `sctWriteBeU16` in-place. |
+| `sctWriteBeU64` | `(v: u64, out: []u8, off: usize)` | Executes `sctWriteBeU64` in-place. |
+| `sctDecodeHashAlg` | `(b: u8): HashAlgorithm` | Invokes `sctDecodeHashAlg` and returns `HashAlgorithm`. |
+| `sctEncodeHashAlg` | `(alg: HashAlgorithm): u8` | Invokes `sctEncodeHashAlg` and returns `u8`. |
+| `sctDecodeSigAlg` | `(b: u8): SignatureAlgorithm` | Invokes `sctDecodeSigAlg` and returns `SignatureAlgorithm`. |
+| `sctEncodeSigAlg` | `(alg: SignatureAlgorithm): u8` | Invokes `sctEncodeSigAlg` and returns `u8`. |
+| `parseSct` | `(data: &[]u8): SignedCertificateTimestamp` | Parses input via `parseSct` and returns `SignedCertificateTimestamp`. |
+| `parseSctList` | `(tls_ext: &[]u8, out: []SignedCertificateTimestamp): i64` | Parses input via `parseSctList` and returns `i64`. |
+| `encodeSct` | `(sct: SignedCertificateTimestamp, out: []u8): usize` | Serializes/formats data via `encodeSct` returning `usize`. |
+
+## Minimal Example
 
 ```cp
-import { parseSct, parseSctList, encodeSct } from "sct";
+import { parseSct } from "sct";
 
-const sct = parseSct(wireBytes);
-if (sct.valid) {
-    let buf: [128]u8 = undefined;
-    const n = encodeSct(sct, buf[0..128]);
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = parseSct(out_buf[0..256]);
+    _ = result;
 }
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

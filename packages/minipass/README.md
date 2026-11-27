@@ -1,40 +1,55 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # minipass
+
+Zero-allocation fixed-capacity ring-buffer byte stream with synchronous backpressure and piping for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:minipass` ([https://github.com/isaacs/minipass](https://github.com/isaacs/minipass))
 
-Zero-allocation fixed-capacity ring-buffer byte stream with synchronous backpressure and piping for CP — clean-room ISC parity with npm `minipass` (326M+/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `minipass` |
+| Version | `1.0.0` |
+| License | `ISC` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 4096 字节环形缓冲字节流，支持同步背压控制、`read`/`readExact`/`peek`、`pause`/`resume`/`end`/`destroy` 状态机及流间零分配 `pipeTo` 管道转发与 EOF 传播。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add minipass
 ```
 
-## API
+```cp
+import { MinipassStream, mpassMin } from "minipass";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `MinipassStream.new` | `(): MinipassStream` | Create a fresh 4096-byte ring-buffer stream |
-| `.write` | `(*_, data: []const u8): bool` | Write bytes into ring buffer (`false` on backpressure/ended) |
-| `.read` / `.readExact` / `.peek` | `(*_, ...) -> usize` | Read up to `out.len`, exact `n` bytes, or non-destructive peek |
-| `.pause` / `.resume` / `.isPaused` | `(*_) / (): bool` | Flow-mode control |
-| `.end` / `.isEnded` / `.isDrained` | `(*_) / (): bool` | End-of-stream and drain checks |
-| `.bufferedBytes` / `.freeSpace` | `(): usize` | Query buffered and remaining ring-buffer capacity |
-| `.pipeTo` | `(*_, dest: *MinipassStream): usize` | Transfer bytes into destination stream and propagate EOF |
+| `MinipassStream` | `class` | Fields: `buf: [4096]u8, head: usize, len: usize, flowing: bool, ended: bool, destroyed: bool` · Methods: `new, bufferedBytes, freeSpace, isPaused, isEnded, isDrained, +9 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `mpassMin` | `(a: usize, b: usize): usize` | Invokes `mpassMin` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { MinipassStream } from "minipass";
+import { mpassMin } from "minipass";
 
-let src = MinipassStream.new();
-let dst = MinipassStream.new();
-* = src.write("hello minipass");
-src.end();
-const moved = src.pipeTo(*dst); // 14, dst.isEnded() == true
+pub fn main() {
+    let result = mpassMin(0, 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

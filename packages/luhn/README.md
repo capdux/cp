@@ -1,28 +1,63 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `luhn`
+# luhn
+
+Zero-heap ISO/IEC 7812 Luhn Mod-10, Damm, and Verhoeff check digit algorithms in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:luhn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
 
-Zero-heap industrial check digit validation & generation in pure CP: ISO/IEC 7812 Luhn Mod-10, Damm (2004) anti-symmetric quasigroup, and Verhoeff (1969) dihedral group D5.
+| Metadata | Value |
+| --- | --- |
+| Package | `luhn` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP 工业级校验码三合一引擎：ISO/IEC 7812 Luhn Mod-10、Damm 全反对称拟群算法与 Verhoeff 二面体群算法，适用于银行卡号、IMEI、税务/订单编号与防单错/相邻换位校验。
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add luhn
 ```
 
-## API
+```cp
+import {
+    luhnValidate,
+    luhnCheckDigit,
+    dammCheckDigit,
+    dammValidate,
+    verhoeffCheckDigit,
+    verhoeffValidate,
+} from "luhn";
+```
 
-| Function | Description |
-| --- | --- |
-| `luhnValidate(input)` / `luhnCheckDigit(payload)` | ISO/IEC 7812 Luhn Mod-10 validation & check digit generation |
-| `dammValidate(input)` / `dammCheckDigit(payload)` | Damm algorithm (catches 100% of single-digit & adjacent transpositions including `09 <-> 90`) |
-| `verhoeffValidate(input)` / `verhoeffCheckDigit(payload)` | Verhoeff dihedral group D5 check digit validation & generation |
+## Core API
 
-## License
+### Functions
 
-MIT
+| Function | Signature | Description |
+| --- | --- | --- |
+| `luhnValidate` | `(input: &[]u8): bool` | Invokes `luhnValidate` and returns `bool`. |
+| `luhnCheckDigit` | `(payload: &[]u8): i32` | Invokes `luhnCheckDigit` and returns `i32`. |
+| `dammCheckDigit` | `(payload: &[]u8): i32` | Invokes `dammCheckDigit` and returns `i32`. |
+| `dammValidate` | `(input: &[]u8): bool` | Invokes `dammValidate` and returns `bool`. |
+| `verhoeffCheckDigit` | `(payload: &[]u8): i32` | Invokes `verhoeffCheckDigit` and returns `i32`. |
+| `verhoeffValidate` | `(input: &[]u8): bool` | Invokes `verhoeffValidate` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { luhnValidate } from "luhn";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = luhnValidate(out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

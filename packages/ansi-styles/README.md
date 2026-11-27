@@ -1,18 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# ansi-styles
+
+ANSI escape codes for styling strings in the terminal (clean-room CP implementation of npm ansi-styles)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **npm** [`ansi-styles`](https://github.com/chalk/ansi-styles)（`MIT`）（包名 `ansi-styles`）。
 
-# ansi-styles
+| Metadata | Value |
+| --- | --- |
+| Package | `ansi-styles` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 原生终端 ANSI SGR 转义样式库，Clean-Room MIT 实现对标 npm 顶流包 `ansi-styles`（4 亿+/周下载，`chalk` 核心依赖），跨包复用 `color-convert`（及传递依赖 `color-name`）。
+## Installation & Import
 
-## 特性
+```bash
+cap add ansi-styles
+```
 
-- 完整内置 16 色前景/背景、亮色与全部 SGR 修饰符（`BOLD`/`DIM`/`ITALIC`/`UNDERLINE`/`STRIKETHROUGH`/`INVERSE`/`OVERLINE`）
-- `formatAnsi256` / `formatAnsi16m` 零堆生成 256 色与 24-bit Truecolor SGR 序列
-- `formatHexToAnsi16m` / `formatKeywordToAnsi16m` / `formatRgbToAnsi256` 直接委托 `color-convert`
+```cp
+import {
+    StylePair,
+    asPushStr,
+    asPushU8,
+    wrapStyle,
+    formatAnsi256,
+    formatAnsi16m,
+    formatRgbToAnsi16,
+    formatRgbToAnsi256,
+} from "ansi-styles";
+```
 
-## 致谢
+## Core API
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`chalk/ansi-styles`](https://github.com/chalk/ansi-styles)。
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `StylePair` | `class` | Fields: `open: string, close: string` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `asPushStr` | `(out: []u8, pos: usize, s: string): usize` | Invokes `asPushStr` and returns `usize`. |
+| `asPushU8` | `(out: []u8, pos: usize, v: u8): usize` | Invokes `asPushU8` and returns `usize`. |
+| `wrapStyle` | `(style: StylePair, text: string, out: []u8): usize` | Invokes `wrapStyle` and returns `usize`. |
+| `formatAnsi256` | `(code: u8, is_bg: bool, out: []u8): usize` | Serializes/formats data via `formatAnsi256` returning `usize`. |
+| `formatAnsi16m` | `(r: u8, g: u8, b: u8, is_bg: bool, out: []u8): usize` | Serializes/formats data via `formatAnsi16m` returning `usize`. |
+| `formatRgbToAnsi16` | `(r: u8, g: u8, b: u8, is_bg: bool, out: []u8): usize` | Serializes/formats data via `formatRgbToAnsi16` returning `usize`. |
+| `formatRgbToAnsi256` | `(r: u8, g: u8, b: u8, is_bg: bool, out: []u8): usize` | Serializes/formats data via `formatRgbToAnsi256` returning `usize`. |
+| `formatHexToAnsi16m` | `(hex: string, is_bg: bool, out: []u8): usize` | Serializes/formats data via `formatHexToAnsi16m` returning `usize`. |
+| `formatKeywordToAnsi16m` | `(name: string, is_bg: bool, out: []u8): usize` | Serializes/formats data via `formatKeywordToAnsi16m` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { formatHexToAnsi16m } from "ansi-styles";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatHexToAnsi16m("example", false, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

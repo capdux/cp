@@ -1,35 +1,80 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # crypto-bigint
+
+Zero-allocation constant-time fixed-width 256-bit unsigned integer (U256) arithmetic and modular operations (RustCrypto crypto-bigint parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:crypto-bigint` ([https://github.com/RustCrypto/crypto-bigint](https://github.com/RustCrypto/crypto-bigint))
 
-Zero-allocation constant-time fixed-width 256-bit unsigned integer (`U256`) arithmetic and modular operations for CP — clean-room parity with RustCrypto `crypto-bigint` (365M+ downloads on crates.io, Apache-2.0 OR MIT).
+| Metadata | Value |
+| --- | --- |
+| Package | `crypto-bigint` |
+| Version | `1.0.0` |
+| License | `Apache-2.0 OR MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配恒定时间 256 位无符号大整数（`U256`，4×`u64` 小端 limbs）算术库，提供字节序/十六进制编解码、恒定时间加减乘移位、恒定时间比较/选择与密码学模加模减。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add crypto-bigint
 ```
 
-## API
+```cp
+import {
+    CbiAddRes,
+    CbiSubRes,
+    U256,
+    cbiMask64,
+    cbiAllOnes64,
+    cbiCtMask,
+    cbiReadBeU64,
+    cbiReadLeU64,
+} from "crypto-bigint";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `U256` | `ZERO`, `ONE`, `fromU64`, `fromBeBytes`, `fromLeBytes`, `toBeBytes`, `toLeBytes`, `fromBeHex`, `toHex` | Fixed-width 256-bit unsigned integer & codecs |
-| `U256` (arith) | `wrappingAdd`, `wrappingSub`, `wrappingMul`, `shl1`, `shr1`, `bitLen`, `ctEq`, `ctCmp`, `ctSelect` | Constant-time 256-bit arithmetic & comparisons |
-| `addMod` / `subMod` | `(a: U256, b: U256, m: U256): U256` | Constant-time modular addition & subtraction |
+| `CbiAddRes` | `class` | Fields: `val: U256, carry: u64` |
+| `CbiSubRes` | `class` | Fields: `val: U256, borrow: u64` |
+| `U256` | `class` | Fields: `limbs: [4]u64` · Methods: `fromU64, fromBeBytes, fromLeBytes, toBeBytes, toLeBytes, fromBeHex, +12 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cbiMask64` | `(): u128` | Invokes `cbiMask64` and returns `u128`. |
+| `cbiAllOnes64` | `(): u64` | Invokes `cbiAllOnes64` and returns `u64`. |
+| `cbiCtMask` | `(cond: bool): u64` | Invokes `cbiCtMask` and returns `u64`. |
+| `cbiReadBeU64` | `(b: &[]u8, off: usize): u64` | Invokes `cbiReadBeU64` and returns `u64`. |
+| `cbiReadLeU64` | `(b: &[]u8, off: usize): u64` | Invokes `cbiReadLeU64` and returns `u64`. |
+| `cbiWriteBeU64` | `(v: u64, out: []u8, off: usize)` | Executes `cbiWriteBeU64` in-place. |
+| `cbiWriteLeU64` | `(v: u64, out: []u8, off: usize)` | Executes `cbiWriteLeU64` in-place. |
+| `cbiHexNibble` | `(ch: u8): i32` | Invokes `cbiHexNibble` and returns `i32`. |
+| `cbiHexChar` | `(nibble: u8): u8` | Invokes `cbiHexChar` and returns `u8`. |
+| `cbiBitLen64` | `(v_in: u64): usize` | Invokes `cbiBitLen64` and returns `usize`. |
+| `cbiAddWithCarry` | `(a: U256, b: U256): CbiAddRes` | Invokes `cbiAddWithCarry` and returns `CbiAddRes`. |
+| `cbiSubWithBorrow` | `(a: U256, b: U256): CbiSubRes` | Invokes `cbiSubWithBorrow` and returns `CbiSubRes`. |
+| `addMod` | `(a: U256, b: U256, m: U256): U256` | Mutates or appends state via `addMod`. |
+| `subMod` | `(a: U256, b: U256, m: U256): U256` | Invokes `subMod` and returns `U256`. |
+
+## Minimal Example
 
 ```cp
-import { U256, addMod, subMod } from "crypto-bigint";
+import { cbiMask64 } from "crypto-bigint";
 
-const a = U256.fromU64(100 as u64);
-const b = U256.fromU64(50 as u64);
-const m = U256.fromU64(120 as u64);
-const r = addMod(a, b, m); // 30
+pub fn main() {
+    let result = cbiMask64();
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

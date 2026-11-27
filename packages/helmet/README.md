@@ -1,47 +1,74 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `helmet`
+# helmet
+
+Zero-heap HTTP security response headers policy generator (CSP, HSTS, COOP, CORP, X-Frame-Options, Referrer-Policy) with CRLF-injection defense in pure CP (clean-room MIT counterpart to npm helmet v8).
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:helmet` ([https://github.com/helmetjs/helmet](https://github.com/helmetjs/helmet))（原库名 `helmet` → CP 包名 `helmet`）
 
-Zero-heap HTTP security response headers policy generator in pure CP (clean-room MIT counterpart to npm `helmet` v8).
+| Metadata | Value |
+| --- | --- |
+| Package | `helmet` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **100% Zero Heap Allocation**: Formats full CRLF-delimited HTTP security header blocks directly into caller-provided `out: []u8`.
-- **Comprehensive Security Header Coverage**:
-  - `Content-Security-Policy` (CSP)
-  - `Strict-Transport-Security` (HSTS with `max-age`, `includeSubDomains`, `preload`)
-  - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options` (`DENY` / `SAMEORIGIN`)
-  - `Referrer-Policy`
-  - `Cross-Origin-Opener-Policy` (COOP)
-  - `Cross-Origin-Resource-Policy` (CORP)
-  - `X-DNS-Prefetch-Control`
-  - `X-Permitted-Cross-Domain-Policies`
-  - `Origin-Agent-Cluster: ?1`
-- **CRLF / Header-Splitting Defense**: `isSafeHeaderValue(val)` rejects `\r`, `\n`, `\0`, DEL, and control characters; unsafe values are automatically dropped during formatting.
-- **Presets**: `HelmetOptions.defaultStrict()` and `HelmetOptions.minimal()`.
-
-## Quick Start
-
-```cp
-import { HelmetOptions, formatHelmetHeaders, formatHstsHeader, formatCspHeader } from "helmet";
-
-let out: [1024]u8 = undefined;
-const opts = HelmetOptions.defaultStrict();
-const n = formatHelmetHeaders(opts, &out);
+```bash
+cap add helmet
 ```
 
-## API
+```cp
+import {
+    HelmetOptions,
+    hlmWriteByte,
+    hlmWriteStr,
+    hlmWriteU64,
+    hlmWriteHeaderLine,
+    hlmAppendCspDirective,
+    isSafeHeaderValue,
+    formatHstsHeader,
+} from "helmet";
+```
 
-- `HelmetOptions` (`HelmetOptions.defaultStrict()`, `HelmetOptions.minimal()`)
-- `formatHelmetHeaders(opts: HelmetOptions, out: []u8): usize`
-- `formatHstsHeader(max_age: u64, include_subdomains: bool, preload: bool, out: []u8): usize`
-- `formatCspHeader(default_src, script_src, style_src, img_src, connect_src, out: []u8): usize`
-- `isSafeHeaderValue(val: string): bool`
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `HelmetOptions` | `class` | Fields: `csp_enabled: bool, csp_value: string, hsts_enabled: bool, hsts_max_age: u64, hsts_include_subdomains: bool, hsts_preload: bool, +8 more` · Methods: `defaultStrict, minimal` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hlmWriteByte` | `(out: []u8, pos: &mut usize, b: u8)` | Executes `hlmWriteByte` in-place. |
+| `hlmWriteStr` | `(out: []u8, pos: &mut usize, s: string)` | Executes `hlmWriteStr` in-place. |
+| `hlmWriteU64` | `(out: []u8, pos: &mut usize, val: u64)` | Executes `hlmWriteU64` in-place. |
+| `hlmWriteHeaderLine` | `(out: []u8, pos: &mut usize, name: string, val: string)` | Executes `hlmWriteHeaderLine` in-place. |
+| `hlmAppendCspDirective` | `(out: []u8, pos: &mut usize, has_any: &mut bool, dir_name: string, val: string)` | Executes `hlmAppendCspDirective` in-place. |
+| `isSafeHeaderValue` | `(val: string): bool` | Checks predicate `isSafeHeaderValue` and returns `bool`. |
+| `formatHstsHeader` | `(max_age: u64, include_subdomains: bool, preload: bool, out: []u8): usize` | Serializes/formats data via `formatHstsHeader` returning `usize`. |
+| `formatCspHeader` | `(default_src: string, script_src: string, style_src: string, img_src: string, connect_src: string, out: []u8): usize` | Serializes/formats data via `formatCspHeader` returning `usize`. |
+| `formatHelmetHeaders` | `(opts: HelmetOptions, out: []u8): usize` | Serializes/formats data via `formatHelmetHeaders` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { isSafeHeaderValue } from "helmet";
+
+pub fn main() {
+    let result = isSafeHeaderValue("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,49 +1,57 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # sharded-slab
+
+Zero-allocation O(1) generational slab allocator and ABA-safe handle pool (Rust slab + generational-arena parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:sharded-slab` ([https://github.com/hawkw/sharded-slab](https://github.com/hawkw/sharded-slab))（原库名 `sharded-slab` → CP 包名 `sharded-slab`）
 
-Zero-allocation O(1) generational slab allocator and ABA-safe handle pool for CP — clean-room MIT parity with Rust `slab` (1.19B downloads on crates.io) + `generational-arena`.
+| Metadata | Value |
+| --- | --- |
+| Package | `sharded-slab` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 O(1) 侵入式空闲链表对象池与防悬垂代数句柄引擎，适用于连接池、定时器句柄、事件源与资源表映射。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add sharded-slab
 ```
 
-## Features / 核心特性
+```cp
+import { SlabKey, SlabI64, SlabU64, nextGeneration } from "sharded-slab";
+```
 
-- **O(1) Allocation & Free**: Intrusive free-list + bump pointer over fixed 256-slot stack storage (`SlabI64`, `SlabU64`), zero heap allocation.
-- **ABA / Use-After-Free Protection**: Every `SlabKey{ index, generation }` carries a generation counter that increments on `remove()` and `clear()`, invalidating stale handles even after slot reuse.
+## Core API
 
-## API
+### Data Structures
 
-| Symbol | Signature | Description |
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `SlabKey` | `struct { index: u32, generation: u32 }` | Generational handle (`equals(other) -> bool`) |
-| `SlabI64` / `SlabU64` | `init() -> Slab*` | Initialize empty 256-slot slab |
-| `insert` | `(*_, value) -> SlabKey?` | O(1) insert (reuses freed slot or bumps); returns `null` when full |
-| `get` | `(key: SlabKey) -> T?` | O(1) lookup with generation verification |
-| `set` | `(*_, key: SlabKey, value) -> bool` | O(1) update if handle is live |
-| `remove` | `(*_, key: SlabKey) -> T?` | O(1) remove, bump generation, push slot onto free list |
-| `contains` | `(key: SlabKey) -> bool` | Check if handle is currently live |
-| `count` / `isEmpty` / `isFull` | `() -> usize / bool` | Occupancy queries |
-| `clear` | `(*_)` | Clear all live entries and bump their generations |
+| `SlabKey` | `class` | Fields: `index: u32, generation: u32` · Methods: `equals` |
+| `SlabI64` | `class` | Fields: `slots: [SLAB_CAPACITY]i64, occupied: [SLAB_CAPACITY]bool, generations: [SLAB_CAPACITY]u32, next_free: [SLAB_CAPACITY]i32, free_head: i32, next_alloc: usize, +2 more` · Methods: `init, insert, contains, get, set, remove, +4 more` |
+| `SlabU64` | `class` | Fields: `slots: [SLAB_CAPACITY]u64, occupied: [SLAB_CAPACITY]bool, generations: [SLAB_CAPACITY]u32, next_free: [SLAB_CAPACITY]i32, free_head: i32, next_alloc: usize, +2 more` · Methods: `init, insert, contains, get, set, remove, +4 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `nextGeneration` | `(gen: u32): u32` | Invokes `nextGeneration` and returns `u32`. |
+
+## Minimal Example
 
 ```cp
-import { SlabI64, SlabKey } from "sharded-slab";
+import { nextGeneration } from "sharded-slab";
 
-let pool = SlabI64.init();
-const k1 = pool.insert(42 as i64) ?? SlabKey{ index: 0 as u32, generation: 0 as u32 };
-const v1 = pool.get(k1); // 42
-* = pool.remove(k1);
-
-const k2 = pool.insert(99 as i64) ?? SlabKey{ index: 0 as u32, generation: 0 as u32 };
-// k2 reuses index 0 with generation 2; pool.get(k1) safely returns null!
+pub fn main() {
+    let result = nextGeneration(0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,18 +1,58 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # escalade
+
+Zero-heap ancestor directory path walker (clean-room CP implementation of npm escalade)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:escalade` ([https://github.com/lukeed/escalade](https://github.com/lukeed/escalade))
 
-零堆分配的 CP 原生父目录向上遍历器，Clean-Room MIT 实现对标 npm 顶流包 `escalade`（1.2 亿+/周下载，`yargs` / `find-up` 核心依赖），跨包零重复复用 `normalize-path`。
+| Metadata | Value |
+| --- | --- |
+| Package | `escalade` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- `AncestorWalker`：从任意 POSIX 或 Windows 路径逐级向上遍历至根目录（`/` 或 `C:/`）
-- 跨包复用 `normalize-path` 统一反斜杠与尾斜杠规范化
-- `joinCandidate(dir, name, out)`：零堆拼接候选文件路径（如查找 `cap.json` / `package.json`）
+```bash
+cap add escalade
+```
 
-## 致谢
+```cp
+import { AncestorWalker, joinCandidate } from "escalade";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`lukeed/escalade`](https://github.com/lukeed/escalade)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `AncestorWalker` | `class` | Fields: `buf: [512]u8, len: usize, done: bool` · Methods: `new, isDone, next, remainingDepth` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `joinCandidate` | `(dir: string, name: string, out: []u8): usize` | Invokes `joinCandidate` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { joinCandidate } from "escalade";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = joinCandidate("example", "example", out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

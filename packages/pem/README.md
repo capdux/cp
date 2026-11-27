@@ -1,35 +1,72 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # pem
+
+Zero-heap RFC 7468 PEM armor multi-block parser, validator, and 64-column wrapped encoder for certificates and keys
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rustls-pemfile` ([https://github.com/rustls/pemfile](https://github.com/rustls/pemfile)) / `crates.io:pem-rfc7468` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))（原库名 `rustls-pemfile` → CP 包名 `pem`）
 
-Zero-heap RFC 7468 PEM armor parser, multi-block certificate bundle iterator, Base64 extractor, and 64-column line-wrapping encoder in pure CP (replaces Rust `pem` [55M] & npm `pem-jwk`/`sshpk`).
+| Metadata | Value |
+| --- | --- |
+| Package | `pem` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Install
+## Installation & Import
 
 ```bash
 cap add pem
 ```
 
-## Usage
-
 ```cp
-import { parsePem, parsePemBundle, extractBase64, encodePem } from "pem";
-
-let out: [512]u8 = undefined;
-const pem = encodePem("PUBLIC KEY", "MCowBQYDK2VwAyEA...", out[0..512]);
-const blk = parsePem(pem);
-// blk.label == "PUBLIC KEY"
+import {
+    PemBlock,
+    PemBundle,
+    isValidLabel,
+    parsePemFrom,
+    parsePem,
+    parsePemBundle,
+    extractBase64,
+    encodePem,
+} from "pem";
 ```
 
-## API
+## Core API
 
-| Function | Description |
-| --- | --- |
-| `parsePem(input)` | Parse the first RFC 7468 PEM block |
-| `parsePemFrom(input, offset)` | Parse next PEM block starting at byte offset |
-| `parsePemBundle(input)` | Parse up to 16 PEM blocks from a cert chain / bundle |
-| `extractBase64(blk, out)` | Strip whitespace & RFC 1421 headers, returning clean Base64 |
-| `encodePem(label, b64, out)` | Format label + Base64 with 64-column RFC 7468 wrapping |
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `PemBlock` | `class` | Fields: `valid: bool, label: string, raw_body: string, start_offset: usize, end_offset: usize` |
+| `PemBundle` | `class` | Fields: `blocks: [16]PemBlock, count: usize` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isValidLabel` | `(label: string): bool` | Checks predicate `isValidLabel` and returns `bool`. |
+| `parsePemFrom` | `(input: string, from_offset: usize): PemBlock` | Parses input via `parsePemFrom` and returns `PemBlock`. |
+| `parsePem` | `(input: string): PemBlock` | Parses input via `parsePem` and returns `PemBlock`. |
+| `parsePemBundle` | `(input: string): PemBundle` | Parses input via `parsePemBundle` and returns `PemBundle`. |
+| `extractBase64` | `(blk: PemBlock, out: []u8): string` | Invokes `extractBase64` and returns `string`. |
+| `encodePem` | `(label: string, base64_payload: string, out: []u8): string` | Serializes/formats data via `encodePem` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { isValidLabel } from "pem";
+
+pub fn main() {
+    let result = isValidLabel("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

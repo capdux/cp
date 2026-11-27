@@ -1,14 +1,80 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# ajv-formats
+
+Zero-allocation JSON Schema Draft 2019-09/2020-12 string format validators: date, time, date-time, email, hostname, ipv4, ipv6, uuid, uri, json-pointer (clean-room MIT implementation of npm ajv-formats, #205 / 212M wk)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ajv-formats` ([https://github.com/ajv-validator/ajv-formats](https://github.com/ajv-validator/ajv-formats)) | 许可：`MIT`
 
-# `ajv-formats`
+| Metadata | Value |
+| --- | --- |
+| Package | `ajv-formats` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配纯 CP JSON Schema Draft 2019-09 / 2020-12 字符串格式校验器，完整对标 npm **#205** `ajv-formats`（真实周下载 **2.12 亿/周**，AJV 生态核心校验依赖）。
+## Installation & Import
 
-## 核心 API
+```bash
+cap add ajv-formats
+```
 
-- 日期时间：`isDate`（RFC 3339 含闰年 2 月 29 日校验）、`isTime`（含闰秒与时区换算校验）、`isDateTime`
-- 网络与标识：`isEmail`、`isHostname`（RFC 1034/1123）、`isIpv4`、`isIpv6`（支持 `::` 与混合 IPv4）、`isUuid`、`isUri`、`isJsonPointer`（RFC 6901）
-- 统一分派：`validateFormat(format_name: string, value: string): bool`
+```cp
+import {
+    ajvfIsDigit,
+    ajvfIsAlpha,
+    ajvfIsAlphaNum,
+    ajvfIsHex,
+    ajvfParse2Digits,
+    ajvfParse4Digits,
+    ajvfIsLeapYear,
+    ajvfDaysInMonth,
+} from "ajv-formats";
+```
+
+## Core API
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ajvfIsDigit` | `(b: u8): bool` | Invokes `ajvfIsDigit` and returns `bool`. |
+| `ajvfIsAlpha` | `(b: u8): bool` | Invokes `ajvfIsAlpha` and returns `bool`. |
+| `ajvfIsAlphaNum` | `(b: u8): bool` | Invokes `ajvfIsAlphaNum` and returns `bool`. |
+| `ajvfIsHex` | `(b: u8): bool` | Invokes `ajvfIsHex` and returns `bool`. |
+| `ajvfParse2Digits` | `(s: string, offset: usize): i32` | Invokes `ajvfParse2Digits` and returns `i32`. |
+| `ajvfParse4Digits` | `(s: string, offset: usize): i32` | Invokes `ajvfParse4Digits` and returns `i32`. |
+| `ajvfIsLeapYear` | `(year: u32): bool` | Invokes `ajvfIsLeapYear` and returns `bool`. |
+| `ajvfDaysInMonth` | `(year: u32, month: u32): u32` | Invokes `ajvfDaysInMonth` and returns `u32`. |
+| `isDate` | `(s: string): bool` | Checks predicate `isDate` and returns `bool`. |
+| `isTime` | `(s: string): bool` | Checks predicate `isTime` and returns `bool`. |
+| `isDateTime` | `(s: string): bool` | Checks predicate `isDateTime` and returns `bool`. |
+| `isHostname` | `(s: string): bool` | Checks predicate `isHostname` and returns `bool`. |
+| `ajvfIsEmailLocalChar` | `(b: u8): bool` | Invokes `ajvfIsEmailLocalChar` and returns `bool`. |
+| `isEmail` | `(s: string): bool` | Checks predicate `isEmail` and returns `bool`. |
+| `isIpv4` | `(s: string): bool` | Checks predicate `isIpv4` and returns `bool`. |
+| `isIpv6` | `(s: string): bool` | Checks predicate `isIpv6` and returns `bool`. |
+| `isUuid` | `(s: string): bool` | Checks predicate `isUuid` and returns `bool`. |
+| `ajvfIsSchemeChar` | `(b: u8): bool` | Invokes `ajvfIsSchemeChar` and returns `bool`. |
+| `isUri` | `(s: string): bool` | Checks predicate `isUri` and returns `bool`. |
+| `isJsonPointer` | `(s: string): bool` | Checks predicate `isJsonPointer` and returns `bool`. |
+| `ajvfStrEq` | `(a: string, b: string): bool` | Invokes `ajvfStrEq` and returns `bool`. |
+| `validateFormat` | `(format_name: string, value: string): bool` | Validates input with `validateFormat` returning `bool`. |
+
+## Minimal Example
+
+```cp
+import { isDate } from "ajv-formats";
+
+pub fn main() {
+    let result = isDate("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,30 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `bwt`
+# bwt
+
+Zero-allocation Burrows-Wheeler Transform (BWT) and Move-To-Front (MTF) reversible compression preprocessing in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bwt` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
 
-Zero-heap-allocation Burrows-Wheeler Transform (BWT) and Move-To-Front (MTF) reversible compression preprocessing engine in pure CP.
+| Metadata | Value |
+| --- | --- |
+| Package | `bwt` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Burrows-Wheeler Transform (`bwtForward` / `bwtInverse`)**: Deterministic iterative merge sort over cyclic rotations (`MAX_BLOCK = 512`) and O(N) LF-Mapping exact inverse.
-- **Move-To-Front (`mtfEncode` / `mtfDecode`)**: Full 256-byte alphabet MTF transform turning BWT symbol clusters into zero runs for RLE/Huffman stages.
-- **Zero Heap Allocation**: All buffers live on stack or caller-provided slices.
-
-## API
-
-```cp
-import { MAX_BLOCK, BwtResult, bwtForward, bwtInverse, mtfEncode, mtfDecode } from "bwt";
+```bash
+cap add bwt
 ```
 
-- `MAX_BLOCK: usize = 512`
-- `bwtForward(src: []const u8, dst: []u8) -> BwtResult`
-- `bwtInverse(src: []const u8, primary_index: usize, dst: []u8) -> bool`
-- `mtfEncode(src: []const u8, dst: []u8) -> bool`
-- `mtfDecode(src: []const u8, dst: []u8) -> bool`
+```cp
+import {
+    BwtResult,
+    cmpRotations,
+    bwtForward,
+    bwtInverse,
+    mtfEncode,
+    mtfDecode,
+} from "bwt";
+```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `BwtResult` | `class` | Fields: `primary_index: usize, len: usize, ok: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cmpRotations` | `(src: &[]u8, a: usize, b: usize): i32` | Invokes `cmpRotations` and returns `i32`. |
+| `bwtForward` | `(src: &[]u8, dst: []u8): BwtResult` | Invokes `bwtForward` and returns `BwtResult`. |
+| `bwtInverse` | `(src: &[]u8, primary_index: usize, dst: []u8): bool` | Invokes `bwtInverse` and returns `bool`. |
+| `mtfEncode` | `(src: &[]u8, dst: []u8): bool` | Invokes `mtfEncode` and returns `bool`. |
+| `mtfDecode` | `(src: &[]u8, dst: []u8): bool` | Invokes `mtfDecode` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { cmpRotations } from "bwt";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = cmpRotations(out_buf[0..256], 0, 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

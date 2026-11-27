@@ -1,45 +1,56 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # topological-sort
+
+Zero-allocation deterministic Kahn topological sort, cycle detection, and parallel DAG level stratification (Rust topological-sort / petgraph / npm toposort parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:topological-sort` ([https://github.com/gifnksm/topological-sort-rs](https://github.com/gifnksm/topological-sort-rs))（原库名 `topological-sort` → CP 包名 `topological-sort`）
 
-零堆分配的 CP 确定性 Kahn 拓扑排序、有向图环路检测与 DAG 并行执行层级分层引擎 — 洁净室 MIT 实现，对标 Rust `topological-sort` / `petgraph::algo::toposort` 与 npm `toposort`。
+| Metadata | Value |
+| --- | --- |
+| Package | `topological-sort` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation deterministic Kahn topological sort, cycle detection, and parallel DAG level stratification for CP — clean-room MIT parity with Rust `topological-sort`, `petgraph`, and npm `toposort`.
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add topological-sort
 ```
 
-## API 参考 / API Reference
-
-- **`TopoResult`**：`{ ok: bool, count: usize, order: [128]u16, levels: [128]u16 }`
-- **`TopoGraph`**（最多 128 节点、512 有向边，压缩邻接表存储）：
-  - `init(node_count)`, `reset(*_, node_count)`
-  - `add_edge(*_, from, to) -> bool`
-  - `in_degree(node) -> u16`, `out_degree(node) -> u16`
-  - `sort() -> TopoResult`（最小节点 ID 优先队列，字典序最小确定性输出 + 并行层级 `levels`）
-  - `has_cycle() -> bool`
-
-## 使用示例 / Usage
-
 ```cp
-import { TopoGraph } from "topological-sort";
-
-let g = TopoGraph.init(4 as usize);
-* = g.add_edge(0 as usize, 1 as usize);
-* = g.add_edge(0 as usize, 2 as usize);
-* = g.add_edge(1 as usize, 3 as usize);
-* = g.add_edge(2 as usize, 3 as usize);
-
-const res = g.sort();
-// res.ok == true, res.order[0..4] == [0, 1, 2, 3], res.levels[0..4] == [0, 1, 1, 2]
+import { TopoResult, TopoGraph, clampNodes } from "topological-sort";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `TopoResult` | `class` | Fields: `ok: bool, count: usize, order: [MAX_NODES]u16, levels: [MAX_NODES]u16` · Methods: `empty` |
+| `TopoGraph` | `class` | Fields: `node_count: usize, edge_count: usize, head: [MAX_NODES]i16, edge_to: [MAX_EDGES]u16, edge_next: [MAX_EDGES]i16, in_deg: [MAX_NODES]u16, +1 more` · Methods: `init, reset, add_edge, in_degree, out_degree, sort, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `clampNodes` | `(n: usize): usize` | Invokes `clampNodes` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { clampNodes } from "topological-sort";
+
+pub fn main() {
+    let result = clampNodes(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,41 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # indoc
+
+Zero-allocation multiline string dedent, indent, stripMargin, and newline normalization engine for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:indoc` ([https://github.com/dtolnay/indoc](https://github.com/dtolnay/indoc))
 
-Zero-allocation multiline string `dedent`, `indent`, `stripMargin`, `trimBlankLines`, and newline normalization engine for CP — clean-room MIT parity with Rust `indoc`, npm `dedent`, and Kotlin `trimMargin`.
+| Metadata | Value |
+| --- | --- |
+| Package | `indoc` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 多行文本去缩进与模板对齐引擎，专为 SQL / HTML / YAML / LLM Prompt 嵌入式多行字符串打造，支持公共最小缩进剥离、相对嵌套缩进保留、Kotlin/Scala 风格 `stripMargin('|')` 与 CRLF 换行规范化（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add indoc
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `minCommonIndent` | `(input: string) -> usize` | 计算全部非空白行的最小公共前导空格/制表符数 |
-| `dedent` | `(input: string, out: []u8) -> string` | 剥离首尾单行空行与公共最小缩进，保留相对嵌套并清空纯空白行 |
-| `indent` | `(input: string, prefix: string, skip_empty: bool, out: []u8) -> string` | 为每行添加统一前缀（可选跳过空行） |
-| `stripMargin` | `(input: string, margin_char: u8, out: []u8) -> string` | 剥离每行前导空白及紧随的边界符（如 `'|'`） |
-| `normalizeNewlines` | `(input: string, out: []u8) -> string` | 统一 `\r\n` 与 `\r` 为 `\n` |
-| `trimBlankLines` | `(input: string) -> string` | 零拷贝切片剥离首尾全部空行 |
-
-## Usage / 使用示例
-
 ```cp
-import { dedent, indent, stripMargin } from "indoc";
-
-let out: [512]u8 = undefined;
-const sql = dedent("\n    SELECT *\n      FROM users\n    WHERE active = 1\n", out[0..512]);
-// => "SELECT *\n  FROM users\nWHERE active = 1"
+import {
+    isHws,
+    isLineBlank,
+    appendByte,
+    stripOuterSingleBlankLines,
+    trimBlankLines,
+    minCommonIndent,
+    dedent,
+    indent,
+} from "indoc";
 ```
 
-## License
+## Core API
 
-MIT
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isHws` | `(c: u8): bool` | Checks predicate `isHws` and returns `bool`. |
+| `isLineBlank` | `(s: string, start: usize, end: usize): bool` | Checks predicate `isLineBlank` and returns `bool`. |
+| `appendByte` | `(out: []u8, pos: usize, c: u8): usize` | Invokes `appendByte` and returns `usize`. |
+| `stripOuterSingleBlankLines` | `(input: string): string` | Invokes `stripOuterSingleBlankLines` and returns `string`. |
+| `trimBlankLines` | `(input: string): string` | Invokes `trimBlankLines` and returns `string`. |
+| `minCommonIndent` | `(input: string): usize` | Invokes `minCommonIndent` and returns `usize`. |
+| `dedent` | `(input: string, out: []u8): string` | Invokes `dedent` and returns `string`. |
+| `indent` | `(input: string, prefix: string, skip_empty: bool, out: []u8): string` | Invokes `indent` and returns `string`. |
+| `stripMargin` | `(input: string, margin_char: u8, out: []u8): string` | Invokes `stripMargin` and returns `string`. |
+| `normalizeNewlines` | `(input: string, out: []u8): string` | Invokes `normalizeNewlines` and returns `string`. |
+
+## Minimal Example
+
+```cp
+import { isLineBlank } from "indoc";
+
+pub fn main() {
+    let result = isLineBlank("example", 0, 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

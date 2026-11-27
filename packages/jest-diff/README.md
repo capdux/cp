@@ -1,19 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # jest-diff
+
+Zero-heap pure CP Jest-style unified diff engine with ANSI coloring (clean-room MIT implementation of npm jest-diff)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:jest-diff` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest))
 
-零堆分配的纯 CP Jest 风格统一差异（Unified Diff）对比引擎，Clean-Room MIT 实现对标 npm Top 50 包 `jest-diff`（周下载 9000 万+），跨包复用 `similar` 的行级 LCS 差分算法与 `picocolors` 的 ANSI 终端着色能力。
+| Metadata | Value |
+| --- | --- |
+| Package | `jest-diff` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- **Jest 风格统一输出**：`diffLinesUnified` 生成带头部注释（默认 `"- Expected"` / `"+ Received"`）、可选变更计数、`"- "` / `"+ "` / `"  "` 前缀行的统一差异视图
-- **上下文折叠与展开**：通过 `context_lines` 与 `expand` 控制上下文窗口及 `@@ ... @@` 折叠标记
-- **ANSI 终端着色**：按 `use_color` 自动委托 `picocolors` 对删除行（红）、新增行（绿）与上下文行（灰）着色
-- **差异统计与无差异提示**：`diffStats` 返回精确的增/删/相等行数；完全相同时输出 `NO_DIFF_MESSAGE`
+```bash
+cap add jest-diff
+```
 
-## 致谢
+```cp
+import {
+    JdfLine,
+    DiffOptions,
+    DiffSummary,
+    jdfSplitLines,
+    jdfWriteBytes,
+    jdfWriteStr,
+    jdfWriteByte,
+    jdfWriteUsize,
+} from "jest-diff";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`jestjs/jest` (`jest-diff`)](https://github.com/jestjs/jest/tree/main/packages/jest-diff)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `JdfLine` | `class` | Fields: `start: usize, end: usize` |
+| `DiffOptions` | `class` | Fields: `a_annotation: string, b_annotation: string, context_lines: usize, expand: bool, include_change_counts: bool, use_color: bool` · Methods: `defaults, colored` |
+| `DiffSummary` | `class` | Fields: `insertions: usize, deletions: usize, equal: usize, has_diff: bool` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `jdfSplitLines` | `(text: string, out_lines: []JdfLine): usize` | Invokes `jdfSplitLines` and returns `usize`. |
+| `jdfWriteBytes` | `(out: []u8, pos: usize, src: string, start: usize, end: usize): usize` | Invokes `jdfWriteBytes` and returns `usize`. |
+| `jdfWriteStr` | `(out: []u8, pos: usize, s: string): usize` | Invokes `jdfWriteStr` and returns `usize`. |
+| `jdfWriteByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `jdfWriteByte` and returns `usize`. |
+| `jdfWriteUsize` | `(out: []u8, pos: usize, val: usize): usize` | Invokes `jdfWriteUsize` and returns `usize`. |
+| `jdfEmitStyledLine` | `(fmt: PicoFormatter, color_kind: u8, line_text: string, out: []u8, pos: usize): usize` | Invokes `jdfEmitStyledLine` and returns `usize`. |
+| `diffStats` | `(expected: string, received: string): DiffSummary` | Invokes `diffStats` and returns `DiffSummary`. |
+| `diffLinesUnified` | `(expected: string, received: string, opts: DiffOptions, out: []u8): usize` | Invokes `diffLinesUnified` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { jdfSplitLines } from "jest-diff";
+
+pub fn main() {
+    let result = jdfSplitLines("example", /* out_lines: []JdfLine */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

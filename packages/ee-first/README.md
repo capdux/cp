@@ -1,18 +1,58 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # ee-first
+
+Zero-heap pure CP multi-emitter first-event race listener with automatic cleanup (clean-room MIT implementation of npm ee-first v1)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ee-first` ([https://github.com/jonathanong/ee-first](https://github.com/jonathanong/ee-first))
 
-零堆分配的纯 CP 多事件源首个事件竞态监听器，Clean-Room MIT 实现对标 npm Top 30 包 `ee-first` v1（周下载 1.6 亿+）。
+| Metadata | Value |
+| --- | --- |
+| Package | `ee-first` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- **零堆 16 槽位竞态**：`FirstRace` 使用固定 `[16]EventWatch` 栈数组注册多组 `(emitter_id, event_name)` 监听
-- **首个命中自动清理**：`emit` 命中首个活跃监听后立即记录获胜事件（`FirstResult`），并自动取消其余全部活跃监听
-- **手动取消与状态查询**：支持 `cancel()` 手动释放剩余监听，以及 `activeCount()`、`isSettled()`、`winner()` 零开销查询
+```bash
+cap add ee-first
+```
 
-## 致谢
+```cp
+import { EventWatch, FirstResult, FirstRace, eefStrEq } from "ee-first";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`jonathanong/ee-first`](https://github.com/jonathanong/ee-first)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `EventWatch` | `class` | Fields: `emitter_id: u32, event_name: string, active: bool` |
+| `FirstResult` | `class` | Fields: `triggered: bool, emitter_id: u32, event_name: string, payload_code: i32, cancelled_count: usize` · Methods: `empty` |
+| `FirstRace` | `class` | Fields: `watchers: [16]EventWatch, count: usize, settled: bool, result: FirstResult` · Methods: `new, add, emit, cancel, activeCount, isSettled, +1 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `eefStrEq` | `(a: string, b: string): bool` | Invokes `eefStrEq` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { eefStrEq } from "ee-first";
+
+pub fn main() {
+    let result = eefStrEq("example", "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

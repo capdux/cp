@@ -1,38 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # geohash
+
+Zero-allocation Base32 Geohash encoder, bounding-box decoder, and 8-direction neighbor finder (Rust geohash / ngeohash parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:geohash` ([https://github.com/georust/geohash](https://github.com/georust/geohash))
 
-Zero-allocation Base32 Geohash encoder, bounding-box decoder, and 8-direction neighbor finder for CP — clean-room MIT parity with Rust `geohash` and npm `ngeohash`.
+| Metadata | Value |
+| --- | --- |
+| Package | `geohash` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 Geohash 经纬度网格编解码、包围盒计算与 8 方向相邻网格查找引擎，适用于 LBS 附近搜索、地理围栏与空间索引。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add geohash
 ```
 
-## API
+```cp
+import {
+    GeoPoint,
+    GeoBBox,
+    invalidBBox,
+    base32Index,
+    isValid,
+    encode,
+    decodeBBox,
+    decode,
+} from "geohash";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `GeoPoint` | `struct { lat: f64, lon: f64 }` | Decoded latitude/longitude center point |
-| `GeoBBox` | `struct { min_lat, max_lat, min_lon, max_lon, valid }` | Exact Geohash cell bounding box |
-| `encode` | `(lat: f64, lon: f64, precision: usize, dst: []u8) -> usize` | Encode coordinates to Base32 Geohash (`1..12` chars) |
-| `decodeBBox` | `(hash: []const u8) -> GeoBBox` | Decode cell bounding box |
-| `decode` | `(hash: []const u8) -> GeoPoint` | Decode cell center point |
-| `neighbor` | `(hash: []const u8, dlat: i32, dlon: i32, dst: []u8) -> usize` | Compute 8-way neighbor with ±180° longitude wrap-around |
-| `isValid` | `(hash: []const u8) -> bool` | Validate Geohash alphabet & length |
+| `GeoPoint` | `class` | Fields: `lat: f64, lon: f64` |
+| `GeoBBox` | `class` | Fields: `min_lat: f64, max_lat: f64, min_lon: f64, max_lon: f64, valid: bool` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `invalidBBox` | `(): GeoBBox` | Invokes `invalidBBox` and returns `GeoBBox`. |
+| `base32Index` | `(c: u8): i16` | Invokes `base32Index` and returns `i16`. |
+| `isValid` | `(hash: &[]u8): bool` | Checks predicate `isValid` and returns `bool`. |
+| `encode` | `(lat: f64, lon: f64, precision: usize, dst: []u8): usize` | Serializes/formats data via `encode` returning `usize`. |
+| `decodeBBox` | `(hash: &[]u8): GeoBBox` | Parses input via `decodeBBox` and returns `GeoBBox`. |
+| `decode` | `(hash: &[]u8): GeoPoint` | Parses input via `decode` and returns `GeoPoint`. |
+| `neighbor` | `(hash: &[]u8, dlat: i32, dlon: i32, dst: []u8): usize` | Invokes `neighbor` and returns `usize`. |
+
+## Minimal Example
 
 ```cp
-import { encode, decode, neighbor } from "geohash";
+import { isValid } from "geohash";
 
-let buf: [16]u8 = undefined;
-const n = encode(57.64911, 10.40744, 11 as usize, buf[0..16]);
-// buf[0..n] == "u4pruydqqvj"
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = isValid(out_buf[0..256]);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

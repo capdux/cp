@@ -1,42 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # env_filter
+
+Zero-allocation RUST_LOG-style hierarchical log filter parser and longest-prefix module matcher (Rust env_filter parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:env_filter` ([https://github.com/rust-cli/env_logger](https://github.com/rust-cli/env_logger))
 
-Zero-allocation `RUST_LOG`-style hierarchical log level filter parser and module prefix matcher for CP — clean-room parity with Rust `env_filter` (257M+ downloads on crates.io).
+| Metadata | Value |
+| --- | --- |
+| Package | `env_filter` |
+| Version | `1.0.0` |
+| License | `MIT OR Apache-2.0` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 `RUST_LOG` 风格分级模块日志过滤引擎（最多 32 条指令，按 `target` 长度降序执行最长模块前缀匹配与 `::` 边界对齐），适用于日志框架、可观测性管线与动态调试过滤。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add env_filter
 ```
 
-## API
+```cp
+import {
+    LogLevel,
+    FilterDirective,
+    EnvFilter,
+    efltLevelRank,
+    parseLogLevel,
+    efltMatchesTarget,
+} from "env_filter";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `LogLevel` | `enum: u8 { Off = 0, Error = 1, Warn = 2, Info = 3, Debug = 4, Trace = 5 }` | Standard 6-level log severity |
-| `FilterDirective` | `struct { target: string, level: LogLevel }` | Single module-to-level directive |
-| `parseLogLevel` | `(s: string) -> LogLevel?` | Case-insensitive level name parser |
-| `EnvFilter.parse` | `(spec: string) -> EnvFilter` | Parses comma-separated `RUST_LOG` spec |
-| `EnvFilter.empty` | `() -> EnvFilter` | Empty filter (all targets `Off`) |
-| `EnvFilter.addDirective` | `(*_, target: string, level: LogLevel) -> bool` | Adds or updates a directive |
-| `EnvFilter.enabled` | `(target: string, level: LogLevel) -> bool` | Checks if a target+level is enabled |
-| `EnvFilter.maxLevelFor` | `(target: string) -> LogLevel` | Resolves highest enabled level for target |
-| `EnvFilter.directiveCount` | `() -> usize` | Number of active directives |
+| `enum` | `LogLevel` | `Off, Error, Warn, Info, Debug, Trace` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `FilterDirective` | `class` | Fields: `target: string, level: LogLevel` |
+| `EnvFilter` | `class` | Fields: `directives: [32]FilterDirective, count: usize` · Methods: `empty, sortDesc, addDirective, parse, directiveCount, getDirective, +2 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `efltLevelRank` | `(lvl: LogLevel): u8` | Invokes `efltLevelRank` and returns `u8`. |
+| `parseLogLevel` | `(s: string): LogLevel?` | Parses input via `parseLogLevel` and returns `LogLevel?`. |
+| `efltMatchesTarget` | `(target: string, directive_target: string): bool` | Invokes `efltMatchesTarget` and returns `bool`. |
+
+## Minimal Example
 
 ```cp
-import { EnvFilter, LogLevel } from "env_filter";
+import { parseLogLevel } from "env_filter";
 
-const filter = EnvFilter.parse("warn,my_app=info,my_app::net=debug,quiet_mod=off");
-const ok1 = filter.enabled("my_app::net::tcp", LogLevel.Debug); // true
-const ok2 = filter.enabled("my_app::db", LogLevel.Debug);       // false (max is Info)
-const ok3 = filter.enabled("quiet_mod::sub", LogLevel.Error);   // false (Off)
-const ok4 = filter.enabled("other_crate", LogLevel.Warn);       // true (fallback Warn)
+pub fn main() {
+    let result = parseLogLevel("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

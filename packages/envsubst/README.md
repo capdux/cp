@@ -1,62 +1,79 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # envsubst
+
+Zero-allocation POSIX / Docker / K8s environment variable template expansion engine (dotenv-expand / envsub / Rust shellexpand parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:dotenv-expand` ([https://github.com/motdotla/dotenv-expand](https://github.com/motdotla/dotenv-expand))（原库名 `dotenv-expand` → CP 包名 `envsubst`）
 
-零堆分配的 POSIX / Docker / Kubernetes 风格环境变量模板展开引擎 — 洁净室 MIT 实现，对标 npm `dotenv-expand` / `envsub` 与 Rust `shellexpand`。
+| Metadata | Value |
+| --- | --- |
+| Package | `envsubst` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation POSIX / Docker / K8s environment variable template expansion engine for CP — clean-room MIT parity with npm `dotenv-expand`, `envsub`, and Rust `shellexpand`.
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add envsubst
 ```
 
-## 支持语法 / Supported POSIX Syntax
-
-| 语法 / Syntax | 行为说明 / Behavior |
-| --- | --- |
-| `$VAR`, `${VAR}` | 基础变量替换（未定义时为空串） |
-| `${VAR:-default}` | 未定义或为空串 `""` 时使用 `default`（支持嵌套展开） |
-| `${VAR-default}` | 仅当未定义时使用 `default`（已定义为空串 `""` 时保留空串） |
-| `${VAR:+alt}` | 已定义且非空时替换为 `alt`，否则为空串 |
-| `${VAR+alt}` | 只要已定义（含空串）即替换为 `alt`，否则为空串 |
-| `${VAR:?err_msg}` | 未定义或为空串时返回 `ExpandError.MissingRequired` |
-| `$$`, `\$` | 字面量 `$` 转义 |
-
-## API 参考 / API Reference
-
-| 符号 / Symbol | 说明 / Description |
-| --- | --- |
-| `EnvMap` | 栈上环境变量表（最多 64 项）：`init()`、`set(*_, key, val)`、`get(key) -> string?`、`has(key) -> bool` |
-| `ExpandError` | 错误枚举：`None` / `UnclosedBrace` / `MissingRequired` / `BufferOverflow` |
-| `ExpandResult` | 展开结果：`{ ok: bool, err: ExpandError, len: usize, missing_var: string }` |
-| `expandEnv` | `(tpl: string, env: EnvMap, out: []u8) -> ExpandResult` |
-| `expandEnvStr` | `(tpl: string, env: EnvMap, out: []u8) -> string` |
-| `hasEnvVars` | `(tpl: string) -> bool`（忽略 `$$` / `\$` 转义） |
-
-## 使用示例 / Usage
-
 ```cp
-import { EnvMap, expandEnv, expandEnvStr, hasEnvVars } from "envsubst";
-
-let env = EnvMap.init();
-env.set("HOST", "db.internal");
-env.set("PORT", "5432");
-env.set("TLS", "1");
-
-let buf: [512]u8 = undefined;
-const dsn = expandEnvStr(
-    "postgres://${USER:-postgres}@$HOST:${PORT:-5432}/app${TLS:+?sslmode=require}",
-    env,
-    buf[0..512],
-);
-// => "postgres://postgres@db.internal:5432/app?sslmode=require"
+import {
+    ExpandError,
+    EnvMap,
+    ExpandResult,
+    isVarStart,
+    isVarCont,
+    expandImpl,
+    expandEnv,
+    expandEnvStr,
+} from "envsubst";
 ```
 
-## License
+## Core API
 
-MIT
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `ExpandError` | `None, UnclosedBrace, MissingRequired, BufferOverflow` |
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `EnvMap` | `class` | Fields: `keys: [MAX_ENV_VARS]string, vals: [MAX_ENV_VARS]string, len: usize` · Methods: `init, set, get, has` |
+| `ExpandResult` | `class` | Fields: `ok: bool, err: ExpandError, len: usize, missing_var: string` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `isVarStart` | `(c: u8): bool` | Checks predicate `isVarStart` and returns `bool`. |
+| `isVarCont` | `(c: u8): bool` | Checks predicate `isVarCont` and returns `bool`. |
+| `expandImpl` | `(tpl: string, env: EnvMap, out: []u8, start_out: usize, depth: u8): ExpandResult` | Invokes `expandImpl` and returns `ExpandResult`. |
+| `expandEnv` | `(tpl: string, env: EnvMap, out: []u8): ExpandResult` | Invokes `expandEnv` and returns `ExpandResult`. |
+| `expandEnvStr` | `(tpl: string, env: EnvMap, out: []u8): string` | Invokes `expandEnvStr` and returns `string`. |
+| `hasEnvVars` | `(tpl: string): bool` | Checks predicate `hasEnvVars` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { expandEnv } from "envsubst";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = expandEnv("example", /* env: EnvMap */, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

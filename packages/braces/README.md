@@ -1,45 +1,86 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # braces
+
+Zero-allocation Bash/Glob brace expansion and sequence range generator (braces + fill-range parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:braces` ([https://github.com/micromatch/braces](https://github.com/micromatch/braces))
 
-Zero-allocation Bash/Glob brace expansion and sequence range generator for CP — clean-room MIT parity with npm `braces` + `fill-range` (~500M/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `braces` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 Bash/Glob 花括号展开与序列范围生成器，使用固定输出缓冲区与零拷贝偏移索引，内置展开上限防爆保护。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add braces
 ```
 
-## Features / 核心特性
+```cp
+import {
+    BraceResult,
+    BrExpander,
+    BrInt,
+    BrRangeSpec,
+    BrSpan,
+    brInitExpander,
+    brToResult,
+    brPushItem,
+} from "braces";
+```
 
-- **Comma Set Expansion**: `a/{b,c,d}/e` → `a/b/e`, `a/c/e`, `a/d/e`, including empty alternatives (`a{,b}` → `a`, `ab`).
-- **Numeric & Alpha Sequences (`fill-range`)**: `{1..5}`, descending `{10..2..2}`, zero-padded `{01..03}`, negative `{-2..1}`, letters `{a..e}`, `{Z..W}`, `{a..g..2}`.
-- **Cartesian Product & Nesting**: `{x,y}{1..2}` → `x1, x2, y1, y2`; `src/{a,b/{c,d}}.cp` → `src/a.cp, src/b/c.cp, src/b/d.cp`.
-- **Explosion Guard**: Caps output at 64 items (`truncated: true`) and passes through unclosed/non-expandable braces verbatim.
+## Core API
 
-## API
+### Data Structures
 
-| Symbol | Signature | Description |
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `BraceResult` | `struct { buf: []u8, starts: [64]usize, lens: [64]usize, count: usize, truncated: bool }` | Zero-allocation expansion result with `itemAt(idx) -> string` |
-| `expandBraces` | `(pattern: string, out: []u8) -> BraceResult` | Expand Bash/Glob brace expressions into `out` |
-| `fillRange` | `(start: string, end: string, step: i32, out: []u8) -> BraceResult` | Generate numeric or alphabetic sequence with optional step |
+| `BraceResult` | `class` | Fields: `buf: []u8, starts: [BR_MAX_ITEMS]usize, lens: [BR_MAX_ITEMS]usize, count: usize, truncated: bool` · Methods: `itemAt` |
+| `BrExpander` | `class` | Fields: `out: []u8, pos: usize, starts: [BR_MAX_ITEMS]usize, lens: [BR_MAX_ITEMS]usize, count: usize, truncated: bool` |
+| `BrInt` | `class` | Fields: `ok: bool, val: i64` |
+| `BrRangeSpec` | `class` | Fields: `ok: bool, startStr: string, endStr: string, step: i32` |
+| `BrSpan` | `class` | Fields: `found: bool, openIdx: usize, closeIdx: usize, isCommaSet: bool` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `brInitExpander` | `(out: []u8): BrExpander` | Invokes `brInitExpander` and returns `BrExpander`. |
+| `brToResult` | `(e: &mut BrExpander): BraceResult` | Invokes `brToResult` and returns `BraceResult`. |
+| `brPushItem` | `(e: &mut BrExpander, s: string)` | Executes `brPushItem` in-place. |
+| `brIsDigit` | `(c: u8): bool` | Invokes `brIsDigit` and returns `bool`. |
+| `brIsUpper` | `(c: u8): bool` | Invokes `brIsUpper` and returns `bool`. |
+| `brIsLower` | `(c: u8): bool` | Invokes `brIsLower` and returns `bool`. |
+| `brParseInt` | `(s: string): BrInt` | Invokes `brParseInt` and returns `BrInt`. |
+| `brFormatSimpleInt` | `(v: i64, buf: &mut [32]u8): string` | Invokes `brFormatSimpleInt` and returns `string`. |
+| `brParseRangeSpec` | `(body: string): BrRangeSpec` | Invokes `brParseRangeSpec` and returns `BrRangeSpec`. |
+| `brHasTopLevelComma` | `(body: string): bool` | Invokes `brHasTopLevelComma` and returns `bool`. |
+| `brFindExpandableBrace` | `(pat: string): BrSpan` | Invokes `brFindExpandableBrace` and returns `BrSpan`. |
+| `brBuildCombined` | `(prefix: string, mid: string, suffix: string, buf: &mut [BR_MAX_WORK_BUF]u8): usize` | Invokes `brBuildCombined` and returns `usize`. |
+| `brEmitToken` | `(e: &mut BrExpander, prefix: string, tok: string, suffix: string, depth: usize)` | Executes `brEmitToken` in-place. |
+| `brExpandRangeWithContext` | `(e: &mut BrExpander, prefix: string, startStr: string, endStr: string, stepIn: i32, suffix: string, depth: usize)` | Executes `brExpandRangeWithContext` in-place. |
+| `brExpandRec` | `(e: &mut BrExpander, pat: string, depth: usize)` | Executes `brExpandRec` in-place. |
+| `expandBraces` | `(pattern: string, out: []u8): BraceResult` | Invokes `expandBraces` and returns `BraceResult`. |
+| `fillRange` | `(start: string, end: string, step: i32, out: []u8): BraceResult` | Invokes `fillRange` and returns `BraceResult`. |
+
+## Minimal Example
 
 ```cp
-import { expandBraces, fillRange } from "braces";
+import { brParseInt } from "braces";
 
-let buf: [1024]u8 = undefined;
-const res = expandBraces("src/{a,b/{c,d}}.cp", buf[0..1024]);
-// res.count == 3: "src/a.cp", "src/b/c.cp", "src/b/d.cp"
-
-let rbuf: [256]u8 = undefined;
-const seq = fillRange("01", "03", 1, rbuf[0..256]);
-// seq.count == 3: "01", "02", "03"
+pub fn main() {
+    let result = brParseInt("example");
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

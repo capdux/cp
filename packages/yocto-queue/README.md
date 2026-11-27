@@ -1,29 +1,51 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # yocto-queue
+
+Tiny O(1) FIFO queue data structure (clean-room zero-heap CP implementation of npm yocto-queue)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:yocto-queue` ([https://github.com/sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue))
 
-零堆分配的 CP 原生 O(1) FIFO 队列，Clean-Room MIT 实现对标 npm 顶流包 `yocto-queue`（2 亿+/周下载，`p-limit` / `p-queue` 核心底层依赖）。
+| Metadata | Value |
+| --- | --- |
+| Package | `yocto-queue` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## 特性
+## Installation & Import
 
-- 固定栈环形缓冲（`YOCTO_QUEUE_CAP = 256`），无 GC、无堆分配、`= undefined` 零初始化开销
-- O(1) `enqueue` / `dequeue` / `peek` / `peekAt` / `clear` / `size` / `drain`
-- 同时提供无符号 `YoctoQueueU64` 与有符号 `YoctoQueueI64`
-
-## 使用示例
-
-```cp
-import { YoctoQueueU64 } from "yocto-queue";
-
-let q = YoctoQueueU64.new();
-* = q.enqueue(10);
-* = q.enqueue(20);
-let r = q.dequeue(); // { ok: true, value: 10 }
+```bash
+cap add yocto-queue
 ```
 
-## 致谢
+```cp
+import { PopU64Result, PopI64Result, YoctoQueueU64, YoctoQueueI64 } from "yocto-queue";
+```
 
-Clean-Room MIT 实现，API 语义对标开源生态 [`sindresorhus/yocto-queue`](https://github.com/sindresorhus/yocto-queue)。
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `PopU64Result` | `class` | Fields: `ok: bool, value: u64` |
+| `PopI64Result` | `class` | Fields: `ok: bool, value: i64` |
+| `YoctoQueueU64` | `class` | Fields: `buf: [256]u64, head: usize, tail: usize, count: usize` · Methods: `new, size, capacity, isEmpty, isFull, enqueue, +5 more` |
+| `YoctoQueueI64` | `class` | Fields: `buf: [256]i64, head: usize, tail: usize, count: usize` · Methods: `new, size, isEmpty, isFull, enqueue, dequeue, +2 more` |
+
+## Minimal Example
+
+```cp
+import { PopU64Result } from "yocto-queue";
+
+pub fn main() {
+    // Refer to src/index.d.cp for PopU64Result fields and methods
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

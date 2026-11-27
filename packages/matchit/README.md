@@ -1,38 +1,84 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # matchit
+
+Zero-allocation URL router with static, named (:id / {id}), and catch-all (*rest / {*rest}) priority matching (Rust matchit parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:matchit` ([https://github.com/ibraheemdev/matchit](https://github.com/ibraheemdev/matchit))
 
-Zero-allocation high-priority URL router for CP — clean-room MIT parity with Rust `matchit` (595M downloads on crates.io, powering `axum`).
+| Metadata | Value |
+| --- | --- |
+| Package | `matchit` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配超高速 URL 路由引擎，严格遵循 **静态字面段 > 命名参数段 (`:id` / `{id}`) > 通配捕获段 (`*rest` / `{*rest}`)** 优先级，零拷贝返回路径参数切片。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add matchit
 ```
 
-## API
+```cp
+import {
+    SegKind,
+    RouteParam,
+    RouteMatch,
+    RouteSeg,
+    RouteEntry,
+    Router,
+    emptyParam,
+    noMatch,
+} from "matchit";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
 | --- | --- | --- |
-| `RouteParam` | `struct { key: string, value: string }` | Zero-copy extracted parameter |
-| `RouteMatch` | `struct { matched: bool, handler_id: u32, params: [8]RouteParam, param_count: usize }` | Match result with `param(key) -> string?` |
-| `Router` | `init()` / `insert(*_, pattern, handler_id) -> bool` / `at(path) -> RouteMatch` / `routeCount() -> usize` | Fixed-capacity (64 routes) zero-allocation URL router |
+| `enum` | `SegKind` | `Static, Param, CatchAll` |
 
-## Usage / 使用示例
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `RouteParam` | `class` | Fields: `key: string, value: string` |
+| `RouteMatch` | `class` | Fields: `matched: bool, handler_id: u32, params: [MAX_PARAMS]RouteParam, param_count: usize` · Methods: `param` |
+| `RouteSeg` | `class` | Fields: `kind: SegKind, text: string` |
+| `RouteEntry` | `class` | Fields: `active: bool, handler_id: u32, segs: [MAX_SEGS]RouteSeg, seg_count: usize` |
+| `Router` | `class` | Fields: `routes: [MAX_ROUTES]RouteEntry, count: usize` · Methods: `init, insert, at, routeCount` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `emptyParam` | `(): RouteParam` | Invokes `emptyParam` and returns `RouteParam`. |
+| `noMatch` | `(): RouteMatch` | Invokes `noMatch` and returns `RouteMatch`. |
+| `emptySeg` | `(): RouteSeg` | Invokes `emptySeg` and returns `RouteSeg`. |
+| `emptyEntry` | `(): RouteEntry` | Invokes `emptyEntry` and returns `RouteEntry`. |
+| `segPriority` | `(kind: SegKind): u8` | Invokes `segPriority` and returns `u8`. |
+| `parseRoutePattern` | `(pattern: string, handler_id: u32): RouteEntry?` | Parses input via `parseRoutePattern` and returns `RouteEntry?`. |
+| `routesConflict` | `(a: RouteEntry, b: RouteEntry): bool` | Invokes `routesConflict` and returns `bool`. |
+| `routeBetterThan` | `(cand: RouteEntry, best: RouteEntry): bool` | Invokes `routeBetterThan` and returns `bool`. |
+| `matchEntry` | `(entry: RouteEntry, path: string): RouteMatch?` | Invokes `matchEntry` and returns `RouteMatch?`. |
+
+## Minimal Example
 
 ```cp
-import { Router } from "matchit";
+import { parseRoutePattern } from "matchit";
 
-let r = Router.init();
-* = r.insert("/users/me", 1 as u32);
-* = r.insert("/users/:id", 2 as u32);
-* = r.insert("/files/*filepath", 3 as u32);
-
-const m = r.at("/users/42");
-// m.matched == true, m.handler_id == 2, m.param("id") == "42"
+pub fn main() {
+    let result = parseRoutePattern("example", 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

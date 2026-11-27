@@ -1,40 +1,56 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # pathfinding
+
+Zero-allocation weighted shortest-path engine with Dijkstra, Bellman-Ford negative-cycle detection, and path reconstruction (Rust pathfinding / petgraph parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:pathfinding` ([https://github.com/evenfurther/pathfinding](https://github.com/evenfurther/pathfinding))（原库名 `pathfinding` → CP 包名 `pathfinding`）
 
-Zero-allocation weighted shortest-path engine (Dijkstra + Bellman-Ford with negative-cycle detection + path reconstruction) for CP — clean-room MIT parity with Rust `pathfinding` and `petgraph::algo::dijkstra`.
+| Metadata | Value |
+| --- | --- |
+| Package | `pathfinding` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配静态图加权最短路径引擎（压缩前向星邻接表，最多 64 节点 / 256 边），支持非负权 Dijkstra、负权边 Bellman-Ford 与可达负环检测及前驱路径回溯。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add pathfinding
 ```
 
-## API
+```cp
+import { ShortestPaths, WeightedGraph, emptyShortestPaths } from "pathfinding";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `ShortestPaths` | `distanceTo(target) -> i64`, `isReachable(target) -> bool`, `reconstructPath(target, out) -> usize` | Shortest-path result & forward path reconstruction |
-| `WeightedGraph` | `init(n_nodes)`, `addEdge(*_, src, dst, w)`, `addUndirectedEdge(*_, u, v, w)`, `nodeCount()`, `edgeCount()`, `reset(*_, n_nodes)` | Fixed-capacity forward-star weighted graph |
-| `dijkstra` | `(source: usize) -> ShortestPaths` | Non-negative weighted shortest paths |
-| `bellmanFord` | `(source: usize) -> ShortestPaths` | Handles negative weights and sets `ok = false` on reachable negative cycles |
+| `ShortestPaths` | `class` | Fields: `ok: bool, node_count: usize, source: usize, dist: [MAX_NODES]i64, prev: [MAX_NODES]i16` · Methods: `isReachable, distanceTo, reconstructPath` |
+| `WeightedGraph` | `class` | Fields: `node_count: usize, edge_count: usize, head: [MAX_NODES]i16, edge_src: [MAX_EDGES]u16, edge_dst: [MAX_EDGES]u16, edge_weight: [MAX_EDGES]i64, +1 more` · Methods: `init, nodeCount, edgeCount, addEdge, addUndirectedEdge, reset, +2 more` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `emptyShortestPaths` | `(n_nodes: usize, src: usize, ok_val: bool): ShortestPaths` | Invokes `emptyShortestPaths` and returns `ShortestPaths`. |
+
+## Minimal Example
 
 ```cp
-import { WeightedGraph } from "pathfinding";
+import { emptyShortestPaths } from "pathfinding";
 
-let g = WeightedGraph.init(4 as usize);
-* = g.addEdge(0 as usize, 1 as usize, 4 as i64);
-* = g.addEdge(0 as usize, 2 as usize, 1 as i64);
-* = g.addEdge(2 as usize, 1 as usize, 2 as i64);
-* = g.addEdge(1 as usize, 3 as usize, 1 as i64);
-
-const sp = g.dijkstra(0 as usize);
-const d = sp.distanceTo(3 as usize); // 4
+pub fn main() {
+    let result = emptyShortestPaths(0, 0, false);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

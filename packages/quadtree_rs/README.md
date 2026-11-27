@@ -1,26 +1,66 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # quadtree_rs
+
+Zero-allocation pooled 2D QuadTree spatial index supporting point insertion, automatic subdivision, rectangular range queries, and radius queries for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:quadtree_rs` ([https://github.com/ambuc/quadtree_rs](https://github.com/ambuc/quadtree_rs)) / `npm:d3-quadtree` ([https://github.com/d3/d3-quadtree](https://github.com/d3/d3-quadtree))（原库名 `quadtree_rs` → CP 包名 `quadtree_rs`）
 
-Zero-allocation pooled 2D QuadTree spatial index for CP with automatic 4-quadrant subdivision, rectangular range queries, and Euclidean radius queries.
+| Metadata | Value |
+| --- | --- |
+| Package | `quadtree_rs` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation**: caller provides fixed `[]QuadNode` and `[]QuadItem` pools; non-recursive DFS queries use an explicit stack.
-- **Automatic subdivision**: splits leaf nodes into 4 quadrants when `max_leaf_items` is exceeded up to `max_depth`.
-- **Spatial queries**: `queryRect` and `queryRadius`.
-
-## Usage
+```bash
+cap add quadtree_rs
+```
 
 ```cp
-import { Rect2, QuadNode, QuadItem, QuadTree } from "quadtree_rs";
-
-let nodes: [64]QuadNode = undefined;
-let items: [64]QuadItem = undefined;
-let qt = QuadTree.empty();
-* = qt.init(nodes[0..64], Rect2.new(0.0 as f64, 0.0 as f64, 100.0 as f64, 100.0 as f64), 4 as u32, 6 as u32);
-* = qt.insert(nodes[0..64], items[0..64], 25.0 as f64, 30.0 as f64, 1 as u32);
+import {
+    Rect2,
+    QuadItem,
+    QuadNode,
+    QuadTree,
+    qtMakeLeaf,
+    qtChildIndex,
+} from "quadtree_rs";
 ```
+
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Rect2` | `class` | Fields: `min_x: f64, min_y: f64, max_x: f64, max_y: f64` · Methods: `new, contains, intersects` |
+| `QuadItem` | `class` | Fields: `x: f64, y: f64, id: u32, next_item: i32` |
+| `QuadNode` | `class` | Fields: `bounds: Rect2, first_item: i32, count: u32, children: [4]i32, is_leaf: bool` |
+| `QuadTree` | `class` | Fields: `node_count: usize, item_count: usize, max_leaf_items: u32, max_depth: u32` · Methods: `empty, init, insert, queryRect, queryRadius` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `qtMakeLeaf` | `(bounds: Rect2): QuadNode` | Invokes `qtMakeLeaf` and returns `QuadNode`. |
+| `qtChildIndex` | `(b: Rect2, x: f64, y: f64): usize` | Invokes `qtChildIndex` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { qtMakeLeaf } from "quadtree_rs";
+
+pub fn main() {
+    let result = qtMakeLeaf(/* bounds: Rect2 */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

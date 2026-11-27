@@ -1,10 +1,18 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI 智能体速查](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)
 
 # didyoumean
 
-> 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
-
 Zero-allocation spell-suggestion & edit-distance engine (didyoumean / fastest-levenshtein / Rust strsim parity: Levenshtein, Damerau-Levenshtein, Jaro-Winkler & CLI command suggestion) for CP
+
+<!-- cap-source-attribution -->
+> **参考 / 吸收来源**：`npm:didyoumean` ([https://github.com/dcporter/didyoumean.js](https://github.com/dcporter/didyoumean.js))
+
+| 元信息 | 值 |
+| --- | --- |
+| 包名 | `didyoumean` |
+| 版本 | `1.0.0` |
+| 许可证 | `MIT` |
+| 类型声明 | [`src/index.d.cp`](./src/index.d.cp) |
 
 ## 安装与导入
 
@@ -13,18 +21,50 @@ cap add didyoumean
 ```
 
 ```cp
-import { levenshtein } from "didyoumean";
+import {
+    Suggestion,
+    min3,
+    levenshtein,
+    damerauLevenshtein,
+    similarity,
+    didYouMeanWith,
+    didYouMean,
+} from "didyoumean";
 ```
 
-## 核心导出 API
+## 核心 API
 
-- `export fn levenshtein(a: string, b: string): usize;`
-- `export fn damerauLevenshtein(a: string, b: string, ignore_case: bool): usize;`
-- `export fn similarity(a: string, b: string): f64;`
-- `export fn didYouMeanWith(input: string, candidates: []string, max_dist: usize): Suggestion;`
-- `export fn didYouMean(input: string, candidates: []string): string?;`
+### 数据结构
 
-<!-- cap-source-attribution -->
-## 上游来源与许可证说明
+| 类型名 | 种类 | 字段与方法 |
+| --- | --- | --- |
+| `Suggestion` | `class` | 字段: `found: bool, match_str: string, distance: usize, index: usize` |
 
-- **上游生态**：`npm` (`didyoumean@1.0.0`)，许可证：Apache-2.0
+### 函数列表
+
+| 函数名 | 签名 | 说明 |
+| --- | --- | --- |
+| `min3` | `(a: usize, b: usize, c: usize): usize` | 调用 `min3` 并返回 `usize`。 |
+| `levenshtein` | `(a: string, b: string): usize` | 调用 `levenshtein` 并返回 `usize`。 |
+| `damerauLevenshtein` | `(a: string, b: string, ignore_case: bool): usize` | 调用 `damerauLevenshtein` 并返回 `usize`。 |
+| `similarity` | `(a: string, b: string): f64` | 调用 `similarity` 并返回 `f64`。 |
+| `didYouMeanWith` | `(input: string, candidates: []string, max_dist: usize): Suggestion` | 调用 `didYouMeanWith` 并返回 `Suggestion`。 |
+| `didYouMean` | `(input: string, candidates: []string): string?` | 调用 `didYouMean` 并返回 `string?`。 |
+
+## 最小调用示例
+
+```cp
+import { levenshtein } from "didyoumean";
+
+pub fn main() {
+    let result = levenshtein("example", "example");
+    _ = result;
+}
+```
+
+## CP 零堆与借用安全亮点
+
+- **纯 CP 零堆分配**：基于栈结构体与切片视图完成计算，无隐式堆内存分配与垃圾回收抖动。
+- **零拷贝字符串切片**：输入与返回的字符串直接借用调用方切片内存，避免无谓拷贝。
+- **显式错误联合与可选类型**：采用 `!T` 与 `T?` 替代运行时异常，错误传播清晰可控。
+- **编译期借用与类型安全**：由 `cpc` 编译期静态检查可变借用（`&mut`）与不可变借用边界。

@@ -1,44 +1,80 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # unsigned-varint
+
+Zero-allocation 3-in-1 variable-length integer codec (ULEB128, SLEB128, Protobuf ZigZag, and QUIC RFC 9000 varint) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unsigned-varint` ([https://github.com/paritytech/unsigned-varint](https://github.com/paritytech/unsigned-varint))（原库名 `unsigned-varint` → CP 包名 `unsigned-varint`）
 
-Zero-allocation 3-in-1 variable-length integer codec (ULEB128, SLEB128, Protobuf ZigZag, and QUIC RFC 9000 varint) for CP — clean-room MIT parity with Rust `unsigned-varint`, `leb128`, and `integer-encoding`.
+| Metadata | Value |
+| --- | --- |
+| Package | `unsigned-varint` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-零堆分配的 CP 变长整数 3 合 1 编解码引擎，统一实现 Unsigned/Signed LEB128（WASM / Protobuf / DWARF / libp2p）、ZigZag 有符号编码（Protobuf `sint64`）与 QUIC RFC 9000 2-bit 前缀变长整数，严格防 64-bit 溢出与截断流（纯 CP 洁净室 MIT 实现）。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add unsigned-varint
 ```
 
-## API Reference / 接口一览
-
-| Symbol | Signature | Description |
-| :--- | :--- | :--- |
-| `U64Decode` / `I64Decode` | `pub struct { ok: bool, value, bytes_read: usize }` | 零堆解码结果结构体 |
-| `encodeUleb128` / `decodeUleb128` / `uleb128Size` | ULEB128 编解码与长度计算 | 严格拒绝第 10 字节 `> 0x01` 溢出与截断流 |
-| `zigzagEncode` / `zigzagDecode` | `(i64) -> u64` / `(u64) -> i64` | 覆盖全 `i64` 范围（含 `i64::MIN` / `i64::MAX`） |
-| `encodeSleb128` / `decodeSleb128` | SLEB128 有符号编解码 | 支持完整 64-bit 二补码符号扩展与溢出校验 |
-| `encodeZigzagVarint` / `decodeZigzagVarint` | Protobuf `sint64` 编解码 | ZigZag + ULEB128 组合编解码 |
-| `encodeQuicVarint` / `decodeQuicVarint` | QUIC RFC 9000 变长整数 | 1/2/4/8 字节大端变长整数（`0 .. 2^62-1`） |
-
-## Usage / 使用示例
-
 ```cp
-import { encodeUleb128, decodeUleb128, encodeQuicVarint, decodeQuicVarint } from "unsigned-varint";
-
-let buf: [16]u8 = undefined;
-const n = encodeUleb128(624485, buf[0..16]).?;
-const u = decodeUleb128(buf[0..n]); // u.ok == true, u.value == 624485
-
-const qn = encodeQuicVarint(15293, buf[0..16]).?; // 2 bytes: 0x7b, 0xbd
-const qd = decodeQuicVarint(buf[0..qn]);          // qd.value == 15293
+import {
+    U64Decode,
+    I64Decode,
+    i64ToBits,
+    bitsToI64,
+    uleb128Size,
+    encodeUleb128,
+    decodeUleb128,
+    zigzagEncode,
+} from "unsigned-varint";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `U64Decode` | `class` | Fields: `ok: bool, value: u64, bytes_read: usize` · Methods: `fail` |
+| `I64Decode` | `class` | Fields: `ok: bool, value: i64, bytes_read: usize` · Methods: `fail` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `i64ToBits` | `(v: i64): u64` | Invokes `i64ToBits` and returns `u64`. |
+| `bitsToI64` | `(u: u64): i64` | Invokes `bitsToI64` and returns `i64`. |
+| `uleb128Size` | `(v: u64): usize` | Invokes `uleb128Size` and returns `usize`. |
+| `encodeUleb128` | `(v: u64, out: []u8): usize?` | Serializes/formats data via `encodeUleb128` returning `usize?`. |
+| `decodeUleb128` | `(data: string): U64Decode` | Parses input via `decodeUleb128` and returns `U64Decode`. |
+| `zigzagEncode` | `(v: i64): u64` | Invokes `zigzagEncode` and returns `u64`. |
+| `zigzagDecode` | `(u: u64): i64` | Invokes `zigzagDecode` and returns `i64`. |
+| `encodeSleb128` | `(v: i64, out: []u8): usize?` | Serializes/formats data via `encodeSleb128` returning `usize?`. |
+| `decodeSleb128` | `(data: string): I64Decode` | Parses input via `decodeSleb128` and returns `I64Decode`. |
+| `encodeZigzagVarint` | `(v: i64, out: []u8): usize?` | Serializes/formats data via `encodeZigzagVarint` returning `usize?`. |
+| `decodeZigzagVarint` | `(data: string): I64Decode` | Parses input via `decodeZigzagVarint` and returns `I64Decode`. |
+| `encodeQuicVarint` | `(v: u64, out: []u8): usize?` | Serializes/formats data via `encodeQuicVarint` returning `usize?`. |
+| `decodeQuicVarint` | `(data: string): U64Decode` | Parses input via `decodeQuicVarint` and returns `U64Decode`. |
+
+## Minimal Example
+
+```cp
+import { decodeUleb128 } from "unsigned-varint";
+
+pub fn main() {
+    let result = decodeUleb128("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

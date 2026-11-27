@@ -1,38 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # chacha20
+
+Zero-allocation RFC 8439 ChaCha20 stream cipher (Rust chacha20 crate parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:chacha20` ([https://github.com/RustCrypto/stream-ciphers](https://github.com/RustCrypto/stream-ciphers))（原库名 `chacha20` → CP 包名 `chacha20`）
 
-Zero-allocation RFC 8439 ChaCha20 stream cipher (256-bit key, 96-bit nonce, 32-bit block counter) for CP — clean-room MIT parity with Rust `chacha20` v0.9 (crates.io #115).
+| Metadata | Value |
+| --- | --- |
+| Package | `chacha20` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配 RFC 8439 ChaCha20 流密码实现，支持 256 位密钥、96 位 Nonce、32 位块计数器跳转 (`seek`) 与跨 64 字节块任意长度流式原地加解密 (`applyKeystream`)。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add chacha20
 ```
 
-## API
+```cp
+import {
+    ChaCha20Cipher,
+    cc20Add32,
+    cc20Rotl16,
+    cc20Rotl12,
+    cc20Rotl8,
+    cc20Rotl7,
+    cc20ReadLe32,
+    cc20WriteLe32,
+} from "chacha20";
+```
 
-| Symbol | Signature | Description |
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
 | --- | --- | --- |
-| `CHACHA20_KEY_LEN` | `usize = 32` | ChaCha20 key size (256 bits) |
-| `CHACHA20_NONCE_LEN` | `usize = 12` | ChaCha20 nonce size (96 bits) |
-| `CHACHA20_BLOCK_LEN` | `usize = 64` | ChaCha20 keystream block size (512 bits) |
-| `chacha20Block` | `(key: []u8, counter: u32, nonce: []u8, out64: []u8) -> bool` | Generate one 64-byte keystream block |
-| `ChaCha20Cipher.new` | `(key: []u8, nonce: []u8) -> ChaCha20Cipher?` | Create cipher initialized at block counter `0` |
-| `ChaCha20Cipher.newWithCounter` | `(key: []u8, nonce: []u8, counter: u32) -> ChaCha20Cipher?` | Create cipher at specified 32-bit block counter |
-| `ChaCha20Cipher.seek` | `(*_, block_counter: u32)` | Seek cipher to a specific 32-bit block counter |
-| `ChaCha20Cipher.applyKeystream` | `(*_, data: []u8)` | XOR keystream into `data` in-place (streaming) |
+| `ChaCha20Cipher` | `class` | Fields: `key: [32]u8, nonce: [12]u8, counter: u32, block_buf: [64]u8, block_pos: usize` · Methods: `new, newWithCounter, seek, applyKeystream` |
 
-## Usage / 使用示例
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `cc20Add32` | `(a: u32, b: u32): u32` | Invokes `cc20Add32` and returns `u32`. |
+| `cc20Rotl16` | `(x: u32): u32` | Invokes `cc20Rotl16` and returns `u32`. |
+| `cc20Rotl12` | `(x: u32): u32` | Invokes `cc20Rotl12` and returns `u32`. |
+| `cc20Rotl8` | `(x: u32): u32` | Invokes `cc20Rotl8` and returns `u32`. |
+| `cc20Rotl7` | `(x: u32): u32` | Invokes `cc20Rotl7` and returns `u32`. |
+| `cc20ReadLe32` | `(b: []u8, off: usize): u32` | Invokes `cc20ReadLe32` and returns `u32`. |
+| `cc20WriteLe32` | `(out: []u8, off: usize, v: u32)` | Executes `cc20WriteLe32` in-place. |
+| `cc20QuarterRound` | `(st: []u32, ai: usize, bi: usize, ci: usize, di: usize)` | Executes `cc20QuarterRound` in-place. |
+| `chacha20Block` | `(key: []u8, counter: u32, nonce: []u8, out64: []u8): bool` | Invokes `chacha20Block` and returns `bool`. |
+
+## Minimal Example
 
 ```cp
-import { ChaCha20Cipher } from "chacha20";
+import { cc20Add32 } from "chacha20";
 
-let cipher = ChaCha20Cipher.newWithCounter(key[0..32], nonce[0..12], 1 as u32)!;
-cipher.applyKeystream(buf[0..len]);
+pub fn main() {
+    let result = cc20Add32(0, 0);
+    _ = result;
+}
 ```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

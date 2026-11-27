@@ -1,52 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # parse_duration
+
+Zero-heap human-readable duration parser and formatter supporting compound expressions, fractional units, Unicode microseconds, and overflow protection (clean-room port of Rust parse_duration / duration-str)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:parse_duration` ([https://github.com/zeta12ti/parse_duration](https://github.com/zeta12ti/parse_duration))（原库名 `parse_duration` → CP 包名 `parse_duration`）
 
-Clean-room MIT, zero-heap human-readable duration parser and formatter for CP — modeled on crates.io `parse_duration` / `duration-str`.
+| Metadata | Value |
+| --- | --- |
+| Package | `parse_duration` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero heap allocation**: parses directly from `string` slices and formats into caller-provided `[]u8` buffers.
-- **Comprehensive unit support (case-insensitive)**:
-  - `ns`, `nsec`, `nanosecond(s)`
-  - `us`, `usec`, `µs`, `μs`, `microsecond(s)`
-  - `ms`, `msec`, `millisecond(s)`
-  - `s`, `sec`, `second(s)`
-  - `m`, `min`, `minute(s)`
-  - `h`, `hr`, `hour(s)`
-  - `d`, `day(s)`
-  - `w`, `wk`, `week(s)`
-  - `y`, `yr`, `year(s)` (365 days)
-- **Compound expressions & fractional values**: handles `"2h 30m 15s"`, `"1d12h"`, `"5m, 10s"`, `"1h + 30m"`, `"1.5h"`, `"0.25s"`, `"2.5ms"` using exact integer arithmetic (no floating-point rounding drift).
-- **Strict validation**: rejects empty strings, unitless numbers, unknown units, negative numbers, trailing separators, and `u64` overflows.
-
-## API
-
-### `ParsedDuration`
-- Fields: `secs: u64`, `nanos: u32`
-- Methods:
-  - `totalNanos(): u64?`
-  - `totalMillis(): u64`
-  - `totalSecs(): u64`
-  - `isZero(): bool`
-
-### Functions
-- `parseDuration(input: string): ParsedDuration?`
-- `formatDuration(d: ParsedDuration, out: []u8): usize`
-
-## Usage
-
-```typescript
-import { parseDuration, formatDuration } from "parse_duration";
-
-let d = parseDuration("2h 30m 15s"); // secs = 9015, nanos = 0
-let buf: [64]u8 = ...;
-let n = formatDuration(d ?? ParsedDuration { secs: 0, nanos: 0 }, buf[0..64]);
+```bash
+cap add parse_duration
 ```
 
-## License
+```cp
+import {
+    ParsedDuration,
+    pdurCheckedAddU64,
+    pdurCheckedMulU64,
+    pdurMatchUnit,
+    pdurAppendPart,
+    parseDuration,
+    formatDuration,
+} from "parse_duration";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `ParsedDuration` | `class` | Fields: `secs: u64, nanos: u32` · Methods: `isZero, totalSecs, totalMillis, totalNanos` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `pdurCheckedAddU64` | `(a: u64, b: u64): u64?` | Invokes `pdurCheckedAddU64` and returns `u64?`. |
+| `pdurCheckedMulU64` | `(a: u64, b: u64): u64?` | Invokes `pdurCheckedMulU64` and returns `u64?`. |
+| `pdurMatchUnit` | `(u: string): u32` | Invokes `pdurMatchUnit` and returns `u32`. |
+| `pdurAppendPart` | `(out: []u8, pos: usize, val: u64, suffix: string): usize` | Invokes `pdurAppendPart` and returns `usize`. |
+| `parseDuration` | `(input: string): ParsedDuration?` | Parses input via `parseDuration` and returns `ParsedDuration?`. |
+| `formatDuration` | `(d: ParsedDuration, out: []u8): usize` | Serializes/formats data via `formatDuration` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { parseDuration } from "parse_duration";
+
+pub fn main() {
+    let result = parseDuration("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

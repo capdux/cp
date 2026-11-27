@@ -1,34 +1,73 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `point-in-polygon`
+# point-in-polygon
+
+Zero-heap 2D polygon geometry (Shoelace area, centroid, perimeter, ray-casting containment, convexity) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:point-in-polygon` ([https://github.com/substack/point-in-polygon](https://github.com/substack/point-in-polygon)) / `crates.io:geo-types` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `point-in-polygon` → CP 包名 `point-in-polygon`）
 
-Zero-heap 2D polygon geometry algorithms in pure CP: Shoelace signed/unsigned area, winding direction, perimeter, centroid, ray-casting point-in-polygon with edge tolerance, and convexity check.
+| Metadata | Value |
+| --- | --- |
+| Package | `point-in-polygon` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **100% Zero Heap Allocation & Zero Dependencies**: Operates directly on `[]const Pt2` slices with built-in Newton-Raphson `sqrtF64`.
-- **Complete Geometry Suite**: `signedArea`, `area`, `isCounterClockwise`, `perimeter`, `centroid`, `containsPoint`, `isConvex`.
-- **Degenerate Safety**: Gracefully handles `< 3` vertices and zero-area polygons.
-
-## Quick Start
-
-```cp
-import { Pt2, area, centroid, containsPoint, isConvex } from "point-in-polygon";
-
-const sq: [4]Pt2 = [
-    Pt2 { x: 0.0, y: 0.0 },
-    Pt2 { x: 4.0, y: 0.0 },
-    Pt2 { x: 4.0, y: 4.0 },
-    Pt2 { x: 0.0, y: 4.0 },
-];
-const a = area(&sq); // 16.0
-const c = centroid(&sq); // (2.0, 2.0)
-const inside = containsPoint(&sq, Pt2 { x: 2.0, y: 2.0 }); // true
+```bash
+cap add point-in-polygon
 ```
 
-## License
+```cp
+import {
+    Pt2,
+    absF64,
+    sqrtF64,
+    signedArea,
+    area,
+    isCounterClockwise,
+    perimeter,
+    centroid,
+} from "point-in-polygon";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Pt2` | `class` | Fields: `x: f64, y: f64` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `absF64` | `(x: f64): f64` | Invokes `absF64` and returns `f64`. |
+| `sqrtF64` | `(x: f64): f64` | Invokes `sqrtF64` and returns `f64`. |
+| `signedArea` | `(pts: &[]Pt2): f64` | Invokes `signedArea` and returns `f64`. |
+| `area` | `(pts: &[]Pt2): f64` | Invokes `area` and returns `f64`. |
+| `isCounterClockwise` | `(pts: &[]Pt2): bool` | Checks predicate `isCounterClockwise` and returns `bool`. |
+| `perimeter` | `(pts: &[]Pt2): f64` | Invokes `perimeter` and returns `f64`. |
+| `centroid` | `(pts: &[]Pt2): Pt2` | Invokes `centroid` and returns `Pt2`. |
+| `pointOnSegment` | `(p: Pt2, a: Pt2, b: Pt2): bool` | Invokes `pointOnSegment` and returns `bool`. |
+| `containsPoint` | `(pts: &[]Pt2, p: Pt2): bool` | Invokes `containsPoint` and returns `bool`. |
+| `isConvex` | `(pts: &[]Pt2): bool` | Checks predicate `isConvex` and returns `bool`. |
+
+## Minimal Example
+
+```cp
+import { isCounterClockwise } from "point-in-polygon";
+
+pub fn main() {
+    let result = isCounterClockwise(/* pts: &[]Pt2 */);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

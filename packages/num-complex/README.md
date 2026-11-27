@@ -1,40 +1,69 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # num-complex
+
+Zero-allocation Complex64 arithmetic, Smith overflow-safe division, polar coordinates, Euler exp, principal sqrt, and formatting (Rust num-complex parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-complex` ([https://github.com/rust-num/num-complex](https://github.com/rust-num/num-complex))
 
-零堆分配的 CP 复数数学引擎（`Complex64`） — 洁净室 MIT 实现，对标 Rust crates.io #317 `num-complex`（4.96 亿+ 总下载），服务 FFT、DSP、信号处理与科学计算。
+| Metadata | Value |
+| --- | --- |
+| Package | `num-complex` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation `Complex64` arithmetic, Smith overflow-safe division, polar coordinates, Euler `exp`, principal `sqrt`, and formatting for CP — clean-room MIT parity with Rust `num-complex` (496M+ downloads).
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add num-complex
 ```
 
-## API 参考 / API Reference
-
-- **构造器 / Constructors**：`Complex64.new(re, im)`、`zero()`、`one()`、`i()`、`fromPolar(r, theta)`
-- **代数运算 / Algebra**：`add`、`sub`、`mul`、`div`（Smith 防溢出缩放）、`neg`、`conj`、`scale`、`inv`、`powi`（支持负整数快速幂）
-- **几何与复变函数 / Geometry & Functions**：`normSqr`、`norm`（`hypot`）、`arg`（`atan2`）、`exp`（欧拉公式）、`sqrt`（主平方根）、`approxEq`
-- **格式化 / Formatting**：`formatComplex(z, out) -> string`
-
-## 使用示例 / Usage
-
 ```cp
-import { Complex64, formatComplex } from "num-complex";
-
-const z1 = Complex64.new(3.0, 4.0);
-const mag = z1.norm();       // 5.0
-const root = z1.sqrt();      // 2 + 1i
-
-let buf: [64]u8 = undefined;
-const text = formatComplex(z1, buf[0..64]); // "3+4i"
+import {
+    Complex64,
+    fabs,
+    pushByte,
+    pushU64,
+    pushAbsFloat,
+    formatComplex,
+} from "num-complex";
 ```
 
-## License
+## Core API
 
-MIT
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Complex64` | `class` | Fields: `re: f64, im: f64` · Methods: `new, zero, one, i, fromPolar, add, +14 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `fabs` | `(x: f64): f64` | Invokes `fabs` and returns `f64`. |
+| `pushByte` | `(out: []u8, pos: usize, b: u8): usize` | Mutates or appends state via `pushByte`. |
+| `pushU64` | `(out: []u8, pos: usize, val: u64): usize` | Mutates or appends state via `pushU64`. |
+| `pushAbsFloat` | `(out: []u8, pos: usize, v: f64): usize` | Mutates or appends state via `pushAbsFloat`. |
+| `formatComplex` | `(z: Complex64, out: []u8): string` | Serializes/formats data via `formatComplex` returning `string`. |
+
+## Minimal Example
+
+```cp
+import { formatComplex } from "num-complex";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatComplex(/* z: Complex64 */, out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

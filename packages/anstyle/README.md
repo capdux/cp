@@ -1,32 +1,68 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `anstyle`
+# anstyle
+
+Zero-heap ANSI terminal styling model (16-color, 256-color, truecolor RGB, SGR effects) in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:anstyle` ([https://github.com/rust-cli/anstyle](https://github.com/rust-cli/anstyle)) / `crates.io:console` ([https://github.com/console-rs/console](https://github.com/console-rs/console)) / `crates.io:colored` ([https://github.com/colored-rs/colored](https://github.com/colored-rs/colored))
 
-Zero-heap ANSI terminal styling model in pure CP (clean-room counterpart to Rust `anstyle`).
+| Metadata | Value |
+| --- | --- |
+| Package | `anstyle` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **100% Zero Heap Allocation**: Value-type `Color`, `Effects`, and `Style` rendering directly into caller-provided `out: []u8`.
-- **Full Color Support**: Basic 16-color (`30-37`/`90-97`/`40-47`/`100-107`), 256-color (`38;5;N`/`48;5;N`), and 24-bit TrueColor RGB (`38;2;R;G;B`/`48;2;R;G;B`).
-- **Complete SGR Effects**: `bold`, `dimmed`, `italic`, `underline`, `blink`, `invert`, `hidden`, `strikethrough`.
-- **Clean Passthrough & Reset**: `paint(text, out)` passes plain styles through untouched and automatically appends `ESC[0m` for styled text.
-
-## Quick Start
-
-```cp
-import { Color, Style } from "anstyle";
-
-const base = Style.new();
-const red = base.fgColor(Color.ansi(1));
-const err_style = red.bold();
-
-let buf: [64]u8 = undefined;
-const n = err_style.paint("Error!", &buf); // "\x1b[1;31mError!\x1b[0m"
+```bash
+cap add anstyle
 ```
 
-## License
+```cp
+import {
+    Color,
+    Effects,
+    Style,
+    writeByte,
+    writeU8Dec,
+    writeParam,
+} from "anstyle";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `Color` | `class` | Fields: `kind: u8, r: u8, g: u8, b: u8` · Methods: `none, ansi, ansi256, rgb` |
+| `Effects` | `class` | Fields: `bits: u16` · Methods: `new, isEmpty` |
+| `Style` | `class` | Fields: `fg: Color, bg: Color, effects: Effects` · Methods: `new, isPlain, fgColor, bgColor, bold, dimmed, +9 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `writeByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `writeByte` and returns `usize`. |
+| `writeU8Dec` | `(out: []u8, pos: usize, val: u8): usize` | Invokes `writeU8Dec` and returns `usize`. |
+| `writeParam` | `(out: []u8, pos: usize, has_prev: bool, val: u8): usize` | Invokes `writeParam` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { writeByte } from "anstyle";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = writeByte(out_buf[0..256], 0, 0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

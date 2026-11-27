@@ -1,39 +1,52 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # weezl
+
+Zero-allocation GIF/TIFF/PDF LZW dictionary lossless compressor & decompressor with 9..12-bit variable code widths, Clear/EOI control codes, and KwKwK handling (Rust weezl parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:weezl` ([https://github.com/image-rs/lzw](https://github.com/image-rs/lzw))（原库名 `weezl` → CP 包名 `weezl`）
 
-零堆分配的 CP GIF/TIFF/PDF 工业标准 LZW 字典无损压缩与解压引擎 — 洁净室 MIT 实现，对标 Rust `weezl`，支持 Clear(256) / EOI(257) 控制码、9..12 位可变码宽自增、4096 项静态字典自动清空与 `KwKwK` 自引用特例。
+| Metadata | Value |
+| --- | --- |
+| Package | `weezl` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-allocation GIF/TIFF/PDF LZW dictionary lossless compressor & decompressor for CP — clean-room MIT parity with Rust `weezl`.
-
-## 安装 / Install
+## Installation & Import
 
 ```bash
 cap add weezl
 ```
 
-## API 参考 / API Reference
-
-| 符号 / Symbol | 说明 / Description |
-| --- | --- |
-| `CLEAR_CODE` (`256`) / `EOI_CODE` (`257`) | LZW 控制码常量 |
-| `encode(src: []const u8, dst: []u8) -> i64` | LSB-first LZW 压缩（`dst` 不足返回 `-1`） |
-| `decode(src: []const u8, dst: []u8) -> i64` | LSB-first LZW 解压（支持 `KwKwK` 与中途 Clear，非法返回 `-1`） |
-
-## 使用示例 / Usage
-
 ```cp
-import { encode, decode } from "weezl";
-
-let comp: [256]u8 = undefined;
-let out: [256]u8 = undefined;
-const n = encode("TOBEORNOTTOBEORTOBEORNOT", comp[0..256]);
-const m = decode(comp[0..(n as usize)], out[0..256]);
+import { hashPair, encode, decode } from "weezl";
 ```
 
-## License
+## Core API
 
-MIT
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hashPair` | `(key: u32): usize` | Checks predicate `hashPair` and returns `bool`. |
+| `encode` | `(src: &[]u8, dst: []u8): i64` | Serializes/formats data via `encode` returning `i64`. |
+| `decode` | `(src: &[]u8, dst: []u8): i64` | Parses input via `decode` and returns `i64`. |
+
+## Minimal Example
+
+```cp
+import { hashPair } from "weezl";
+
+pub fn main() {
+    let result = hashPair(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

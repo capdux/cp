@@ -1,28 +1,57 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
+
+# p-limit
+
+Zero-allocation concurrency limiter and FIFO task slot scheduler (p-limit parity) powered by yocto-queue in pure CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **npm** [`p-limit`](https://github.com/sindresorhus/p-limit)（`MIT`）（包名 `p-limit`）。
 
-# `p-limit`
+| Metadata | Value |
+| --- | --- |
+| Package | `p-limit` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-Zero-heap-allocation concurrency limiter and FIFO task slot scheduler in pure CP (clean-room MIT implementation inspired by npm `p-limit`).
+## Installation & Import
 
-Reuses [`yocto-queue`](../yocto-queue) (`YoctoQueueU64`) for O(1) fixed-capacity FIFO task queuing.
-
-## Features
-
-- **`PLimit.new(concurrency)`** — Creates a concurrency limiter (`0` is safely clamped to `1`).
-- **`submit(task_id)`** — Immediately acquires a slot if `activeCount() < concurrency()`, otherwise queues in FIFO order or returns `rejected: true` if full.
-- **`complete()`** — Releases an active slot and automatically dequeues the next pending task if capacity permits.
-- **`setConcurrency(new_limit)` + `drainReady(out)`** — Dynamic scale-up and scale-down of concurrency limits with batch task wake-up.
-- **`clearQueue()`** — Drops all pending tasks without disturbing active tasks.
-
-## Usage
-
-```cp
-import { PLimit, SubmitResult, CompleteResult } from "p-limit";
+```bash
+cap add p-limit
 ```
 
-## License
+```cp
+import { SubmitResult, CompleteResult, PLimit, plClampConcurrency } from "p-limit";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `SubmitResult` | `class` | Fields: `started_immediately: bool, queued: bool, rejected: bool` |
+| `CompleteResult` | `class` | Fields: `has_next: bool, next_task_id: u64` |
+| `PLimit` | `class` | Fields: `limit: usize, active: usize, queue: YoctoQueueU64` · Methods: `new, activeCount, pendingCount, queueCapacity, concurrency, setConcurrency, +7 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `plClampConcurrency` | `(c: usize): usize` | Invokes `plClampConcurrency` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { plClampConcurrency } from "p-limit";
+
+pub fn main() {
+    let result = plClampConcurrency(0);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

@@ -1,70 +1,70 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `cookie`
+# cookie
+
+Zero-allocation Rust-style CookieBuilder, percent-encoded Set-Cookie helpers, and removal cookie generator for CP.
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cookie` ([https://github.com/SergioBenitez/cookie-rs](https://github.com/SergioBenitez/cookie-rs))（原库名 `cookie` → CP 包名 `cookie`）
 
-Zero-allocation Rust-style `CookieBuilder`, percent-encoded `Set-Cookie` parser/formatter, and removal cookie generator for CP (clean-room MIT, inspired by Rust `cookie` v0.18).
+| Metadata | Value |
+| --- | --- |
+| Package | `cookie` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Dependencies (Zero Duplication)
+## Installation & Import
 
-- `tough-cookie`: reuses `Cookie`, `parseSetCookie`, `serializeSetCookie`, and `SAMESITE_*` constants.
-- `percent-encoding`: reuses `componentSet`, `percentEncode`, and `percentDecode`.
-
-## API
-
-```cp
-pub struct EncodedCookieMeta {
-    pub name_len: usize,
-    pub value_len: usize,
-    pub domain: string,
-    pub path: string,
-    pub max_age: i64,
-    pub has_max_age: bool,
-    pub secure: bool,
-    pub http_only: bool,
-    pub same_site: u8,
-    pub ok: bool,
-}
-
-pub struct CookieBuilder {
-    pub static fn new(name: string, value: string): CookieBuilder
-    pub fn domain(*_, d: string): *CookieBuilder
-    pub fn path(*_, p: string): *CookieBuilder
-    pub fn maxAge(*_, secs: i64): *CookieBuilder
-    pub fn secure(*_, v: bool): *CookieBuilder
-    pub fn httpOnly(*_, v: bool): *CookieBuilder
-    pub fn sameSite(*_, s: u8): *CookieBuilder
-    pub fn build(): Cookie
-}
-
-pub fn parseEncodedCookie(header: string, name_out: []u8, val_out: []u8): EncodedCookieMeta
-pub fn formatEncodedCookie(c: Cookie, out: []u8): usize
-pub fn makeRemovalCookie(name: string, path: string, out: []u8): usize
+```bash
+cap add cookie
 ```
-
-## Usage
 
 ```cp
 import {
+    EncodedCookieMeta,
     CookieBuilder,
-    COOKIE_SAMESITE_LAX,
-    formatEncodedCookie,
+    ckcDefaultCookie,
     parseEncodedCookie,
+    formatEncodedCookie,
     makeRemovalCookie,
 } from "cookie";
+```
 
-fn example() {
-    let b = CookieBuilder.new("session", "a b/c=d");
-    const c = b.domain("example.com").path("/app").maxAge(3600).secure(true).httpOnly(true).sameSite(COOKIE_SAMESITE_LAX).build();
+## Core API
 
-    let hdr: [256]u8 = undefined;
-    const n = formatEncodedCookie(c, hdr[0..256]);
-    // "session=a%20b%2Fc%3Dd; Domain=example.com; Path=/app; Max-Age=3600; Secure; HttpOnly; SameSite=Lax"
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `EncodedCookieMeta` | `class` | Fields: `name_len: usize, value_len: usize, domain: string, path: string, max_age: i64, has_max_age: bool, +4 more` |
+| `CookieBuilder` | `class` | Fields: `cookie: Cookie` · Methods: `new, domain, path, maxAge, secure, httpOnly, +2 more` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `ckcDefaultCookie` | `(name: string, value: string): Cookie` | Invokes `ckcDefaultCookie` and returns `Cookie`. |
+| `parseEncodedCookie` | `(header: string, name_out: []u8, val_out: []u8): EncodedCookieMeta` | Parses input via `parseEncodedCookie` and returns `EncodedCookieMeta`. |
+| `formatEncodedCookie` | `(c: Cookie, out: []u8): usize` | Serializes/formats data via `formatEncodedCookie` returning `usize`. |
+| `makeRemovalCookie` | `(name: string, path: string, out: []u8): usize` | Invokes `makeRemovalCookie` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { parseEncodedCookie } from "cookie";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let mut buf_1: [256]u8 = undefined;
+    let result = parseEncodedCookie("example", out_buf[0..256], buf_1[0..256]);
+    _ = result;
 }
 ```
 
-## License
+## CP Zero-Heap & Borrow-Safety Highlights
 
-MIT
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

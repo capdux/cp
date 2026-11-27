@@ -1,67 +1,75 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # cli-spinners
+
+Zero-allocation terminal spinner frame presets and Unicode/ASCII status symbols (cli-spinners / ora / log-symbols parity) for CP
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cli-spinners` ([https://github.com/sindresorhus/cli-spinners](https://github.com/sindresorhus/cli-spinners))
 
-Zero-allocation terminal spinner frame presets and Unicode/ASCII status symbols for CP — clean-room MIT parity with npm `cli-spinners` (35M/wk), `ora` (35M/wk), and `log-symbols` (45M/wk).
+| Metadata | Value |
+| --- | --- |
+| Package | `cli-spinners` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-纯 CP 零堆分配终端加载动画帧集与状态指示器引擎，内置 12 套高频 Spinner 动画预设与 Unicode/ASCII 状态符号。
-
-## Install / 安装
+## Installation & Import
 
 ```bash
 cap add cli-spinners
 ```
 
-## Built-in Spinner Presets / 内置动画预设
-
-| Preset | Interval | Frames | Sample |
-| --- | --- | --- | --- |
-| `Dots` | `80ms` | 10 | `⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏` |
-| `Dots2` | `80ms` | 8 | `⣾ ⣽ ⣻ ⢿ ⡿ ⣟ ⣯ ⣷` |
-| `Line` | `130ms` | 4 | `- \ \| /` |
-| `Pipe` | `100ms` | 8 | `┤ ┘ ┴ └ ├ ┌ ┬ ┐` |
-| `Arc` | `100ms` | 6 | `◜ ◠ ◝ ◞ ◡ ◟` |
-| `Circle` | `120ms` | 4 | `◐ ◓ ◑ ◒` |
-| `SquareCorners` | `180ms` | 4 | `◰ ◳ ◲ ◱` |
-| `Bounce` | `120ms` | 4 | `⠁ ⠂ ⠄ ⠂` |
-| `BouncingBar` | `80ms` | 8 | `[    ]` .. `[=== ]` |
-| `Arrow` | `100ms` | 8 | `← ↖ ↑ ↗ → ↘ ↓ ↙` |
-| `Clock` | `100ms` | 12 | `🕛 🕐 ... 🕚` |
-| `AsciiDots` | `200ms` | 3 | `.  ` / `.. ` / `...` |
-
-## API
-
-| Symbol | Signature | Description |
-| --- | --- | --- |
-| `SpinnerKind` | `enum { Dots, Dots2, Line, Pipe, Arc, Circle, SquareCorners, Bounce, BouncingBar, Arrow, Clock, AsciiDots }` | 12 built-in spinner presets |
-| `SymbolKind` | `enum { Success, Error, Warning, Info }` | Status indicator symbol enum |
-| `intervalMs` | `(kind: SpinnerKind) -> u32` | Recommended frame interval in ms |
-| `frameCount` | `(kind: SpinnerKind) -> usize` | Total frames in preset |
-| `frameAt` | `(kind: SpinnerKind, tick: usize) -> string` | Frame string at tick (auto-wraps) |
-| `frameAtTime` | `(kind: SpinnerKind, elapsed_ms: u64) -> string` | Frame string at elapsed milliseconds |
-| `findSpinnerByName` | `(name: string) -> SpinnerKind?` | Lookup preset by name (supports camelCase/kebab-case) |
-| `logSymbol` | `(kind: SymbolKind, ascii_only: bool) -> string` | Unicode (`✔✖⚠ℹ`) or fallback (`√×!i`) symbol |
-| `renderSpinnerLine` | `(kind: SpinnerKind, tick: usize, text: string, out: []u8) -> string` | Render `<frame> <text>` into caller buffer |
-| `renderStatusLine` | `(sym: SymbolKind, ascii_only: bool, text: string, out: []u8) -> string` | Render `<symbol> <text>` into caller buffer |
-
-## Usage / 使用示例
-
 ```cp
 import {
     SpinnerKind,
     SymbolKind,
+    intervalMs,
+    frameCount,
+    frameAt,
     frameAtTime,
-    renderSpinnerLine,
-    renderStatusLine,
+    findSpinnerByName,
+    logSymbol,
 } from "cli-spinners";
-
-let buf: [128]u8 = undefined;
-const line = renderSpinnerLine(SpinnerKind.Dots, 2, "Compiling modules...", buf[0..128]);
-// "⠹ Compiling modules..."
-
-const done = renderStatusLine(SymbolKind.Success, false, "Build succeeded", buf[0..128]);
-// "✔ Build succeeded"
 ```
+
+## Core API
+
+### Types, Enums & Errors
+
+| Kind | Name | Definition |
+| --- | --- | --- |
+| `enum` | `SpinnerKind` | `Dots, Dots2, Line, Pipe, Arc, Circle, SquareCorners, Bounce ...` |
+| `enum` | `SymbolKind` | `Success, Error, Warning, Info` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `intervalMs` | `(kind: SpinnerKind): u32` | Invokes `intervalMs` and returns `u32`. |
+| `frameCount` | `(kind: SpinnerKind): usize` | Invokes `frameCount` and returns `usize`. |
+| `frameAt` | `(kind: SpinnerKind, tick: usize): string` | Invokes `frameAt` and returns `string`. |
+| `frameAtTime` | `(kind: SpinnerKind, elapsed_ms: u64): string` | Invokes `frameAtTime` and returns `string`. |
+| `findSpinnerByName` | `(name: string): SpinnerKind?` | Queries/retrieves data via `findSpinnerByName` returning `SpinnerKind?`. |
+| `logSymbol` | `(kind: SymbolKind, ascii_only: bool): string` | Invokes `logSymbol` and returns `string`. |
+| `renderSpinnerLine` | `(kind: SpinnerKind, tick: usize, text: string, out: []u8): string` | Invokes `renderSpinnerLine` and returns `string`. |
+| `renderStatusLine` | `(sym: SymbolKind, ascii_only: bool, text: string, out: []u8): string` | Invokes `renderStatusLine` and returns `string`. |
+
+## Minimal Example
+
+```cp
+import { findSpinnerByName } from "cli-spinners";
+
+pub fn main() {
+    let result = findSpinnerByName("example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Explicit error & optional handling**: Uses CP error unions (`!T`) and optionals (`T?`) instead of exceptions for predictable control flow.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

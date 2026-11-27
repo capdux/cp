@@ -1,54 +1,79 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-# `similar`
+# similar
+
+Zero-allocation line-level LCS diff, unified diff formatter, and similarity ratio engine for CP (clean-room MIT, inspired by Rust similar v2).
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:similar` ([https://github.com/mitsuhiko/similar](https://github.com/mitsuhiko/similar))（原库名 `similar` → CP 包名 `similar`）
 
-Zero-allocation line-level LCS diff, unified diff formatter, and similarity ratio engine for CP (clean-room MIT implementation inspired by Rust's `similar` v2).
+| Metadata | Value |
+| --- | --- |
+| Package | `similar` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **Zero Heap Allocation**: Operates directly on UTF-8 `string` slices and caller-supplied `[]DiffOp` / `[]u8` buffers.
-- **Exact LCS Minimal Edit Script**: Trims common prefixes/suffixes and runs bottom-up LCS DP (up to 128 lines per side, with safe graceful degradation beyond 128 lines).
-- **Standard Unified Diff Output**: Produces `--- old\n+++ new\n@@ -a,b +c,d @@\n` with `-`, `+`, and ` ` context lines.
-- **Basis-Point Similarity Ratio**: `similarityRatio` computes `0..10000` (`2 * matches * 10000 / (old_lines + new_lines)`), returning `10000` for identical or empty-to-empty inputs.
-
-## Usage
-
-```typescript
-import {
-    DIFF_EQUAL,
-    DIFF_DELETE,
-    DIFF_INSERT,
-    DiffOp,
-    diffLines,
-    similarityRatio,
-    formatUnifiedDiff,
-    hasChanges,
-} from "similar";
-
-const old_s = "alpha\nbeta\ngamma\n";
-const new_s = "alpha\nBETA\ngamma\ndelta\n";
-
-let ops: [32]DiffOp = undefined;
-const stats = diffLines(old_s, new_s, ops[0..32]);
-const ratio: u32 = similarityRatio(old_s, new_s);
-
-let diff_buf: [512]u8 = undefined;
-const written: usize = formatUnifiedDiff("a.txt", "b.txt", old_s, new_s, diff_buf[0..512]);
+```bash
+cap add similar
 ```
 
-## API
+```cp
+import {
+    DiffOp,
+    DiffStats,
+    SmdLine,
+    smdSplitLines,
+    smdLineEq,
+    smdEmitOp,
+    smdWriteBytes,
+    smdWriteStr,
+} from "similar";
+```
 
-- `DIFF_EQUAL` (`0`), `DIFF_DELETE` (`1`), `DIFF_INSERT` (`2`)
-- `struct DiffOp { tag: u8, old_idx: usize, new_idx: usize }`
-- `struct DiffStats { equal_lines: usize, deleted_lines: usize, inserted_lines: usize, total_ops: usize }`
-- `diffLines(old_text: string, new_text: string, ops_out: []DiffOp): DiffStats`
-- `similarityRatio(old_text: string, new_text: string): u32`
-- `formatUnifiedDiff(old_name: string, new_name: string, old_text: string, new_text: string, out: []u8): usize`
-- `hasChanges(old_text: string, new_text: string): bool`
+## Core API
 
-## License
+### Data Structures
 
-MIT
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `DiffOp` | `class` | Fields: `tag: u8, old_idx: usize, new_idx: usize` |
+| `DiffStats` | `class` | Fields: `equal_lines: usize, deleted_lines: usize, inserted_lines: usize, total_ops: usize` |
+| `SmdLine` | `class` | Fields: `start: usize, end: usize` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `smdSplitLines` | `(text: string, out_lines: []SmdLine): usize` | Invokes `smdSplitLines` and returns `usize`. |
+| `smdLineEq` | `(a: string, la: SmdLine, b: string, lb: SmdLine): bool` | Invokes `smdLineEq` and returns `bool`. |
+| `smdEmitOp` | `(ops_out: []DiffOp, stats: &mut DiffStats, tag: u8, old_idx: usize, new_idx: usize)` | Executes `smdEmitOp` in-place. |
+| `smdWriteBytes` | `(out: []u8, pos: usize, src: string, start: usize, end: usize): usize` | Invokes `smdWriteBytes` and returns `usize`. |
+| `smdWriteStr` | `(out: []u8, pos: usize, s: string): usize` | Invokes `smdWriteStr` and returns `usize`. |
+| `smdWriteByte` | `(out: []u8, pos: usize, b: u8): usize` | Invokes `smdWriteByte` and returns `usize`. |
+| `smdWriteUsize` | `(out: []u8, pos: usize, val: usize): usize` | Invokes `smdWriteUsize` and returns `usize`. |
+| `diffLines` | `(old_text: string, new_text: string, ops_out: []DiffOp): DiffStats` | Invokes `diffLines` and returns `DiffStats`. |
+| `hasChanges` | `(old_text: string, new_text: string): bool` | Checks predicate `hasChanges` and returns `bool`. |
+| `similarityRatio` | `(old_text: string, new_text: string): u32` | Invokes `similarityRatio` and returns `u32`. |
+| `formatUnifiedDiff` | `(old_name: string, new_name: string, old_text: string, new_text: string, out: []u8): usize` | Serializes/formats data via `formatUnifiedDiff` returning `usize`. |
+
+## Minimal Example
+
+```cp
+import { formatUnifiedDiff } from "similar";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = formatUnifiedDiff("example", "example", "example", "example", out_buf[0..256]);
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).

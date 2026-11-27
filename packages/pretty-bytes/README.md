@@ -1,32 +1,71 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # pretty-bytes
+
+Pure CP zero-allocation human-readable byte and bit size formatter supporting SI/IEC, bits, signed, and compact modes (npm pretty-bytes parity)
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pretty-bytes` ([https://github.com/sindresorhus/pretty-bytes](https://github.com/sindresorhus/pretty-bytes))
 
-Pure CP, zero-allocation human-readable byte and bit size formatter (parity with npm `pretty-bytes`).
+| Metadata | Value |
+| --- | --- |
+| Package | `pretty-bytes` |
+| Version | `1.0.0` |
+| License | `MIT` |
+| Type Declarations | [`src/index.d.cp`](./src/index.d.cp) |
 
-## Features
+## Installation & Import
 
-- **SI (1000-based) & IEC Binary (1024-based)**: `B, kB, MB, GB, TB, PB, EB` and `B, KiB, MiB, GiB, TiB, PiB, EiB`
-- **Bit Units (`bits: true`)**: `b, kbit, Mbit, Gbit...` and `b, kibit, Mibit, Gibit...`
-- **Formatting Options**: `signed_val` (`+42 B` / ` 0 B`), `space` (`1.34 kB` vs `1.34kB`), configurable `precision` with automatic trailing-zero trimming
-- **Zero Heap Allocation**: Formats directly into caller-provided `[]u8` buffer with overflow protection
-
-## Usage
-
-```cp
-import { prettyBytes, prettyBytesWith, PrettyBytesOpts } from "pretty-bytes";
-
-let buf: [32]u8 = undefined;
-let n1 = prettyBytes(1337.0, buf[0..32]); // "1.34 kB"
-
-let opts = PrettyBytesOpts.defaults();
-opts.binary = true;
-let n2 = prettyBytesWith(1536.0, opts, buf[0..32]); // "1.5 KiB"
+```bash
+cap add pretty-bytes
 ```
 
-## License
+```cp
+import {
+    PrettyBytesOpts,
+    pbUnitStr,
+    pbAppendStr,
+    pbAppendByte,
+    pbAppendU64,
+    prettyBytesWith,
+    prettyBytes,
+} from "pretty-bytes";
+```
 
-MIT
+## Core API
+
+### Data Structures
+
+| Type | Kind | Fields & Methods |
+| --- | --- | --- |
+| `PrettyBytesOpts` | `class` | Fields: `binary: bool, bits: bool, signed_val: bool, space: bool, precision: u8` · Methods: `defaults` |
+
+### Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `pbUnitStr` | `(idx: usize, binary: bool, bits: bool): string` | Invokes `pbUnitStr` and returns `string`. |
+| `pbAppendStr` | `(out: []u8, pos: &mut usize, s: string): bool` | Invokes `pbAppendStr` and returns `bool`. |
+| `pbAppendByte` | `(out: []u8, pos: &mut usize, ch: u8): bool` | Invokes `pbAppendByte` and returns `bool`. |
+| `pbAppendU64` | `(out: []u8, pos: &mut usize, v: u64): bool` | Invokes `pbAppendU64` and returns `bool`. |
+| `prettyBytesWith` | `(num: f64, opts: PrettyBytesOpts, out: []u8): usize` | Invokes `prettyBytesWith` and returns `usize`. |
+| `prettyBytes` | `(num: f64, out: []u8): usize` | Invokes `prettyBytes` and returns `usize`. |
+
+## Minimal Example
+
+```cp
+import { pbAppendStr } from "pretty-bytes";
+
+pub fn main() {
+    let mut out_buf: [256]u8 = undefined;
+    let result = pbAppendStr(out_buf[0..256], /* pos: &mut usize */, "example");
+    _ = result;
+}
+```
+
+## CP Zero-Heap & Borrow-Safety Highlights
+
+- **Zero-heap pure CP design**: Operates on stack-allocated structs and slices without hidden heap allocations or garbage collection.
+- **Caller-owned output buffers**: Functions taking `[]u8` write directly into caller-provided buffers for deterministic memory usage.
+- **Zero-copy string slicing**: String parameters and returned slices borrow directly from caller memory without redundant copies.
+- **Strict compile-time type & borrow checks**: Verified by `cpc` borrow checking (`&mut` for mutable references, immutable borrows by default).
