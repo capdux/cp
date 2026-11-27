@@ -558,16 +558,34 @@ fn handleFrom(allocator: std.mem.Allocator, args: []const []const u8) !void {
     defer cmd_list.deinit(allocator);
     try cmd_list.append(allocator, cpc_bin);
     try cmd_list.append(allocator, "from");
-    for (args) |a| {
+
+    var out_dir_opt: ?[]const u8 = null;
+    var src_arg_opt: ?[]const u8 = null;
+    var is_pkg_mode = false;
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const a = args[i];
         if (std.mem.eql(u8, a, "-ts")) {
             try cmd_list.append(allocator, "--ts");
         } else if (std.mem.eql(u8, a, "-rs")) {
             try cmd_list.append(allocator, "--rs");
         } else if (std.mem.eql(u8, a, "-npm")) {
+            is_pkg_mode = true;
             try cmd_list.append(allocator, "--npm");
         } else if (std.mem.eql(u8, a, "-crate") or std.mem.eql(u8, a, "-cargo")) {
+            is_pkg_mode = true;
             try cmd_list.append(allocator, "--crate");
+        } else if (std.mem.eql(u8, a, "-o") or std.mem.eql(u8, a, "--out")) {
+            try cmd_list.append(allocator, a);
+            if (i + 1 < args.len) {
+                i += 1;
+                out_dir_opt = args[i];
+                try cmd_list.append(allocator, args[i]);
+            }
         } else {
+            if (!std.mem.startsWith(u8, a, "-") and src_arg_opt == null) {
+                src_arg_opt = a;
+            }
             try cmd_list.append(allocator, a);
         }
     }
@@ -579,6 +597,31 @@ fn handleFrom(allocator: std.mem.Allocator, args: []const []const u8) !void {
             if (code != 0) std.process.exit(code);
         },
         else => std.process.exit(1),
+    }
+
+    // Automatically run `cap fix` on the migrated output directory so all `.cp` imports
+    // and `cap.json` dependencies are remapped via `packages/registry.json` in one step.
+    const fix_target_owned: ?[]u8 = blk: {
+        if (out_dir_opt) |od| {
+            break :blk try allocator.dupe(u8, od);
+        }
+        if (!is_pkg_mode) {
+            if (src_arg_opt) |sa| {
+                const candidate = try std.fmt.allocPrint(allocator, "{s}_cp", .{std.mem.trimEnd(u8, sa, "/")});
+                if (std.Io.Dir.openDir(.cwd(), global_io, candidate, .{})) |d_val| {
+                    var d = d_val;
+                    d.close(global_io);
+                    break :blk candidate;
+                } else |_| {
+                    allocator.free(candidate);
+                }
+            }
+        }
+        break :blk null;
+    };
+    if (fix_target_owned) |ft| {
+        defer allocator.free(ft);
+        @import("fix.zig").fixPathAuto(allocator, global_io, cap_root, ft) catch {};
     }
 }
 
@@ -604,7 +647,7 @@ fn usage() void {
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
         \\  cap demangle [trace_file]     Demangle Zig stack traces to original CP lines
         \\  cap brief <pkg>               AI-First package brief (README_AGENT.md / README.md + src/index.d.cp)
-        \\  cap fix [--dry-run] <path>    AI-First auto-fixer (legacy @cap/<pkg> -> bare original pkg names)
+        \\  cap fix [--dry-run] <path>    AI-First auto-fixer (registry.json imports + cap.json deps + @cap/* -> bare)
         \\  cap check <file.cp|dir>       AI-First zero-build fast type/borrow/syntax check via cpc --check
         \\  cap init [app|agent|lib|web] [dir] Initialize a new CP project template (--template <name>)
         \\  cap add <pkg> [-d] [-g]       Add a dependency (@scope/pkg, file:./..., -d dev, -g global)
