@@ -345,8 +345,8 @@ fn normalizeUrlPathImpl(path: string, is_special: bool, out: []u8): ([]const u8)
         return out[0..1];
     }
 
-    let seg_starts: [256]usize = [0; 256];
-    let seg_lens: [256]usize = [0; 256];
+    let seg_starts: [256]usize = undefined;
+    let seg_lens: [256]usize = undefined;
     let seg_count: usize = 0;
 
     const last_byte = path[path.len - 1];

@@ -59,7 +59,7 @@ pub struct DataUrl {
         if (!has_pct) {
             return base64Decode(_.data, out);
         }
-        let tmp: [4096]u8 = [0; 4096];
+        let tmp: [4096]u8 = undefined;
         const unesc = percentDecode(_.data, tmp[0..]) ?? return null;
         return base64Decode(unesc, out);
     }
