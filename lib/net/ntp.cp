@@ -51,7 +51,7 @@ pub struct NtpTimestamp {
     }
 
     /// Converts Unix epoch milliseconds to an NTP 64-bit timestamp.
-    fn fromUnixMs(ms: i64): NtpTimestamp {
+    static fn fromUnixMs(ms: i64): NtpTimestamp {
         let sec_i64 = ms / 1000;
         let rem_ms = ms % 1000;
         if (rem_ms < 0) {

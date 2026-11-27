@@ -293,7 +293,7 @@ fn parseNatsHeaders(alloc: std.mem.Allocator, raw: []const u8): ([]const NatsHea
 // ============================================================================
 
 pub struct NatsEncoder {
-    pub fn encodeConnect(alloc: std.mem.Allocator, json_opts: []const u8): ([]u8)! {
+    pub static fn encodeConnect(alloc: std.mem.Allocator, json_opts: []const u8): ([]u8)! {
         if (hasCrLf(json_opts)) return err.CommandInjection;
         let out: std.ArrayListUnmanaged(u8) = .{};
         errdefer out.deinit(alloc);
@@ -304,7 +304,7 @@ pub struct NatsEncoder {
         return out.toOwnedSlice(alloc) catch return err.OutOfMemory;
     }
 
-    pub fn encodePub(
+    pub static fn encodePub(
         alloc: std.mem.Allocator,
         subject: []const u8,
         reply_to: ([]const u8)?,
@@ -332,7 +332,7 @@ pub struct NatsEncoder {
         return out.toOwnedSlice(alloc) catch return err.OutOfMemory;
     }
 
-    pub fn encodeHpub(
+    pub static fn encodeHpub(
         alloc: std.mem.Allocator,
         subject: []const u8,
         reply_to: ([]const u8)?,
@@ -381,7 +381,7 @@ pub struct NatsEncoder {
         return out.toOwnedSlice(alloc) catch return err.OutOfMemory;
     }
 
-    pub fn encodeSub(
+    pub static fn encodeSub(
         alloc: std.mem.Allocator,
         subject: []const u8,
         queue_group: ([]const u8)?,
@@ -408,7 +408,7 @@ pub struct NatsEncoder {
         return out.toOwnedSlice(alloc) catch return err.OutOfMemory;
     }
 
-    pub fn encodeUnsub(
+    pub static fn encodeUnsub(
         alloc: std.mem.Allocator,
         sid: []const u8,
         max_msgs: usize?,
@@ -428,11 +428,11 @@ pub struct NatsEncoder {
         return out.toOwnedSlice(alloc) catch return err.OutOfMemory;
     }
 
-    pub fn encodePing(alloc: std.mem.Allocator): ([]u8)! {
+    pub static fn encodePing(alloc: std.mem.Allocator): ([]u8)! {
         return dupeBytes(alloc, "PING\r\n");
     }
 
-    pub fn encodePong(alloc: std.mem.Allocator): ([]u8)! {
+    pub static fn encodePong(alloc: std.mem.Allocator): ([]u8)! {
         return dupeBytes(alloc, "PONG\r\n");
     }
 }
