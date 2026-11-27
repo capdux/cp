@@ -1,7 +1,19 @@
-// @cap/camelcase — Zero-heap programming case converter (camel, Pascal, snake, kebab, SCREAMING_SNAKE)
-// MIT License (clean-room CP implementation)
+// ident_case — Zero-heap identifier case converter with full Rust `ident_case::RenameRule` parity
+// MIT License (clean-room CP implementation, reuses `cap:ascii`)
 
-import { isDigit, isAlnum, toLowerByte, toUpperByte } from "cap:ascii";
+import { isDigit, isAlnum, toLowerByte, toUpperByte, strEq } from "cap:ascii";
+
+/// All 8 naming conventions supported by Rust `ident_case` / `serde` `RenameRule`.
+pub enum RenameRule {
+    LowerCase,
+    UpperCase,
+    CamelCase,
+    PascalCase,
+    SnakeCase,
+    ScreamingSnakeCase,
+    KebabCase,
+    ScreamingKebabCase,
+}
 
 fn isUpper(c: u8) -> bool {
     return c >= 'A' as u8 && c <= 'Z' as u8;
@@ -95,22 +107,83 @@ fn convertJoined(
     return out_pos;
 }
 
+/// Converts `input` into `lowercase` (all words concatenated in ASCII lowercase).
+pub fn toLowerCase(input: string, out: []u8) -> usize {
+    return convertJoined(input, out, 0, false, false, false, false);
+}
+
+/// Converts `input` into `UPPERCASE` (all words concatenated in ASCII uppercase).
+pub fn toUpperCase(input: string, out: []u8) -> usize {
+    return convertJoined(input, out, 0, false, true, false, false);
+}
+
+/// Converts `input` into `camelCase`.
 pub fn toCamelCase(input: string, out: []u8) -> usize {
     return convertJoined(input, out, 0, false, false, false, true);
 }
 
+/// Converts `input` into `PascalCase`.
 pub fn toPascalCase(input: string, out: []u8) -> usize {
     return convertJoined(input, out, 0, false, false, true, true);
 }
 
+/// Converts `input` into `snake_case`.
 pub fn toSnakeCase(input: string, out: []u8) -> usize {
     return convertJoined(input, out, '_' as u8, true, false, false, false);
 }
 
+/// Converts `input` into `kebab-case`.
 pub fn toKebabCase(input: string, out: []u8) -> usize {
     return convertJoined(input, out, '-' as u8, true, false, false, false);
 }
 
+/// Converts `input` into `SCREAMING_SNAKE_CASE`.
 pub fn toScreamingSnakeCase(input: string, out: []u8) -> usize {
     return convertJoined(input, out, '_' as u8, true, true, false, false);
 }
+
+/// Converts `input` into `SCREAMING-KEBAB-CASE`.
+pub fn toScreamingKebabCase(input: string, out: []u8) -> usize {
+    return convertJoined(input, out, '-' as u8, true, true, false, false);
+}
+
+/// Applies any of the 8 `RenameRule` variants to `input`, writing into `out`.
+pub fn renameIdent(rule: RenameRule, input: string, out: []u8) -> usize {
+    return switch (rule) {
+        .LowerCase => toLowerCase(input, out),
+        .UpperCase => toUpperCase(input, out),
+        .CamelCase => toCamelCase(input, out),
+        .PascalCase => toPascalCase(input, out),
+        .SnakeCase => toSnakeCase(input, out),
+        .ScreamingSnakeCase => toScreamingSnakeCase(input, out),
+        .KebabCase => toKebabCase(input, out),
+        .ScreamingKebabCase => toScreamingKebabCase(input, out),
+    };
+}
+
+/// Parses a standard serde/ident_case rule name string into a `RenameRule`.
+pub fn parseRenameRule(name: string) -> RenameRule? {
+    if (strEq(name, "lowercase")) { return RenameRule.LowerCase; }
+    if (strEq(name, "UPPERCASE")) { return RenameRule.UpperCase; }
+    if (strEq(name, "camelCase")) { return RenameRule.CamelCase; }
+    if (strEq(name, "PascalCase")) { return RenameRule.PascalCase; }
+    if (strEq(name, "snake_case")) { return RenameRule.SnakeCase; }
+    if (strEq(name, "SCREAMING_SNAKE_CASE")) { return RenameRule.ScreamingSnakeCase; }
+    if (strEq(name, "kebab-case")) { return RenameRule.KebabCase; }
+    if (strEq(name, "SCREAMING-KEBAB-CASE")) { return RenameRule.ScreamingKebabCase; }
+    return null;
+}
+
+export {
+    RenameRule,
+    toLowerCase,
+    toUpperCase,
+    toCamelCase,
+    toPascalCase,
+    toSnakeCase,
+    toKebabCase,
+    toScreamingSnakeCase,
+    toScreamingKebabCase,
+    renameIdent,
+    parseRenameRule,
+};

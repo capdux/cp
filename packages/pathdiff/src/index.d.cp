@@ -1,12 +1,8 @@
 // Type definitions for CP
 
-export fn pdStrEq(a: string, b: string): bool;
-export fn pdPush(out: []u8, pos: usize, s: string): usize;
-export class SegList {
-    segs: [32]string,
-    count: usize,
-    is_abs: bool,
-}
+export const PATHDIFF_MAX_SEGS: usize;
 
-export fn pdSplitNormalized(path: string): SegList;
+export fn hasSameRoot(path: string, base: string): bool;
+export fn normalizePath(path: string, out: []u8): usize?;
 export fn diffPaths(target: string, base: string, out: []u8): usize?;
+export fn diffUtf8Paths(path: string, base: string, out: []u8): usize?;

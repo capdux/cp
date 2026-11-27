@@ -1,8 +1,17 @@
 // Type definitions for CP
 
+export const BSPLINE_MAX_DEGREE: usize;
+export const BSPLINE_MAX_KNOTS: usize;
+
 export class Pt2 {
     x: f64,
     y: f64,
+}
+
+export class Pt3 {
+    x: f64,
+    y: f64,
+    z: f64,
 }
 
 export fn hermite1D(p0: f64, m0: f64, p1: f64, m1: f64, t: f64): f64;
@@ -11,4 +20,14 @@ export fn catmullRom1D(p0: f64, p1: f64, p2: f64, p3: f64, t: f64): f64;
 export fn catmullRom2D(p0: Pt2, p1: Pt2, p2: Pt2, p3: Pt2, t: f64): Pt2;
 export fn uniformCubicBSpline1D(p0: f64, p1: f64, p2: f64, p3: f64, t: f64): f64;
 export fn uniformCubicBSpline2D(p0: Pt2, p1: Pt2, p2: Pt2, p3: Pt2, t: f64): Pt2;
-export fn evalCatmullRomChain(pts: &[]Pt2, u: f64): Pt2;
+export fn evalCatmullRomChain(pts: []const Pt2, u: f64): Pt2;
+export fn generateClampedKnots(num_points: usize, degree: usize, out_knots: []f64): usize;
+export fn generateUniformKnots(num_points: usize, degree: usize, out_knots: []f64): usize;
+export fn findKnotSpan(n: usize, degree: usize, u: f64, knots: []const f64): usize;
+export fn bspline1D(t: f64, degree: usize, points: []const f64, knots: []const f64, weights: []const f64): f64?;
+export fn bspline2D(t: f64, degree: usize, points: []const Pt2, knots: []const f64, weights: []const f64): Pt2?;
+export fn bspline3D(t: f64, degree: usize, points: []const Pt3, knots: []const f64, weights: []const f64): Pt3?;
+export fn bspline1DUniform(t: f64, degree: usize, points: []const f64): f64?;
+export fn bspline2DUniform(t: f64, degree: usize, points: []const Pt2): Pt2?;
+export fn bspline3DUniform(t: f64, degree: usize, points: []const Pt3): Pt3?;
+export fn sampleBSpline2D(degree: usize, points: []const Pt2, knots: []const f64, weights: []const f64, out: []Pt2): usize;
