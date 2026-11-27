@@ -1,7 +1,21 @@
 import { test, expect_eq } from "cap:test";
 import {
-    normalizeErrorStatus, statusReason, formatErrorHtml,
-    formatCannotMessage, buildFinalHttpResponse
+    FinalEnv,
+    FinalError,
+    FinalHandlerOptions,
+    ResponseHeader,
+    normalizeErrorStatus,
+    statusCode,
+    getErrorStatusCode,
+    statusReason,
+    escapeHtmlText,
+    formatErrorMessage,
+    formatErrorHtml,
+    createHtmlDocument,
+    defaultSecurityHeaders,
+    formatCannotMessage,
+    buildFinalHttpResponse,
+    buildFinalHttpResponseWithOptions,
 } from "../../packages/finalhandler/src/index.cp";
 
 fn containsStr(haystack: []const u8, len: usize, needle: string): bool {
@@ -69,5 +83,57 @@ fn main() {
         expect_eq(r_head.status, 500);
         expect_eq(r_head.body_len, r_get.body_len);
         expect_eq(r_head.total_len + r_head.body_len, r_get.total_len);
+    });
+
+    test("7. @cap/finalhandler — statusCode, formatErrorMessage env redaction & createHtmlDocument", () => {
+        const err500 = FinalError {
+            status: 0,
+            status_code: 502,
+            expose: false,
+            message: "db password leaked",
+            stack: "Error: db password leaked\n  at query.cp:42",
+        };
+        expect_eq(statusCode(err500), 502 as u16);
+        expect_eq(getErrorStatusCode(err500), 502 as u16);
+        // Production redacts internal 5xx error details
+        expect_eq(formatErrorMessage(err500, 502, .Production), "Bad Gateway");
+        // Development surfaces full stack
+        expect_eq(formatErrorMessage(err500, 502, .Development), err500.stack);
+
+        const err400 = FinalError {
+            status: 400,
+            status_code: 0,
+            expose: true,
+            message: "invalid email",
+            stack: "",
+        };
+        expect_eq(formatErrorMessage(err400, 400, .Production), "invalid email");
+
+        let html: [512]u8 = undefined;
+        const hn = createHtmlDocument("Line 1\n  Line 2 <ok>", html[0..512]);
+        expect_eq(containsStr(html[0..hn], hn, "Line 1<br> &nbsp;Line 2 &lt;ok&gt;"), true);
+
+        let esc: [64]u8 = undefined;
+        const en = escapeHtmlText("a & b", esc[0..64]);
+        expect_eq(esc[0..en] as string, "a &amp; b");
+    });
+
+    test("8. @cap/finalhandler — buildFinalHttpResponseWithOptions with headers & defaultSecurityHeaders", () => {
+        let hdrs: [4]ResponseHeader = undefined;
+        expect_eq(defaultSecurityHeaders(hdrs[0..4]), 3 as usize);
+        expect_eq(hdrs[0].name, "Content-Security-Policy");
+
+        const extra: [1]ResponseHeader = [
+            ResponseHeader { name: "X-Request-Id", value: "req-99" },
+        ];
+        let opts = FinalHandlerOptions.default();
+        opts.method = "DELETE";
+        opts.url = "/items/7";
+
+        let out: [1024]u8 = undefined;
+        const res = buildFinalHttpResponseWithOptions(null, opts, extra[0..1], out[0..1024]);
+        expect_eq(res.status, 404 as u16);
+        expect_eq(containsStr(out[0..res.total_len], res.total_len, "X-Request-Id: req-99\r\n"), true);
+        expect_eq(containsStr(out[0..res.total_len], res.total_len, "Cannot DELETE /items/7"), true);
     });
 }

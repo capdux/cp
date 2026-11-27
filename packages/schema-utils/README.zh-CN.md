@@ -13,17 +13,31 @@ cap add schema-utils
 ```
 
 ```cp
-import { schuStrEq } from "schema-utils";
+import { schemaTypeName } from "schema-utils";
 ```
 
 ## 核心导出 API
 
+- `export enum SchemaType`
+- `export fn schemaTypeName(t: SchemaType): string;`
 - `export fn schuStrEq(a: string, b: string): bool;`
+- `export fn schuWriteStr(out: []u8, pos: usize, s: string): usize;`
 - `export fn schuOk(): ValidationResult;`
 - `export fn schuFail(code: u32, msg: string): ValidationResult;`
 - `export fn validateStringField(value: string, present: bool, c: FieldConstraint): ValidationResult;`
 - `export fn validateIntField(value: i64, present: bool, c: FieldConstraint): ValidationResult;`
 - `export fn validateEnumField(value: string, allowed: &[]string): ValidationResult;`
+- `export fn schuMatchClass(pat: string, start: usize, end: usize, c: u8): bool;`
+- `export fn schuAtomLen(pat: string, pi: usize): usize;`
+- `export fn schuMatchAtom(pat: string, pi: usize, atom_len: usize, c: u8): bool;`
+- `export fn schuMatchHere(pat: string, pi: usize, text: string, ti: usize): bool;`
+- `export fn matchPattern(pattern: string, text: string): bool;`
+- `export fn validatePatternField(value: string, pattern: string): ValidationResult;`
+- `export fn schuTypeMatches(expected: SchemaType, actual: SchemaType): bool;`
+- `export fn schuPushError(report: &mut ValidationReport, err: ValidationError);`
+- `export fn validate(schema: ObjectSchema, values: &[]SchemaValue): ValidationReport;`
+- `export fn formatValidationError(schema_name: string, err: ValidationError, out: []u8): usize;`
+- `export fn formatValidationReport(schema_name: string, report: ValidationReport, out: []u8): usize;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

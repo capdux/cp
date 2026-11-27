@@ -2,12 +2,27 @@ import { test, expect_eq } from "cap:test";
 import {
     PatchOp,
     StatePatch,
+    ImmerState,
+    Draft,
     invertPatch,
+    inversePatches,
     formatJsonPointer,
     parseJsonPointer,
     unescapePointerToken,
     patchOpName,
+    formatPatchJson,
+    freeze,
+    isFrozen,
+    produce,
+    produceWithPatches,
+    applyPatches,
 } from "../../packages/immer/src/index.cp";
+
+fn mutateProfile(draft: *Draft) {
+    draft.set("name", "Bob");
+    draft.set("role", "admin");
+    draft.remove("temp");
+}
 
 fn main() {
     test("1. @cap/immer-patches — patchOpName returns RFC 6902 op strings", () => {
@@ -89,5 +104,53 @@ fn main() {
         const d1 = unescapePointerToken(tokens[1], dec1[0..64]);
         expect_eq(dec0[0..d0] as string, "foo/bar");
         expect_eq(dec1[0..d1] as string, "tilde~key");
+    });
+
+    test("7. @cap/immer — freeze, isFrozen & produce immutability", () => {
+        let base = ImmerState.new();
+        expect_eq(isFrozen(base), false);
+        expect_eq(base.setUnfrozen("name", "Alice"), true);
+        expect_eq(base.setUnfrozen("temp", "123"), true);
+        freeze(&base);
+        expect_eq(isFrozen(base), true);
+        expect_eq(base.setUnfrozen("name", "Mallory"), false);
+
+        const next = produce(base, mutateProfile);
+        expect_eq(isFrozen(next), true);
+        expect_eq(base.get("name") ?? "", "Alice");
+        expect_eq(base.has("temp"), true);
+        expect_eq(next.get("name") ?? "", "Bob");
+        expect_eq(next.get("role") ?? "", "admin");
+        expect_eq(next.has("temp"), false);
+    });
+
+    test("8. @cap/immer — produceWithPatches, applyPatches & inversePatches undo roundtrip", () => {
+        let base = ImmerState.new();
+        base.setUnfrozen("name", "Alice");
+        base.setUnfrozen("temp", "123");
+        freeze(&base);
+
+        const res = produceWithPatches(base, mutateProfile);
+        expect_eq(res.patch_count, 3 as usize);
+        expect_eq(res.inverse_count, 3 as usize);
+        expect_eq(patchOpName(res.patches[0].op), "replace");
+        expect_eq(patchOpName(res.patches[1].op), "add");
+        expect_eq(patchOpName(res.patches[2].op), "remove");
+
+        // Re-apply forward patches to base reproduces next_state
+        const replayed = applyPatches(base, res.patches[0..res.patch_count]);
+        expect_eq(replayed.get("name") ?? "", "Bob");
+        expect_eq(replayed.get("role") ?? "", "admin");
+        expect_eq(replayed.has("temp"), false);
+
+        // Apply inverse patches to next_state restores base
+        const undone = applyPatches(res.next_state, res.inverse_patches[0..res.inverse_count]);
+        expect_eq(undone.get("name") ?? "", "Alice");
+        expect_eq(undone.get("temp") ?? "", "123");
+        expect_eq(undone.has("role"), false);
+
+        let jbuf: [128]u8 = [0; 128];
+        const jn = formatPatchJson(res.patches[1], jbuf[0..128]);
+        expect_eq(jbuf[0..jn] as string, "{\"op\":\"add\",\"path\":\"role\",\"value\":\"admin\"}");
     });
 }
