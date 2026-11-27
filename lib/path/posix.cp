@@ -83,7 +83,7 @@ pub const PosixPath = struct {
         return ".";
     }
 
-    pub fn extname(filepath: []const u8): []const u8 {
+    pub static fn extname(filepath: []const u8): []const u8 {
         const base = basename(filepath, null);
         if (base.len <= 1) return "";
         if (std.mem.eql(u8, base, "..")) return "";
@@ -123,7 +123,7 @@ pub const PosixPath = struct {
         return longestCommonPathPosix(paths);
     }
 
-    pub fn parse(filepath: []const u8): ParsedPath {
+    pub static fn parse(filepath: []const u8): ParsedPath {
         if (filepath.len == 0) return ParsedPath{};
         let r: []const u8 = if (isAbsolute(filepath)) "/" else "";
         let b = basename(filepath, null);

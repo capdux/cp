@@ -39,7 +39,7 @@ pub const WindowsPath = struct {
         return isAbsoluteWindows(filepath);
     }
 
-    pub fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
+    pub static fn basename(filepath: []const u8, ext: ([]const u8)?): []const u8 {
         let p = filepath;
         let vol = volumeName(p);
         while (p.len > vol.len + 1 and isSeparator(p[p.len - 1])) {
@@ -70,7 +70,7 @@ pub const WindowsPath = struct {
         return base;
     }
 
-    pub fn dirname(filepath: []const u8): []const u8 {
+    pub static fn dirname(filepath: []const u8): []const u8 {
         let p = filepath;
         let vol = volumeName(p);
         while (p.len > vol.len + 1 and isSeparator(p[p.len - 1])) {
@@ -106,7 +106,7 @@ pub const WindowsPath = struct {
         return ".";
     }
 
-    pub fn extname(filepath: []const u8): []const u8 {
+    pub static fn extname(filepath: []const u8): []const u8 {
         const base = basename(filepath, null);
         if (base.len <= 1) return "";
         if (std.mem.eql(u8, base, "..")) return "";
@@ -146,7 +146,7 @@ pub const WindowsPath = struct {
         return longestCommonPathWindows(paths);
     }
 
-    pub fn parse(filepath: []const u8): ParsedPath {
+    pub static fn parse(filepath: []const u8): ParsedPath {
         if (filepath.len == 0) return ParsedPath{};
         let vol = volumeName(filepath);
         let r: []const u8 = "";
