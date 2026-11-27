@@ -57,7 +57,7 @@ pub struct FifoI64 {
 
 pub fn newFifoI64(): FifoI64 {
     return FifoI64 {
-        buf: [0; 256],
+        buf: undefined,
         head: 0,
         tail: 0,
         count: 0,
@@ -114,7 +114,7 @@ pub struct FifoStr {
 
 pub fn newFifoStr(): FifoStr {
     return FifoStr {
-        buf: [""; 256],
+        buf: undefined,
         head: 0,
         tail: 0,
         count: 0,

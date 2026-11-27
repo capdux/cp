@@ -84,9 +84,9 @@ pub struct IndexMapU64 {
     pub used: usize,
 
     pub static fn new(): IndexMapU64 {
-        let empty_entry = IndexMapEntry { key: 0, val: 0 };
+        let entries: [64]IndexMapEntry = undefined;
         return IndexMapU64 {
-            entries: [empty_entry; 64],
+            entries: entries,
             buckets: [-1; 128],
             used: 0
         };
@@ -318,9 +318,9 @@ pub struct IndexMapStr {
     pub used: usize,
 
     pub static fn new(): IndexMapStr {
-        let empty_entry = IndexMapStrEntry { key_buf: [0; 64], key_len: 0, val: 0 };
+        let entries: [32]IndexMapStrEntry = undefined;
         return IndexMapStr {
-            entries: [empty_entry; 32],
+            entries: entries,
             buckets: [-1; 64],
             used: 0
         };
@@ -382,7 +382,7 @@ pub struct IndexMapStr {
 
     pub fn getIndex(idx: usize): GetStrEntryResult {
         if (idx >= _.used) {
-            return GetStrEntryResult { found: false, key_buf: [0; 64], key_len: 0, val: 0 };
+            return GetStrEntryResult { found: false, key_buf: undefined, key_len: 0, val: 0 };
         }
         let e = _.entries[idx];
         return GetStrEntryResult { found: true, key_buf: e.key_buf, key_len: e.key_len, val: e.val };
@@ -394,7 +394,7 @@ pub struct IndexMapStr {
 
     pub fn last(): GetStrEntryResult {
         if (_.used == 0) {
-            return GetStrEntryResult { found: false, key_buf: [0; 64], key_len: 0, val: 0 };
+            return GetStrEntryResult { found: false, key_buf: undefined, key_len: 0, val: 0 };
         }
         return _.getIndex(_.used - 1);
     }
@@ -529,7 +529,7 @@ pub struct IndexMapStr {
 
     pub fn pop(*_): GetStrEntryResult {
         if (_.used == 0) {
-            return GetStrEntryResult { found: false, key_buf: [0; 64], key_len: 0, val: 0 };
+            return GetStrEntryResult { found: false, key_buf: undefined, key_len: 0, val: 0 };
         }
         let last_idx = _.used - 1;
         let e = _.entries[last_idx];

@@ -14,7 +14,7 @@ fn pkdPush(out: []u8, pos: usize, s: string): usize {
 
 pub fn packageDirectoryInList(cwd: string, existing_files: []string, out: []u8): usize? {
     let opts = FindUpOptions.defaults(cwd);
-    let found_buf: [256]u8 = [0; 256];
+    let found_buf: [256]u8 = undefined;
     let n_opt = findUpInList(opts, "package.json", existing_files, found_buf[0..256]);
     if (n_opt == null) { return null; }
     let n = n_opt ?? 0;
@@ -25,7 +25,7 @@ pub fn packageDirectoryInList(cwd: string, existing_files: []string, out: []u8):
 pub fn capPackageDirectoryInList(cwd: string, existing_files: []string, out: []u8): usize? {
     let opts = FindUpOptions.defaults(cwd);
     let manifests: [2]string = ["cap.json", "package.json"];
-    let found_buf: [256]u8 = [0; 256];
+    let found_buf: [256]u8 = undefined;
     let n_opt = findUpMultipleInList(opts, manifests[0..2], existing_files, found_buf[0..256]);
     if (n_opt == null) { return null; }
     let n = n_opt ?? 0;
@@ -36,7 +36,7 @@ pub fn capPackageDirectoryInList(cwd: string, existing_files: []string, out: []u
 pub fn packageDirectoryBounded(cwd: string, stop_at: string, existing_files: []string, out: []u8): usize? {
     let opts = FindUpOptions.defaults(cwd);
     opts.stop_at = stop_at;
-    let found_buf: [256]u8 = [0; 256];
+    let found_buf: [256]u8 = undefined;
     let n_opt = findUpInList(opts, "package.json", existing_files, found_buf[0..256]);
     if (n_opt == null) { return null; }
     let n = n_opt ?? 0;

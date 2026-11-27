@@ -25,10 +25,10 @@ pub fn damerauLevenshteinSteps(a: string, b: string): usize {
     if (m > 127) { m = 127; }
     if (n > 127) { n = 127; }
 
-    // 3 rolling rows (prev2, prev1, cur) of width 128
-    let row0: [128]usize = [0; 128];
-    let row1: [128]usize = [0; 128];
-    let row2: [128]usize = [0; 128];
+    // 3 rolling rows (prev2, prev1, cur) of width 128 — strictly written before read
+    let row0: [128]usize = undefined;
+    let row1: [128]usize = undefined;
+    let row2: [128]usize = undefined;
 
     let j: usize = 0;
     while (j <= n) {

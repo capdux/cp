@@ -22,7 +22,7 @@ pub struct IdArenaI64 {
     static fn new(arena_id: u32): IdArenaI64 {
         return IdArenaI64{
             arena_id: arena_id,
-            items: [0; 128],
+            items: undefined,
             count: 0,
         };
     }
@@ -86,7 +86,7 @@ pub struct IdArenaU64 {
     static fn new(arena_id: u32): IdArenaU64 {
         return IdArenaU64{
             arena_id: arena_id,
-            items: [0; 128],
+            items: undefined,
             count: 0,
         };
     }

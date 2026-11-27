@@ -3,6 +3,8 @@
 // Supports arbitrary input chunking, output-buffer resumption, quoted fields with
 // embedded delimiters/newlines, doubled-quote escaping (""), CRLF/LF, and custom delimiters.
 
+import { findByteInBytes, countByte } from "cap:bin";
+
 pub const CSV_READ_INPUT_EMPTY: i32 = 0;
 pub const CSV_READ_OUTPUT_FULL: i32 = 1;
 pub const CSV_READ_FIELD: i32 = 2;
@@ -256,12 +258,17 @@ pub struct CsvReader {
                 if (out_pos >= out.len) {
                     return CsvReadResult { status: CSV_READ_OUTPUT_FULL, bytes_read: in_pos, bytes_written: out_pos };
                 }
-                if (b == 0x0A) {
-                    _.line_num = _.line_num + 1;
-                }
-                out[out_pos] = b;
-                out_pos = out_pos + 1;
-                in_pos = in_pos + 1;
+                let avail_in = input.len - in_pos;
+                let avail_out = out.len - out_pos;
+                let max_copy = if (avail_in < avail_out) { avail_in } else { avail_out };
+                let window = input[in_pos..(in_pos + max_copy)];
+                let q_opt = findByteInBytes(window, _.quote, 0);
+                let chunk_len = q_opt ?? max_copy;
+                let chunk = input[in_pos..(in_pos + chunk_len)];
+                _.line_num = _.line_num + (countByte(chunk, 0x0A) as u64);
+                @memcpy(out[out_pos..(out_pos + chunk_len)], chunk);
+                out_pos = out_pos + chunk_len;
+                in_pos = in_pos + chunk_len;
                 continue;
             }
 
@@ -371,13 +378,9 @@ pub struct CsvWriter {
             return w;
         }
 
-        let i: usize = 0;
-        while (i < field.len && w < out.len) {
-            out[w] = field[i];
-            w = w + 1;
-            i = i + 1;
-        }
-        return w;
+        let n = if (field.len < out.len) { field.len } else { out.len };
+        @memcpy(out[0..n], field[0..n]);
+        return n;
     }
 
     /// Encodes a full CSV record (`fields` joined by `delimiter` plus trailing `\n`) into `out`.
@@ -416,7 +419,7 @@ pub fn countCsvRecords(input: []const u8): usize {
         return 0;
     }
     let rdr = CsvReader.new();
-    let scratch: [128]u8 = [0; 128];
+    let scratch: [128]u8 = undefined;
     let pos: usize = 0;
     let records: usize = 0;
     while (true) {
@@ -438,7 +441,7 @@ pub fn countCsvFieldsInLine(input: []const u8): usize {
         return 0;
     }
     let rdr = CsvReader.new();
-    let scratch: [128]u8 = [0; 128];
+    let scratch: [128]u8 = undefined;
     let pos: usize = 0;
     let fields: usize = 0;
     while (true) {

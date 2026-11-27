@@ -48,8 +48,8 @@ pub fn simplifyPolyline(pts: []Pt2, epsilon: f64, keep_mask: []u8, out: []Pt2): 
     keep_mask[n - 1] = 1;
 
     let eps_sq = epsilon * epsilon;
-    let stack_start: [128]usize = [0; 128];
-    let stack_end: [128]usize = [0; 128];
+    let stack_start: [128]usize = undefined;
+    let stack_end: [128]usize = undefined;
     let sp: usize = 0;
     stack_start[sp] = 0;
     stack_end[sp] = n - 1;

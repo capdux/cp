@@ -2,6 +2,7 @@
 // Zero-allocation upward package.json finder, parser, and normalizer for CP.
 // Clean-room MIT pure CP implementation reusing `@cap/find-up` and `@cap/read-pkg`.
 
+import { strEq } from "cap:ascii";
 import {
     FindUpOptions,
     FindUpWalker,
@@ -22,20 +23,6 @@ pub struct ReadPkgUpResult {
     pub found: bool,
     pub pkg_path_len: usize,
     pub pkg: ReadPkgResult,
-}
-
-fn rpuStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 fn rpuCopyBytes(out: []u8, src: string): usize {
@@ -63,7 +50,7 @@ pub fn readPackageUpInEntries(
         allow_symlinks: true,
     };
     let walker: FindUpWalker = FindUpWalker.new(opts);
-    let cand: [512]u8 = [0; 512];
+    let cand: [512]u8 = undefined;
 
     while (true) {
         let n_opt: usize? = walker.nextCandidate("package.json", cand[0..512]);
@@ -75,7 +62,7 @@ pub fn readPackageUpInEntries(
 
         let i: usize = 0;
         while (i < entries.len) {
-            if (rpuStrEq(entries[i].path, cand_str)) {
+            if (strEq(entries[i].path, cand_str)) {
                 let written: usize = rpuCopyBytes(path_out, cand_str);
                 let parsed_pkg: ReadPkgResult = parsePackageJson(entries[i].content, normalize);
                 return ReadPkgUpResult {

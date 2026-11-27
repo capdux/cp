@@ -15,7 +15,7 @@ pub struct RelPath {
     pub length: usize;
 
     pub static fn empty(): RelPath {
-        return RelPath { buf: [0; 256], length: 0 };
+        return RelPath { buf: undefined, length: 0 };
     }
 
     pub static fn fromStr(s: string): RelPath {
@@ -282,11 +282,7 @@ pub struct RelPath {
         let a = _.normalize();
         if (b.length == 0) { return true; }
         if (a.length < b.length) { return false; }
-        let i: usize = 0;
-        while (i < b.length) {
-            if (a.buf[i] != b.buf[i]) { return false; }
-            i = i + 1;
-        }
+        if (!bytesEq(a.buf[0..b.length], b.buf[0..b.length])) { return false; }
         if (a.length == b.length) { return true; }
         return a.buf[b.length] == '/';
     }
@@ -296,11 +292,7 @@ pub struct RelPath {
         let a = _.normalize();
         if (b.length == 0) { return a; }
         if (a.length < b.length) { return null; }
-        let i: usize = 0;
-        while (i < b.length) {
-            if (a.buf[i] != b.buf[i]) { return null; }
-            i = i + 1;
-        }
+        if (!bytesEq(a.buf[0..b.length], b.buf[0..b.length])) { return null; }
         if (a.length == b.length) { return RelPath.empty(); }
         if (a.buf[b.length] != '/') { return null; }
         let out = RelPath.empty();

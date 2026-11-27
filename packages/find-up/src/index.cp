@@ -1,16 +1,7 @@
+import { strEq } from "cap:ascii";
 import { dirnameOf } from "../../npm-run-path/src/index.cp";
 
 pub const FIND_UP_MAX_DEPTH: usize = 64;
-
-fn fupStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i = i + 1;
-    }
-    return true;
-}
 
 fn fupTrimTrailingSlash(s: string): string {
     let end = s.len;
@@ -80,12 +71,12 @@ pub struct FindUpWalker {
         let dir = _.current;
         _.steps = _.steps + 1;
 
-        if (_.stop_at.len > 0 && fupStrEq(dir, _.stop_at)) {
+        if (_.stop_at.len > 0 && strEq(dir, _.stop_at)) {
             _.done = true;
             return dir;
         }
         let parent = dirnameOf(dir, false);
-        if (parent.len == 0 || fupStrEq(parent, dir)) {
+        if (parent.len == 0 || strEq(parent, dir)) {
             _.done = true;
         } else {
             _.current = parent;
@@ -103,7 +94,7 @@ pub struct FindUpWalker {
 
 pub fn findUpInList(opts: FindUpOptions, filename: string, existing_paths: []string, out: []u8): usize? {
     let w = FindUpWalker.new(opts);
-    let cand: [256]u8 = [0; 256];
+    let cand: [256]u8 = undefined;
     while (true) {
         let n_opt = w.nextCandidate(filename, cand[0..256]);
         if (n_opt == null) { break; }
@@ -111,7 +102,7 @@ pub fn findUpInList(opts: FindUpOptions, filename: string, existing_paths: []str
         let cand_str = cand[0..n] as string;
         let i: usize = 0;
         while (i < existing_paths.len) {
-            if (fupStrEq(existing_paths[i], cand_str)) {
+            if (strEq(existing_paths[i], cand_str)) {
                 return fupPush(out, 0, cand_str);
             }
             i = i + 1;
@@ -122,7 +113,7 @@ pub fn findUpInList(opts: FindUpOptions, filename: string, existing_paths: []str
 
 pub fn findUpMultipleInList(opts: FindUpOptions, filenames: []string, existing_paths: []string, out: []u8): usize? {
     let w = FindUpWalker.new(opts);
-    let cand: [256]u8 = [0; 256];
+    let cand: [256]u8 = undefined;
     while (true) {
         let d_opt = w.nextDir();
         if (d_opt == null) { break; }
@@ -133,7 +124,7 @@ pub fn findUpMultipleInList(opts: FindUpOptions, filenames: []string, existing_p
             let cand_str = cand[0..n] as string;
             let ei: usize = 0;
             while (ei < existing_paths.len) {
-                if (fupStrEq(existing_paths[ei], cand_str)) {
+                if (strEq(existing_paths[ei], cand_str)) {
                     return fupPush(out, 0, cand_str);
                 }
                 ei = ei + 1;

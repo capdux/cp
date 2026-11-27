@@ -2,6 +2,7 @@
 // Clean-room MIT CP implementation of npm `postcss` (150M+/wk).
 
 import { isSpace, strEq, eqIgnoreCase, trim } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 import { writeStr } from "cap:fmt";
 
 // Node kinds
@@ -47,9 +48,9 @@ pub struct PostCssDecl {
         return PostCssDecl {
             kind: PC_DECL,
             parent_node: -1,
-            prop: [0; 48],
+            prop: undefined,
             prop_len: 0,
-            value: [0; 128],
+            value: undefined,
             value_len: 0,
             important: false,
         };
@@ -77,9 +78,9 @@ pub struct PostCssNode {
         return PostCssNode {
             kind: PC_RULE,
             parent_node: -1,
-            name: [0; 64],
+            name: undefined,
             name_len: 0,
-            params: [0; 128],
+            params: undefined,
             params_len: 0,
             has_block: false,
         };
@@ -102,7 +103,7 @@ pub struct PostCssComment {
     pub static fn empty(): PostCssComment {
         return PostCssComment {
             kind: PC_COMMENT,
-            text: [0; 128],
+            text: undefined,
             text_len: 0,
         };
     }
@@ -122,6 +123,14 @@ fn pcAddComment(sheet: *PostCssSheet, raw_text: []const u8) {
     sheet.comment_len = sheet.comment_len + 1;
 }
 
+fn pcFindCommentClose(css: string, cstart: usize, end: usize): usize? {
+    const rel = indexOfBytes(css[cstart..end], "*/", 0);
+    if (rel == null) {
+        return null;
+    }
+    return cstart + (rel ?? 0);
+}
+
 /// Skips whitespace and `/* ... */` comments (recording each comment into `sheet`).
 /// Returns `false` if an unterminated comment is encountered.
 fn pcSkipWsAndComments(css: string, pos: *usize, end: usize, sheet: *PostCssSheet): bool {
@@ -132,22 +141,15 @@ fn pcSkipWsAndComments(css: string, pos: *usize, end: usize, sheet: *PostCssShee
         }
         if (pos.* + 1 < end && css[pos.*] == 47 && css[pos.* + 1] == 42) {
             const cstart = pos.* + 2;
-            let i = cstart;
-            let closed = false;
-            while (i + 1 < end) {
-                if (css[i] == 42 && css[i + 1] == 47) {
-                    pcAddComment(sheet, css[cstart..i]);
-                    pos.* = i + 2;
-                    closed = true;
-                    break;
-                }
-                i = i + 1;
-            }
-            if (!closed) {
+            const cend_opt = pcFindCommentClose(css, cstart, end);
+            if (cend_opt == null) {
                 sheet.ok = false;
                 pos.* = end;
                 return false;
             }
+            const cend = cend_opt ?? end;
+            pcAddComment(sheet, css[cstart..cend]);
+            pos.* = cend + 2;
             continue;
         }
         break;
@@ -662,23 +664,8 @@ pub struct PostCssSheet {
 
     pub static fn empty(): PostCssSheet {
         let nodes: [32]PostCssNode = undefined;
-        let i: usize = 0;
-        while (i < PC_MAX_NODES) {
-            nodes[i] = PostCssNode.empty();
-            i = i + 1;
-        }
         let decls: [64]PostCssDecl = undefined;
-        i = 0;
-        while (i < PC_MAX_DECLS) {
-            decls[i] = PostCssDecl.empty();
-            i = i + 1;
-        }
         let comments: [16]PostCssComment = undefined;
-        i = 0;
-        while (i < PC_MAX_COMMENTS) {
-            comments[i] = PostCssComment.empty();
-            i = i + 1;
-        }
         return PostCssSheet {
             nodes: nodes,
             node_len: 0,

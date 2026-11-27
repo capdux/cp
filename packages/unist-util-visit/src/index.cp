@@ -2,6 +2,8 @@
 // Clean-room MIT implementation of npm `unist-util-visit` (#507, 111.7M/wk),
 // `unist-util-visit-parents` (#508), and `unist-util-is` (#524).
 
+import { strEq } from "cap:ascii";
+
 pub const UNIST_NONE: u32 = 0xFFFFFFFF;
 pub const UNIST_MAX_NODES: usize = 128;
 
@@ -11,20 +13,6 @@ pub struct UnistNode {
     pub parent: u32,      // index of parent node, or UNIST_NONE for root
     pub first_child: u32, // index of first child, or UNIST_NONE
     pub next_sibling: u32, // index of next sibling, or UNIST_NONE
-}
-
-fn uuvStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub struct UnistTree {
@@ -69,7 +57,7 @@ pub struct UnistTree {
         if (target_kind.len == 0) {
             return true;
         }
-        return uuvStrEq(_.nodes[idx as usize].kind, target_kind);
+        return strEq(_.nodes[idx as usize].kind, target_kind);
     }
 
     /// Iterative pre-order DFS traversal collecting matching node indices into `out`.
@@ -78,7 +66,7 @@ pub struct UnistTree {
         if ((root_idx as usize) >= _.len) {
             return 0;
         }
-        let stack: [128]u32 = [0; 128];
+        let stack: [128]u32 = undefined;
         let sp: usize = 0;
         stack[0] = root_idx;
         sp = 1;
@@ -94,7 +82,7 @@ pub struct UnistTree {
                 count += 1;
             }
             // Collect children then push in reverse so first_child is popped first
-            let children: [128]u32 = [0; 128];
+            let children: [128]u32 = undefined;
             let c_len: usize = 0;
             let ch = _.nodes[cur as usize].first_child;
             while (ch != UNIST_NONE && c_len < 128) {
@@ -117,7 +105,7 @@ pub struct UnistTree {
         if ((node_idx as usize) >= _.len) {
             return 0;
         }
-        let rev: [128]u32 = [0; 128];
+        let rev: [128]u32 = undefined;
         let rlen: usize = 0;
         let cur = _.nodes[node_idx as usize].parent;
         while (cur != UNIST_NONE && (cur as usize) < _.len && rlen < 128) {
