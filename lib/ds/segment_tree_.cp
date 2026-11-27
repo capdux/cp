@@ -36,125 +36,125 @@ pub fn SegmentTree(comptime T: type): type {
             return st;
         }
 
-        pub fn deinit(self: *Self) {
-            self.alloc.free(self.nodes);
+        pub fn deinit(*_) {
+            _.alloc.free(_.nodes);
         }
 
-        pub fn len(self: Self): usize {
-            return self.n;
+        pub fn len(): usize {
+            return _.n;
         }
 
-        fn pull(self: *Self, idx: usize) {
-            const left = self.nodes[idx * 2];
-            const right = self.nodes[idx * 2 + 1];
-            self.nodes[idx].sum = left.sum + right.sum;
-            self.nodes[idx].min_val = @min(left.min_val, right.min_val);
-            self.nodes[idx].max_val = @max(left.max_val, right.max_val);
+        fn pull(*_, idx: usize) {
+            const left = _.nodes[idx * 2];
+            const right = _.nodes[idx * 2 + 1];
+            _.nodes[idx].sum = left.sum + right.sum;
+            _.nodes[idx].min_val = @min(left.min_val, right.min_val);
+            _.nodes[idx].max_val = @max(left.max_val, right.max_val);
         }
 
-        fn applyAdd(self: *Self, idx: usize, l: usize, r: usize, delta: T) {
+        fn applyAdd(*_, idx: usize, l: usize, r: usize, delta: T) {
             const count: T = @intCast(r - l + 1);
-            self.nodes[idx].sum += delta * count;
-            self.nodes[idx].min_val += delta;
-            self.nodes[idx].max_val += delta;
-            self.nodes[idx].lazy_add += delta;
+            _.nodes[idx].sum += delta * count;
+            _.nodes[idx].min_val += delta;
+            _.nodes[idx].max_val += delta;
+            _.nodes[idx].lazy_add += delta;
         }
 
-        fn push(self: *Self, idx: usize, l: usize, r: usize) {
-            const lz = self.nodes[idx].lazy_add;
+        fn push(*_, idx: usize, l: usize, r: usize) {
+            const lz = _.nodes[idx].lazy_add;
             if (lz != 0 and l < r) {
                 const mid = l + (r - l) / 2;
-                self.applyAdd(idx * 2, l, mid, lz);
-                self.applyAdd(idx * 2 + 1, mid + 1, r, lz);
-                self.nodes[idx].lazy_add = 0;
+                _.applyAdd(idx * 2, l, mid, lz);
+                _.applyAdd(idx * 2 + 1, mid + 1, r, lz);
+                _.nodes[idx].lazy_add = 0;
             }
         }
 
-        fn build(self: *Self, idx: usize, l: usize, r: usize, values: []const T) {
-            self.nodes[idx].lazy_add = 0;
+        fn build(*_, idx: usize, l: usize, r: usize, values: []const T) {
+            _.nodes[idx].lazy_add = 0;
             if (l == r) {
                 const v = values[l];
-                self.nodes[idx].sum = v;
-                self.nodes[idx].min_val = v;
-                self.nodes[idx].max_val = v;
+                _.nodes[idx].sum = v;
+                _.nodes[idx].min_val = v;
+                _.nodes[idx].max_val = v;
                 return;
             }
             const mid = l + (r - l) / 2;
-            self.build(idx * 2, l, mid, values);
-            self.build(idx * 2 + 1, mid + 1, r, values);
-            self.pull(idx);
+            _.build(idx * 2, l, mid, values);
+            _.build(idx * 2 + 1, mid + 1, r, values);
+            _.pull(idx);
         }
 
-        fn updateRange(self: *Self, idx: usize, l: usize, r: usize, ql: usize, qr: usize, delta: T) {
+        fn updateRange(*_, idx: usize, l: usize, r: usize, ql: usize, qr: usize, delta: T) {
             if (ql <= l and r <= qr) {
-                self.applyAdd(idx, l, r, delta);
+                _.applyAdd(idx, l, r, delta);
                 return;
             }
-            self.push(idx, l, r);
+            _.push(idx, l, r);
             const mid = l + (r - l) / 2;
             if (ql <= mid) {
-                self.updateRange(idx * 2, l, mid, ql, qr, delta);
+                _.updateRange(idx * 2, l, mid, ql, qr, delta);
             }
             if (qr > mid) {
-                self.updateRange(idx * 2 + 1, mid + 1, r, ql, qr, delta);
+                _.updateRange(idx * 2 + 1, mid + 1, r, ql, qr, delta);
             }
-            self.pull(idx);
+            _.pull(idx);
         }
 
-        pub fn rangeAdd(self: *Self, left: usize, right: usize, delta: T): SegError!void {
+        pub fn rangeAdd(*_, left: usize, right: usize, delta: T): SegError!void {
             if (left > right) { return SegError.InvalidRange; }
-            if (right >= self.n) { return SegError.IndexOutOfBounds; }
-            self.updateRange(1, 0, self.n - 1, left, right, delta);
+            if (right >= _.n) { return SegError.IndexOutOfBounds; }
+            _.updateRange(1, 0, _.n - 1, left, right, delta);
         }
 
-        fn querySumNode(self: *Self, idx: usize, l: usize, r: usize, ql: usize, qr: usize): T {
-            if (ql <= l and r <= qr) { return self.nodes[idx].sum; }
-            self.push(idx, l, r);
+        fn querySumNode(*_, idx: usize, l: usize, r: usize, ql: usize, qr: usize): T {
+            if (ql <= l and r <= qr) { return _.nodes[idx].sum; }
+            _.push(idx, l, r);
             const mid = l + (r - l) / 2;
             let res: T = 0;
-            if (ql <= mid) { res += self.querySumNode(idx * 2, l, mid, ql, qr); }
-            if (qr > mid) { res += self.querySumNode(idx * 2 + 1, mid + 1, r, ql, qr); }
+            if (ql <= mid) { res += _.querySumNode(idx * 2, l, mid, ql, qr); }
+            if (qr > mid) { res += _.querySumNode(idx * 2 + 1, mid + 1, r, ql, qr); }
             return res;
         }
 
-        pub fn rangeSum(self: *Self, left: usize, right: usize): SegError!T {
+        pub fn rangeSum(*_, left: usize, right: usize): SegError!T {
             if (left > right) { return SegError.InvalidRange; }
-            if (right >= self.n) { return SegError.IndexOutOfBounds; }
-            return self.querySumNode(1, 0, self.n - 1, left, right);
+            if (right >= _.n) { return SegError.IndexOutOfBounds; }
+            return _.querySumNode(1, 0, _.n - 1, left, right);
         }
 
-        fn queryMinNode(self: *Self, idx: usize, l: usize, r: usize, ql: usize, qr: usize): T {
-            if (ql <= l and r <= qr) { return self.nodes[idx].min_val; }
-            self.push(idx, l, r);
+        fn queryMinNode(*_, idx: usize, l: usize, r: usize, ql: usize, qr: usize): T {
+            if (ql <= l and r <= qr) { return _.nodes[idx].min_val; }
+            _.push(idx, l, r);
             const mid = l + (r - l) / 2;
-            if (qr <= mid) { return self.queryMinNode(idx * 2, l, mid, ql, qr); }
-            if (ql > mid) { return self.queryMinNode(idx * 2 + 1, mid + 1, r, ql, qr); }
-            const a = self.queryMinNode(idx * 2, l, mid, ql, qr);
-            const b = self.queryMinNode(idx * 2 + 1, mid + 1, r, ql, qr);
+            if (qr <= mid) { return _.queryMinNode(idx * 2, l, mid, ql, qr); }
+            if (ql > mid) { return _.queryMinNode(idx * 2 + 1, mid + 1, r, ql, qr); }
+            const a = _.queryMinNode(idx * 2, l, mid, ql, qr);
+            const b = _.queryMinNode(idx * 2 + 1, mid + 1, r, ql, qr);
             return @min(a, b);
         }
 
-        pub fn rangeMin(self: *Self, left: usize, right: usize): SegError!T {
+        pub fn rangeMin(*_, left: usize, right: usize): SegError!T {
             if (left > right) { return SegError.InvalidRange; }
-            if (right >= self.n) { return SegError.IndexOutOfBounds; }
-            return self.queryMinNode(1, 0, self.n - 1, left, right);
+            if (right >= _.n) { return SegError.IndexOutOfBounds; }
+            return _.queryMinNode(1, 0, _.n - 1, left, right);
         }
 
-        fn queryMaxNode(self: *Self, idx: usize, l: usize, r: usize, ql: usize, qr: usize): T {
-            if (ql <= l and r <= qr) { return self.nodes[idx].max_val; }
-            self.push(idx, l, r);
+        fn queryMaxNode(*_, idx: usize, l: usize, r: usize, ql: usize, qr: usize): T {
+            if (ql <= l and r <= qr) { return _.nodes[idx].max_val; }
+            _.push(idx, l, r);
             const mid = l + (r - l) / 2;
-            if (qr <= mid) { return self.queryMaxNode(idx * 2, l, mid, ql, qr); }
-            if (ql > mid) { return self.queryMaxNode(idx * 2 + 1, mid + 1, r, ql, qr); }
-            const a = self.queryMaxNode(idx * 2, l, mid, ql, qr);
-            const b = self.queryMaxNode(idx * 2 + 1, mid + 1, r, ql, qr);
+            if (qr <= mid) { return _.queryMaxNode(idx * 2, l, mid, ql, qr); }
+            if (ql > mid) { return _.queryMaxNode(idx * 2 + 1, mid + 1, r, ql, qr); }
+            const a = _.queryMaxNode(idx * 2, l, mid, ql, qr);
+            const b = _.queryMaxNode(idx * 2 + 1, mid + 1, r, ql, qr);
             return @max(a, b);
         }
 
-        pub fn rangeMax(self: *Self, left: usize, right: usize): SegError!T {
+        pub fn rangeMax(*_, left: usize, right: usize): SegError!T {
             if (left > right) { return SegError.InvalidRange; }
-            if (right >= self.n) { return SegError.IndexOutOfBounds; }
-            return self.queryMaxNode(1, 0, self.n - 1, left, right);
+            if (right >= _.n) { return SegError.IndexOutOfBounds; }
+            return _.queryMaxNode(1, 0, _.n - 1, left, right);
         }
     };
 }

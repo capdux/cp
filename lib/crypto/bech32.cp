@@ -114,9 +114,9 @@ pub const DecodedBech32 = struct {
     data5: []u8,
     variant: Bech32Variant,
 
-    pub fn deinit(self: *const DecodedBech32, alloc: std.mem.Allocator) {
-        alloc.free(self.hrp);
-        alloc.free(self.data5);
+    pub fn deinit(alloc: std.mem.Allocator) {
+        alloc.free(_.hrp);
+        alloc.free(_.data5);
     }
 };
 
@@ -216,9 +216,9 @@ pub const DecodedBytes = struct {
     bytes: []u8,
     variant: Bech32Variant,
 
-    pub fn deinit(self: *const DecodedBytes, alloc: std.mem.Allocator) {
-        alloc.free(self.hrp);
-        alloc.free(self.bytes);
+    pub fn deinit(alloc: std.mem.Allocator) {
+        alloc.free(_.hrp);
+        alloc.free(_.bytes);
     }
 };
 

@@ -15,56 +15,56 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
             };
         }
 
-        pub fn deinit(*this) {
-            this.items.deinit(this.alloc);
+        pub fn deinit(*_) {
+            _.items.deinit(_.alloc);
         }
 
-        pub fn len(this): usize {
-            return this.items.items.len;
+        pub fn len(): usize {
+            return _.items.items.len;
         }
 
-        pub fn isEmpty(this): bool {
-            return this.items.items.len == 0;
+        pub fn isEmpty(): bool {
+            return _.items.items.len == 0;
         }
 
-        pub fn clear(*this) {
-            this.items.clearRetainingCapacity();
+        pub fn clear(*_) {
+            _.items.clearRetainingCapacity();
         }
 
-        pub fn peek(this): T? {
-            if (this.items.items.len == 0) {
+        pub fn peek(): T? {
+            if (_.items.items.len == 0) {
                 return null;
             }
-            return this.items.items[0];
+            return _.items.items[0];
         }
 
-        pub fn push(*this, item: T): !void {
-            try this.items.append(this.alloc, item);
-            this.siftUp(this.items.items.len - 1);
+        pub fn push(*_, item: T): !void {
+            try _.items.append(_.alloc, item);
+            _.siftUp(_.items.items.len - 1);
         }
 
-        pub fn pop(*this): T? {
-            const n = this.items.items.len;
+        pub fn pop(*_): T? {
+            const n = _.items.items.len;
             if (n == 0) {
                 return null;
             }
             if (n == 1) {
-                return this.items.pop();
+                return _.items.pop();
             }
-            const top = this.items.items[0];
-            this.items.items[0] = this.items.pop() orelse unreachable;
-            this.siftDown(0);
+            const top = _.items.items[0];
+            _.items.items[0] = _.items.pop() orelse unreachable;
+            _.siftDown(0);
             return top;
         }
 
-        fn siftUp(*this, start_idx: usize) {
-            var idx = start_idx;
+        fn siftUp(*_, start_idx: usize) {
+            let idx = start_idx;
             while (idx > 0) {
                 const parent = (idx - 1) / 2;
-                if (cmp(this.items.items[idx], this.items.items[parent]) == .lt) {
-                    const tmp = this.items.items[idx];
-                    this.items.items[idx] = this.items.items[parent];
-                    this.items.items[parent] = tmp;
+                if (cmp(_.items.items[idx], _.items.items[parent]) == .lt) {
+                    const tmp = _.items.items[idx];
+                    _.items.items[idx] = _.items.items[parent];
+                    _.items.items[parent] = tmp;
                     idx = parent;
                 } else {
                     break;
@@ -72,23 +72,23 @@ pub fn BinaryHeap(comptime T: type, comptime cmp: fn (a: T, b: T) std.math.Order
             }
         }
 
-        fn siftDown(*this, start_idx: usize) {
-            var idx = start_idx;
-            const n = this.items.items.len;
+        fn siftDown(*_, start_idx: usize) {
+            let idx = start_idx;
+            const n = _.items.items.len;
             while (true) {
                 const left = idx * 2 + 1;
                 if (left >= n) {
                     break;
                 }
-                var best = left;
+                let best = left;
                 const right = left + 1;
-                if (right < n and cmp(this.items.items[right], this.items.items[left]) == .lt) {
+                if (right < n and cmp(_.items.items[right], _.items.items[left]) == .lt) {
                     best = right;
                 }
-                if (cmp(this.items.items[best], this.items.items[idx]) == .lt) {
-                    const tmp = this.items.items[idx];
-                    this.items.items[idx] = this.items.items[best];
-                    this.items.items[best] = tmp;
+                if (cmp(_.items.items[best], _.items.items[idx]) == .lt) {
+                    const tmp = _.items.items[idx];
+                    _.items.items[idx] = _.items.items[best];
+                    _.items.items[best] = tmp;
                     idx = best;
                 } else {
                     break;

@@ -43,70 +43,70 @@ pub const SnowflakeGenerator = struct {
         };
     }
 
-    pub fn nextIdAt(self: *SnowflakeGenerator, now_ms: i64): SnowflakeError!u64 {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+    pub fn nextIdAt(*_, now_ms: i64): SnowflakeError!u64 {
+        _.mutex.lock();
+        defer _.mutex.unlock();
 
-        if (now_ms < self.last_ts) {
+        if (now_ms < _.last_ts) {
             return SnowflakeError.ClockMovedBackwards;
         }
         let ts = now_ms;
-        if (ts == self.last_ts) {
-            if (self.sequence == MAX_SEQUENCE) {
+        if (ts == _.last_ts) {
+            if (_.sequence == MAX_SEQUENCE) {
                 // Virtual deterministic advance to next millisecond for explicit-clock callers
-                ts = self.last_ts + 1;
-                self.sequence = 0;
+                ts = _.last_ts + 1;
+                _.sequence = 0;
             } else {
-                self.sequence += 1;
+                _.sequence += 1;
             }
         } else {
-            self.sequence = 0;
+            _.sequence = 0;
         }
-        self.last_ts = ts;
+        _.last_ts = ts;
 
-        const rel_ts: u64 = @intCast(ts - self.epoch_ms);
+        const rel_ts: u64 = @intCast(ts - _.epoch_ms);
         return (rel_ts << 22) |
-            (@as(u64, self.datacenter_id) << 17) |
-            (@as(u64, self.worker_id) << 12) |
-            @as(u64, self.sequence);
+            (@as(u64, _.datacenter_id) << 17) |
+            (@as(u64, _.worker_id) << 12) |
+            @as(u64, _.sequence);
     }
 
-    pub fn nextId(self: *SnowflakeGenerator): SnowflakeError!u64 {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+    pub fn nextId(*_): SnowflakeError!u64 {
+        _.mutex.lock();
+        defer _.mutex.unlock();
 
         let now_ms = std.time.milliTimestamp();
-        if (now_ms < self.last_ts) {
-            const drift = self.last_ts - now_ms;
+        if (now_ms < _.last_ts) {
+            const drift = _.last_ts - now_ms;
             if (drift > 5) {
                 return SnowflakeError.ClockMovedBackwards;
             }
-            while (now_ms < self.last_ts) {
+            while (now_ms < _.last_ts) {
                 std.Thread.yield() catch {};
                 now_ms = std.time.milliTimestamp();
             }
         }
 
-        if (now_ms == self.last_ts) {
-            if (self.sequence == MAX_SEQUENCE) {
-                while (now_ms <= self.last_ts) {
+        if (now_ms == _.last_ts) {
+            if (_.sequence == MAX_SEQUENCE) {
+                while (now_ms <= _.last_ts) {
                     std.Thread.yield() catch {};
                     now_ms = std.time.milliTimestamp();
                 }
-                self.sequence = 0;
+                _.sequence = 0;
             } else {
-                self.sequence += 1;
+                _.sequence += 1;
             }
         } else {
-            self.sequence = 0;
+            _.sequence = 0;
         }
-        self.last_ts = now_ms;
+        _.last_ts = now_ms;
 
-        const rel_ts: u64 = @intCast(now_ms - self.epoch_ms);
+        const rel_ts: u64 = @intCast(now_ms - _.epoch_ms);
         return (rel_ts << 22) |
-            (@as(u64, self.datacenter_id) << 17) |
-            (@as(u64, self.worker_id) << 12) |
-            @as(u64, self.sequence);
+            (@as(u64, _.datacenter_id) << 17) |
+            (@as(u64, _.worker_id) << 12) |
+            @as(u64, _.sequence);
     }
 };
 

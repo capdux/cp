@@ -62,22 +62,22 @@ pub const Share = struct {
     threshold: u8,
     data: []u8,
 
-    pub fn deinit(self: *const Share, alloc: std.mem.Allocator) {
-        alloc.free(self.data);
+    pub fn deinit(alloc: std.mem.Allocator) {
+        alloc.free(_.data);
     }
 
-    pub fn encode(self: Share, alloc: std.mem.Allocator): ShamirError![]u8 {
-        if (self.index == 0) { return ShamirError.InvalidShareIndex; }
+    pub fn encode(alloc: std.mem.Allocator): ShamirError![]u8 {
+        if (_.index == 0) { return ShamirError.InvalidShareIndex; }
         // Format: "CPSS1" (5) + threshold (1) + index (1) + data (N)
-        let out = try alloc.alloc(u8, 7 + self.data.len);
+        let out = try alloc.alloc(u8, 7 + _.data.len);
         @memcpy(out[0..5], "CPSS1");
-        out[5] = self.threshold;
-        out[6] = self.index;
-        @memcpy(out[7..], self.data);
+        out[5] = _.threshold;
+        out[6] = _.index;
+        @memcpy(out[7..], _.data);
         return out;
     }
 
-    pub fn decode(alloc: std.mem.Allocator, raw: []const u8): ShamirError!Share {
+    pub static fn decode(alloc: std.mem.Allocator, raw: []const u8): ShamirError!Share {
         if (raw.len < 8 or !std.mem.eql(u8, raw[0..5], "CPSS1")) {
             return ShamirError.InvalidShareFormat;
         }

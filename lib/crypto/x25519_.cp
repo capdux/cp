@@ -31,8 +31,8 @@ pub const KeyPair = struct {
         };
     }
 
-    pub fn computeShared(self: KeyPair, peer_public: [32]u8): X25519Error![32]u8 {
-        return scalarmult(self.secret_key, peer_public);
+    pub fn computeShared(peer_public: [32]u8): X25519Error![32]u8 {
+        return scalarmult(_.secret_key, peer_public);
     }
 };
 

@@ -277,75 +277,73 @@ pub const AhoCorasick = struct {
         };
     }
 
-    pub fn deinit(self: *AhoCorasick, alloc: std.mem.Allocator) {
-        self.nodes.deinit(alloc);
-        self.dups.deinit(alloc);
+    pub fn deinit(*_, alloc: std.mem.Allocator) {
+        _.nodes.deinit(alloc);
+        _.dups.deinit(alloc);
     }
 
     /// Returns `true` if `cap:simd` root-state prefiltering is active for this automaton.
-    pub fn prefilterActive(self: AhoCorasick): bool {
-        return self.prefilter_len > 0;
+    pub fn prefilterActive(): bool {
+        return _.prefilter_len > 0;
     }
 
     /// Returns the number of target start bytes accelerated by `cap:simd` prefiltering (`0..4`).
-    pub fn prefilterByteCount(self: AhoCorasick): usize {
-        return @intCast(self.prefilter_len);
+    pub fn prefilterByteCount(): usize {
+        return @intCast(_.prefilter_len);
     }
 
-    fn prefilterNext(self: AhoCorasick, rem: []const u8): usize? {
-        if (self.prefilter_len == 1) {
-            return Simd.indexOfByte(rem, self.prefilter_bytes[0]);
+    fn prefilterNext(rem: []const u8): usize? {
+        if (_.prefilter_len == 1) {
+            return Simd.indexOfByte(rem, _.prefilter_bytes[0]);
         }
-        if (self.prefilter_len == 2) {
-            return Simd.indexOfAny2(rem, self.prefilter_bytes[0], self.prefilter_bytes[1]);
+        if (_.prefilter_len == 2) {
+            return Simd.indexOfAny2(rem, _.prefilter_bytes[0], _.prefilter_bytes[1]);
         }
-        if (self.prefilter_len == 3) {
+        if (_.prefilter_len == 3) {
             return Simd.indexOfAny4(
                 rem,
-                self.prefilter_bytes[0],
-                self.prefilter_bytes[1],
-                self.prefilter_bytes[2],
-                self.prefilter_bytes[2],
+                _.prefilter_bytes[0],
+                _.prefilter_bytes[1],
+                _.prefilter_bytes[2],
+                _.prefilter_bytes[2],
             );
         }
-        if (self.prefilter_len == 4) {
+        if (_.prefilter_len == 4) {
             return Simd.indexOfAny4(
                 rem,
-                self.prefilter_bytes[0],
-                self.prefilter_bytes[1],
-                self.prefilter_bytes[2],
-                self.prefilter_bytes[3],
+                _.prefilter_bytes[0],
+                _.prefilter_bytes[1],
+                _.prefilter_bytes[2],
+                _.prefilter_bytes[3],
             );
         }
         return 0;
     }
 
-    fn stepState(self: AhoCorasick, state_in: usize, raw_byte: u8): usize {
-        const b: u8 = if (self.ascii_case_insensitive) asciiLower(raw_byte) else raw_byte;
+    fn stepState(state_in: usize, raw_byte: u8): usize {
+        const b: u8 = if (_.ascii_case_insensitive) asciiLower(raw_byte) else raw_byte;
         const b_idx: usize = @intCast(b);
         let state: usize = state_in;
-        while (state != 0 && self.nodes.items[state].next[b_idx] == 0) {
-            state = @intCast(self.nodes.items[state].fail);
+        while (state != 0 && _.nodes.items[state].next[b_idx] == 0) {
+            state = @intCast(_.nodes.items[state].fail);
         }
-        return @intCast(self.nodes.items[state].next[b_idx]);
+        return @intCast(_.nodes.items[state].next[b_idx]);
     }
 
     /// Finds the next match starting at or after `search_start` under `self.match_kind`.
     /// When `allow_empty_at_start == false`, zero-width matches at `search_start` are skipped
     /// (preventing an empty match immediately following a non-empty match, per BurntSushi/aho-corasick).
-    pub fn findNextAt(
-        self: AhoCorasick,
-        text: []const u8,
+    pub fn findNextAt(text: []const u8,
         search_start: usize,
         allow_empty_at_start: bool,
     ): Match? {
         if (search_start > text.len) return null;
-        if (self.nodes.items.len == 1 && !self.has_empty_pattern) return null;
+        if (_.nodes.items.len == 1 && !_.has_empty_pattern) return null;
 
-        if (self.match_kind == MatchKind.Standard) {
-            if (self.has_empty_pattern && allow_empty_at_start) {
+        if (_.match_kind == MatchKind.Standard) {
+            if (_.has_empty_pattern && allow_empty_at_start) {
                 return Match{
-                    .pattern_id = @intCast(self.empty_pattern_id),
+                    .pattern_id = @intCast(_.empty_pattern_id),
                     .start = search_start,
                     .end = search_start,
                 };
@@ -353,20 +351,20 @@ pub const AhoCorasick = struct {
             let state: usize = 0;
             let i: usize = search_start;
             while (i < text.len) {
-                if (state == 0 && self.prefilter_len > 0) {
-                    const off_opt: usize? = self.prefilterNext(text[i..]);
+                if (state == 0 && _.prefilter_len > 0) {
+                    const off_opt: usize? = _.prefilterNext(text[i..]);
                     if (off_opt == null) return null;
                     if (off := off_opt) {
                         i += off;
                     }
                 }
-                state = self.stepState(state, text[i]);
+                state = _.stepState(state, text[i]);
                 // Pick best match ending at i + 1 (lowest pattern_id along node + out_link)
                 let found: bool = false;
                 let best_m: Match = Match{ .pattern_id = 0, .start = 0, .end = 0 };
                 let cur: usize = state;
                 while (cur != 0) {
-                    const nd = self.nodes.items[cur];
+                    const nd = _.nodes.items[cur];
                     if (nd.pattern_id != NO_PAT) {
                         const m_start: usize = i + 1 - nd.pattern_len;
                         if (m_start >= search_start) {
@@ -384,9 +382,9 @@ pub const AhoCorasick = struct {
                     cur = @intCast(nd.out_link);
                 }
                 if (found) return best_m;
-                if (self.has_empty_pattern) {
+                if (_.has_empty_pattern) {
                     return Match{
-                        .pattern_id = @intCast(self.empty_pattern_id),
+                        .pattern_id = @intCast(_.empty_pattern_id),
                         .start = i + 1,
                         .end = i + 1,
                     };
@@ -400,14 +398,14 @@ pub const AhoCorasick = struct {
         let has_best: bool = false;
         let best: Match = Match{ .pattern_id = 0, .start = 0, .end = 0 };
 
-        if (self.has_empty_pattern && allow_empty_at_start) {
+        if (_.has_empty_pattern && allow_empty_at_start) {
             has_best = true;
             best = Match{
-                .pattern_id = @intCast(self.empty_pattern_id),
+                .pattern_id = @intCast(_.empty_pattern_id),
                 .start = search_start,
                 .end = search_start,
             };
-            if (self.match_kind == MatchKind.LeftmostFirst && best.pattern_id == 0) {
+            if (_.match_kind == MatchKind.LeftmostFirst && best.pattern_id == 0) {
                 return best;
             }
         }
@@ -415,19 +413,19 @@ pub const AhoCorasick = struct {
         let state: usize = 0;
         let i: usize = search_start;
         while (i < text.len) {
-            if (state == 0 && !has_best && self.prefilter_len > 0) {
-                const off_opt: usize? = self.prefilterNext(text[i..]);
+            if (state == 0 && !has_best && _.prefilter_len > 0) {
+                const off_opt: usize? = _.prefilterNext(text[i..]);
                 if (off_opt == null) return null;
                 if (off := off_opt) {
                     i += off;
                 }
             }
-            state = self.stepState(state, text[i]);
+            state = _.stepState(state, text[i]);
 
             // Evaluate all matches terminating at i + 1 whose start >= search_start
             let cur: usize = state;
             while (cur != 0) {
-                const nd = self.nodes.items[cur];
+                const nd = _.nodes.items[cur];
                 if (nd.pattern_id != NO_PAT) {
                     const m_start: usize = i + 1 - nd.pattern_len;
                     if (m_start >= search_start) {
@@ -442,7 +440,7 @@ pub const AhoCorasick = struct {
                         } else if (cand.start < best.start) {
                             best = cand;
                         } else if (cand.start == best.start) {
-                            if (self.match_kind == MatchKind.LeftmostFirst) {
+                            if (_.match_kind == MatchKind.LeftmostFirst) {
                                 if (cand.pattern_id < best.pattern_id) {
                                     best = cand;
                                 }
@@ -459,25 +457,25 @@ pub const AhoCorasick = struct {
             }
 
             // Consider empty pattern at boundary i + 1 (only if strictly after search_start when !allow_empty_at_start)
-            if (self.has_empty_pattern) {
+            if (_.has_empty_pattern) {
                 const emp_pos: usize = i + 1;
                 if (!has_best) {
                     best = Match{
-                        .pattern_id = @intCast(self.empty_pattern_id),
+                        .pattern_id = @intCast(_.empty_pattern_id),
                         .start = emp_pos,
                         .end = emp_pos,
                     };
                     has_best = true;
                 } else if (emp_pos < best.start) {
                     best = Match{
-                        .pattern_id = @intCast(self.empty_pattern_id),
+                        .pattern_id = @intCast(_.empty_pattern_id),
                         .start = emp_pos,
                         .end = emp_pos,
                     };
-                } else if (emp_pos == best.start && self.match_kind == MatchKind.LeftmostFirst) {
-                    if (@as(usize, @intCast(self.empty_pattern_id)) < best.pattern_id) {
+                } else if (emp_pos == best.start && _.match_kind == MatchKind.LeftmostFirst) {
+                    if (@as(usize, @intCast(_.empty_pattern_id)) < best.pattern_id) {
                         best = Match{
-                            .pattern_id = @intCast(self.empty_pattern_id),
+                            .pattern_id = @intCast(_.empty_pattern_id),
                             .start = emp_pos,
                             .end = emp_pos,
                         };
@@ -487,11 +485,11 @@ pub const AhoCorasick = struct {
 
             // Early termination: earliest possible start of any future match is (i + 1) - nodes[state].depth
             if (has_best) {
-                const min_future_start: usize = (i + 1) - self.nodes.items[state].depth;
+                const min_future_start: usize = (i + 1) - _.nodes.items[state].depth;
                 if (min_future_start > best.start) {
                     return best;
                 }
-                if (self.match_kind == MatchKind.LeftmostFirst && best.start == search_start && best.pattern_id == 0) {
+                if (_.match_kind == MatchKind.LeftmostFirst && best.start == search_start && best.pattern_id == 0) {
                     return best;
                 }
             }
@@ -503,15 +501,13 @@ pub const AhoCorasick = struct {
     }
 
     /// Finds the first match in `text` under `self.match_kind`.
-    pub fn findFirst(self: AhoCorasick, text: []const u8): Match? {
-        return self.findNextAt(text, 0, true);
+    pub fn findFirst(text: []const u8): Match? {
+        return _.findNextAt(text, 0, true);
     }
 
     /// Zero-heap non-overlapping scan populating matches into caller-owned `out_matches`.
     /// Returns the number of matches written (stops cleanly when `out_matches` is full).
-    pub fn findAllNonOverlapping(
-        self: AhoCorasick,
-        text: []const u8,
+    pub fn findAllNonOverlapping(text: []const u8,
         out_matches: *[]Match,
     ): usize {
         if (out_matches.len == 0) return 0;
@@ -519,7 +515,7 @@ pub const AhoCorasick = struct {
         let pos: usize = 0;
         let allow_empty: bool = true;
         while (pos <= text.len && count < out_matches.len) {
-            const m_opt: Match? = self.findNextAt(text, pos, allow_empty);
+            const m_opt: Match? = _.findNextAt(text, pos, allow_empty);
             if (m_opt == null) break;
             if (m := m_opt) {
                 out_matches[count] = m;
@@ -539,28 +535,26 @@ pub const AhoCorasick = struct {
 
     /// Zero-heap overlapping scan populating all overlapping matches (including duplicate patterns
     /// and full `out_link` dictionary suffix chains) into caller-owned `out_matches`.
-    pub fn findAllOverlappingInto(
-        self: AhoCorasick,
-        text: []const u8,
+    pub fn findAllOverlappingInto(text: []const u8,
         out_matches: *[]Match,
     ): usize {
         if (out_matches.len == 0) return 0;
-        if (self.nodes.items.len == 1 && !self.has_empty_pattern) return 0;
+        if (_.nodes.items.len == 1 && !_.has_empty_pattern) return 0;
         let count: usize = 0;
 
         // Emit empty-pattern matches at position 0 if present
-        if (self.has_empty_pattern && self.nodes.items[0].pattern_id != NO_PAT) {
+        if (_.has_empty_pattern && _.nodes.items[0].pattern_id != NO_PAT) {
             if (count < out_matches.len) {
                 out_matches[count] = Match{
-                    .pattern_id = @intCast(self.nodes.items[0].pattern_id),
+                    .pattern_id = @intCast(_.nodes.items[0].pattern_id),
                     .start = 0,
                     .end = 0,
                 };
                 count += 1;
             }
-            let d: u32 = self.nodes.items[0].dup_head;
+            let d: u32 = _.nodes.items[0].dup_head;
             while (d != NO_PAT && count < out_matches.len) {
-                const de = self.dups.items[@as(usize, @intCast(d))];
+                const de = _.dups.items[@as(usize, @intCast(d))];
                 out_matches[count] = Match{
                     .pattern_id = @intCast(de.pattern_id),
                     .start = 0,
@@ -574,18 +568,18 @@ pub const AhoCorasick = struct {
         let state: usize = 0;
         let i: usize = 0;
         while (i < text.len && count < out_matches.len) {
-            if (state == 0 && self.prefilter_len > 0) {
-                const off_opt: usize? = self.prefilterNext(text[i..]);
+            if (state == 0 && _.prefilter_len > 0) {
+                const off_opt: usize? = _.prefilterNext(text[i..]);
                 if (off_opt == null) break;
                 if (off := off_opt) {
                     i += off;
                 }
             }
-            state = self.stepState(state, text[i]);
+            state = _.stepState(state, text[i]);
 
             let cur: usize = state;
             while (cur != 0 && count < out_matches.len) {
-                const nd = self.nodes.items[cur];
+                const nd = _.nodes.items[cur];
                 if (nd.pattern_id != NO_PAT) {
                     out_matches[count] = Match{
                         .pattern_id = @intCast(nd.pattern_id),
@@ -595,7 +589,7 @@ pub const AhoCorasick = struct {
                     count += 1;
                     let d: u32 = nd.dup_head;
                     while (d != NO_PAT && count < out_matches.len) {
-                        const de = self.dups.items[@as(usize, @intCast(d))];
+                        const de = _.dups.items[@as(usize, @intCast(d))];
                         out_matches[count] = Match{
                             .pattern_id = @intCast(de.pattern_id),
                             .start = i + 1 - de.pattern_len,
@@ -608,16 +602,16 @@ pub const AhoCorasick = struct {
                 cur = @intCast(nd.out_link);
             }
 
-            if (self.has_empty_pattern && self.nodes.items[0].pattern_id != NO_PAT && count < out_matches.len) {
+            if (_.has_empty_pattern && _.nodes.items[0].pattern_id != NO_PAT && count < out_matches.len) {
                 out_matches[count] = Match{
-                    .pattern_id = @intCast(self.nodes.items[0].pattern_id),
+                    .pattern_id = @intCast(_.nodes.items[0].pattern_id),
                     .start = i + 1,
                     .end = i + 1,
                 };
                 count += 1;
-                let d: u32 = self.nodes.items[0].dup_head;
+                let d: u32 = _.nodes.items[0].dup_head;
                 while (d != NO_PAT && count < out_matches.len) {
-                    const de = self.dups.items[@as(usize, @intCast(d))];
+                    const de = _.dups.items[@as(usize, @intCast(d))];
                     out_matches[count] = Match{
                         .pattern_id = @intCast(de.pattern_id),
                         .start = i + 1,
@@ -634,20 +628,18 @@ pub const AhoCorasick = struct {
 
     /// Zero-heap single-pass multi-pattern replacement into caller-owned `out_buf`.
     /// Uses `self.match_kind` non-overlapping semantics and returns total bytes written.
-    pub fn replaceAllInto(
-        self: AhoCorasick,
-        text: []const u8,
+    pub fn replaceAllInto(text: []const u8,
         replacements: []const []const u8,
         out_buf: *[]u8,
     ): usize ! AcError {
-        if (replacements.len < self.pattern_count) return AcError.ReplacementCountMismatch;
+        if (replacements.len < _.pattern_count) return AcError.ReplacementCountMismatch;
         let out_pos: usize = 0;
         let last_copied: usize = 0;
         let search_pos: usize = 0;
         let allow_empty: bool = true;
 
         while (search_pos <= text.len) {
-            const m_opt: Match? = self.findNextAt(text, search_pos, allow_empty);
+            const m_opt: Match? = _.findNextAt(text, search_pos, allow_empty);
             if (m_opt == null) break;
             if (m := m_opt) {
                 const gap_len: usize = m.start - last_copied;
@@ -684,19 +676,19 @@ pub const AhoCorasick = struct {
     }
 
     /// Backward-compatible allocator-backed overlapping scan.
-    pub fn findAllOverlapping(self: AhoCorasick, alloc: std.mem.Allocator, text: []const u8): ![]Match {
+    pub fn findAllOverlapping(alloc: std.mem.Allocator, text: []const u8): ![]Match {
         let out = std.ArrayList(Match).empty;
         errdefer out.deinit(alloc);
 
-        if (self.has_empty_pattern && self.nodes.items[0].pattern_id != NO_PAT) {
+        if (_.has_empty_pattern && _.nodes.items[0].pattern_id != NO_PAT) {
             try out.append(alloc, Match{
-                .pattern_id = @intCast(self.nodes.items[0].pattern_id),
+                .pattern_id = @intCast(_.nodes.items[0].pattern_id),
                 .start = 0,
                 .end = 0,
             });
-            let d: u32 = self.nodes.items[0].dup_head;
+            let d: u32 = _.nodes.items[0].dup_head;
             while (d != NO_PAT) {
-                const de = self.dups.items[@as(usize, @intCast(d))];
+                const de = _.dups.items[@as(usize, @intCast(d))];
                 try out.append(alloc, Match{
                     .pattern_id = @intCast(de.pattern_id),
                     .start = 0,
@@ -709,18 +701,18 @@ pub const AhoCorasick = struct {
         let state: usize = 0;
         let i: usize = 0;
         while (i < text.len) {
-            if (state == 0 && self.prefilter_len > 0) {
-                const off_opt: usize? = self.prefilterNext(text[i..]);
+            if (state == 0 && _.prefilter_len > 0) {
+                const off_opt: usize? = _.prefilterNext(text[i..]);
                 if (off_opt == null) break;
                 if (off := off_opt) {
                     i += off;
                 }
             }
-            state = self.stepState(state, text[i]);
+            state = _.stepState(state, text[i]);
 
             let cur: usize = state;
             while (cur != 0) {
-                const nd = self.nodes.items[cur];
+                const nd = _.nodes.items[cur];
                 if (nd.pattern_id != NO_PAT) {
                     try out.append(alloc, Match{
                         .pattern_id = @intCast(nd.pattern_id),
@@ -729,7 +721,7 @@ pub const AhoCorasick = struct {
                     });
                     let d: u32 = nd.dup_head;
                     while (d != NO_PAT) {
-                        const de = self.dups.items[@as(usize, @intCast(d))];
+                        const de = _.dups.items[@as(usize, @intCast(d))];
                         try out.append(alloc, Match{
                             .pattern_id = @intCast(de.pattern_id),
                             .start = i + 1 - de.pattern_len,
@@ -741,15 +733,15 @@ pub const AhoCorasick = struct {
                 cur = @intCast(nd.out_link);
             }
 
-            if (self.has_empty_pattern && self.nodes.items[0].pattern_id != NO_PAT) {
+            if (_.has_empty_pattern && _.nodes.items[0].pattern_id != NO_PAT) {
                 try out.append(alloc, Match{
-                    .pattern_id = @intCast(self.nodes.items[0].pattern_id),
+                    .pattern_id = @intCast(_.nodes.items[0].pattern_id),
                     .start = i + 1,
                     .end = i + 1,
                 });
-                let d: u32 = self.nodes.items[0].dup_head;
+                let d: u32 = _.nodes.items[0].dup_head;
                 while (d != NO_PAT) {
-                    const de = self.dups.items[@as(usize, @intCast(d))];
+                    const de = _.dups.items[@as(usize, @intCast(d))];
                     try out.append(alloc, Match{
                         .pattern_id = @intCast(de.pattern_id),
                         .start = i + 1,
@@ -764,21 +756,21 @@ pub const AhoCorasick = struct {
     }
 
     /// Fast zero-alloc existence check (accelerated by `cap:simd` prefilter when active).
-    pub fn containsAny(self: AhoCorasick, text: []const u8): bool {
-        if (self.has_empty_pattern) return true;
-        if (self.nodes.items.len == 1) return false;
+    pub fn containsAny(text: []const u8): bool {
+        if (_.has_empty_pattern) return true;
+        if (_.nodes.items.len == 1) return false;
         let state: usize = 0;
         let i: usize = 0;
         while (i < text.len) {
-            if (state == 0 && self.prefilter_len > 0) {
-                const off_opt: usize? = self.prefilterNext(text[i..]);
+            if (state == 0 && _.prefilter_len > 0) {
+                const off_opt: usize? = _.prefilterNext(text[i..]);
                 if (off_opt == null) return false;
                 if (off := off_opt) {
                     i += off;
                 }
             }
-            state = self.stepState(state, text[i]);
-            if (self.nodes.items[state].pattern_id != NO_PAT || self.nodes.items[state].out_link != 0) {
+            state = _.stepState(state, text[i]);
+            if (_.nodes.items[state].pattern_id != NO_PAT || _.nodes.items[state].out_link != 0) {
                 return true;
             }
             i += 1;

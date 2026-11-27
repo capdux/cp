@@ -100,12 +100,12 @@ pub const ReedSolomon = struct {
         };
     }
 
-    pub fn deinit(self: *const ReedSolomon) {
-        self.alloc.free(self.parity_rows);
+    pub fn deinit() {
+        _.alloc.free(_.parity_rows);
     }
 
-    fn validateShards(self: *const ReedSolomon, shards: []const []u8): RsError!usize {
-        if (shards.len != self.total_shards) { return RsError.ShardCountMismatch; }
+    fn validateShards(shards: []const []u8): RsError!usize {
+        if (shards.len != _.total_shards) { return RsError.ShardCountMismatch; }
         const shard_len = shards[0].len;
         if (shard_len == 0) { return RsError.EmptyShard; }
         for (s of shards) {
@@ -114,15 +114,15 @@ pub const ReedSolomon = struct {
         return shard_len;
     }
 
-    pub fn encode(self: *const ReedSolomon, shards: []const []u8): RsError!void {
-        const shard_len = try self.validateShards(shards);
+    pub fn encode(shards: []const []u8): RsError!void {
+        const shard_len = try _.validateShards(shards);
         let p: usize = 0;
-        while (p < self.parity_shards) : (p += 1) {
-            let dst = shards[self.data_shards + p];
+        while (p < _.parity_shards) : (p += 1) {
+            let dst = shards[_.data_shards + p];
             @memset(dst, 0);
             let d: usize = 0;
-            while (d < self.data_shards) : (d += 1) {
-                const coeff = self.parity_rows[p * self.data_shards + d];
+            while (d < _.data_shards) : (d += 1) {
+                const coeff = _.parity_rows[p * _.data_shards + d];
                 if (coeff == 0) { continue; }
                 const src = shards[d];
                 let byte_i: usize = 0;
@@ -133,69 +133,69 @@ pub const ReedSolomon = struct {
         }
     }
 
-    pub fn verify(self: *const ReedSolomon, alloc: std.mem.Allocator, shards: []const []u8): RsError!bool {
-        const shard_len = try self.validateShards(shards);
+    pub fn verify(alloc: std.mem.Allocator, shards: []const []u8): RsError!bool {
+        const shard_len = try _.validateShards(shards);
         let tmp = try alloc.alloc(u8, shard_len);
         defer alloc.free(tmp);
 
         let p: usize = 0;
-        while (p < self.parity_shards) : (p += 1) {
+        while (p < _.parity_shards) : (p += 1) {
             @memset(tmp, 0);
             let d: usize = 0;
-            while (d < self.data_shards) : (d += 1) {
-                const coeff = self.parity_rows[p * self.data_shards + d];
+            while (d < _.data_shards) : (d += 1) {
+                const coeff = _.parity_rows[p * _.data_shards + d];
                 const src = shards[d];
                 let byte_i: usize = 0;
                 while (byte_i < shard_len) : (byte_i += 1) {
                     tmp[byte_i] ^= gfMul(coeff, src[byte_i]);
                 }
             }
-            if (!std.mem.eql(u8, tmp, shards[self.data_shards + p])) {
+            if (!std.mem.eql(u8, tmp, shards[_.data_shards + p])) {
                 return false;
             }
         }
         return true;
     }
 
-    fn rowForShard(self: *const ReedSolomon, shard_idx: usize, col: usize): u8 {
-        if (shard_idx < self.data_shards) {
+    fn rowForShard(shard_idx: usize, col: usize): u8 {
+        if (shard_idx < _.data_shards) {
             return if (shard_idx == col) 1 else 0;
         }
-        const p = shard_idx - self.data_shards;
-        return self.parity_rows[p * self.data_shards + col];
+        const p = shard_idx - _.data_shards;
+        return _.parity_rows[p * _.data_shards + col];
     }
 
-    pub fn reconstruct(self: *const ReedSolomon, alloc: std.mem.Allocator, shards: []const []u8, present: []const bool): RsError!void {
-        if (shards.len != self.total_shards or present.len != self.total_shards) {
+    pub fn reconstruct(alloc: std.mem.Allocator, shards: []const []u8, present: []const bool): RsError!void {
+        if (shards.len != _.total_shards or present.len != _.total_shards) {
             return RsError.ShardCountMismatch;
         }
-        const shard_len = try self.validateShards(shards);
+        const shard_len = try _.validateShards(shards);
 
         // Count present shards and check if any data shard is missing
         let present_count: usize = 0;
         let data_missing = false;
         let parity_missing = false;
         let i: usize = 0;
-        while (i < self.total_shards) : (i += 1) {
+        while (i < _.total_shards) : (i += 1) {
             if (present[i]) {
                 present_count += 1;
-            } else if (i < self.data_shards) {
+            } else if (i < _.data_shards) {
                 data_missing = true;
             } else {
                 parity_missing = true;
             }
         }
         if (!data_missing and !parity_missing) { return; }
-        if (present_count < self.data_shards) { return RsError.TooFewShards; }
+        if (present_count < _.data_shards) { return RsError.TooFewShards; }
 
         if (data_missing) {
-            const k = self.data_shards;
+            const k = _.data_shards;
             // Pick first k present shards to form k x k invertible submatrix
             let chosen = try alloc.alloc(usize, k);
             defer alloc.free(chosen);
             let ci: usize = 0;
             i = 0;
-            while (i < self.total_shards and ci < k) : (i += 1) {
+            while (i < _.total_shards and ci < k) : (i += 1) {
                 if (present[i]) {
                     chosen[ci] = i;
                     ci += 1;
@@ -212,7 +212,7 @@ pub const ReedSolomon = struct {
                 const s_idx = chosen[r];
                 let c: usize = 0;
                 while (c < k) : (c += 1) {
-                    mat[r * (2 * k) + c] = self.rowForShard(s_idx, c);
+                    mat[r * (2 * k) + c] = _.rowForShard(s_idx, c);
                 }
                 mat[r * (2 * k) + k + r] = 1;
             }
@@ -270,13 +270,13 @@ pub const ReedSolomon = struct {
         // Recompute any missing parity shards from now-complete data shards
         if (parity_missing) {
             let p: usize = 0;
-            while (p < self.parity_shards) : (p += 1) {
-                if (present[self.data_shards + p]) { continue; }
-                let dst = shards[self.data_shards + p];
+            while (p < _.parity_shards) : (p += 1) {
+                if (present[_.data_shards + p]) { continue; }
+                let dst = shards[_.data_shards + p];
                 @memset(dst, 0);
                 let d: usize = 0;
-                while (d < self.data_shards) : (d += 1) {
-                    const coeff = self.parity_rows[p * self.data_shards + d];
+                while (d < _.data_shards) : (d += 1) {
+                    const coeff = _.parity_rows[p * _.data_shards + d];
                     const src = shards[d];
                     let byte_i: usize = 0;
                     while (byte_i < shard_len) : (byte_i += 1) {

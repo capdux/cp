@@ -36,65 +36,65 @@ pub const DisjointSet = struct {
         };
     }
 
-    pub fn deinit(self: *DisjointSet) {
-        self.alloc.free(self.parent);
-        self.alloc.free(self.rank);
-        self.alloc.free(self.size);
+    pub fn deinit(*_) {
+        _.alloc.free(_.parent);
+        _.alloc.free(_.rank);
+        _.alloc.free(_.size);
     }
 
-    pub fn len(self: DisjointSet): usize {
-        return self.parent.len;
+    pub fn len(): usize {
+        return _.parent.len;
     }
 
-    pub fn components(self: DisjointSet): usize {
-        return self.num_components;
+    pub fn components(): usize {
+        return _.num_components;
     }
 
-    pub fn find(self: *DisjointSet, x: usize): DsuError!usize {
-        if (x >= self.parent.len) { return DsuError.IndexOutOfBounds; }
+    pub fn find(*_, x: usize): DsuError!usize {
+        if (x >= _.parent.len) { return DsuError.IndexOutOfBounds; }
         let cur = x;
-        while (self.parent[cur] != cur) {
-            self.parent[cur] = self.parent[self.parent[cur]];
-            cur = self.parent[cur];
+        while (_.parent[cur] != cur) {
+            _.parent[cur] = _.parent[_.parent[cur]];
+            cur = _.parent[cur];
         }
         return cur;
     }
 
-    pub fn unite(self: *DisjointSet, a: usize, b: usize): DsuError!bool {
-        let ra = try self.find(a);
-        let rb = try self.find(b);
+    pub fn unite(*_, a: usize, b: usize): DsuError!bool {
+        let ra = try _.find(a);
+        let rb = try _.find(b);
         if (ra == rb) { return false; }
 
-        if (self.rank[ra] < self.rank[rb]) {
+        if (_.rank[ra] < _.rank[rb]) {
             const tmp = ra;
             ra = rb;
             rb = tmp;
         }
-        self.parent[rb] = ra;
-        self.size[ra] += self.size[rb];
-        if (self.rank[ra] == self.rank[rb]) {
-            self.rank[ra] += 1;
+        _.parent[rb] = ra;
+        _.size[ra] += _.size[rb];
+        if (_.rank[ra] == _.rank[rb]) {
+            _.rank[ra] += 1;
         }
-        self.num_components -= 1;
+        _.num_components -= 1;
         return true;
     }
 
-    pub fn connected(self: *DisjointSet, a: usize, b: usize): DsuError!bool {
-        return (try self.find(a)) == (try self.find(b));
+    pub fn connected(*_, a: usize, b: usize): DsuError!bool {
+        return (try _.find(a)) == (try _.find(b));
     }
 
-    pub fn componentSize(self: *DisjointSet, x: usize): DsuError!usize {
-        const r = try self.find(x);
-        return self.size[r];
+    pub fn componentSize(*_, x: usize): DsuError!usize {
+        const r = try _.find(x);
+        return _.size[r];
     }
 
-    pub fn reset(self: *DisjointSet) {
+    pub fn reset(*_) {
         let i: usize = 0;
-        while (i < self.parent.len) : (i += 1) {
-            self.parent[i] = i;
-            self.rank[i] = 0;
-            self.size[i] = 1;
+        while (i < _.parent.len) : (i += 1) {
+            _.parent[i] = i;
+            _.rank[i] = 0;
+            _.size[i] = 1;
         }
-        self.num_components = self.parent.len;
+        _.num_components = _.parent.len;
     }
 };

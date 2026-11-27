@@ -24,74 +24,74 @@ export fn BiMap(comptime L: type, comptime R: type): type {
             };
         }
 
-        pub fn deinit(&self) {
-            self.left_to_right.deinit();
-            self.right_to_left.deinit();
+        pub fn deinit(*_) {
+            _.left_to_right.deinit();
+            _.right_to_left.deinit();
         }
 
-        pub fn insert(&self, left: L, right: R): !void {
-            if (self.left_to_right.contains(left)) {
+        pub fn insert(*_, left: L, right: R): !void {
+            if (_.left_to_right.contains(left)) {
                 return BiMapError.DuplicateLeft;
             }
-            if (self.right_to_left.contains(right)) {
+            if (_.right_to_left.contains(right)) {
                 return BiMapError.DuplicateRight;
             }
-            try self.left_to_right.put(left, right);
-            errdefer _ = self.left_to_right.remove(left);
-            try self.right_to_left.put(right, left);
+            try _.left_to_right.put(left, right);
+            errdefer * = _.left_to_right.remove(left);
+            try _.right_to_left.put(right, left);
         }
 
-        pub fn forceInsert(&self, left: L, right: R): !void {
-            if (old_right_kv := self.left_to_right.fetchRemove(left)) {
-                * = self.right_to_left.remove(old_right_kv.value);
+        pub fn forceInsert(*_, left: L, right: R): !void {
+            if (old_right_kv := _.left_to_right.fetchRemove(left)) {
+                * = _.right_to_left.remove(old_right_kv.value);
             }
-            if (old_left_kv := self.right_to_left.fetchRemove(right)) {
-                * = self.left_to_right.remove(old_left_kv.value);
+            if (old_left_kv := _.right_to_left.fetchRemove(right)) {
+                * = _.left_to_right.remove(old_left_kv.value);
             }
-            try self.left_to_right.put(left, right);
-            errdefer _ = self.left_to_right.remove(left);
-            try self.right_to_left.put(right, left);
+            try _.left_to_right.put(left, right);
+            errdefer * = _.left_to_right.remove(left);
+            try _.right_to_left.put(right, left);
         }
 
-        pub fn getRight(self, left: L): R? {
-            return self.left_to_right.get(left);
+        pub fn getRight(left: L): R? {
+            return _.left_to_right.get(left);
         }
 
-        pub fn getLeft(self, right: R): L? {
-            return self.right_to_left.get(right);
+        pub fn getLeft(right: R): L? {
+            return _.right_to_left.get(right);
         }
 
-        pub fn removeByLeft(&self, left: L): R? {
-            if (kv := self.left_to_right.fetchRemove(left)) {
-                * = self.right_to_left.remove(kv.value);
+        pub fn removeByLeft(*_, left: L): R? {
+            if (kv := _.left_to_right.fetchRemove(left)) {
+                * = _.right_to_left.remove(kv.value);
                 return kv.value;
             }
             return null;
         }
 
-        pub fn removeByRight(&self, right: R): L? {
-            if (kv := self.right_to_left.fetchRemove(right)) {
-                * = self.left_to_right.remove(kv.value);
+        pub fn removeByRight(*_, right: R): L? {
+            if (kv := _.right_to_left.fetchRemove(right)) {
+                * = _.left_to_right.remove(kv.value);
                 return kv.value;
             }
             return null;
         }
 
-        pub fn containsLeft(self, left: L): bool {
-            return self.left_to_right.contains(left);
+        pub fn containsLeft(left: L): bool {
+            return _.left_to_right.contains(left);
         }
 
-        pub fn containsRight(self, right: R): bool {
-            return self.right_to_left.contains(right);
+        pub fn containsRight(right: R): bool {
+            return _.right_to_left.contains(right);
         }
 
-        pub fn len(self): usize {
-            return self.left_to_right.count();
+        pub fn len(): usize {
+            return _.left_to_right.count();
         }
 
-        pub fn clear(&self) {
-            self.left_to_right.clearRetainingCapacity();
-            self.right_to_left.clearRetainingCapacity();
+        pub fn clear(*_) {
+            _.left_to_right.clearRetainingCapacity();
+            _.right_to_left.clearRetainingCapacity();
         }
     };
 }

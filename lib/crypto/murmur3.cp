@@ -54,52 +54,52 @@ pub const Murmur3_32Stream = struct {
         };
     }
 
-    fn mixBlock(self: *Murmur3_32Stream, k_in: u32) {
+    fn mixBlock(*_, k_in: u32) {
         let k1 = k_in *% C1_32;
         k1 = std.math.rotl(u32, k1, 15);
         k1 = k1 *% C2_32;
-        self.h1 ^= k1;
-        self.h1 = std.math.rotl(u32, self.h1, 13);
-        self.h1 = (self.h1 *% 5) +% 0xe6546b64;
+        _.h1 ^= k1;
+        _.h1 = std.math.rotl(u32, _.h1, 13);
+        _.h1 = (_.h1 *% 5) +% 0xe6546b64;
     }
 
-    pub fn update(self: *Murmur3_32Stream, data: []const u8) {
-        self.total_len = self.total_len +% data.len;
+    pub fn update(*_, data: []const u8) {
+        _.total_len = _.total_len +% data.len;
         let pos: usize = 0;
-        if (self.buf_len > 0) {
-            const need = 4 - self.buf_len;
+        if (_.buf_len > 0) {
+            const need = 4 - _.buf_len;
             const take = @min(need, data.len);
-            @memcpy(self.buf[self.buf_len .. self.buf_len + take], data[0..take]);
-            self.buf_len += take;
+            @memcpy(_.buf[_.buf_len .. _.buf_len + take], data[0..take]);
+            _.buf_len += take;
             pos += take;
-            if (self.buf_len == 4) {
-                self.mixBlock(std.mem.readInt(u32, &self.buf, .little));
-                self.buf_len = 0;
+            if (_.buf_len == 4) {
+                _.mixBlock(std.mem.readInt(u32, &_.buf, .little));
+                _.buf_len = 0;
             }
         }
         while (pos + 4 <= data.len) : (pos += 4) {
-            self.mixBlock(std.mem.readInt(u32, data[pos .. pos + 4], .little));
+            _.mixBlock(std.mem.readInt(u32, data[pos .. pos + 4], .little));
         }
         if (pos < data.len) {
             const rem = data.len - pos;
-            @memcpy(self.buf[0..rem], data[pos..]);
-            self.buf_len = rem;
+            @memcpy(_.buf[0..rem], data[pos..]);
+            _.buf_len = rem;
         }
     }
 
-    pub fn final(self: *Murmur3_32Stream): u32 {
-        if (self.buf_len > 0) {
+    pub fn final(*_): u32 {
+        if (_.buf_len > 0) {
             let k1: u32 = 0;
-            if (self.buf_len >= 3) { k1 ^= (@as(u32, self.buf[2]) << 16); }
-            if (self.buf_len >= 2) { k1 ^= (@as(u32, self.buf[1]) << 8); }
-            k1 ^= @as(u32, self.buf[0]);
+            if (_.buf_len >= 3) { k1 ^= (@as(u32, _.buf[2]) << 16); }
+            if (_.buf_len >= 2) { k1 ^= (@as(u32, _.buf[1]) << 8); }
+            k1 ^= @as(u32, _.buf[0]);
             k1 = k1 *% C1_32;
             k1 = std.math.rotl(u32, k1, 15);
             k1 = k1 *% C2_32;
-            self.h1 ^= k1;
+            _.h1 ^= k1;
         }
-        self.h1 ^= @as(u32, @truncate(self.total_len));
-        return fmix32(self.h1);
+        _.h1 ^= @as(u32, @truncate(_.total_len));
+        return fmix32(_.h1);
     }
 };
 
@@ -121,93 +121,93 @@ pub const Murmur3_128Stream = struct {
         };
     }
 
-    fn mixBlock(self: *Murmur3_128Stream, k1_in: u64, k2_in: u64) {
+    fn mixBlock(*_, k1_in: u64, k2_in: u64) {
         let k1 = k1_in *% C1_128;
         k1 = std.math.rotl(u64, k1, 31);
         k1 = k1 *% C2_128;
-        self.h1 ^= k1;
-        self.h1 = std.math.rotl(u64, self.h1, 27);
-        self.h1 = self.h1 +% self.h2;
-        self.h1 = (self.h1 *% 5) +% 0x52dce729;
+        _.h1 ^= k1;
+        _.h1 = std.math.rotl(u64, _.h1, 27);
+        _.h1 = _.h1 +% _.h2;
+        _.h1 = (_.h1 *% 5) +% 0x52dce729;
 
         let k2 = k2_in *% C2_128;
         k2 = std.math.rotl(u64, k2, 33);
         k2 = k2 *% C1_128;
-        self.h2 ^= k2;
-        self.h2 = std.math.rotl(u64, self.h2, 31);
-        self.h2 = self.h2 +% self.h1;
-        self.h2 = (self.h2 *% 5) +% 0x38495ab5;
+        _.h2 ^= k2;
+        _.h2 = std.math.rotl(u64, _.h2, 31);
+        _.h2 = _.h2 +% _.h1;
+        _.h2 = (_.h2 *% 5) +% 0x38495ab5;
     }
 
-    pub fn update(self: *Murmur3_128Stream, data: []const u8) {
-        self.total_len = self.total_len +% data.len;
+    pub fn update(*_, data: []const u8) {
+        _.total_len = _.total_len +% data.len;
         let pos: usize = 0;
-        if (self.buf_len > 0) {
-            const need = 16 - self.buf_len;
+        if (_.buf_len > 0) {
+            const need = 16 - _.buf_len;
             const take = @min(need, data.len);
-            @memcpy(self.buf[self.buf_len .. self.buf_len + take], data[0..take]);
-            self.buf_len += take;
+            @memcpy(_.buf[_.buf_len .. _.buf_len + take], data[0..take]);
+            _.buf_len += take;
             pos += take;
-            if (self.buf_len == 16) {
-                const k1 = std.mem.readInt(u64, self.buf[0..8], .little);
-                const k2 = std.mem.readInt(u64, self.buf[8..16], .little);
-                self.mixBlock(k1, k2);
-                self.buf_len = 0;
+            if (_.buf_len == 16) {
+                const k1 = std.mem.readInt(u64, _.buf[0..8], .little);
+                const k2 = std.mem.readInt(u64, _.buf[8..16], .little);
+                _.mixBlock(k1, k2);
+                _.buf_len = 0;
             }
         }
         while (pos + 16 <= data.len) : (pos += 16) {
             const k1 = std.mem.readInt(u64, data[pos .. pos + 8], .little);
             const k2 = std.mem.readInt(u64, data[pos + 8 .. pos + 16], .little);
-            self.mixBlock(k1, k2);
+            _.mixBlock(k1, k2);
         }
         if (pos < data.len) {
             const rem = data.len - pos;
-            @memcpy(self.buf[0..rem], data[pos..]);
-            self.buf_len = rem;
+            @memcpy(_.buf[0..rem], data[pos..]);
+            _.buf_len = rem;
         }
     }
 
-    pub fn final(self: *Murmur3_128Stream): [16]u8 {
-        if (self.buf_len > 0) {
+    pub fn final(*_): [16]u8 {
+        if (_.buf_len > 0) {
             let k1: u64 = 0;
             let k2: u64 = 0;
-            if (self.buf_len > 8) {
-                let i: usize = self.buf_len - 1;
+            if (_.buf_len > 8) {
+                let i: usize = _.buf_len - 1;
                 while (i >= 8) : (i -= 1) {
                     const sh: u6 = @intCast((i - 8) * 8);
-                    k2 ^= (@as(u64, self.buf[i]) << sh);
+                    k2 ^= (@as(u64, _.buf[i]) << sh);
                     if (i == 8) { break; }
                 }
                 k2 = k2 *% C2_128;
                 k2 = std.math.rotl(u64, k2, 33);
                 k2 = k2 *% C1_128;
-                self.h2 ^= k2;
+                _.h2 ^= k2;
             }
-            const lim = @min(self.buf_len, 8);
+            const lim = @min(_.buf_len, 8);
             let j: usize = 0;
             while (j < lim) : (j += 1) {
                 const sh: u6 = @intCast(j * 8);
-                k1 ^= (@as(u64, self.buf[j]) << sh);
+                k1 ^= (@as(u64, _.buf[j]) << sh);
             }
             k1 = k1 *% C1_128;
             k1 = std.math.rotl(u64, k1, 31);
             k1 = k1 *% C2_128;
-            self.h1 ^= k1;
+            _.h1 ^= k1;
         }
 
-        const len64: u64 = @intCast(self.total_len);
-        self.h1 ^= len64;
-        self.h2 ^= len64;
-        self.h1 = self.h1 +% self.h2;
-        self.h2 = self.h2 +% self.h1;
-        self.h1 = fmix64(self.h1);
-        self.h2 = fmix64(self.h2);
-        self.h1 = self.h1 +% self.h2;
-        self.h2 = self.h2 +% self.h1;
+        const len64: u64 = @intCast(_.total_len);
+        _.h1 ^= len64;
+        _.h2 ^= len64;
+        _.h1 = _.h1 +% _.h2;
+        _.h2 = _.h2 +% _.h1;
+        _.h1 = fmix64(_.h1);
+        _.h2 = fmix64(_.h2);
+        _.h1 = _.h1 +% _.h2;
+        _.h2 = _.h2 +% _.h1;
 
         let out: [16]u8 = undefined;
-        std.mem.writeInt(u64, out[0..8], self.h1, .little);
-        std.mem.writeInt(u64, out[8..16], self.h2, .little);
+        std.mem.writeInt(u64, out[0..8], _.h1, .little);
+        std.mem.writeInt(u64, out[8..16], _.h2, .little);
         return out;
     }
 };

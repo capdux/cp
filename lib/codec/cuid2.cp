@@ -101,14 +101,14 @@ pub const Cuid2Generator = struct {
         };
     }
 
-    pub fn nextInto(self: *Cuid2Generator, out: []u8): Cuid2Error![]const u8 {
+    pub fn nextInto(*_, out: []u8): Cuid2Error![]const u8 {
         if (out.len < CUID2_MIN_LEN or out.len > CUID2_MAX_LEN) {
             return Cuid2Error.InvalidLength;
         }
         let threaded = std.Io.Threaded.init(std.heap.page_allocator, .{});
         defer threaded.deinit();
         const ts_ms: i64 = std.Io.Clock.real.now(threaded.io()).toMilliseconds();
-        const cnt = self.counter.fetchAdd(1, .monotonic);
+        const cnt = _.counter.fetchAdd(1, .monotonic);
 
         let salt: [32]u8 = undefined;
         threaded.io().random(&salt);
@@ -125,7 +125,7 @@ pub const Cuid2Generator = struct {
         hasher.update(&ts_bytes);
         hasher.update(&salt);
         hasher.update(&cnt_bytes);
-        hasher.update(&self.fingerprint);
+        hasher.update(&_.fingerprint);
 
         let digest: [64]u8 = undefined;
         hasher.final(&digest);
@@ -144,9 +144,9 @@ pub const Cuid2Generator = struct {
         return out[0..out.len];
     }
 
-    pub fn next24(self: *Cuid2Generator): [24]u8 {
+    pub fn next24(*_): [24]u8 {
         let buf: [24]u8 = undefined;
-        * = self.nextInto(&buf) catch unreachable;
+        * = _.nextInto(&buf) catch unreachable;
         return buf;
     }
 };

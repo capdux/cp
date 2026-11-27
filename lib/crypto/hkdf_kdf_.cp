@@ -14,16 +14,16 @@ pub const HkdfHash = enum {
     Sha384,
     Sha512,
 
-    pub fn prkLen(self: HkdfHash): usize {
-        switch (self) {
+    pub fn prkLen(): usize {
+        switch (_) {
             .Sha256 => return 32,
             .Sha384 => return 48,
             .Sha512 => return 64,
         }
     }
 
-    pub fn maxOutputLen(self: HkdfHash): usize {
-        return 255 * self.prkLen();
+    pub fn maxOutputLen(): usize {
+        return 255 * _.prkLen();
     }
 };
 

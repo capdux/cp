@@ -442,60 +442,60 @@ pub const Version = struct {
         return Version.order(a, b);
     }
 
-    pub fn eql(self: Version, b: Version): bool {
-        return Version.order(self, b) == .eq;
+    pub fn eql(b: Version): bool {
+        return Version.order(_, b) == .eq;
     }
 
-    pub fn lt(self: Version, b: Version): bool {
-        return Version.order(self, b) == .lt;
+    pub fn lt(b: Version): bool {
+        return Version.order(_, b) == .lt;
     }
 
-    pub fn lte(self: Version, b: Version): bool {
-        let ord = Version.order(self, b);
+    pub fn lte(b: Version): bool {
+        let ord = Version.order(_, b);
         return ord == .lt || ord == .eq;
     }
 
-    pub fn gt(self: Version, b: Version): bool {
-        return Version.order(self, b) == .gt;
+    pub fn gt(b: Version): bool {
+        return Version.order(_, b) == .gt;
     }
 
-    pub fn gte(self: Version, b: Version): bool {
-        let ord = Version.order(self, b);
+    pub fn gte(b: Version): bool {
+        let ord = Version.order(_, b);
         return ord == .gt || ord == .eq;
     }
 
-    pub fn format(self: Version, buf: []u8): []const u8 {
-        let s = std.fmt.bufPrint(buf, "{d}.{d}.{d}", .{ self.major, self.minor, self.patch }) catch return "";
+    pub fn format(buf: []u8): []const u8 {
+        let s = std.fmt.bufPrint(buf, "{d}.{d}.{d}", .{ _.major, _.minor, _.patch }) catch return "";
         let out_len = s.len;
 
-        if (self.prerelease.len > 0) {
+        if (_.prerelease.len > 0) {
             if (out_len < buf.len) {
                 buf[out_len] = '-';
                 out_len += 1;
             }
-            let copy_len = if (out_len + self.prerelease.len <= buf.len) self.prerelease.len else (buf.len - out_len);
-            @memcpy(buf[out_len .. out_len + copy_len], self.prerelease[0 .. copy_len]);
+            let copy_len = if (out_len + _.prerelease.len <= buf.len) _.prerelease.len else (buf.len - out_len);
+            @memcpy(buf[out_len .. out_len + copy_len], _.prerelease[0 .. copy_len]);
             out_len += copy_len;
         }
 
-        if (self.build.len > 0) {
+        if (_.build.len > 0) {
             if (out_len < buf.len) {
                 buf[out_len] = '+';
                 out_len += 1;
             }
-            let copy_len = if (out_len + self.build.len <= buf.len) self.build.len else (buf.len - out_len);
-            @memcpy(buf[out_len .. out_len + copy_len], self.build[0 .. copy_len]);
+            let copy_len = if (out_len + _.build.len <= buf.len) _.build.len else (buf.len - out_len);
+            @memcpy(buf[out_len .. out_len + copy_len], _.build[0 .. copy_len]);
             out_len += copy_len;
         }
 
         return buf[0 .. out_len];
     }
 
-    pub fn increment(self: Version, release_type: ReleaseType, identifier: ([]const u8)?): Version {
-        return self.incrementWithBuf(release_type, identifier, &inc_scratch);
+    pub fn increment(release_type: ReleaseType, identifier: ([]const u8)?): Version {
+        return _.incrementWithBuf(release_type, identifier, &inc_scratch);
     }
 
-    pub fn incrementWithBuf(self: Version, release_type: ReleaseType, identifier: ([]const u8)?, buf: []u8): Version {
+    pub fn incrementWithBuf(release_type: ReleaseType, identifier: ([]const u8)?, buf: []u8): Version {
         const max_u64: u64 = std.math.maxInt(u64);
         let id_val = "0";
         if (id := identifier) {
@@ -505,7 +505,7 @@ pub const Version = struct {
         switch (release_type) {
             .major => {
                 return Version{
-                    major: if (self.major < max_u64) (self.major + 1) else max_u64,
+                    major: if (_.major < max_u64) (_.major + 1) else max_u64,
                     minor: 0,
                     patch: 0,
                     prerelease: "",
@@ -514,8 +514,8 @@ pub const Version = struct {
             },
             .minor => {
                 return Version{
-                    major: self.major,
-                    minor: if (self.minor < max_u64) (self.minor + 1) else max_u64,
+                    major: _.major,
+                    minor: if (_.minor < max_u64) (_.minor + 1) else max_u64,
                     patch: 0,
                     prerelease: "",
                     build: "",
@@ -523,9 +523,9 @@ pub const Version = struct {
             },
             .patch => {
                 return Version{
-                    major: self.major,
-                    minor: self.minor,
-                    patch: if (self.patch < max_u64) (self.patch + 1) else max_u64,
+                    major: _.major,
+                    minor: _.minor,
+                    patch: if (_.patch < max_u64) (_.patch + 1) else max_u64,
                     prerelease: "",
                     build: "",
                 };
@@ -533,7 +533,7 @@ pub const Version = struct {
             .premajor => {
                 let pre = if (identifier != null) id_val else "0";
                 return Version{
-                    major: if (self.major < max_u64) (self.major + 1) else max_u64,
+                    major: if (_.major < max_u64) (_.major + 1) else max_u64,
                     minor: 0,
                     patch: 0,
                     prerelease: pre,
@@ -543,8 +543,8 @@ pub const Version = struct {
             .preminor => {
                 let pre = if (identifier != null) id_val else "0";
                 return Version{
-                    major: self.major,
-                    minor: if (self.minor < max_u64) (self.minor + 1) else max_u64,
+                    major: _.major,
+                    minor: if (_.minor < max_u64) (_.minor + 1) else max_u64,
                     patch: 0,
                     prerelease: pre,
                     build: "",
@@ -553,20 +553,20 @@ pub const Version = struct {
             .prepatch => {
                 let pre = if (identifier != null) id_val else "0";
                 return Version{
-                    major: self.major,
-                    minor: self.minor,
-                    patch: if (self.patch < max_u64) (self.patch + 1) else max_u64,
+                    major: _.major,
+                    minor: _.minor,
+                    patch: if (_.patch < max_u64) (_.patch + 1) else max_u64,
                     prerelease: pre,
                     build: "",
                 };
             },
             .prerelease => {
-                if (self.prerelease.len == 0) {
+                if (_.prerelease.len == 0) {
                     let pre = if (identifier != null) id_val else "0";
                     return Version{
-                        major: self.major,
-                        minor: self.minor,
-                        patch: if (self.patch < max_u64) (self.patch + 1) else max_u64,
+                        major: _.major,
+                        minor: _.minor,
+                        patch: if (_.patch < max_u64) (_.patch + 1) else max_u64,
                         prerelease: pre,
                         build: "",
                     };
@@ -574,12 +574,12 @@ pub const Version = struct {
 
                 // If identifier specified and prerelease does not begin with it
                 if (id := identifier) {
-                    if (!std.mem.startsWith(u8, self.prerelease, id)) {
+                    if (!std.mem.startsWith(u8, _.prerelease, id)) {
                         let formatted = std.fmt.bufPrint(buf, "{s}.0", .{id}) catch id;
                         return Version{
-                            major: self.major,
-                            minor: self.minor,
-                            patch: self.patch,
+                            major: _.major,
+                            minor: _.minor,
+                            patch: _.patch,
                             prerelease: formatted,
                             build: "",
                         };
@@ -588,39 +588,39 @@ pub const Version = struct {
 
                 // Find trailing numeric identifier to increment
                 let last_dot: usize? = null;
-                let idx: usize = self.prerelease.len;
+                let idx: usize = _.prerelease.len;
                 while (idx > 0) {
                     idx -= 1;
-                    if (self.prerelease[idx] == '.') {
+                    if (_.prerelease[idx] == '.') {
                         last_dot = idx;
                         break;
                     }
                 }
 
                 let prefix = "";
-                let suffix = self.prerelease;
+                let suffix = _.prerelease;
                 if (d := last_dot) {
-                    prefix = self.prerelease[0 .. d + 1];
-                    suffix = self.prerelease[d + 1 ..];
+                    prefix = _.prerelease[0 .. d + 1];
+                    suffix = _.prerelease[d + 1 ..];
                 }
 
                 if (Version.isAllDigits(suffix)) {
                     let num = std.fmt.parseInt(u64, suffix, 10) catch 0;
                     const next_num = if (num < max_u64) (num + 1) else max_u64;
-                    let formatted = std.fmt.bufPrint(buf, "{s}{d}", .{ prefix, next_num }) catch self.prerelease;
+                    let formatted = std.fmt.bufPrint(buf, "{s}{d}", .{ prefix, next_num }) catch _.prerelease;
                     return Version{
-                        major: self.major,
-                        minor: self.minor,
-                        patch: self.patch,
+                        major: _.major,
+                        minor: _.minor,
+                        patch: _.patch,
                         prerelease: formatted,
                         build: "",
                     };
                 } else {
-                    let formatted = std.fmt.bufPrint(buf, "{s}.0", .{self.prerelease}) catch self.prerelease;
+                    let formatted = std.fmt.bufPrint(buf, "{s}.0", .{_.prerelease}) catch _.prerelease;
                     return Version{
-                        major: self.major,
-                        minor: self.minor,
-                        patch: self.patch,
+                        major: _.major,
+                        minor: _.minor,
+                        patch: _.patch,
                         prerelease: formatted,
                         build: "",
                     };
@@ -630,14 +630,14 @@ pub const Version = struct {
     }
 
     /// 64-bit Wyhash fingerprint over (major, minor, patch, prerelease, build), synced from Bun Version.cp.
-    pub fn hash(self: Version): u64 {
+    pub fn hash(): u64 {
         let h = std.hash.Wyhash.init(0);
-        h.update(std.mem.asBytes(&self.major));
-        h.update(std.mem.asBytes(&self.minor));
-        h.update(std.mem.asBytes(&self.patch));
-        h.update(self.prerelease);
+        h.update(std.mem.asBytes(&_.major));
+        h.update(std.mem.asBytes(&_.minor));
+        h.update(std.mem.asBytes(&_.patch));
+        h.update(_.prerelease);
         h.update(&[0xff]);
-        h.update(self.build);
+        h.update(_.build);
         return h.final();
     }
 };

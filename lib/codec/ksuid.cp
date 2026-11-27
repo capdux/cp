@@ -60,38 +60,38 @@ pub const Ksuid = struct {
         return Ksuid.generateAt(ts_ns);
     }
 
-    pub fn timestampUnix(self: Ksuid): i64 {
-        const rel: i64 = @intCast(std.mem.readInt(u32, self.bytes[0..4], .big));
+    pub fn timestampUnix(): i64 {
+        const rel: i64 = @intCast(std.mem.readInt(u32, _.bytes[0..4], .big));
         return KSUID_EPOCH + rel;
     }
 
-    pub fn payload(self: Ksuid): [16]u8 {
+    pub fn payload(): [16]u8 {
         let p: [16]u8 = undefined;
-        @memcpy(&p, self.bytes[4..20]);
+        @memcpy(&p, _.bytes[4..20]);
         return p;
     }
 
-    pub fn equals(self: Ksuid, other: Ksuid): bool {
-        return std.mem.eql(u8, &self.bytes, &other.bytes);
+    pub fn equals(other: Ksuid): bool {
+        return std.mem.eql(u8, &_.bytes, &other.bytes);
     }
 
-    pub fn compare(self: Ksuid, other: Ksuid): i8 {
+    pub fn compare(other: Ksuid): i8 {
         let i: usize = 0;
         while (i < 20) : (i += 1) {
-            if (self.bytes[i] < other.bytes[i]) { return -1; }
-            if (self.bytes[i] > other.bytes[i]) { return 1; }
+            if (_.bytes[i] < other.bytes[i]) { return -1; }
+            if (_.bytes[i] > other.bytes[i]) { return 1; }
         }
         return 0;
     }
 
-    pub fn encode(self: Ksuid): [27]u8 {
+    pub fn encode(): [27]u8 {
         // Convert 20-byte big-endian (5 x u32 words) to base62 via repeated division
         let words: [5]u32 = [
-            std.mem.readInt(u32, self.bytes[0..4], .big),
-            std.mem.readInt(u32, self.bytes[4..8], .big),
-            std.mem.readInt(u32, self.bytes[8..12], .big),
-            std.mem.readInt(u32, self.bytes[12..16], .big),
-            std.mem.readInt(u32, self.bytes[16..20], .big),
+            std.mem.readInt(u32, _.bytes[0..4], .big),
+            std.mem.readInt(u32, _.bytes[4..8], .big),
+            std.mem.readInt(u32, _.bytes[8..12], .big),
+            std.mem.readInt(u32, _.bytes[12..16], .big),
+            std.mem.readInt(u32, _.bytes[16..20], .big),
         ];
 
         let out: [27]u8 = undefined;
