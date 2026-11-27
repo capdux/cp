@@ -30,6 +30,49 @@ impl Codegen {
         }
     }
 
+    pub(crate) fn returns_borrowed_view_in_ctx(
+        &self,
+        ty: &Type,
+        class_name: Option<&String>,
+    ) -> bool {
+        if Self::returns_borrowed_view(ty) {
+            return true;
+        }
+        match ty {
+            Type::Optional(inner) | Type::ErrorUnion(inner) => {
+                self.returns_borrowed_view_in_ctx(inner, class_name)
+            }
+            Type::ResultType { ok, .. } => self.returns_borrowed_view_in_ctx(ok, class_name),
+            Type::Ref(id) => {
+                let resolved = if id.sym == "@This()" || id.sym == "Self" || id.sym == "This" {
+                    class_name.map(|s| s.as_str())
+                } else {
+                    Some(id.sym.as_str())
+                };
+                if let Some(name) = resolved {
+                    if let Some(en) = self.enum_defs.get(name) {
+                        return en.variants.iter().any(|v| {
+                            v.tuple_type
+                                .as_ref()
+                                .map_or(false, Self::returns_borrowed_view)
+                                || v.fields.as_ref().map_or(false, |fs| {
+                                    fs.iter().any(|f| Self::returns_borrowed_view(&f.ty))
+                                })
+                        });
+                    }
+                    if let Some(cls) = self.class_defs.get(name) {
+                        return cls
+                            .fields
+                            .iter()
+                            .any(|f| Self::returns_borrowed_view(&f.ty));
+                    }
+                }
+                false
+            }
+            _ => false,
+        }
+    }
+
     pub(crate) fn is_receiver_param_type(ty: &Type, class_name: Option<&String>) -> bool {
         match ty {
             Type::Auto | Type::Any => true,
@@ -627,6 +670,11 @@ impl Codegen {
                         .map(|cls| !cls.generic_params.is_empty())
                         .unwrap_or(false);
                     let is_enum = self.enum_defs.contains_key(c);
+                    let is_pure_enum = self.enum_defs.get(c).map_or(false, |en| {
+                        !en.variants.iter().any(|v| {
+                            v.fields.is_some() || v.tuple_type.is_some() || v.from_err.is_some()
+                        })
+                    });
                     let is_val =
                         is_enum || self.value_classes.contains(c) || is_generic || c == "@This()";
                     let type_name = if is_generic || c == "@This()" {
@@ -634,12 +682,12 @@ impl Codegen {
                     } else {
                         c.clone()
                     };
-                    let needs_const_ptr_self = !is_enum
+                    let needs_const_ptr_self = !is_pure_enum
                         && self.current_receiver_mode == ReceiverMode::ReadOnly
                         && func
                             .return_type
                             .as_ref()
-                            .map(Self::returns_borrowed_view)
+                            .map(|t| self.returns_borrowed_view_in_ctx(t, Some(c)))
                             .unwrap_or(false);
                     let ptr_type = if let Some(first) = func.params.first().filter(|p| {
                         p.ident.sym == "this"

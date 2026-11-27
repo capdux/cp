@@ -1291,9 +1291,11 @@ impl Codegen {
         }
 
         if !is_result_disc && Self::is_simple_literal_switch(m) {
+            let is_self_ptr_switch =
+                self.is_self_ptr_receiver() && Self::is_self_receiver_ident(&m.disc);
             let disc_code = {
                 let raw = self.generate_expr(&m.disc);
-                if self.is_self_ptr_receiver() && Self::is_self_receiver_ident(&m.disc) {
+                if is_self_ptr_switch {
                     format!("{}.*", raw)
                 } else {
                     raw
@@ -1357,7 +1359,17 @@ impl Codegen {
                                         format!("{}{} =>", inline_prefix, base)
                                     } else {
                                         bound_ident = Some(id.sym.clone());
-                                        format!("{}{} => |{}|", inline_prefix, base, id.sym)
+                                        let auto_ptr = is_self_ptr_switch
+                                            && self.should_auto_ptr_capture_self_variant(
+                                                &ep.variant_name.sym,
+                                                &id.sym,
+                                                &arm.body,
+                                            );
+                                        let ptr_prefix = if auto_ptr { "*" } else { "" };
+                                        format!(
+                                            "{}{} => |{}{}|",
+                                            inline_prefix, base, ptr_prefix, id.sym
+                                        )
                                     }
                                 } else {
                                     format!("{}{} =>", inline_prefix, base)
@@ -1370,7 +1382,18 @@ impl Codegen {
                                 format!("{}{} =>", inline_prefix, base)
                             } else {
                                 bound_ident = Some(cap.sym.clone());
-                                let ptr_prefix = if arm.is_capture_ptr { "*" } else { "" };
+                                let auto_ptr = !arm.is_capture_ptr
+                                    && is_self_ptr_switch
+                                    && self.should_auto_ptr_capture_self_variant(
+                                        &ep.variant_name.sym,
+                                        &cap.sym,
+                                        &arm.body,
+                                    );
+                                let ptr_prefix = if arm.is_capture_ptr || auto_ptr {
+                                    "*"
+                                } else {
+                                    ""
+                                };
                                 format!("{}{} => |{}{}|", inline_prefix, base, ptr_prefix, cap.sym)
                             }
                         } else {
@@ -2006,5 +2029,272 @@ impl Codegen {
                 }
             }
         }
+    }
+
+    pub(crate) fn is_value_container_payload(&self, ty: &Type) -> bool {
+        match ty {
+            Type::FixedArray(_, _) | Type::Object(_) => true,
+            Type::Ref(id) => {
+                if Self::returns_borrowed_view(ty) {
+                    return false;
+                }
+                if matches!(
+                    id.sym.as_str(),
+                    "u8" | "i8"
+                        | "u16"
+                        | "i16"
+                        | "u32"
+                        | "i32"
+                        | "u64"
+                        | "i64"
+                        | "u128"
+                        | "i128"
+                        | "usize"
+                        | "isize"
+                        | "f16"
+                        | "f32"
+                        | "f64"
+                        | "f128"
+                        | "bool"
+                        | "void"
+                        | "anyerror"
+                        | "type"
+                        | "comptime_int"
+                        | "comptime_float"
+                ) {
+                    return false;
+                }
+                if let Some(en) = self.enum_defs.get(&id.sym) {
+                    let is_pure = !en.variants.iter().any(|v| {
+                        v.fields.is_some() || v.tuple_type.is_some() || v.from_err.is_some()
+                    });
+                    if is_pure {
+                        return false;
+                    }
+                }
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub(crate) fn lookup_self_variant_payload_ty(&self, variant_name: &str) -> Option<Type> {
+        let c = self.current_class_name.as_ref()?;
+        if let Some(cls) = self.class_defs.get(c) {
+            if let Some(f) = cls.fields.iter().find(|f| f.ident.sym == variant_name) {
+                return Some(f.ty.clone());
+            }
+        }
+        if let Some(en) = self.enum_defs.get(c) {
+            if let Some(v) = en.variants.iter().find(|v| v.ident.sym == variant_name) {
+                if let Some(tty) = &v.tuple_type {
+                    return Some(tty.clone());
+                }
+            }
+        }
+        None
+    }
+
+    fn walk_capture_usage_expr(
+        expr: &Expr,
+        name: &str,
+        has_deref_use: &mut bool,
+        has_bare_use: &mut bool,
+    ) {
+        match expr {
+            Expr::Ident(id) => {
+                if id.sym == name {
+                    *has_bare_use = true;
+                }
+            }
+            Expr::Slice(s) => {
+                if matches!(&*s.obj, Expr::Ident(id) if id.sym == name) {
+                    *has_deref_use = true;
+                } else {
+                    Self::walk_capture_usage_expr(&s.obj, name, has_deref_use, has_bare_use);
+                }
+                if let Some(st) = &s.start {
+                    Self::walk_capture_usage_expr(st, name, has_deref_use, has_bare_use);
+                }
+                if let Some(e) = &s.end {
+                    Self::walk_capture_usage_expr(e, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Index { obj, index } => {
+                if matches!(&**obj, Expr::Ident(id) if id.sym == name) {
+                    *has_deref_use = true;
+                } else {
+                    Self::walk_capture_usage_expr(obj, name, has_deref_use, has_bare_use);
+                }
+                Self::walk_capture_usage_expr(index, name, has_deref_use, has_bare_use);
+            }
+            Expr::Member(m) | Expr::OptMember(m) => {
+                if matches!(&*m.obj, Expr::Ident(id) if id.sym == name) {
+                    *has_deref_use = true;
+                } else {
+                    Self::walk_capture_usage_expr(&m.obj, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Call(c) | Expr::OptCall(c) | Expr::New(c) => {
+                Self::walk_capture_usage_expr(&c.callee, name, has_deref_use, has_bare_use);
+                for a in &c.args {
+                    Self::walk_capture_usage_expr(a, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Bin(b) => {
+                Self::walk_capture_usage_expr(&b.left, name, has_deref_use, has_bare_use);
+                Self::walk_capture_usage_expr(&b.right, name, has_deref_use, has_bare_use);
+            }
+            Expr::Deref(inner)
+            | Expr::Unwrap(inner)
+            | Expr::BitNot(inner)
+            | Expr::Neg(inner)
+            | Expr::ComptimeExpr(inner)
+            | Expr::Question(inner)
+            | Expr::ErrWrap(inner)
+            | Expr::BoxNew(inner)
+            | Expr::Await(inner)
+            | Expr::Move(inner)
+            | Expr::Borrow(inner, _)
+            | Expr::ReflectOf { expr: inner, .. } => {
+                Self::walk_capture_usage_expr(inner, name, has_deref_use, has_bare_use);
+            }
+            Expr::EnumInit(e) => {
+                if let Some(fs) = &e.fields {
+                    for f in fs {
+                        Self::walk_capture_usage_expr(&f.val, name, has_deref_use, has_bare_use);
+                    }
+                }
+                if let Some(args) = &e.tuple_args {
+                    for a in args {
+                        Self::walk_capture_usage_expr(a, name, has_deref_use, has_bare_use);
+                    }
+                }
+            }
+            Expr::Object(fs) | Expr::Dict(fs) => {
+                for f in fs {
+                    Self::walk_capture_usage_expr(&f.val, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Array(elems) => {
+                for e in elems {
+                    Self::walk_capture_usage_expr(e, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::QuestionFallback { expr, fallback, .. } => {
+                Self::walk_capture_usage_expr(expr, name, has_deref_use, has_bare_use);
+                Self::walk_capture_usage_expr(fallback, name, has_deref_use, has_bare_use);
+            }
+            Expr::NullCoalesce { left, right } => {
+                Self::walk_capture_usage_expr(left, name, has_deref_use, has_bare_use);
+                Self::walk_capture_usage_expr(right, name, has_deref_use, has_bare_use);
+            }
+            Expr::Cast { expr, .. } => {
+                Self::walk_capture_usage_expr(expr, name, has_deref_use, has_bare_use);
+            }
+            Expr::If {
+                test, cons, alt, ..
+            } => {
+                Self::walk_capture_usage_expr(test, name, has_deref_use, has_bare_use);
+                Self::walk_capture_usage_expr(cons, name, has_deref_use, has_bare_use);
+                if let Some(a) = alt {
+                    Self::walk_capture_usage_expr(a, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Builtin(b) => {
+                for a in &b.args {
+                    Self::walk_capture_usage_expr(a, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Unsafe(b) | Expr::Comptime(b) | Expr::Arena(b) => {
+                for s in &b.body {
+                    Self::walk_capture_usage_stmt(s, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::LabeledBlock { block, .. } => {
+                for s in &block.body {
+                    Self::walk_capture_usage_stmt(s, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Break(_, val) | Expr::Return(_, val) | Expr::LabeledBreak(_, _, val) => {
+                if let Some(v) = val {
+                    Self::walk_capture_usage_expr(v, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Match(m) => {
+                Self::walk_capture_usage_expr(&m.disc, name, has_deref_use, has_bare_use);
+                for arm in &m.arms {
+                    if let Some(g) = &arm.guard {
+                        Self::walk_capture_usage_expr(g, name, has_deref_use, has_bare_use);
+                    }
+                    Self::walk_capture_usage_stmt(&arm.body, name, has_deref_use, has_bare_use);
+                }
+            }
+            Expr::Catch { expr, body, .. } => {
+                Self::walk_capture_usage_expr(expr, name, has_deref_use, has_bare_use);
+                Self::walk_capture_usage_stmt(body, name, has_deref_use, has_bare_use);
+            }
+            Expr::Zig(z) => {
+                if Self::code_contains_word(&z.code, name) {
+                    *has_bare_use = true;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn walk_capture_usage_stmt(
+        stmt: &Stmt,
+        name: &str,
+        has_deref_use: &mut bool,
+        has_bare_use: &mut bool,
+    ) {
+        match stmt {
+            Stmt::Expr(e) => Self::walk_capture_usage_expr(e, name, has_deref_use, has_bare_use),
+            Stmt::Return(r) => {
+                if let Some(arg) = &r.arg {
+                    Self::walk_capture_usage_expr(arg, name, has_deref_use, has_bare_use);
+                }
+            }
+            Stmt::Block(b)
+            | Stmt::UnsafeBlock(b)
+            | Stmt::ComptimeBlock(b)
+            | Stmt::ArenaBlock(b) => {
+                for s in &b.body {
+                    Self::walk_capture_usage_stmt(s, name, has_deref_use, has_bare_use);
+                }
+            }
+            Stmt::Var(v) => {
+                if let Some(init) = &v.init {
+                    Self::walk_capture_usage_expr(init, name, has_deref_use, has_bare_use);
+                }
+            }
+            Stmt::If(i) => {
+                Self::walk_capture_usage_expr(&i.test, name, has_deref_use, has_bare_use);
+                Self::walk_capture_usage_stmt(&i.cons, name, has_deref_use, has_bare_use);
+                if let Some(alt) = &i.alt {
+                    Self::walk_capture_usage_stmt(alt, name, has_deref_use, has_bare_use);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub(crate) fn should_auto_ptr_capture_self_variant(
+        &self,
+        variant_name: &str,
+        cap_name: &str,
+        arm_body: &Stmt,
+    ) -> bool {
+        let Some(payload_ty) = self.lookup_self_variant_payload_ty(variant_name) else {
+            return false;
+        };
+        if !self.is_value_container_payload(&payload_ty) {
+            return false;
+        }
+        let mut has_deref_use = false;
+        let mut has_bare_use = false;
+        Self::walk_capture_usage_stmt(arm_body, cap_name, &mut has_deref_use, &mut has_bare_use);
+        has_deref_use && !has_bare_use
     }
 }

@@ -1430,3 +1430,7 @@
 ## [2026-11-27] - 编译器 Sema 6 类假阳性全面修复：全仓 904 / 904 (100.0%) 生态包 `cpc check` 零失败绿灯
 - `cpc/src/sema/{type_infer,coerce,mod,safety,stmt_expr}.rs`: 修复 6 类静态类型推断假阳性（二元运算左侧整数字面量吸收右侧类型、`IfExpr` 分支字面量目标类型传播、`string` 切片推断为 `String`、重赋值不覆盖已声明类型、`@Vector(N,u8)→@Vector(N,u32)` 向量拓宽、`??`/浮点内建/`@as`/函数指针/常量数组长度/重赋值定长失效），通过 `bash scripts/sync_cpc.sh release` 正式发布，并向 `bun_agy` 与 `capsurf_agy` 广播生效。
 - 全仓验证：`cpc/target/release/cpc check` 扫描全部 904 个生态包达到 **904 / 904 PASS (0 failed)**。
+
+## [2026-11-27] - 紧急热修 `task-bun-20261127-enum-slice-by-val`：消除 `union(enum)`/tagged `enum` 只读方法返回内联数组切片的 Use-After-Return 隐患
+- `cpc/src/codegen/actor.rs`: 区分纯无负载枚举与带负载 tagged `enum`/`union(enum)`，新增 `returns_borrowed_view_in_ctx` 支持返回切片/指针/字符串或含借用视图的聚合类型（如 `Data.substring()`）时自动生成 `self: *const Self`。
+- `cpc/src/codegen/pattern.rs`: 对 `switch (self.*)` 中仅用于切片/索引/成员访问的固定数组/值容器变体自动提升为指针捕获 `|*arr|`，彻底避免按值拷贝栈帧悬垂切片（已通过 `clobberStack()` 运行时内存区间实测并发布 release 版 `cpc`）。

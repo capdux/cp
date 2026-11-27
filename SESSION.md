@@ -7818,3 +7818,9 @@
 - **任务编号**：`syntax-sema-20261127-6-false-positives-fixed`
 - **变更说明**：`cpc (release)` 已升级发布，修复 `cpc/src/sema/` 6 类静态类型推断假阳性（二元运算左侧整数字面量吸收、`IfExpr` 分支字面量传播、`string` 切片推断、重赋值保护、`@Vector` 拓宽、`??`/浮点内建/`@as`/函数指针/常量数组长度/重赋值定长失效），全仓 **904 / 904** 生态包 `cpc check` 达到 **100% 绿灯**。
 - **处理状态**：已发布并双端广播。
+
+### [2026-11-27 14:13] 下游工单紧急热修结单（来自 `bun_agy`）
+- **任务编号**：`task-bun-20261127-enum-slice-by-val`
+- **复现用例**：`/data/dev/cp/temp/repro_enum_slice_self_by_val.cp`
+- **根因与修复**：`cpc/src/codegen/actor.rs` 区分纯无负载 `enum` 与带负载 tagged `enum`/`union(enum)`，对返回切片/指针/字符串或含借用视图聚合类型的只读方法自动生成 `self: *const Self`（覆盖 `Data.slice`/`sliceZ`/`substring`）；`cpc/src/codegen/pattern.rs` 对 `switch (self.*)` 中仅做切片/索引/成员访问的固定数组/值容器变体自动提升为指针捕获 `|*arr|` 彻底消除 Use-After-Return 悬垂栈切片。
+- **验证与结单**：已直通同步回 `cpc_dev/src/codegen/`，执行 `bash scripts/sync_cpc.sh release` 原子部署生效，通过 `cargo test`、`clobberStack()` 运行时地址区间实测与 `/data/dev/bun/src/sql/shared/Data.cp` 验证，已调用 `resolve_task.py` 结单通知 `bun_agy`。

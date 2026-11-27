@@ -598,3 +598,7 @@
 ## 2026-11-27: `cpc/src/sema` 6 类假阳性清零（全仓 904/904 100% 绿灯）与下游双端广播
 - 依托 Phase 5 全仓 904 包 `cpc check` 体检精准定位 46 例剩余报错均属 Sema 静态类型推断假阳性（0 语法/借用/导入错误），在 `cpc_dev/src/sema/` 5 个文件中一次性根治 6 类推断缺口并回归 `cargo test --lib` (28/28) 与 `golden_and_fuzz` (6/6) 零回归。
 - 合并至 `cpc/src/sema/` 并发布 Release `cpc`，实测全仓 **904 / 904 PASS (100.0%)**；按 `COMM.md` 规范发出 `syntax-sema-20261127-6-false-positives-fixed` 双端广播通知 `bun_agy` 与 `capsurf_agy`。
+
+## 2026-11-27: 紧急热修 `bun_agy` 工单 `task-bun-20261127-enum-slice-by-val`（防 Use-After-Return 悬垂栈切片）
+- **根因**：两层叠加——① `actor.rs` 将带负载 tagged `enum` 一刀切按值传 `self: Data`，且未识别返回自身/含借用视图结构体（如 `Data.substring()`）；② `pattern.rs` 在 `switch (self.*)` 中生成值捕获 `|arr|` 会把 `[16]u8` 拷贝到栈上导致 `arr[0..4]` 悬垂。
+- **修复**：`actor.rs` 仅对纯无负载 `enum` 按值传参、对带负载 tagged `enum`/`union(enum)` 启用 `needs_const_ptr_self` 并深度识别含借用视图返回类型；`pattern.rs` 对固定数组/值容器变体自动提升为 `|*arr|`。通过 `clobberStack()` 运行时地址区间测试与 `bun/src/sql/shared/Data.cp` 验证，已部署 release `cpc`、直通同步 `cpc_dev` 并结单通知 `bun_agy`。
