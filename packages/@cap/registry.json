@@ -13865,6 +13865,352 @@
       "kind": "package",
       "aliases": [],
       "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "cssparser",
+      "source_repo": "https://github.com/servo/rust-cssparser",
+      "license": "MIT",
+      "cp_target": "@cap/cssparser",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "smawk",
+      "source_repo": "https://github.com/mgeisler/smawk",
+      "license": "MIT",
+      "cp_target": "@cap/smawk",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "email_address",
+      "source_repo": "https://github.com/johnstonskj/rust-email_address",
+      "license": "MIT",
+      "cp_target": "@cap/email-address",
+      "kind": "package",
+      "aliases": [
+        "email-address"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "wordwrap",
+      "source_repo": "https://github.com/substack/node-wordwrap",
+      "license": "MIT",
+      "cp_target": "@cap/wordwrap",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "jest-docblock",
+      "source_repo": "https://github.com/jestjs/jest",
+      "license": "MIT",
+      "cp_target": "@cap/jest-docblock",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "matchers",
+      "source_repo": "https://github.com/hawkw/matchers",
+      "license": "MIT",
+      "cp_target": "cap:regex",
+      "kind": "stdlib",
+      "aliases": [
+        "fancy-regex"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "fs_extra",
+      "source_repo": "https://github.com/webdesus/fs_extra",
+      "license": "MIT",
+      "cp_target": "cap:fs",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "instant",
+      "source_repo": "https://github.com/sebcrozet/instant",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:time",
+      "kind": "stdlib",
+      "aliases": [
+        "quanta"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "criterion",
+      "source_repo": "https://github.com/bheisler/criterion.rs",
+      "license": "Apache-2.0",
+      "cp_target": "@cap/tinybench",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ed25519-dalek",
+      "source_repo": "https://github.com/dalek-cryptography/curve25519-dalek",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/ed25519",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "rsa",
+      "source_repo": "https://github.com/RustCrypto/RSA",
+      "license": "MIT",
+      "cp_target": "cap:crypto",
+      "kind": "stdlib",
+      "aliases": [
+        "p256"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "plotters",
+      "source_repo": "https://github.com/plotters-rs/plotters",
+      "license": "MIT",
+      "cp_target": "@cap/plotters-svg",
+      "kind": "package",
+      "aliases": [
+        "plotters-backend"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "ureq",
+      "source_repo": "https://github.com/algesten/ureq",
+      "license": "MIT",
+      "cp_target": "cap:http",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "zlib-rs",
+      "source_repo": "https://github.com/trifectatechfoundation/zlib-rs",
+      "license": "Zlib",
+      "cp_target": "cap:zlib",
+      "kind": "stdlib",
+      "aliases": [
+        "fdeflate"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "image",
+      "source_repo": "https://github.com/image-rs/image",
+      "license": "MIT",
+      "cp_target": "cap:png",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "num-bigint-dig",
+      "source_repo": "https://github.com/dignifiedquire/num-bigint",
+      "license": "MIT",
+      "cp_target": "@cap/crypto-bigint",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "terminal_size",
+      "source_repo": "https://github.com/eminence/terminal-size",
+      "license": "MIT",
+      "cp_target": "@cap/cli-width",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "encode_unicode",
+      "source_repo": "https://github.com/tormol/encode_unicode",
+      "license": "MIT",
+      "cp_target": "@cap/utf-8",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "predicates-tree",
+      "source_repo": "https://github.com/assert-rs/predicates-rs",
+      "license": "MIT",
+      "cp_target": "@cap/predicates",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "wasm-streams",
+      "source_repo": "https://github.com/MattiasBuelens/wasm-streams",
+      "license": "MIT",
+      "cp_target": "@web/streams",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "term",
+      "source_repo": "https://github.com/Stebalien/term",
+      "license": "MIT",
+      "cp_target": "cap:ansi",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "x25519-dalek",
+      "source_repo": "https://github.com/dalek-cryptography/curve25519-dalek",
+      "license": "BSD-3-Clause",
+      "cp_target": "@cap/curve25519-dalek",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "jpeg-decoder",
+      "source_repo": "https://github.com/image-rs/jpeg-decoder",
+      "license": "MIT",
+      "cp_target": "cap:jpeg",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "selectors",
+      "source_repo": "https://github.com/servo/stylo",
+      "license": "MPL-2.0",
+      "cp_target": "@cap/css-what",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "crates.io",
+      "source_name": "dtoa-short",
+      "source_repo": "https://github.com/upsuper/dtoa-short",
+      "license": "MPL-2.0",
+      "cp_target": "@cap/lexical-write-float",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "ansis",
+      "source_repo": "https://github.com/webdiscus/ansis",
+      "license": "ISC",
+      "cp_target": "@cap/picocolors",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "events-universal",
+      "source_repo": "https://github.com/holepunchto/events-universal",
+      "license": "Apache-2.0",
+      "cp_target": "cap:event",
+      "kind": "stdlib",
+      "aliases": [
+        "emittery"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "big-integer",
+      "source_repo": "https://github.com/peterolson/BigInteger.js",
+      "license": "Unlicense",
+      "cp_target": "@cap/bigint-u256",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "deep-extend",
+      "source_repo": "https://github.com/unclechu/node-deep-extend",
+      "license": "MIT",
+      "cp_target": "@cap/deepmerge",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "style-to-js",
+      "source_repo": "https://github.com/remarkablemark/style-to-js",
+      "license": "MIT",
+      "cp_target": "@cap/cssstyle",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "spdx-license-ids",
+      "source_repo": "https://github.com/jslicense/spdx-license-ids",
+      "license": "CC0-1.0",
+      "cp_target": "@cap/spdx-expression-parse",
+      "kind": "package",
+      "aliases": [
+        "spdx-exceptions"
+      ],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "language-subtag-registry",
+      "source_repo": "https://github.com/mattcg/language-subtag-registry",
+      "license": "CC0-1.0",
+      "cp_target": "@cap/language-tags",
+      "kind": "package",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
+    },
+    {
+      "source_registry": "npm",
+      "source_name": "secure-json-parse",
+      "source_repo": "https://github.com/fastify/secure-json-parse",
+      "license": "BSD-3-Clause",
+      "cp_target": "cap:json",
+      "kind": "stdlib",
+      "aliases": [],
+      "absorbed_at": "2026-11-27"
     }
   ]
 }

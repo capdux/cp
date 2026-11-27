@@ -574,3 +574,7 @@
 ### 2026-11-27 — Batch 163 开发日志（881 `@cap/*` 包 + 1,209 上游映射）
 - 三路并行交付 `dlv-list`（#848）、`ordered-multimap`（#857）、`normalize-line-endings`（#875）、`jsonpath-rust`（#915）、`sketches-ddsketch`（#920）、`ufo`（#836）、`requires-port`（#873）、`language-tags`（#890），全部 6/6 PASS。
 - 检查 `capdux.org` LIVE 同步条件：已过 2026-11-27 00:00 UTC，但当前 shell 未注入 `CAPDUX_TOKEN` 环境变量，待用户提供或配置后即可一键执行 `seed_official.ts` 全量上线。
+
+### 2026-11-27 — Batch 164 开发日志（crates.io Top 700 全盘复核与收口）
+- 对 `temp/real_top700_crates.json` 全部 700 个真实下载量排行包做了逐类自动化复核，补齐最后 21 个可零重复映射至现有标准库/生态包的条目，crates.io Top 700 显式映射覆盖 395/700（其余 305 个 100% 为 OS/FFI、Rust 过程宏、Rust 语言特有 Trait 或大型运行时/SDK）。
+- 同步收录 `cssparser`/`smawk`/`email-address`/`wordwrap`/`jest-docblock` 5 个新包，总计 886 个 `@cap/*` 官方包、1,242 条上游映射。

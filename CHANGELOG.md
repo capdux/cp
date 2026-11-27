@@ -1396,3 +1396,8 @@
 ### 2026-11-27 — Batch 163（双平台 Real Top 836–920：+8 `@cap/*` 包，总计 881 `@cap/*`）
 - 新增 `packages/@cap/{dlv-list,ordered-multimap,normalize-line-endings,jsonpath-rust,sketches-ddsketch,ufo,requires-port,language-tags}/` 及对应 8 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（总映射 1,209）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
+
+### 2026-11-27 — Batch 164（+5 `@cap/*` 包 + 28 条零重复映射，crates.io Top 700 显式映射达 395/700，总计 886 `@cap/*`）
+- 新增 `packages/@cap/{cssparser,smawk,email-address,wordwrap,jest-docblock}/` 及对应 5 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
+- 补齐 crates.io Top 700 剩余 16 条（覆盖 21 个 crate）及 Top 900–1000 共 12 条零重复标准库/已有生态映射
+- 更新 `packages/@cap/registry.json`（总映射 **1,242**）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。

@@ -1203,3 +1203,12 @@ const h = cap.hash.wyhash("hello");
 - `@cap/ufo` (`npm:ufo` #836, MIT) — UnJS URL 协议检测、双斜杠清理与路径段安全拼接工具。
 - `@cap/requires-port` (`npm:requires-port` #873, MIT) — URL 协议默认端口查询与非默认端口判定器。
 - `@cap/language-tags` (`npm:language-tags` #890, MIT) — BCP 47 / RFC 5646 语言标签解析、规范大小写格式化与 RFC 4647 前缀匹配器。
+
+### Batch 164 — 双平台 Top 850–935 + crates.io Top 700 零重复映射彻底收口（5 packages + 28 mappings; 886 `@cap/*` + 1,242 mappings!）
+
+- `@cap/cssparser` (`crates.io:cssparser` #865, MIT) — CSS Syntax Level 3 19 变体词法分析器。
+- `@cap/smawk` (`crates.io:smawk` #905, MIT) — 矩阵行最小值与全单调性校验/分治求解器。
+- `@cap/email-address` (`crates.io:email_address` #935, MIT) — RFC 5321/5322 邮箱地址解析与校验器。
+- `@cap/wordwrap` (`npm:wordwrap` #850, MIT) — 零堆软/硬列宽文本自动换行器。
+- `@cap/jest-docblock` (`npm:jest-docblock` #880, MIT) — `/** @pragma val */` 注释块提取、解析与打印器。
+- 补齐 crates.io Top 700 与 Top 900–1000 共 28 条零重复标准库/已有生态映射（`matchers`/`fancy-regex`/`fs_extra`/`instant`/`quanta`/`criterion`/`ed25519-dalek`/`rsa`/`p256`/`plotters`/`ureq`/`zlib-rs`/`fdeflate`/`image`/`num-bigint-dig`/`terminal_size`/`encode_unicode`/`predicates-tree`/`wasm-streams`/`term`/`x25519-dalek`/`jpeg-decoder`/`selectors` 等）。

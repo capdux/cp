@@ -1,0 +1,15 @@
+{
+  "name": "@cap/smawk",
+  "version": "0.3.2",
+  "description": "Zero-heap SMAWK / monotone matrix row-minima algorithm and total monotonicity checker in pure CP",
+  "entry": "src/index.cp",
+  "license": "MIT",
+  "author": "CP Official Team",
+  "source": {
+    "ecosystem": "crates.io",
+    "package": "smawk",
+    "version": "0.3.2",
+    "license": "MIT",
+    "repository": "https://github.com/mgeisler/smawk"
+  }
+}
