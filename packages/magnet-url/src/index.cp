@@ -1,6 +1,9 @@
 // @cap/magnet-uri — Zero-heap BitTorrent Magnet URI (BEP-9 / BEP-53) parser & builder
 // Clean-room MIT implementation for CP (compatible with npm magnet-uri & Rust magnet-url).
 
+import { toLowerByte, eqIgnoreCase, isHexDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const HASH_UNKNOWN: u8 = 0;
 pub const HASH_BTIH_HEX: u8 = 1;    // 40-char SHA-1 hex (BitTorrent v1)
 pub const HASH_BTIH_BASE32: u8 = 2; // 32-char SHA-1 Base32 (BitTorrent v1)
@@ -16,21 +19,6 @@ pub struct MagnetLink {
     pub valid: bool,
 }
 
-fn toLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') { return c + 32; }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLower(a[i]) != toLower(b[i])) { return false; }
-        i += 1;
-    }
-    return true;
-}
-
 fn startsWithIgnoreCase(s: string, prefix: string): bool {
     if (s.len < prefix.len) { return false; }
     return eqIgnoreCase(s[0..prefix.len], prefix);
@@ -39,9 +27,7 @@ fn startsWithIgnoreCase(s: string, prefix: string): bool {
 fn isHexStr(s: string): bool {
     let i: usize = 0;
     while (i < s.len) {
-        let c: u8 = s[i];
-        let ok: bool = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-        if (!ok) { return false; }
+        if (!isHexDigit(s[i])) { return false; }
         i += 1;
     }
     return s.len > 0;
@@ -50,7 +36,7 @@ fn isHexStr(s: string): bool {
 fn isBase32Str(s: string): bool {
     let i: usize = 0;
     while (i < s.len) {
-        let c: u8 = toLower(s[i]);
+        let c: u8 = toLowerByte(s[i]);
         let ok: bool = (c >= 'a' && c <= 'z') || (c >= '2' && c <= '7');
         if (!ok) { return false; }
         i += 1;
@@ -170,12 +156,7 @@ pub fn parseMagnet(uri: string): MagnetLink {
 
 fn appendBytes(dst: []u8, pos: usize, src: string): usize {
     if (pos + src.len > dst.len) { return 0; }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return pos + src.len;
+    return writeStr(src, dst, pos);
 }
 
 /// Format a BitTorrent v1 magnet URI (`magnet:?xt=urn:btih:<hash>[&dn=<name>][&tr=<tracker>...]`).

@@ -1,6 +1,9 @@
 // @cap/urn-parse — Zero-allocation RFC 8141 URN Parser, Equivalence & Formatter
 // Clean-room MIT implementation in pure CP.
 
+import { isAlnum, toLowerByte, eqIgnoreCase, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct Urn {
     pub nid: string,
     pub nss: string,
@@ -21,50 +24,8 @@ fn invalidUrn() -> Urn {
     };
 }
 
-fn isSpace(b: u8) -> bool {
+fn urnIsSpace(b: u8) -> bool {
     return b == 32 || b == 9;
-}
-
-fn isAlphaNum(b: u8) -> bool {
-    if (b >= 48 && b <= 57) { return true; }
-    if (b >= 65 && b <= 90) { return true; }
-    if (b >= 97 && b <= 122) { return true; }
-    return false;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn strEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Validates an RFC 8141 Namespace Identifier (NID):
@@ -73,13 +34,13 @@ pub fn isValidNid(nid: string) -> bool {
     if (nid.len < 2 || nid.len > 32) {
         return false;
     }
-    if (!isAlphaNum(nid[0]) || !isAlphaNum(nid[nid.len - 1])) {
+    if (!isAlnum(nid[0]) || !isAlnum(nid[nid.len - 1])) {
         return false;
     }
     let i: usize = 1;
     while (i + 1 < nid.len) {
         const ch = nid[i];
-        if (!isAlphaNum(ch) && ch != 45) {
+        if (!isAlnum(ch) && ch != 45) {
             return false;
         }
         i += 1;
@@ -91,10 +52,10 @@ pub fn isValidNid(nid: string) -> bool {
 pub fn parseUrn(input: string) -> Urn {
     let a: usize = 0;
     let b: usize = input.len;
-    while (a < b && isSpace(input[a])) {
+    while (a < b && urnIsSpace(input[a])) {
         a += 1;
     }
-    while (b > a && isSpace(input[b - 1])) {
+    while (b > a && urnIsSpace(input[b - 1])) {
         b -= 1;
     }
     const s = input[a..b];
@@ -211,12 +172,7 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushLowerSlice(dst: []u8, pos: usize, src: string) -> i64 {
@@ -225,7 +181,7 @@ fn pushLowerSlice(dst: []u8, pos: usize, src: string) -> i64 {
     }
     let i: usize = 0;
     while (i < src.len) {
-        dst[pos + i] = toLowerAscii(src[i]);
+        dst[pos + i] = toLowerByte(src[i]);
         i += 1;
     }
     return (pos + src.len) as i64;

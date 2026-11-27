@@ -1,3 +1,5 @@
+import { readU64LE, writeU64LE } from "cap:bin";
+
 fn seaU64(hi: u32, lo: u32): u64 {
     return ((hi as u64) << 32) | (lo as u64);
 }
@@ -12,18 +14,6 @@ fn seaMul64(a: u64, b: u64): u64 {
     let p2: u64 = (ah * bl) & 0xFFFFFFFF;
     let hi: u64 = ((p0 >> 32) + p1 + p2) & 0xFFFFFFFF;
     return (hi << 32) | (p0 & 0xFFFFFFFF);
-}
-
-fn seaReadU64Le(buf: []u8, off: usize): u64 {
-    let lo: u32 = (buf[off] as u32)
-        | ((buf[off + 1] as u32) << 8)
-        | ((buf[off + 2] as u32) << 16)
-        | ((buf[off + 3] as u32) << 24);
-    let hi: u32 = (buf[off + 4] as u32)
-        | ((buf[off + 5] as u32) << 8)
-        | ((buf[off + 6] as u32) << 16)
-        | ((buf[off + 7] as u32) << 24);
-    return seaU64(hi, lo);
 }
 
 pub fn seahashDiffuse(x_in: u64): u64 {
@@ -55,7 +45,7 @@ pub struct SeaHasher {
     }
 
     pub static fn withSeeds(k1: u64, k2: u64, k3: u64, k4: u64): SeaHasher {
-        let zbuf: [8]u8 = [0; 8];
+        let zbuf: [8]u8 = undefined;
         return SeaHasher {
             a: k1,
             b: k2,
@@ -77,12 +67,8 @@ pub struct SeaHasher {
             _.written = _.written + 8;
             return;
         }
-        let tmp: [8]u8 = [0; 8];
-        let i: usize = 0;
-        while (i < 8) {
-            tmp[i] = ((word >> ((i * 8) as u64)) & 255) as u8;
-            i = i + 1;
-        }
+        let tmp: [8]u8 = undefined;
+        * = writeU64LE(tmp[0..8], 0, word);
         _.writeBytes(tmp[0..8]);
     }
 
@@ -93,7 +79,7 @@ pub struct SeaHasher {
             _.buf_len = _.buf_len + 1;
             _.written = _.written + 1;
             if (_.buf_len == 8) {
-                let w: u64 = seaReadU64Le(_.buf[0..8], 0);
+                let w: u64 = readU64LE(_.buf[0..8], 0) ?? 0;
                 let next_a: u64 = seahashDiffuse(_.a ^ w);
                 _.a = _.b;
                 _.b = _.c;
@@ -112,7 +98,7 @@ pub struct SeaHasher {
             _.buf_len = _.buf_len + 1;
             _.written = _.written + 1;
             if (_.buf_len == 8) {
-                let w: u64 = seaReadU64Le(_.buf[0..8], 0);
+                let w: u64 = readU64LE(_.buf[0..8], 0) ?? 0;
                 let next_a: u64 = seahashDiffuse(_.a ^ w);
                 _.a = _.b;
                 _.b = _.c;

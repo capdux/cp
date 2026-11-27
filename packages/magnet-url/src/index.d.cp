@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { toLowerByte, eqIgnoreCase, isHexDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class MagnetLink {
     hash_kind: u8,
     info_hash: string,
@@ -10,8 +12,6 @@ export class MagnetLink {
     valid: bool,
 }
 
-export fn toLower(c: u8): u8;
-export fn eqIgnoreCase(a: string, b: string): bool;
 export fn startsWithIgnoreCase(s: string, prefix: string): bool;
 export fn isHexStr(s: string): bool;
 export fn isBase32Str(s: string): bool;

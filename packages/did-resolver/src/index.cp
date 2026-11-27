@@ -1,6 +1,9 @@
 // @cap/did-parse — Zero-heap W3C DID Core 1.0 parser, validator & formatter
 // MIT License (clean-room CP implementation)
 
+import { strEq, isHexDigit, isAlnum, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct DidUrl {
     pub did: string,
     pub method: string,
@@ -9,26 +12,6 @@ pub struct DidUrl {
     pub query: string,
     pub fragment: string,
     pub valid: bool,
-}
-
-fn bytesEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn isHex(c: u8) -> bool {
-    return (c >= '0' as u8 && c <= '9' as u8)
-        || (c >= 'a' as u8 && c <= 'f' as u8)
-        || (c >= 'A' as u8 && c <= 'F' as u8);
 }
 
 pub fn isValidMethod(method: string) -> bool {
@@ -59,15 +42,13 @@ pub fn isValidMethodId(id: string) -> bool {
     while (i < id.len) {
         const c: u8 = id[i];
         if (c == '%' as u8) {
-            if (i + 2 >= id.len || !isHex(id[i + 1]) || !isHex(id[i + 2])) {
+            if (i + 2 >= id.len || !isHexDigit(id[i + 1]) || !isHexDigit(id[i + 2])) {
                 return false;
             }
             i += 3;
             continue;
         }
-        const ok: bool = (c >= 'a' as u8 && c <= 'z' as u8)
-            || (c >= 'A' as u8 && c <= 'Z' as u8)
-            || (c >= '0' as u8 && c <= '9' as u8)
+        const ok: bool = isAlnum(c)
             || c == '.' as u8
             || c == '-' as u8
             || c == '_' as u8
@@ -91,60 +72,33 @@ pub fn parseDid(input: string) -> DidUrl {
         valid: false,
     };
 
-    if (input.len < 7 || !bytesEq(input[0..4], "did:")) {
+    if (input.len < 7 || !strEq(input[0..4], "did:")) {
         return fail;
     }
 
     // Extract optional #fragment
-    let frag_pos: usize = input.len;
-    let i: usize = 4;
-    while (i < input.len) {
-        if (input[i] == '#' as u8) {
-            frag_pos = i;
-            break;
-        }
-        i += 1;
-    }
+    const frag_pos: usize = findByte(input, '#' as u8, 4) ?? input.len;
     let fragment: string = "";
     if (frag_pos < input.len) {
         fragment = input[(frag_pos + 1)..input.len];
     }
 
     // Extract optional ?query before #fragment
-    let query_pos: usize = frag_pos;
-    let iq: usize = 4;
-    while (iq < frag_pos) {
-        if (input[iq] == '?' as u8) {
-            query_pos = iq;
-            break;
-        }
-        iq += 1;
-    }
+    const query_pos: usize = findByte(input[0..frag_pos], '?' as u8, 4) ?? frag_pos;
     let query: string = "";
     if (query_pos < frag_pos) {
         query = input[(query_pos + 1)..frag_pos];
     }
 
     // Extract optional /path before ?query
-    let path_pos: usize = query_pos;
-    let ip: usize = 4;
-    while (ip < query_pos) {
-        if (input[ip] == '/' as u8) {
-            path_pos = ip;
-            break;
-        }
-        ip += 1;
-    }
+    const path_pos: usize = findByte(input[0..query_pos], '/' as u8, 4) ?? query_pos;
     let path: string = "";
     if (path_pos < query_pos) {
         path = input[path_pos..query_pos];
     }
 
     // Bare DID is input[0..path_pos]
-    let c2: usize = 4;
-    while (c2 < path_pos && input[c2] != ':' as u8) {
-        c2 += 1;
-    }
+    const c2: usize = findByte(input[0..path_pos], ':' as u8, 4) ?? path_pos;
     if (c2 >= path_pos) {
         return fail;
     }
@@ -170,12 +124,7 @@ fn appendSlice(out: []u8, pos: usize, s: string) -> i64 {
     if (s.len > out.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, out, pos) as i64;
 }
 
 pub fn formatDid(method: string, id: string, fragment: string, out: []u8) -> usize {

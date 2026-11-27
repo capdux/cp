@@ -1,6 +1,11 @@
 // @cap/validator — Zero-allocation schema & format validation engine for CP
 // Clean-room MIT implementation inspired by npm `zod`, `validator`, `ajv` and Rust `validator`.
 
+import { isDigit, isAlpha, isAlnum, isHexDigit, toLowerByte, eqIgnoreCase, strEq, isAscii, startsWith, endsWith } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+
+export { isAscii, startsWith, endsWith };
+
 const MAX_VALIDATION_ERRORS: usize = 32;
 
 pub struct ValidationError {
@@ -12,43 +17,6 @@ pub struct ValidationError {
 // ---------------------------------------------------------------------------
 // Low-level ASCII / character helpers
 // ---------------------------------------------------------------------------
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn isAlphaNum(c: u8) -> bool {
-    return isAlpha(c) || isDigit(c);
-}
-
-fn isHexDigit(c: u8) -> bool {
-    return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
 
 fn parseUintDec(s: string, start: usize, end: usize) -> i64 {
     if (start >= end || end > s.len) {
@@ -74,24 +42,13 @@ fn parseUintDec(s: string, start: usize, end: usize) -> i64 {
 // String & basic predicates
 // ---------------------------------------------------------------------------
 
-pub fn isAscii(s: string) -> bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] > 127) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 pub fn isAlphanumeric(s: string) -> bool {
     if (s.len == 0) {
         return false;
     }
     let i: usize = 0;
     while (i < s.len) {
-        if (!isAlphaNum(s[i])) {
+        if (!isAlnum(s[i])) {
             return false;
         }
         i += 1;
@@ -163,7 +120,7 @@ pub fn isBase64(s: string) -> bool {
             if (pad_count > 0) {
                 return false;
             }
-            const ok = isAlphaNum(c) || c == '+' || c == '/' || c == '-' || c == '_';
+            const ok = isAlnum(c) || c == '+' || c == '/' || c == '-' || c == '_';
             if (!ok) {
                 return false;
             }
@@ -211,79 +168,15 @@ pub fn hasLenBetween(s: string, min_len: usize, max_len: usize) -> bool {
     return s.len >= min_len && s.len <= max_len;
 }
 
-pub fn startsWith(s: string, prefix: string) -> bool {
-    if (prefix.len > s.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-pub fn endsWith(s: string, suffix: string) -> bool {
-    if (suffix.len > s.len) {
-        return false;
-    }
-    const offset = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (s[offset + i] != suffix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 pub fn containsStr(s: string, needle: string) -> bool {
-    if (needle.len == 0) {
-        return true;
-    }
-    if (needle.len > s.len) {
-        return false;
-    }
-    let i: usize = 0;
-    const limit = s.len - needle.len;
-    while (i <= limit) {
-        let j: usize = 0;
-        let matched = true;
-        while (j < needle.len) {
-            if (s[i + j] != needle[j]) {
-                matched = false;
-                break;
-            }
-            j += 1;
-        }
-        if (matched) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return indexOfBytes(s, needle, 0) != null;
 }
 
 pub fn isOneOf(s: string, allowed: []string) -> bool {
     let i: usize = 0;
     while (i < allowed.len) {
-        const cand = allowed[i];
-        if (cand.len == s.len) {
-            let j: usize = 0;
-            let same = true;
-            while (j < s.len) {
-                if (s[j] != cand[j]) {
-                    same = false;
-                    break;
-                }
-                j += 1;
-            }
-            if (same) {
-                return true;
-            }
+        if (strEq(s, allowed[i])) {
+            return true;
         }
         i += 1;
     }
@@ -308,7 +201,7 @@ fn isValidDomainLabel(s: string, start: usize, end: usize) -> bool {
     let i = start;
     while (i < end) {
         const c = s[i];
-        if (!isAlphaNum(c) && c != '-') {
+        if (!isAlnum(c) && c != '-') {
             return false;
         }
         i += 1;
@@ -394,7 +287,7 @@ pub fn isEmail(s: string) -> bool {
             prev_dot = true;
         } else {
             prev_dot = false;
-            const ok = isAlphaNum(c) || c == '_' || c == '-' || c == '+' || c == '%' || c == '!' || c == '#';
+            const ok = isAlnum(c) || c == '_' || c == '-' || c == '+' || c == '%' || c == '!' || c == '#';
             if (!ok) {
                 return false;
             }
@@ -636,7 +529,7 @@ pub fn isUuid(s: string) -> bool {
 }
 
 fn isCrockfordBase32(c: u8) -> bool {
-    const lc = toLowerAscii(c);
+    const lc = toLowerByte(c);
     if (isDigit(lc)) {
         return true;
     }
@@ -715,7 +608,7 @@ pub fn isSemver(s: string) -> bool {
         let k = core_end + 1;
         while (k < s.len) {
             const c = s[k];
-            if (!isAlphaNum(c) && c != '.' && c != '-' && c != '+') {
+            if (!isAlnum(c) && c != '.' && c != '-' && c != '+') {
                 return false;
             }
             k += 1;

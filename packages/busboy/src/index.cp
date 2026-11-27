@@ -1,6 +1,8 @@
 // @cap/multipart-boundary — Zero-heap RFC 7578 multipart/form-data parser
 // MIT License (clean-room CP implementation)
 
+import { eqIgnoreCase, strEq, isAlnum } from "cap:ascii";
+
 pub struct MultipartPart {
     pub headers: string,
     pub body: string,
@@ -15,45 +17,8 @@ fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
 }
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn bytesEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn isBchar(c: u8) -> bool {
-    if ((c >= 'a' as u8 && c <= 'z' as u8)
-        || (c >= 'A' as u8 && c <= 'Z' as u8)
-        || (c >= '0' as u8 && c <= '9' as u8)) {
+    if (isAlnum(c)) {
         return true;
     }
     return c == '\'' as u8 || c == '(' as u8 || c == ')' as u8 || c == '+' as u8
@@ -161,7 +126,7 @@ fn matchBoundaryAt(payload: string, pos: usize, boundary: string) -> bool {
     if (payload[pos] != '-' as u8 || payload[pos + 1] != '-' as u8) {
         return false;
     }
-    if (!bytesEq(payload[(pos + 2)..(pos + need)], boundary)) {
+    if (!strEq(payload[(pos + 2)..(pos + need)], boundary)) {
         return false;
     }
     const after: usize = pos + need;

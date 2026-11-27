@@ -1,3 +1,5 @@
+import { readU32LE, readU64LE } from "cap:bin";
+
 fn xxhU64(hi: u32, lo: u32): u64 {
     return ((hi as u64) << 32) | (lo as u64);
 }
@@ -46,19 +48,6 @@ fn xxhRol64(x: u64, r: u64): u64 {
     return (x << r) | (x >> (64 - r));
 }
 
-fn xxhReadU32Le(buf: []u8, off: usize): u32 {
-    return (buf[off] as u32)
-        | ((buf[off + 1] as u32) << 8)
-        | ((buf[off + 2] as u32) << 16)
-        | ((buf[off + 3] as u32) << 24);
-}
-
-fn xxhReadU64Le(buf: []u8, off: usize): u64 {
-    let lo: u32 = xxhReadU32Le(buf, off);
-    let hi: u32 = xxhReadU32Le(buf, off + 4);
-    return xxhU64(hi, lo);
-}
-
 fn xxh32Round(acc: u32, lane: u32): u32 {
     let p1: u32 = 2654435761; // 0x9E3779B1
     let p2: u32 = 2246822519; // 0x85EBCA77
@@ -96,7 +85,7 @@ pub struct XxHash32 {
     pub static fn withSeed(seed: u32): XxHash32 {
         let p1: u32 = 2654435761;
         let p2: u32 = 2246822519;
-        let zbuf: [16]u8 = [0; 16];
+        let zbuf: [16]u8 = undefined;
         return XxHash32 {
             seed: seed,
             v1: xxhAdd32(xxhAdd32(seed, p1), p2),
@@ -122,10 +111,10 @@ pub struct XxHash32 {
             _.buf_len = _.buf_len + 1;
             _.total_len = _.total_len + 1;
             if (_.buf_len == 16) {
-                _.v1 = xxh32Round(_.v1, xxhReadU32Le(_.buf[0..16], 0));
-                _.v2 = xxh32Round(_.v2, xxhReadU32Le(_.buf[0..16], 4));
-                _.v3 = xxh32Round(_.v3, xxhReadU32Le(_.buf[0..16], 8));
-                _.v4 = xxh32Round(_.v4, xxhReadU32Le(_.buf[0..16], 12));
+                _.v1 = xxh32Round(_.v1, readU32LE(_.buf[0..16], 0) ?? 0);
+                _.v2 = xxh32Round(_.v2, readU32LE(_.buf[0..16], 4) ?? 0);
+                _.v3 = xxh32Round(_.v3, readU32LE(_.buf[0..16], 8) ?? 0);
+                _.v4 = xxh32Round(_.v4, readU32LE(_.buf[0..16], 12) ?? 0);
                 _.buf_len = 0;
             }
             i = i + 1;
@@ -139,10 +128,10 @@ pub struct XxHash32 {
             _.buf_len = _.buf_len + 1;
             _.total_len = _.total_len + 1;
             if (_.buf_len == 16) {
-                _.v1 = xxh32Round(_.v1, xxhReadU32Le(_.buf[0..16], 0));
-                _.v2 = xxh32Round(_.v2, xxhReadU32Le(_.buf[0..16], 4));
-                _.v3 = xxh32Round(_.v3, xxhReadU32Le(_.buf[0..16], 8));
-                _.v4 = xxh32Round(_.v4, xxhReadU32Le(_.buf[0..16], 12));
+                _.v1 = xxh32Round(_.v1, readU32LE(_.buf[0..16], 0) ?? 0);
+                _.v2 = xxh32Round(_.v2, readU32LE(_.buf[0..16], 4) ?? 0);
+                _.v3 = xxh32Round(_.v3, readU32LE(_.buf[0..16], 8) ?? 0);
+                _.v4 = xxh32Round(_.v4, readU32LE(_.buf[0..16], 12) ?? 0);
                 _.buf_len = 0;
             }
             i = i + 1;
@@ -169,10 +158,7 @@ pub struct XxHash32 {
 
         let pos: usize = 0;
         while (pos + 4 <= _.buf_len) {
-            let lane: u32 = (_.buf[pos] as u32)
-                | ((_.buf[pos + 1] as u32) << 8)
-                | ((_.buf[pos + 2] as u32) << 16)
-                | ((_.buf[pos + 3] as u32) << 24);
+            let lane: u32 = readU32LE(_.buf[0.._.buf_len], pos) ?? 0;
             h = xxhAdd32(h, xxhMul32(lane, p3));
             h = xxhMul32(xxhRol32(h, 17), p4);
             pos = pos + 4;
@@ -205,7 +191,7 @@ pub struct XxHash64 {
     pub static fn withSeed(seed: u64): XxHash64 {
         let p1: u64 = xxh64Prime1();
         let p2: u64 = xxh64Prime2();
-        let zbuf: [32]u8 = [0; 32];
+        let zbuf: [32]u8 = undefined;
         return XxHash64 {
             seed: seed,
             v1: xxhAdd64(xxhAdd64(seed, p1), p2),
@@ -231,10 +217,10 @@ pub struct XxHash64 {
             _.buf_len = _.buf_len + 1;
             _.total_len = _.total_len + 1;
             if (_.buf_len == 32) {
-                _.v1 = xxh64Round(_.v1, xxhReadU64Le(_.buf[0..32], 0));
-                _.v2 = xxh64Round(_.v2, xxhReadU64Le(_.buf[0..32], 8));
-                _.v3 = xxh64Round(_.v3, xxhReadU64Le(_.buf[0..32], 16));
-                _.v4 = xxh64Round(_.v4, xxhReadU64Le(_.buf[0..32], 24));
+                _.v1 = xxh64Round(_.v1, readU64LE(_.buf[0..32], 0) ?? 0);
+                _.v2 = xxh64Round(_.v2, readU64LE(_.buf[0..32], 8) ?? 0);
+                _.v3 = xxh64Round(_.v3, readU64LE(_.buf[0..32], 16) ?? 0);
+                _.v4 = xxh64Round(_.v4, readU64LE(_.buf[0..32], 24) ?? 0);
                 _.buf_len = 0;
             }
             i = i + 1;
@@ -248,10 +234,10 @@ pub struct XxHash64 {
             _.buf_len = _.buf_len + 1;
             _.total_len = _.total_len + 1;
             if (_.buf_len == 32) {
-                _.v1 = xxh64Round(_.v1, xxhReadU64Le(_.buf[0..32], 0));
-                _.v2 = xxh64Round(_.v2, xxhReadU64Le(_.buf[0..32], 8));
-                _.v3 = xxh64Round(_.v3, xxhReadU64Le(_.buf[0..32], 16));
-                _.v4 = xxh64Round(_.v4, xxhReadU64Le(_.buf[0..32], 24));
+                _.v1 = xxh64Round(_.v1, readU64LE(_.buf[0..32], 0) ?? 0);
+                _.v2 = xxh64Round(_.v2, readU64LE(_.buf[0..32], 8) ?? 0);
+                _.v3 = xxh64Round(_.v3, readU64LE(_.buf[0..32], 16) ?? 0);
+                _.v4 = xxh64Round(_.v4, readU64LE(_.buf[0..32], 24) ?? 0);
                 _.buf_len = 0;
             }
             i = i + 1;
@@ -282,24 +268,13 @@ pub struct XxHash64 {
 
         let pos: usize = 0;
         while (pos + 8 <= _.buf_len) {
-            let lo: u32 = (_.buf[pos] as u32)
-                | ((_.buf[pos + 1] as u32) << 8)
-                | ((_.buf[pos + 2] as u32) << 16)
-                | ((_.buf[pos + 3] as u32) << 24);
-            let hi: u32 = (_.buf[pos + 4] as u32)
-                | ((_.buf[pos + 5] as u32) << 8)
-                | ((_.buf[pos + 6] as u32) << 16)
-                | ((_.buf[pos + 7] as u32) << 24);
-            let k1: u64 = xxh64Round(0, xxhU64(hi, lo));
+            let k1: u64 = xxh64Round(0, readU64LE(_.buf[0.._.buf_len], pos) ?? 0);
             h = h ^ k1;
             h = xxhAdd64(xxhMul64(xxhRol64(h, 27), p1), p4);
             pos = pos + 8;
         }
         if (pos + 4 <= _.buf_len) {
-            let lane32: u32 = (_.buf[pos] as u32)
-                | ((_.buf[pos + 1] as u32) << 8)
-                | ((_.buf[pos + 2] as u32) << 16)
-                | ((_.buf[pos + 3] as u32) << 24);
+            let lane32: u32 = readU32LE(_.buf[0.._.buf_len], pos) ?? 0;
             h = h ^ xxhMul64(lane32 as u64, p1);
             h = xxhAdd64(xxhMul64(xxhRol64(h, 23), p2), p3);
             pos = pos + 4;

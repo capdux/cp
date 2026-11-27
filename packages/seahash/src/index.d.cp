@@ -1,8 +1,8 @@
 // Type definitions for CP
 
+import { readU64LE, writeU64LE } from "cap:bin";
 export fn seaU64(hi: u32, lo: u32): u64;
 export fn seaMul64(a: u64, b: u64): u64;
-export fn seaReadU64Le(buf: []u8, off: usize): u64;
 export fn seahashDiffuse(x_in: u64): u64;
 export class SeaHasher {
     a: u64,

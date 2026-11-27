@@ -1,6 +1,9 @@
 // @cap/purl — Zero-allocation Package URL (PURL) Parser, Validator & Canonical Formatter
 // Clean-room MIT implementation in pure CP (pkg:type/namespace/name@version?qualifiers#subpath).
 
+import { isAlpha, isDigit, toLowerByte, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct Purl {
     pub pkg_type: string,
     pub namespace: string,
@@ -23,23 +26,8 @@ fn invalidPurl() -> Purl {
     };
 }
 
-fn isSpace(b: u8) -> bool {
+fn purlIsSpace(b: u8) -> bool {
     return b == 32 || b == 9;
-}
-
-fn isAlpha(b: u8) -> bool {
-    return (b >= 65 && b <= 90) || (b >= 97 && b <= 122);
-}
-
-fn isDigit(b: u8) -> bool {
-    return b >= 48 && b <= 57;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
 }
 
 /// Validates a PURL `type`: must start with an ASCII letter followed by letters, digits, `.`, `+`, or `-`.
@@ -74,10 +62,10 @@ fn trimSlashes(s: string) -> string {
 pub fn parsePurl(input: string) -> Purl {
     let a: usize = 0;
     let b: usize = input.len;
-    while (a < b && isSpace(input[a])) {
+    while (a < b && purlIsSpace(input[a])) {
         a += 1;
     }
-    while (b > a && isSpace(input[b - 1])) {
+    while (b > a && purlIsSpace(input[b - 1])) {
         b -= 1;
     }
     if (b - a < 5) {
@@ -85,11 +73,7 @@ pub fn parsePurl(input: string) -> Purl {
     }
 
     // Must start with "pkg:" (case-insensitive)
-    if (toLowerAscii(input[a]) != 112
-        || toLowerAscii(input[a + 1]) != 107
-        || toLowerAscii(input[a + 2]) != 103
-        || input[a + 3] != 58)
-    {
+    if (!eqIgnoreCase(input[a..(a + 4)], "pkg:")) {
         return invalidPurl();
     }
 
@@ -192,20 +176,6 @@ pub fn parsePurl(input: string) -> Purl {
     };
 }
 
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 /// Zero-copy lookup of a qualifier value by `key` (case-insensitive) in `purl.qualifiers`.
 /// Returns `""` if not found.
 pub fn getQualifier(purl: Purl, key: string) -> string {
@@ -239,12 +209,7 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushLowerSlice(dst: []u8, pos: usize, src: string) -> i64 {
@@ -253,7 +218,7 @@ fn pushLowerSlice(dst: []u8, pos: usize, src: string) -> i64 {
     }
     let i: usize = 0;
     while (i < src.len) {
-        dst[pos + i] = toLowerAscii(src[i]);
+        dst[pos + i] = toLowerByte(src[i]);
         i += 1;
     }
     return (pos + src.len) as i64;

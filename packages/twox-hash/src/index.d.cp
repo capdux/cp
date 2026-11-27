@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { readU32LE, readU64LE } from "cap:bin";
 export fn xxhU64(hi: u32, lo: u32): u64;
 export fn xxhAdd32(a: u32, b: u32): u32;
 export fn xxhSub32(a: u32, b: u32): u32;
@@ -9,8 +10,6 @@ export fn xxhAdd64(a: u64, b: u64): u64;
 export fn xxhSub64(a: u64, b: u64): u64;
 export fn xxhMul64(a: u64, b: u64): u64;
 export fn xxhRol64(x: u64, r: u64): u64;
-export fn xxhReadU32Le(buf: []u8, off: usize): u32;
-export fn xxhReadU64Le(buf: []u8, off: usize): u64;
 export fn xxh32Round(acc: u32, lane: u32): u32;
 export fn xxh64Prime1(): u64;
 export fn xxh64Prime2(): u64;

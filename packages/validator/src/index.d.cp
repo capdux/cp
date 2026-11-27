@@ -1,19 +1,14 @@
 // Type definitions for CP
 
+import { isDigit, isAlpha, isAlnum, isHexDigit, toLowerByte, eqIgnoreCase, strEq, isAscii, startsWith, endsWith } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 export class ValidationError {
     field: string,
     code: string,
     message: string,
 }
 
-export fn isDigit(c: u8): bool;
-export fn isAlpha(c: u8): bool;
-export fn isAlphaNum(c: u8): bool;
-export fn isHexDigit(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn eqIgnoreCase(a: string, b: string): bool;
 export fn parseUintDec(s: string, start: usize, end: usize): i64;
-export fn isAscii(s: string): bool;
 export fn isAlphanumeric(s: string): bool;
 export fn isNumeric(s: string): bool;
 export fn isHex(s: string): bool;
@@ -22,8 +17,6 @@ export fn isSlug(s: string): bool;
 export fn hasMinLen(s: string, min_len: usize): bool;
 export fn hasMaxLen(s: string, max_len: usize): bool;
 export fn hasLenBetween(s: string, min_len: usize, max_len: usize): bool;
-export fn startsWith(s: string, prefix: string): bool;
-export fn endsWith(s: string, suffix: string): bool;
 export fn containsStr(s: string, needle: string): bool;
 export fn isOneOf(s: string, allowed: []string): bool;
 export fn isValidDomainLabel(s: string, start: usize, end: usize): bool;

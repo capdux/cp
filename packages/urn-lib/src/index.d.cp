@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isAlnum, toLowerByte, eqIgnoreCase, strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class Urn {
     nid: string,
     nss: string,
@@ -10,11 +12,7 @@ export class Urn {
 }
 
 export fn invalidUrn(): Urn;
-export fn isSpace(b: u8): bool;
-export fn isAlphaNum(b: u8): bool;
-export fn toLowerAscii(b: u8): u8;
-export fn eqIgnoreCase(a: string, b: string): bool;
-export fn strEq(a: string, b: string): bool;
+export fn urnIsSpace(b: u8): bool;
 export fn isValidNid(nid: string): bool;
 export fn parseUrn(input: string): Urn;
 export fn urnEquivalent(a: Urn, b: Urn): bool;

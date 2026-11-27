@@ -1,32 +1,7 @@
 // @cap/cors-match — Zero-heap CORS origin & preflight validation engine
 // Clean-room MIT implementation for CP (compatible with npm cors & Rust tower-http::cors).
 
-fn toLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') { return c + 32; }
-    return c;
-}
-
-fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn eqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLower(a[i]) != toLower(b[i])) { return false; }
-        i += 1;
-    }
-    return true;
-}
-
-fn trimSpaces(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && isSpace(s[start])) { start += 1; }
-    while (end > start && isSpace(s[end - 1])) { end -= 1; }
-    return s[start..end];
-}
+import { toLowerByte, isSpace, eqIgnoreCase, trim } from "cap:ascii";
 
 fn findSchemeSep(s: string): i64 {
     let i: usize = 0;
@@ -47,7 +22,7 @@ pub fn isValidOrigin(origin: string): bool {
     let scheme_end: usize = sep as usize;
     let i: usize = 0;
     while (i < scheme_end) {
-        let c: u8 = toLower(origin[i]);
+        let c: u8 = toLowerByte(origin[i]);
         let ok: bool = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.';
         if (!ok) { return false; }
         i += 1;
@@ -125,7 +100,7 @@ pub fn matchOriginList(origin: string, patterns: []const string, allow_credentia
 
 /// Check if an HTTP method (case-insensitive) is allowed by a comma-separated `allowed_methods` list (or `"*"`).
 pub fn isMethodAllowed(method: string, allowed_methods: string): bool {
-    let m: string = trimSpaces(method);
+    let m: string = trim(method);
     if (m.len == 0) { return false; }
     let i: usize = 0;
     while (i < allowed_methods.len) {
@@ -133,7 +108,7 @@ pub fn isMethodAllowed(method: string, allowed_methods: string): bool {
         while (i < allowed_methods.len && allowed_methods[i] != ',') {
             i += 1;
         }
-        let token: string = trimSpaces(allowed_methods[seg_start..i]);
+        let token: string = trim(allowed_methods[seg_start..i]);
         if ((token.len == 1 && token[0] == '*') || eqIgnoreCase(m, token)) {
             return true;
         }
@@ -144,7 +119,7 @@ pub fn isMethodAllowed(method: string, allowed_methods: string): bool {
 
 /// Validate every header in a comma-separated `Access-Control-Request-Headers` list against `allowed_headers` (or `"*"`).
 pub fn areHeadersAllowed(req_headers: string, allowed_headers: string): bool {
-    let trimmed_req: string = trimSpaces(req_headers);
+    let trimmed_req: string = trim(req_headers);
     if (trimmed_req.len == 0) { return true; }
 
     let i: usize = 0;
@@ -153,7 +128,7 @@ pub fn areHeadersAllowed(req_headers: string, allowed_headers: string): bool {
         while (i < trimmed_req.len && trimmed_req[i] != ',') {
             i += 1;
         }
-        let h: string = trimSpaces(trimmed_req[seg_start..i]);
+        let h: string = trim(trimmed_req[seg_start..i]);
         if (h.len > 0) {
             if (!isMethodAllowed(h, allowed_headers)) {
                 return false;
