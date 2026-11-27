@@ -1,23 +1,17 @@
 // @cap/bearer-auth — Zero-allocation RFC 6750 HTTP Bearer Token & Challenge Utilities
 // Clean-room MIT implementation in pure CP.
 
-fn isSpace(b: u8) -> bool {
+import { isAlnum, eqIgnoreCase } from "cap:ascii";
+import { ctEqual } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
+fn isAuthSpace(b: u8) -> bool {
     return b == 32 || b == 9;
 }
 
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn isB64TokenCore(b: u8) -> bool {
-    if (b >= 65 && b <= 90) { return true; }  // A-Z
-    if (b >= 97 && b <= 122) { return true; } // a-z
-    if (b >= 48 && b <= 57) { return true; }  // 0-9
-    // - . _ ~ + /
-    return b == 45 || b == 46 || b == 95 || b == 126 || b == 43 || b == 47;
+    // A-Z a-z 0-9 - . _ ~ + /
+    return isAlnum(b) || b == 45 || b == 46 || b == 95 || b == 126 || b == 43 || b == 47;
 }
 
 /// Validates RFC 6750 `b64token` characters (`A-Z a-z 0-9 - . _ ~ + / =`, non-empty).
@@ -52,29 +46,22 @@ pub fn isValidTokenChars(token: string) -> bool {
 pub fn extractBearer(header: string) -> string {
     let a: usize = 0;
     let b: usize = header.len;
-    while (a < b && isSpace(header[a])) {
+    while (a < b && isAuthSpace(header[a])) {
         a += 1;
     }
-    while (b > a && isSpace(header[b - 1])) {
+    while (b > a && isAuthSpace(header[b - 1])) {
         b -= 1;
     }
     if (b - a < 7) {
         return "";
     }
     // Check "bearer" case-insensitively followed by space/tab
-    if (toLowerAscii(header[a]) != 98
-        || toLowerAscii(header[a + 1]) != 101
-        || toLowerAscii(header[a + 2]) != 97
-        || toLowerAscii(header[a + 3]) != 114
-        || toLowerAscii(header[a + 4]) != 101
-        || toLowerAscii(header[a + 5]) != 114
-        || !isSpace(header[a + 6]))
-    {
+    if (!eqIgnoreCase(header[a..(a + 6)], "bearer") || !isAuthSpace(header[a + 6])) {
         return "";
     }
 
     let tok_start = a + 7;
-    while (tok_start < b && isSpace(header[tok_start])) {
+    while (tok_start < b && isAuthSpace(header[tok_start])) {
         tok_start += 1;
     }
     if (tok_start >= b) {
@@ -96,25 +83,13 @@ pub fn formatBearer(token: string, out: []u8) -> usize {
     if (needed > out.len) {
         return 0;
     }
-    const prefix = "Bearer ";
-    let i: usize = 0;
-    while (i < 7) {
-        out[i] = prefix[i];
-        i += 1;
-    }
-    let k: usize = 0;
-    while (k < token.len) {
-        out[7 + k] = token[k];
-        k += 1;
-    }
-    return needed;
+    let pos = writeStr("Bearer ", out, 0);
+    pos = writeStr(token, out, pos);
+    return pos;
 }
 
 fn isBase64UrlChar(b: u8) -> bool {
-    if (b >= 65 && b <= 90) { return true; }
-    if (b >= 97 && b <= 122) { return true; }
-    if (b >= 48 && b <= 57) { return true; }
-    return b == 45 || b == 95; // '-', '_'
+    return isAlnum(b) || b == 45 || b == 95; // '-', '_'
 }
 
 /// Zero-copy structural precheck: returns true if `token` has exactly 3 non-empty
@@ -149,16 +124,7 @@ pub fn isJwtLike(token: string) -> bool {
 
 /// Constant-time byte slice equality check resistant to timing side-channels.
 pub fn constantTimeEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let diff: u8 = 0;
-    let i: usize = 0;
-    while (i < a.len) {
-        diff |= a[i] ^ b[i];
-        i += 1;
-    }
-    return diff == 0;
+    return ctEqual(a, b);
 }
 
 /// Extracts a Bearer token from `header` and verifies it in constant time against `expected_token`.
@@ -174,12 +140,7 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushQuotedParam(dst: []u8, pos: usize, first: bool, key: string, val: string) -> i64 {

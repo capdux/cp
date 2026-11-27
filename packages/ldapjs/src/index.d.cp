@@ -1,14 +1,12 @@
 // Type definitions for CP
 
+import { isAlpha, isAlnum, isDigit, isHexDigit, eqIgnoreCase, hexVal } from "cap:ascii";
 export class RdnAttr {
     attr: string,
     raw_value: string,
 }
 
 export fn isWs(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn eqIgnoreCase(a: string, b: string): bool;
-export fn fromHex(c: u8): i32;
 export fn isValidAttrType(attr: string): bool;
 export fn isEscapedAt(s: string, start: usize, idx: usize): bool;
 export fn hasValidEscapes(raw: string): bool;

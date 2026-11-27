@@ -1,6 +1,8 @@
 // @cap/ldap-dn — Zero-heap RFC 4514 LDAP Distinguished Name parser & escaper
 // MIT License (clean-room CP implementation)
 
+import { isAlpha, isAlnum, isDigit, isHexDigit, eqIgnoreCase, hexVal } from "cap:ascii";
+
 pub struct RdnAttr {
     pub attr: string,
     pub raw_value: string,
@@ -10,55 +12,17 @@ fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
 }
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn fromHex(c: u8) -> i32 {
-    if (c >= '0' as u8 && c <= '9' as u8) {
-        return (c - ('0' as u8)) as i32;
-    }
-    if (c >= 'a' as u8 && c <= 'f' as u8) {
-        return (c - ('a' as u8) + 10) as i32;
-    }
-    if (c >= 'A' as u8 && c <= 'F' as u8) {
-        return (c - ('A' as u8) + 10) as i32;
-    }
-    return -1;
-}
-
 fn isValidAttrType(attr: string) -> bool {
     if (attr.len == 0) {
         return false;
     }
     const c0: u8 = attr[0];
     // Descr: [A-Za-z][A-Za-z0-9-]*
-    if ((c0 >= 'a' as u8 && c0 <= 'z' as u8) || (c0 >= 'A' as u8 && c0 <= 'Z' as u8)) {
+    if (isAlpha(c0)) {
         let i: usize = 1;
         while (i < attr.len) {
             const c: u8 = attr[i];
-            const ok: bool = (c >= 'a' as u8 && c <= 'z' as u8)
-                || (c >= 'A' as u8 && c <= 'Z' as u8)
-                || (c >= '0' as u8 && c <= '9' as u8)
-                || c == '-' as u8;
-            if (!ok) {
+            if (!isAlnum(c) && c != '-' as u8) {
                 return false;
             }
             i += 1;
@@ -66,14 +30,14 @@ fn isValidAttrType(attr: string) -> bool {
         return true;
     }
     // Numeric OID: [0-9]+(\.[0-9]+)*
-    if (c0 >= '0' as u8 && c0 <= '9' as u8) {
+    if (isDigit(c0)) {
         if (attr[attr.len - 1] == '.' as u8) {
             return false;
         }
         let i: usize = 1;
         while (i < attr.len) {
             const c: u8 = attr[i];
-            if (!((c >= '0' as u8 && c <= '9' as u8) || c == '.' as u8)) {
+            if (!(isDigit(c) || c == '.' as u8)) {
                 return false;
             }
             if (c == '.' as u8 && attr[i - 1] == '.' as u8) {
@@ -107,7 +71,7 @@ fn hasValidEscapes(raw: string) -> bool {
             if (i + 1 >= raw.len) {
                 return false;
             }
-            if (i + 2 < raw.len && fromHex(raw[i + 1]) >= 0 && fromHex(raw[i + 2]) >= 0) {
+            if (i + 2 < raw.len && isHexDigit(raw[i + 1]) && isHexDigit(raw[i + 2])) {
                 i += 3;
             } else {
                 i += 2;
@@ -269,13 +233,13 @@ pub fn unescapeValue(raw: string, out: []u8) -> usize {
                 return 0;
             }
             if (i + 2 < raw.len) {
-                const h0: i32 = fromHex(raw[i + 1]);
-                const h1: i32 = fromHex(raw[i + 2]);
-                if (h0 >= 0 && h1 >= 0) {
+                const h0 = hexVal(raw[i + 1]);
+                const h1 = hexVal(raw[i + 2]);
+                if (h0 != null && h1 != null) {
                     if (pos >= out.len) {
                         return 0;
                     }
-                    out[pos] = (((h0 as u32) << 4) | (h1 as u32)) as u8;
+                    out[pos] = (((h0 ?? (0 as u8)) << 4) | (h1 ?? (0 as u8)));
                     pos += 1;
                     i += 3;
                     continue;

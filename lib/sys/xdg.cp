@@ -13,7 +13,7 @@ pub struct XdgEnv {
     config_dirs: ([]const u8)?;
     data_dirs: ([]const u8)?;
 
-    fn empty(home: ([]const u8)?): XdgEnv {
+    static fn empty(home: ([]const u8)?): XdgEnv {
         return XdgEnv {
             home: home,
             config_home: null,

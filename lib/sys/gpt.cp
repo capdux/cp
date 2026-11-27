@@ -377,7 +377,7 @@ pub struct GptEntryIter {
         };
     }
 
-    fn initFromHeader(header: GptHeader, entries_bytes: []const u8, skip_unused: bool): GptEntryIter {
+    static fn initFromHeader(header: GptHeader, entries_bytes: []const u8, skip_unused: bool): GptEntryIter {
         return GptEntryIter{
             .data = entries_bytes,
             .entry_size = header.part_entry_size as usize,

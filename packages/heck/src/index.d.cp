@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isDigit, toLowerByte, toUpperByte } from "cap:ascii";
 export class HckRune {
     cp: u32,
     len: usize,

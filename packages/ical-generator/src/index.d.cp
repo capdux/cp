@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class IcalEvent {
     uid: &[]u8,
     dtstart: &[]u8,
@@ -40,8 +42,6 @@ export class IcalWriter {
     fn written(): &[]u8;
 }
 
-export fn toUpperAscii(b: u8): u8;
-export fn eqIgnoreCaseUpper(src: &[]u8, start: usize, end: usize, upper_target: &[]u8): bool;
 export fn emptyParsedEvent(): ParsedEvent;
 export fn parseFirstEvent(ics: &[]u8): ParsedEvent;
 export fn unescapeText(src: &[]u8, dst: []u8): i64;

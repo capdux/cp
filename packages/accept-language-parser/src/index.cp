@@ -1,6 +1,8 @@
 // @cap/accept-lang — Zero-heap RFC 9110 / BCP-47 Accept-Language parser & negotiator
 // MIT License (clean-room CP implementation)
 
+import { isAlnum, isDigit, eqIgnoreCase, findByte } from "cap:ascii";
+
 pub struct LangRange {
     pub tag: string,
     pub primary: string,
@@ -10,27 +12,6 @@ pub struct LangRange {
 
 fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 fn isValidTag(tag: string) -> bool {
@@ -43,12 +24,7 @@ fn isValidTag(tag: string) -> bool {
     let i: usize = 0;
     while (i < tag.len) {
         const c: u8 = tag[i];
-        const ok: bool = (c >= 'a' as u8 && c <= 'z' as u8)
-            || (c >= 'A' as u8 && c <= 'Z' as u8)
-            || (c >= '0' as u8 && c <= '9' as u8)
-            || c == '-' as u8
-            || c == '_' as u8;
-        if (!ok) {
+        if (!isAlnum(c) && c != '-' as u8 && c != '_' as u8) {
             return false;
         }
         i += 1;
@@ -100,7 +76,7 @@ pub fn parseQuality(s: string) -> i32 {
         let i: usize = start + 2;
         while (i < end) {
             const d: u8 = s[i];
-            if (d < '0' as u8 || d > '9' as u8) {
+            if (!isDigit(d)) {
                 return -1;
             }
             val += ((d - ('0' as u8)) as u32) * mult;
@@ -118,16 +94,11 @@ pub fn parseAcceptLanguage(header: string, out: []LangRange) -> usize {
     let pos: usize = 0;
 
     while (pos < header.len && count < out.len) {
-        let seg_end: usize = pos;
-        while (seg_end < header.len && header[seg_end] != ',' as u8) {
-            seg_end += 1;
-        }
+        const seg_end: usize = findByte(header, ',' as u8, pos) ?? header.len;
 
         // Split tag from optional ";q=..." parameters
-        let semi: usize = pos;
-        while (semi < seg_end && header[semi] != ';' as u8) {
-            semi += 1;
-        }
+        const semiOpt = findByte(header[pos..seg_end], ';' as u8, 0);
+        const semi: usize = if (semiOpt != null) { pos + (semiOpt ?? 0) } else { seg_end };
 
         let t_s: usize = pos;
         let t_e: usize = semi;

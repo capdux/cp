@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isSpace, isDigit } from "cap:ascii";
 export class PathSegment {
     is_index: bool,
     key: string,
@@ -15,8 +16,6 @@ export class ParsedDotPath {
 
 export fn emptySegment(): PathSegment;
 export fn invalidPath(): ParsedDotPath;
-export fn isSpace(c: u8): bool;
-export fn isDigit(c: u8): bool;
 export fn parseUsize(s: string): usize?;
 export fn parseDotPath(path: string, key_buf: []u8): ParsedDotPath;
 export fn skipSpaces(s: string, pos: usize): usize;

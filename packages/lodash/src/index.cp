@@ -1,6 +1,8 @@
 // @cap/dot-prop — Zero-allocation dot-path parser & deep JSON path reader for CP
 // Clean-room MIT implementation inspired by npm `dot-prop` + `lodash.get` / `dlv` (~280M/wk).
 
+import { isSpace, isDigit } from "cap:ascii";
+
 const MAX_SEGMENTS: usize = 32;
 const MAX_KEY_BUF: usize = 512;
 
@@ -43,14 +45,6 @@ fn invalidPath() -> ParsedDotPath {
         count: 0 as usize,
         valid: false,
     };
-}
-
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
 }
 
 fn parseUsize(s: string) -> usize? {

@@ -1,6 +1,9 @@
 // @cap/mail-addr — Zero-allocation RFC 5322 email address & recipient list parser/formatter for CP
 // Clean-room MIT implementation inspired by npm `addressparser` / `email-addresses` (10M/wk) and `nodemailer`.
 
+import { isAlnum, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_ADDRESSES: usize = 32;
 
 pub struct MailAddress {
@@ -33,25 +36,9 @@ fn invalidMail() -> MailAddress {
     };
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn trimSpaces(s: string) -> string {
-    let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) {
-        start += 1;
-    }
-    let end: usize = s.len;
-    while (end > start && isSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
 // Strip leading and trailing whitespace and balanced (...) comments (outside quotes)
 fn stripEdgeComments(raw: string) -> string {
-    let s = trimSpaces(raw);
+    let s = trim(raw);
     let changed = true;
     while (changed && s.len > 0) {
         changed = false;
@@ -72,7 +59,7 @@ fn stripEdgeComments(raw: string) -> string {
                 } else if (c == ')') {
                     depth -= 1;
                     if (depth == 0) {
-                        s = trimSpaces(s[(i + 1)..s.len]);
+                        s = trim(s[(i + 1)..s.len]);
                         closed = true;
                         changed = true;
                         break;
@@ -101,7 +88,7 @@ fn stripEdgeComments(raw: string) -> string {
                 } else if (c == '(') {
                     depth -= 1;
                     if (depth == 0) {
-                        s = trimSpaces(s[0..idx]);
+                        s = trim(s[0..idx]);
                         opened = true;
                         changed = true;
                         break;
@@ -158,7 +145,7 @@ fn isValidDomain(domain: string) -> bool {
     let i: usize = 0;
     while (i < domain.len) {
         const c = domain[i];
-        const ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '.';
+        const ok = isAlnum(c) || c == '-' || c == '.';
         if (!ok) {
             return false;
         }
@@ -177,7 +164,7 @@ fn isValidDomain(domain: string) -> bool {
 }
 
 fn makeAddrFromSpec(displayName: string, addrSpec: string) -> MailAddress {
-    const spec = trimSpaces(addrSpec);
+    const spec = trim(addrSpec);
     if (spec.len == 0) {
         return invalidMail();
     }
@@ -235,7 +222,7 @@ fn unwrapDisplayName(rawName: string) -> string {
 }
 
 pub fn parseMailbox(raw: string) -> MailAddress {
-    const trimmed = trimSpaces(raw);
+    const trimmed = trim(raw);
     if (trimmed.len == 0) {
         return invalidMail();
     }
@@ -370,7 +357,7 @@ pub fn parseAddressList(raw: string) -> AddressList {
         }
 
         if (atEnd || isComma) {
-            const seg = trimSpaces(raw[segStart..i]);
+            const seg = trim(raw[segStart..i]);
             if (seg.len > 0 && count < MAX_ADDRESSES) {
                 items[count] = parseMailbox(seg);
                 count += 1;
@@ -384,17 +371,6 @@ pub fn parseAddressList(raw: string) -> AddressList {
         items: items,
         count: count,
     };
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
 }
 
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
@@ -423,7 +399,7 @@ pub fn formatMailbox(m: MailAddress, out: []u8) -> string {
     }
     let pos: usize = 0;
     if (m.display_name.len == 0) {
-        pos = appendStr(out, pos, m.address);
+        pos = writeStr(m.address, out, pos);
         return out[0..pos];
     }
 
@@ -440,11 +416,11 @@ pub fn formatMailbox(m: MailAddress, out: []u8) -> string {
         }
         pos = appendByte(out, pos, '"');
     } else {
-        pos = appendStr(out, pos, m.display_name);
+        pos = writeStr(m.display_name, out, pos);
     }
 
-    pos = appendStr(out, pos, " <");
-    pos = appendStr(out, pos, m.address);
+    pos = writeStr(" <", out, pos);
+    pos = writeStr(m.address, out, pos);
     pos = appendByte(out, pos, '>');
     return out[0..pos];
 }

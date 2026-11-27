@@ -2,6 +2,8 @@
 // Zero-allocation Rust `heck` v0.5 compatible case conversion engine for CP.
 // Clean-room MIT implementation.
 
+import { isDigit, toLowerByte, toUpperByte } from "cap:ascii";
+
 // ---------------------------------------------------------------------------
 // Private UTF-8 & Case Helpers (prefixed with hck)
 // ---------------------------------------------------------------------------
@@ -72,10 +74,13 @@ fn hckDecodeUtf8(src: string, offset: usize): HckRune {
 }
 
 fn hckClassify(cp: u32): u8 {
-    if (cp >= 0x41 && cp <= 0x5A) { return HCK_CLS_UPPER; }
-    if (cp >= 0x61 && cp <= 0x7A) { return HCK_CLS_LOWER; }
-    if (cp >= 0x30 && cp <= 0x39) { return HCK_CLS_DIGIT; }
-    if (cp < 0x80) { return HCK_CLS_SEP; }
+    if (cp < 0x80) {
+        const b = cp as u8;
+        if (b >= 0x41 && b <= 0x5A) { return HCK_CLS_UPPER; }
+        if (b >= 0x61 && b <= 0x7A) { return HCK_CLS_LOWER; }
+        if (isDigit(b)) { return HCK_CLS_DIGIT; }
+        return HCK_CLS_SEP;
+    }
     // Latin-1 Supplement uppercase/lowercase letters
     if ((cp >= 0x00C0 && cp <= 0x00D6) || (cp >= 0x00D8 && cp <= 0x00DE)) { return HCK_CLS_UPPER; }
     if ((cp >= 0x00DF && cp <= 0x00F6) || (cp >= 0x00F8 && cp <= 0x00FF)) { return HCK_CLS_LOWER; }
@@ -94,7 +99,7 @@ fn hckClassify(cp: u32): u8 {
 }
 
 fn hckToLowerCp(cp: u32): u32 {
-    if (cp >= 0x41 && cp <= 0x5A) { return cp + 32; }
+    if (cp < 0x80) { return toLowerByte(cp as u8) as u32; }
     if ((cp >= 0x00C0 && cp <= 0x00D6) || (cp >= 0x00D8 && cp <= 0x00DE)) { return cp + 32; }
     if (cp >= 0x0391 && cp <= 0x03AB) { return cp + 32; }
     if (cp >= 0x0410 && cp <= 0x042F) { return cp + 32; }
@@ -102,7 +107,7 @@ fn hckToLowerCp(cp: u32): u32 {
 }
 
 fn hckToUpperCp(cp: u32): u32 {
-    if (cp >= 0x61 && cp <= 0x7A) { return cp - 32; }
+    if (cp < 0x80) { return toUpperByte(cp as u8) as u32; }
     if ((cp >= 0x00E0 && cp <= 0x00F6) || (cp >= 0x00F8 && cp <= 0x00FE)) { return cp - 32; }
     if (cp >= 0x03B1 && cp <= 0x03CB) { return cp - 32; }
     if (cp >= 0x0430 && cp <= 0x044F) { return cp - 32; }

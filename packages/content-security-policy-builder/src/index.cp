@@ -2,30 +2,8 @@
 // Zero-allocation W3C Content-Security-Policy 3 header builder and parser.
 // MIT clean-room pure CP implementation.
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn isAsciiSpace(c: u8): bool {
-    return c == (' ' as u8) || c == ('\t' as u8) || c == ('\r' as u8) || c == ('\n' as u8);
-}
-
-fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
+import { isSpace, isAlnum, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 fn isValidDirectiveName(name: []const u8): bool {
     if (name.len == 0) {
@@ -34,11 +12,7 @@ fn isValidDirectiveName(name: []const u8): bool {
     let i: usize = 0;
     while (i < name.len) {
         const c = name[i];
-        const isLower = c >= ('a' as u8) && c <= ('z' as u8);
-        const isUpper = c >= ('A' as u8) && c <= ('Z' as u8);
-        const isDigit = c >= ('0' as u8) && c <= ('9' as u8);
-        const isHyphen = c == ('-' as u8);
-        if (!isLower && !isUpper && !isDigit && !isHyphen) {
+        if (!isAlnum(c) && c != ('-' as u8)) {
             return false;
         }
         i += 1;
@@ -110,29 +84,16 @@ pub struct CspBuilder {
         }
 
         if (_.count > 0) {
-            _.buf[_.pos] = ';' as u8;
-            _.buf[_.pos + 1] = ' ' as u8;
-            _.pos += 2;
+            _.pos = writeStr("; ", _.buf, _.pos);
         }
 
-        let ni: usize = 0;
-        while (ni < name.len) {
-            _.buf[_.pos] = name[ni];
-            _.pos += 1;
-            ni += 1;
-        }
+        _.pos = writeStr(name, _.buf, _.pos);
 
         let wi: usize = 0;
         while (wi < sources.len) {
-            const src = sources[wi];
             _.buf[_.pos] = ' ' as u8;
             _.pos += 1;
-            let ci: usize = 0;
-            while (ci < src.len) {
-                _.buf[_.pos] = src[ci];
-                _.pos += 1;
-                ci += 1;
-            }
+            _.pos = writeStr(sources[wi], _.buf, _.pos);
             wi += 1;
         }
 
@@ -183,25 +144,22 @@ pub struct CspPolicy {
         let pos: usize = 0;
         while (pos < header.len) {
             // Find end of current ';'-delimited segment.
-            let segEnd = pos;
-            while (segEnd < header.len && header[segEnd] != (';' as u8)) {
-                segEnd += 1;
-            }
+            const segEnd = findByte(header, ';' as u8, pos) ?? header.len;
 
             // Trim leading and trailing ASCII whitespace.
             let start = pos;
-            while (start < segEnd && isAsciiSpace(header[start])) {
+            while (start < segEnd && isSpace(header[start])) {
                 start += 1;
             }
             let end = segEnd;
-            while (end > start && isAsciiSpace(header[end - 1])) {
+            while (end > start && isSpace(header[end - 1])) {
                 end -= 1;
             }
 
             if (start < end) {
                 // Extract directive name (up to first ASCII whitespace).
                 let nameEnd = start;
-                while (nameEnd < end && !isAsciiSpace(header[nameEnd])) {
+                while (nameEnd < end && !isSpace(header[nameEnd])) {
                     nameEnd += 1;
                 }
                 const nameSlice = header[start..nameEnd];
@@ -221,7 +179,7 @@ pub struct CspPolicy {
 
                 if (!isDup && count < 32) {
                     let valStart = nameEnd;
-                    while (valStart < end && isAsciiSpace(header[valStart])) {
+                    while (valStart < end && isSpace(header[valStart])) {
                         valStart += 1;
                     }
                     const valLen = end - valStart;
@@ -290,11 +248,11 @@ pub struct CspPolicy {
         }
         let i: usize = 0;
         while (i < val.len) {
-            while (i < val.len && isAsciiSpace(val[i])) {
+            while (i < val.len && isSpace(val[i])) {
                 i += 1;
             }
             const tokStart = i;
-            while (i < val.len && !isAsciiSpace(val[i])) {
+            while (i < val.len && !isSpace(val[i])) {
                 i += 1;
             }
             if (i > tokStart) {

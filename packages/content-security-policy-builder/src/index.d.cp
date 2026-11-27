@@ -1,8 +1,7 @@
 // Type definitions for CP
 
-export fn toLowerAscii(c: u8): u8;
-export fn isAsciiSpace(c: u8): bool;
-export fn eqIgnoreCase(a: &[]u8, b: &[]u8): bool;
+import { isSpace, isAlnum, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export fn isValidDirectiveName(name: &[]u8): bool;
 export fn isValidSourceValue(src: &[]u8): bool;
 export class CspBuilder {

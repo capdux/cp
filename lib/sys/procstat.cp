@@ -88,7 +88,7 @@ export struct ProcStat {
     rss_pages: i64,
 
     /// Parse a Linux `/proc/<pid>/stat` line (handles `comm` containing spaces or `)` via last-`)` scan).
-    pub fn parse(line: []const u8): ProcStat? {
+    pub static fn parse(line: []const u8): ProcStat? {
         // 1. Find first '(' and last ')'
         let open_p: usize? = null;
         let close_p: usize? = null;

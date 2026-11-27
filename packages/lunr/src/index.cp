@@ -3,6 +3,9 @@
 // Supports ASCII tokenization, lowercase normalization, incremental indexing,
 // multi-term BM25 (k1=1.2, b=0.75) ranking, and prefix autocomplete queries.
 
+import { isAlnum, toLowerByte } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+
 pub const MAX_DOCS: usize = 64;
 pub const MAX_TERMS: usize = 256;
 pub const MAX_POSTINGS: usize = 512;
@@ -33,33 +36,13 @@ struct Posting {
     next: i32,
 }
 
-fn isAlphaNum(b: u8) -> bool {
-    if (b >= 48 && b <= 57) {
-        return true; // '0'..'9'
-    }
-    if (b >= 65 && b <= 90) {
-        return true; // 'A'..'Z'
-    }
-    if (b >= 97 && b <= 122) {
-        return true; // 'a'..'z'
-    }
-    return false;
-}
-
-fn toLower(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn fnv1aLower(data: []const u8, start: usize, end: usize) -> u64 {
     const offset: u64 = ((0xCBF29CE4 as u64) << 32) | (0x84222325 as u64);
     const prime: u64 = ((0x00000100 as u64) << 32) | (0x000001B3 as u64);
     let h: u64 = offset;
     let i = start;
     while (i < end) {
-        h ^= toLower(data[i]) as u64;
+        h ^= toLowerByte(data[i]) as u64;
         h = h *% prime;
         i += 1;
     }
@@ -193,14 +176,14 @@ pub struct MiniSearch {
         const n = text.len;
 
         while (i < n) {
-            while (i < n && !isAlphaNum(text[i])) {
+            while (i < n && !isAlnum(text[i])) {
                 i += 1;
             }
             if (i >= n) {
                 break;
             }
             const start = i;
-            while (i < n && isAlphaNum(text[i])) {
+            while (i < n && isAlnum(text[i])) {
                 i += 1;
             }
             const end = i;
@@ -231,7 +214,7 @@ pub struct MiniSearch {
                 }
                 let c: usize = 0;
                 while (c < tlen) {
-                    tbuf[c] = toLower(text[start + c]);
+                    tbuf[c] = toLowerByte(text[start + c]);
                     c += 1;
                 }
                 const p_idx = _.posting_count;
@@ -298,14 +281,14 @@ pub struct MiniSearch {
         let i: usize = 0;
         const n = query.len;
         while (i < n) {
-            while (i < n && !isAlphaNum(query[i])) {
+            while (i < n && !isAlnum(query[i])) {
                 i += 1;
             }
             if (i >= n) {
                 break;
             }
             const start = i;
-            while (i < n && isAlphaNum(query[i])) {
+            while (i < n && isAlnum(query[i])) {
                 i += 1;
             }
             const h = fnv1aLower(query, start, i);
@@ -363,11 +346,11 @@ pub struct MiniSearch {
         let pbuf: [24]u8 = undefined;
         let plen: usize = 0;
         let pi: usize = 0;
-        while (pi < prefix.len && !isAlphaNum(prefix[pi])) {
+        while (pi < prefix.len && !isAlnum(prefix[pi])) {
             pi += 1;
         }
-        while (pi < prefix.len && isAlphaNum(prefix[pi]) && plen < MAX_TERM_LEN) {
-            pbuf[plen] = toLower(prefix[pi]);
+        while (pi < prefix.len && isAlnum(prefix[pi]) && plen < MAX_TERM_LEN) {
+            pbuf[plen] = toLowerByte(prefix[pi]);
             plen += 1;
             pi += 1;
         }
@@ -392,26 +375,15 @@ pub struct MiniSearch {
         let ti: usize = 0;
         while (ti < _.term_count) {
             const tlen = _.terms[ti].text_len as usize;
-            if (tlen >= plen) {
-                let ok = true;
-                let c: usize = 0;
-                while (c < plen) {
-                    if (_.terms[ti].text[c] != pbuf[c]) {
-                        ok = false;
-                        break;
-                    }
-                    c += 1;
-                }
-                if (ok) {
-                    const idf = bm25Idf(_.doc_count, _.terms[ti].df);
-                    let p_idx = _.terms[ti].head_posting;
-                    while (p_idx != NONE_IDX) {
-                        const post = _.postings[p_idx as usize];
-                        const slot = post.doc_slot as usize;
-                        scores[slot] += bm25TermScore(idf, post.tf, _.docs[slot].length, avgdl);
-                        matched[slot] = true;
-                        p_idx = post.next;
-                    }
+            if (tlen >= plen && bytesEq(_.terms[ti].text[0..plen], pbuf[0..plen])) {
+                const idf = bm25Idf(_.doc_count, _.terms[ti].df);
+                let p_idx = _.terms[ti].head_posting;
+                while (p_idx != NONE_IDX) {
+                    const post = _.postings[p_idx as usize];
+                    const slot = post.doc_slot as usize;
+                    scores[slot] += bm25TermScore(idf, post.tf, _.docs[slot].length, avgdl);
+                    matched[slot] = true;
+                    p_idx = post.next;
                 }
             }
             ti += 1;

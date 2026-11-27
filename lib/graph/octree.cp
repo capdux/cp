@@ -340,7 +340,7 @@ pub struct Octree {
 
     /// Initializes an octree covering `bounds` using caller-supplied `nodes` and `entries` pools.
     /// Returns `null` if `bounds` is inverted, pools are empty, or `leaf_capacity == 0`.
-    fn init(
+    static fn init(
         bounds: Aabb3,
         nodes: []OctreeNode,
         entries: []OctreeEntry,

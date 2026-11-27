@@ -1,6 +1,9 @@
 // @cap/ical — Zero-allocation RFC 5545 iCalendar (.ics) Generator & Parser
 // Clean-room MIT implementation in pure CP.
 
+import { eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct IcalEvent {
     pub uid: []const u8,
     pub dtstart: []const u8,
@@ -28,12 +31,7 @@ fn pushSlice(dst: []u8, pos: usize, src: []const u8) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushEscapedText(dst: []u8, pos: usize, src: []const u8) -> i64 {
@@ -180,27 +178,6 @@ pub struct IcalWriter {
     }
 }
 
-fn toUpperAscii(b: u8) -> u8 {
-    if (b >= 97 && b <= 122) {
-        return b - 32;
-    }
-    return b;
-}
-
-fn eqIgnoreCaseUpper(src: []const u8, start: usize, end: usize, upper_target: []const u8) -> bool {
-    if (end - start != upper_target.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < upper_target.len) {
-        if (toUpperAscii(src[start + i]) != upper_target[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn emptyParsedEvent() -> ParsedEvent {
     return ParsedEvent {
         uid_start: 0,
@@ -243,47 +220,45 @@ pub fn parseFirstEvent(ics: []const u8) -> ParsedEvent {
         }
 
         // Find ':'
-        let colon = line_start;
-        while (colon < line_end && ics[colon] != 58) {
-            colon += 1;
-        }
-        if (colon >= line_end) {
+        const colonOpt = findByte(ics[line_start..line_end], 58, 0);
+        if (colonOpt == null) {
             continue;
         }
+        const colon = line_start + (colonOpt ?? 0);
 
         // Property name ends at first ';' or ':'
-        let name_end = line_start;
-        while (name_end < colon && ics[name_end] != 59) {
-            name_end += 1;
-        }
+        const semiOpt = findByte(ics[line_start..colon], 59, 0);
+        const name_end = if (semiOpt != null) { line_start + (semiOpt ?? 0) } else { colon };
 
         const val_start = colon + 1;
         const val_len = line_end - val_start;
+        const prop_name = ics[line_start..name_end];
+        const prop_val = ics[val_start..line_end];
 
-        if (eqIgnoreCaseUpper(ics, line_start, name_end, "BEGIN") && eqIgnoreCaseUpper(ics, val_start, line_end, "VEVENT")) {
+        if (eqIgnoreCase(prop_name, "BEGIN") && eqIgnoreCase(prop_val, "VEVENT")) {
             in_event = true;
             continue;
         }
 
         if (in_event) {
-            if (eqIgnoreCaseUpper(ics, line_start, name_end, "END") && eqIgnoreCaseUpper(ics, val_start, line_end, "VEVENT")) {
+            if (eqIgnoreCase(prop_name, "END") && eqIgnoreCase(prop_val, "VEVENT")) {
                 ev.valid = true;
                 return ev;
             }
 
-            if (eqIgnoreCaseUpper(ics, line_start, name_end, "UID")) {
+            if (eqIgnoreCase(prop_name, "UID")) {
                 ev.uid_start = val_start;
                 ev.uid_len = val_len;
-            } else if (eqIgnoreCaseUpper(ics, line_start, name_end, "DTSTART")) {
+            } else if (eqIgnoreCase(prop_name, "DTSTART")) {
                 ev.dtstart_start = val_start;
                 ev.dtstart_len = val_len;
-            } else if (eqIgnoreCaseUpper(ics, line_start, name_end, "DTEND")) {
+            } else if (eqIgnoreCase(prop_name, "DTEND")) {
                 ev.dtend_start = val_start;
                 ev.dtend_len = val_len;
-            } else if (eqIgnoreCaseUpper(ics, line_start, name_end, "SUMMARY")) {
+            } else if (eqIgnoreCase(prop_name, "SUMMARY")) {
                 ev.summary_start = val_start;
                 ev.summary_len = val_len;
-            } else if (eqIgnoreCaseUpper(ics, line_start, name_end, "LOCATION")) {
+            } else if (eqIgnoreCase(prop_name, "LOCATION")) {
                 ev.location_start = val_start;
                 ev.location_len = val_len;
             }

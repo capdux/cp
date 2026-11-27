@@ -1,7 +1,9 @@
 // Type definitions for CP
 
-export fn isSpace(b: u8): bool;
-export fn toLowerAscii(b: u8): u8;
+import { isAlnum, eqIgnoreCase } from "cap:ascii";
+import { ctEqual } from "cap:bin";
+import { writeStr } from "cap:fmt";
+export fn isAuthSpace(b: u8): bool;
 export fn isB64TokenCore(b: u8): bool;
 export fn isValidTokenChars(token: string): bool;
 export fn extractBearer(header: string): string;

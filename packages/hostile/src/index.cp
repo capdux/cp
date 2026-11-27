@@ -9,6 +9,9 @@
 //   and aligned canonical formatter (`formatHosts`).
 // - Zero heap allocation: all `HostEntry` strings slice directly into the original input.
 
+import { eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 const MAX_HOST_ENTRIES: usize = 64;
 
 pub struct HostEntry {
@@ -42,38 +45,6 @@ fn isBlank(c: u8) -> bool {
     return c == ' ' || c == '\t' || c == '\r';
 }
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn containsChar(s: string, ch: u8) -> bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == ch) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
-}
-
 /// Parses `/etc/hosts` content into a zero-allocation `HostsTable`.
 pub fn parseHosts(content: string) -> HostsTable {
     let table = HostsTable.empty();
@@ -81,9 +52,7 @@ pub fn parseHosts(content: string) -> HostsTable {
 
     while (cursor < content.len) {
         const ls = cursor;
-        while (cursor < content.len && content[cursor] != '\n') {
-            cursor += 1;
-        }
+        cursor = findByte(content, '\n', cursor) ?? content.len;
         let le = cursor;
         if (le > ls && content[le - 1] == '\r') {
             le -= 1;
@@ -93,10 +62,8 @@ pub fn parseHosts(content: string) -> HostsTable {
         }
 
         // Strip inline `#` comment
-        let eff_end = ls;
-        while (eff_end < le && content[eff_end] != '#') {
-            eff_end += 1;
-        }
+        const hashOpt = findByte(content[ls..le], '#', 0);
+        const eff_end = if (hashOpt != null) { ls + (hashOpt ?? 0) } else { le };
 
         // Parse IP token
         let p = ls;
@@ -111,8 +78,8 @@ pub fn parseHosts(content: string) -> HostsTable {
             p += 1;
         }
         const ip = content[ip_start..p];
-        const is_v6 = containsChar(ip, ':');
-        const is_v4 = containsChar(ip, '.');
+        const is_v6 = findByte(ip, ':', 0) != null;
+        const is_v4 = findByte(ip, '.', 0) != null;
         if (!is_v6 && !is_v4) {
             continue;
         }
@@ -188,17 +155,6 @@ fn pushByte(out: []u8, pos: usize, b: u8) -> usize {
     return pos;
 }
 
-fn pushStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 /// Formats `table` into canonical aligned `/etc/hosts` syntax in caller-provided `out` (zero heap allocation).
 /// Consecutive entries sharing the same IP are grouped on a single line as aliases.
 pub fn formatHosts(table: HostsTable, out: []u8) -> string {
@@ -223,7 +179,7 @@ pub fn formatHosts(table: HostsTable, out: []u8) -> string {
             pos = pushByte(out, pos, '\n');
         }
         const cur_ip = table.entries[i].ip;
-        pos = pushStr(out, pos, cur_ip);
+        pos = writeStr(cur_ip, out, pos);
 
         const pad = if (col_w > cur_ip.len) { col_w - cur_ip.len } else { 1 };
         let sp: usize = 0;
@@ -232,13 +188,13 @@ pub fn formatHosts(table: HostsTable, out: []u8) -> string {
             sp += 1;
         }
 
-        pos = pushStr(out, pos, table.entries[i].hostname);
+        pos = writeStr(table.entries[i].hostname, out, pos);
         i += 1;
 
         // Group consecutive aliases sharing the same IP onto one line
         while (i < table.count && eqIgnoreCase(table.entries[i].ip, cur_ip)) {
             pos = pushByte(out, pos, ' ');
-            pos = pushStr(out, pos, table.entries[i].hostname);
+            pos = writeStr(table.entries[i].hostname, out, pos);
             i += 1;
         }
     }
