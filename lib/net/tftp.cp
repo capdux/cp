@@ -385,7 +385,7 @@ pub struct TftpOptWriter {
     pos: usize,
     valid: bool,
 
-    fn initRequest(buf: []u8, is_write: bool, filename: []const u8, mode: []const u8): TftpOptWriter {
+    static fn initRequest(buf: []u8, is_write: bool, filename: []const u8, mode: []const u8): TftpOptWriter {
         if (n := encodeTftpRequest(is_write, filename, mode, buf)) {
             return TftpOptWriter{
                 .buf = buf,
@@ -400,7 +400,7 @@ pub struct TftpOptWriter {
         };
     }
 
-    fn initOack(buf: []u8): TftpOptWriter {
+    static fn initOack(buf: []u8): TftpOptWriter {
         if (buf.len < 2) {
             return TftpOptWriter{
                 .buf = buf,

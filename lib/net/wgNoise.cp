@@ -69,7 +69,7 @@ pub struct HandshakeInitiation {
         return out;
     }
 
-    pub fn decode(data: []const u8) -> !HandshakeInitiation {
+    pub static fn decode(data: []const u8) -> !HandshakeInitiation {
         if (data.len != INITIATION_LEN) {
             return WgError.InvalidLength;
         }
@@ -113,7 +113,7 @@ pub struct HandshakeResponse {
         return out;
     }
 
-    pub fn decode(data: []const u8) -> !HandshakeResponse {
+    pub static fn decode(data: []const u8) -> !HandshakeResponse {
         if (data.len != RESPONSE_LEN) {
             return WgError.InvalidLength;
         }
@@ -354,7 +354,7 @@ pub fn consumeInitiationAndCreateResponse(
     expected_peer_static: ([32]u8)?,
     psk: [32]u8,
     responder_index: u32,
-    last_timestamp: *Tai64n?,
+    last_timestamp: *(Tai64n?),
     msg: HandshakeInitiation,
 ) -> !ResponderResult {
     const raw_msg = msg.encode();

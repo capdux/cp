@@ -23,7 +23,7 @@ pub struct Tai64n {
     pub sec: u64,
     pub nsec: u32,
 
-    pub fn fromUnixNs(unix_sec: i64, unix_nsec: u32) -> Tai64n {
+    pub static fn fromUnixNs(unix_sec: i64, unix_nsec: u32) -> Tai64n {
         const s: u64 = @intCast(TAI64_EPOCH_OFFSET + @as(i128, unix_sec));
         return Tai64n {
             .sec = s,
@@ -32,13 +32,13 @@ pub struct Tai64n {
     }
 
     pub fn encode() -> [12]u8 {
-        let out: [12]u8 = [0; 12];
+        let out: [12]u8 = undefined;
         std.mem.writeInt(u64, out[0..8], _.sec, .big);
         std.mem.writeInt(u32, out[8..12], _.nsec, .big);
         return out;
     }
 
-    pub fn decode(data: []const u8) -> !Tai64n {
+    pub static fn decode(data: []const u8) -> !Tai64n {
         if (data.len < 12) {
             return WgError.InvalidLength;
         }

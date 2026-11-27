@@ -635,7 +635,7 @@ pub struct KafkaStreamFramer {
     buf: std.ArrayList(u8),
     max_frame_bytes: usize,
 
-    pub fn init(alloc: std.mem.Allocator, max_frame_bytes: usize): KafkaStreamFramer {
+    pub static fn init(alloc: std.mem.Allocator, max_frame_bytes: usize): KafkaStreamFramer {
         return KafkaStreamFramer{
             .alloc = alloc,
             .buf = std.ArrayList(u8).empty,

@@ -84,7 +84,7 @@ pub struct KafkaReader {
     buf: []const u8,
     pos: usize,
 
-    pub fn init(buf: []const u8): KafkaReader {
+    pub static fn init(buf: []const u8): KafkaReader {
         return KafkaReader{
             .buf = buf,
             .pos = 0,
@@ -289,7 +289,7 @@ pub struct KafkaWriter {
     alloc: std.mem.Allocator,
     buf: std.ArrayList(u8),
 
-    pub fn init(alloc: std.mem.Allocator): KafkaWriter {
+    pub static fn init(alloc: std.mem.Allocator): KafkaWriter {
         return KafkaWriter{
             .alloc = alloc,
             .buf = std.ArrayList(u8).empty,
