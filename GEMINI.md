@@ -828,3 +828,11 @@ git status --porcelain cpc_dev/src
 3. **1 秒静态扫描先行，拒绝盲跑全量测试**：排查 `lib/*/index.cp` 真正的跨子文件导出冲突（如重复 `export { sym }`）时，先用 1 秒 Python 正则脚本定位全部 6 处真实导出冲突再精准批量修复，而非盲跑 1,402 个深测逐个看日志，节省 >95% 探测时间与 Token。
 4. **结构化无 receiver 工厂方法必须显式标 `static`**：在 `struct` 中定义不消费 `self` 的工厂方法（除 `init`/`new` 等特例名外，如 `fromState`）须写作 `pub static fn`，否则 Zig 后端会生成未使用的 `self` 形参导致 `BuildFailed`。
 
+### 6.11 第 11 轮 3 小时效率与 Token 审计固化铁律（2026-11-27 18:20）
+
+1. **JSON 索引/配置脚本首轮先打印 Schema，禁止盲猜字段名**：编写统计或校验脚本读取 `packages/registry.json`（注意位于 `packages/` 下且 `entries` 为 `list`，路径字段为 `types`/`agent_doc`/`readme`/`readme_zh` 而非 `path`）等结构化文件前，若记不清字段结构，必须在首条命令先输出顶层 key 与首条样例对象，彻底杜绝因盲猜路径/类型白耗 2~3 轮工具调用。
+2. **注册表/元数据校验必须穿透到真实磁盘文件 (`os.path.isfile`)**：仅判断 JSON key 非空会漏掉死链与已迁走的旧 `@cap/*` 目录别名；全量体检脚本必须同时校验磁盘文件真实存在与目录归属，单次扫描即可 3 分钟清零历史尾项。
+3. **子智能体文档精修批处理“一读一检”零返工模板**：每批 12 包（36 份 EN/ZH/AGENT 文档）在派发 Prompt 中强制要求「首轮单条命令批量读取全部 12 包 `src/index.d.cp` + `cap.json`，完工前单条脚本校验 36 文件存在性、0 `@cap/` 残留、三栏导航完整、`README_AGENT.md` 严格 40~80 行」，连续 3 批（Batch 8~10，108 份文档）实现 100% 一次验收通过、零返工。
+4. **升级 `cpc` 后必清 `.cap/test-mod` 缓存**：执行 `bash scripts/sync_cpc.sh release` 升级编译器后，跑 `cap test -m` 前先清理 `.cap/test-mod`，防止残留旧转译 `.zig` 导致假报错或掩盖真实回归。
+
+
