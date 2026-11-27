@@ -4,7 +4,8 @@
 
 import { normalizePath, hasBackslash } from "../../normalize-path/src/index.cp";
 import { isExtglob } from "../../is-extglob/src/index.cp";
-import { toLowerByte, findByte, rfindByte } from "cap:ascii";
+import { toLowerByte, rfindByte } from "cap:ascii";
+import { findByteInBytes, bytesEq } from "cap:bin";
 
 const PM_MAX_BUF: usize = 1024;
 const PM_MAX_BRACE_DEPTH: usize = 16;
@@ -68,10 +69,14 @@ fn pmCountLeadingNegations(pat: string): usize {
 fn pmHasHiddenSegment(path: string, pIdx: usize): bool {
     let i: usize = pIdx;
     while (i < path.len) {
-        if (path[i] == 46 && (i == 0 || path[i - 1] == 47)) {
-            return true;
+        if (dotPos := findByteInBytes(path, 46, i)) {
+            if (dotPos == 0 || path[dotPos - 1] == 47) {
+                return true;
+            }
+            i = dotPos + 1;
+        } else {
+            return false;
         }
-        i = i + 1;
     }
     return false;
 }
@@ -87,13 +92,22 @@ fn pmFindClassEnd(pat: string, gIdx: usize): usize {
     if (i < pat.len && pat[i] == 93) {
         i = i + 1;
     }
+    const scanStart = i;
     while (i < pat.len) {
-        if (pat[i] == 92 && i + 1 < pat.len) {
-            i = i + 2;
-        } else if (pat[i] == 93) {
-            return i;
+        if (closePos := findByteInBytes(pat, 93, i)) {
+            // Count consecutive preceding backslashes down to scanStart
+            let bs: usize = 0;
+            let k: usize = closePos;
+            while (k > scanStart && pat[k - 1] == 92) {
+                bs = bs + 1;
+                k = k - 1;
+            }
+            if ((bs & 1) == 0) {
+                return closePos;
+            }
+            i = closePos + 1;
         } else {
-            i = i + 1;
+            return 0;
         }
     }
     return 0;
@@ -182,23 +196,19 @@ fn pmMatchCore(path: string, pIdx: usize, pat: string, gIdx: usize, opts: PicoOp
                 if (pmMatchCore(path, pi, pat, nextGi, opts, depth + 1)) {
                     return true;
                 }
-                // Case 2: `**/` consumes 1+ directory segments
+                // Case 2: `**/` consumes 1+ directory segments (16-lane SIMD '/' scan)
                 let cur: usize = pi;
                 while (cur < path.len) {
                     if (!opts.dot && pmIsLeadingDot(path, cur)) {
                         return false;
                     }
-                    // Advance to next '/'
-                    while (cur < path.len && path[cur] != 47) {
-                        cur = cur + 1;
-                    }
-                    if (cur >= path.len) {
+                    if (slashPos := findByteInBytes(path, 47, cur)) {
+                        cur = slashPos + 1;
+                        if (pmMatchCore(path, cur, pat, nextGi, opts, depth + 1)) {
+                            return true;
+                        }
+                    } else {
                         return false;
-                    }
-                    // Skip '/'
-                    cur = cur + 1;
-                    if (pmMatchCore(path, cur, pat, nextGi, opts, depth + 1)) {
-                        return true;
                     }
                 }
                 return false;
@@ -220,9 +230,15 @@ fn pmMatchCore(path: string, pIdx: usize, pat: string, gIdx: usize, opts: PicoOp
             if (!opts.dot && pmIsLeadingDot(path, pi)) {
                 return false;
             }
+            // Determine segment boundary via 16-lane SIMD '/' scan
+            const segEnd = findByteInBytes(path, 47, pi) ?? path.len;
+            // Fast path: trailing `*` matches remainder iff no '/' remains
+            if (nextGi == pat.len) {
+                return segEnd == path.len;
+            }
             // Consume non-'/' characters
             let cur: usize = pi;
-            while (cur < path.len && path[cur] != 47) {
+            while (cur < segEnd) {
                 cur = cur + 1;
                 if (pmMatchCore(path, cur, pat, nextGi, opts, depth + 1)) {
                     return true;
@@ -274,7 +290,29 @@ fn pmMatchCore(path: string, pIdx: usize, pat: string, gIdx: usize, opts: PicoOp
             continue;
         }
 
-        // Literal character match
+        // Literal character / run match (16-lane SIMD bytesEq when case-sensitive)
+        if (!opts.nocase) {
+            let litEnd: usize = gi + 1;
+            while (litEnd < pat.len) {
+                const c = pat[litEnd];
+                if (c == 42 || c == 63 || c == 91 || c == 92) {
+                    break;
+                }
+                litEnd = litEnd + 1;
+            }
+            const litLen = litEnd - gi;
+            if (litLen > 1) {
+                if (pi + litLen > path.len) {
+                    return false;
+                }
+                if (!bytesEq(path[pi..(pi + litLen)], pat[gi..litEnd])) {
+                    return false;
+                }
+                pi = pi + litLen;
+                gi = litEnd;
+                continue;
+            }
+        }
         if (pi >= path.len || !pmCharEq(path[pi], gch, opts.nocase)) {
             return false;
         }
@@ -374,26 +412,16 @@ fn pmMatchWithBraces(path: string, pat: string, opts: PicoOptions, depth: usize)
             const totalLen = openIdx + altLen + suffixLen;
             if (totalLen <= PM_MAX_BUF) {
                 let buf: [1024]u8 = undefined;
-                let w: usize = 0;
-                let k: usize = 0;
-                while (k < openIdx) {
-                    buf[w] = pat[k];
-                    w = w + 1;
-                    k = k + 1;
+                if (openIdx > 0) {
+                    @memcpy(buf[0..openIdx], pat[0..openIdx]);
                 }
-                k = altStart;
-                while (k < cur) {
-                    buf[w] = pat[k];
-                    w = w + 1;
-                    k = k + 1;
+                if (altLen > 0) {
+                    @memcpy(buf[openIdx..(openIdx + altLen)], pat[altStart..cur]);
                 }
-                k = suffixStart;
-                while (k < pat.len) {
-                    buf[w] = pat[k];
-                    w = w + 1;
-                    k = k + 1;
+                if (suffixLen > 0) {
+                    @memcpy(buf[(openIdx + altLen)..totalLen], pat[suffixStart..pat.len]);
                 }
-                if (pmMatchWithBraces(path, buf[0..w], opts, depth + 1)) {
+                if (pmMatchWithBraces(path, buf[0..totalLen], opts, depth + 1)) {
                     return true;
                 }
             }
@@ -417,7 +445,7 @@ fn pmMatchNormalized(normPath: string, pat: string, opts: PicoOptions): bool {
     }
 
     let targetPath = normPath;
-    if (opts.basename && findByte(corePat, 47, 0) == null) {
+    if (opts.basename && findByteInBytes(corePat, 47, 0) == null) {
         targetPath = pmBasenameSlice(normPath);
     }
 
@@ -493,7 +521,7 @@ pub fn isMatchAny(path: string, patterns: []const string, opts: PicoOptions): bo
             const inner = pat[negCount..pat.len];
             if (inner.len > 0) {
                 let targetPath = normPath;
-                if (opts.basename && findByte(inner, 47, 0) == null) {
+                if (opts.basename && findByteInBytes(inner, 47, 0) == null) {
                     targetPath = pmBasenameSlice(normPath);
                 }
                 const hit = pmMatchWithBraces(targetPath, inner, opts, 0);
@@ -553,9 +581,7 @@ pub fn scanBase(pattern: string, out: []u8): usize {
 
     while (i < pat.len) {
         const segStart = i;
-        while (i < pat.len && pat[i] != 47) {
-            i = i + 1;
-        }
+        i = findByteInBytes(pat, 47, i) ?? pat.len;
         const seg = pat[segStart..i];
         if (pmSegmentHasGlob(seg)) {
             break;
@@ -570,11 +596,7 @@ pub fn scanBase(pattern: string, out: []u8): usize {
     if (!hasBase || baseEnd == 0 || out.len < baseEnd) {
         return 0;
     }
-    let k: usize = 0;
-    while (k < baseEnd) {
-        out[k] = pat[k];
-        k = k + 1;
-    }
+    @memcpy(out[0..baseEnd], pat[0..baseEnd]);
     return baseEnd;
 }
 

@@ -16,7 +16,7 @@ import {
     writeU64LE,
 } from "cap:bin";
 import { writeU64, writeStr } from "cap:fmt";
-import { toLowerByte, isSpace, isDigit } from "cap:ascii";
+import { toLowerByte, isSpace, isDigit, trim } from "cap:ascii";
 
 // ============================================================================
 // Part 1: npm `bytes` / Rust `bytesize` — Human-readable byte size parse/format
@@ -84,24 +84,18 @@ fn bytU64Len(val: u64): usize {
 /// when false (SI / Rust `bytesize` compatible), `KB`/`MB`/`GB` use base 1000 while `KiB`/`MiB` always use 1024.
 /// Returns byte count >= 0 on success, or -1 on invalid/overflow input.
 pub fn parseBytes(input: string, binary_default: bool): i64 {
-    let start: usize = 0;
-    let end: usize = input.len;
-    while (start < end && isSpace(input[start])) {
-        start += 1;
-    }
-    while (end > start && isSpace(input[end - 1])) {
-        end -= 1;
-    }
-    if (start >= end) {
+    const trimmed = trim(input);
+    if (trimmed.len == 0) {
         return -1;
     }
 
-    let i: usize = start;
+    let i: usize = 0;
+    const end: usize = trimmed.len;
     let int_part: u64 = 0;
     let has_digit: bool = false;
-    while (i < end && isDigit(input[i])) {
+    while (i < end && isDigit(trimmed[i])) {
         has_digit = true;
-        let d: u64 = (input[i] - '0') as u64;
+        let d: u64 = (trimmed[i] - '0') as u64;
         if (int_part > 900000000000000000) {
             return -1;
         }
@@ -111,12 +105,12 @@ pub fn parseBytes(input: string, binary_default: bool): i64 {
 
     let frac_part: u64 = 0;
     let frac_scale: u64 = 1;
-    if (i < end && input[i] == '.') {
+    if (i < end && trimmed[i] == '.') {
         i += 1;
-        while (i < end && isDigit(input[i])) {
+        while (i < end && isDigit(trimmed[i])) {
             has_digit = true;
             if (frac_scale < 1000000) {
-                frac_part = frac_part * 10 + ((input[i] - '0') as u64);
+                frac_part = frac_part * 10 + ((trimmed[i] - '0') as u64);
                 frac_scale = frac_scale * 10;
             }
             i += 1;
@@ -127,10 +121,10 @@ pub fn parseBytes(input: string, binary_default: bool): i64 {
         return -1;
     }
 
-    while (i < end && isSpace(input[i])) {
+    while (i < end && isSpace(trimmed[i])) {
         i += 1;
     }
-    let unit: string = input[i..end];
+    let unit: string = trimmed[i..end];
     let mult: u64 = bytUnitMultiplier(unit, binary_default);
     if (mult == 0) {
         return -1;
@@ -247,9 +241,8 @@ pub struct ReadU32Result { ok: bool, val: u32 }
 pub struct ReadU64Result { ok: bool, val: u64 }
 
 fn bytbCopyBytes(dst: []u8, src: []const u8, n: usize) {
-    let i: usize = 0;
-    while (i < n) : (i += 1) {
-        dst[i] = src[i];
+    if (n > 0) {
+        @memcpy(dst[0..n], src[0..n]);
     }
 }
 
@@ -414,9 +407,8 @@ pub struct BytesMut {
 
     fn putSlice(*_, src: []const u8): bool {
         if (_.used + src.len > BYTES_MUT_CAP) { return false; }
-        let i: usize = 0;
-        while (i < src.len) : (i += 1) {
-            _.buf[_.used + i] = src[i];
+        if (src.len > 0) {
+            @memcpy(_.buf[_.used..(_.used + src.len)], src);
         }
         _.used = _.used + src.len;
         return true;
@@ -425,14 +417,17 @@ pub struct BytesMut {
     /// Copies the first `at` bytes into `out`, shifting the remaining bytes to the front (mirrors `split_to`).
     fn splitTo(*_, at: usize, out: []u8): i64 {
         if (at > _.used || at > out.len) { return -1; }
-        let i: usize = 0;
-        while (i < at) : (i += 1) {
-            out[i] = _.buf[i];
+        if (at > 0) {
+            @memcpy(out[0..at], _.buf[0..at]);
         }
         let rem = _.used - at;
-        let j: usize = 0;
-        while (j < rem) : (j += 1) {
-            _.buf[j] = _.buf[at + j];
+        if (rem > 0 && at > 0) {
+            let off: usize = 0;
+            while (off < rem) {
+                const chunk = if (rem - off < at) (rem - off) else at;
+                @memcpy(_.buf[off..(off + chunk)], _.buf[(at + off)..(at + off + chunk)]);
+                off += chunk;
+            }
         }
         _.used = rem;
         return at as i64;
@@ -441,9 +436,8 @@ pub struct BytesMut {
     /// Copies all written bytes into `out` and returns written length.
     fn copyAll(out: []u8): usize {
         let n = if (_.used <= out.len) _.used else out.len;
-        let i: usize = 0;
-        while (i < n) : (i += 1) {
-            out[i] = _.buf[i];
+        if (n > 0) {
+            @memcpy(out[0..n], _.buf[0..n]);
         }
         return n;
     }

@@ -6,7 +6,7 @@
 // - Compact triangular stack trace buffer (`undefined` initialized, zero heap allocation)
 // - Line-level diff, byte/character-level diff, GNU Unified Diff formatter, and lossless patch apply
 
-const std = @import("std");
+import { findByteInBytes, bytesEq } from "cap:bin";
 
 pub const MAX_LINES: usize = 256;
 pub const MAX_EDITS: usize = 512;
@@ -117,7 +117,7 @@ fn fnv1a64(data: []const u8): u64 {
 fn linesEqual(a: LineEntry, b: LineEntry): bool {
     if (a.hash != b.hash) return false;
     if (a.text.len != b.text.len) return false;
-    return std.mem.eql(u8, a.text, b.text);
+    return bytesEq(a.text, b.text);
 }
 
 /// Splits `text` into lines preserving trailing `\n` characters so reconstruction is lossless.
@@ -125,27 +125,25 @@ fn splitLines(text: []const u8, out: []LineEntry): usize ! DiffError {
     if (text.len == 0) return 0;
     let count: usize = 0;
     let start: usize = 0;
-    let i: usize = 0;
-    while (i < text.len) : (i += 1) {
-        if (text[i] == '\n') {
-            if (count >= out.len) return DiffError.TooManyLines;
-            const seg = text[start..(i + 1)];
+    while (start < text.len) {
+        if (count >= out.len) return DiffError.TooManyLines;
+        if (nl := findByteInBytes(text, '\n', start)) {
+            const seg = text[start..(nl + 1)];
             out[count] = LineEntry{
                 text: seg,
                 hash: fnv1a64(seg),
             };
             count += 1;
-            start = i + 1;
+            start = nl + 1;
+        } else {
+            const seg = text[start..text.len];
+            out[count] = LineEntry{
+                text: seg,
+                hash: fnv1a64(seg),
+            };
+            count += 1;
+            break;
         }
-    }
-    if (start < text.len) {
-        if (count >= out.len) return DiffError.TooManyLines;
-        const seg = text[start..text.len];
-        out[count] = LineEntry{
-            text: seg,
-            hash: fnv1a64(seg),
-        };
-        count += 1;
     }
     return count;
 }
@@ -368,8 +366,22 @@ fn myersDiffEntries(
 /// Uses FNV-1a 64-bit hash pre-filtering and zero heap allocation (up to `MAX_LINES = 256` lines each).
 pub fn diffLines(old_text: []const u8, new_text: []const u8): LineDiffResult ! DiffError {
     let old_buf: [MAX_LINES]LineEntry = undefined;
-    let new_buf: [MAX_LINES]LineEntry = undefined;
     const old_count = splitLines(old_text, old_buf[0..])?;
+    if (bytesEq(old_text, new_text)) {
+        let res = LineDiffResult{};
+        let i: usize = 0;
+        while (i < old_count) : (i += 1) {
+            res.edits[i] = DiffEdit{
+                op: DiffOp.Equal,
+                old_index: i,
+                new_index: i,
+                text: old_buf[i].text,
+            };
+        }
+        res.len = old_count;
+        return res;
+    }
+    let new_buf: [MAX_LINES]LineEntry = undefined;
     const new_count = splitLines(new_text, new_buf[0..])?;
     return myersDiffEntries(old_buf[0..old_count], new_buf[0..new_count]);
 }
@@ -379,6 +391,20 @@ pub fn diffLines(old_text: []const u8, new_text: []const u8): LineDiffResult ! D
 pub fn diffChars(old_text: []const u8, new_text: []const u8): LineDiffResult ! DiffError {
     if (old_text.len > MAX_LINES || new_text.len > MAX_LINES) {
         return DiffError.TooManyLines;
+    }
+    if (bytesEq(old_text, new_text)) {
+        let res = LineDiffResult{};
+        let i: usize = 0;
+        while (i < old_text.len) : (i += 1) {
+            res.edits[i] = DiffEdit{
+                op: DiffOp.Equal,
+                old_index: i,
+                new_index: i,
+                text: old_text[i..(i + 1)],
+            };
+        }
+        res.len = old_text.len;
+        return res;
     }
 
     let old_buf: [MAX_LINES]LineEntry = undefined;
@@ -415,9 +441,8 @@ struct BufWriter {
 
     fn writeSlice(*_, s: []const u8): void ! DiffError {
         if (s.len > _.buf.len - _.pos) return DiffError.BufferTooSmall;
-        let i: usize = 0;
-        while (i < s.len) : (i += 1) {
-            _.buf[_.pos + i] = s[i];
+        if (s.len > 0) {
+            @memcpy(_.buf[_.pos..(_.pos + s.len)], s);
         }
         _.pos += s.len;
     }
@@ -606,14 +631,14 @@ pub fn applyLineDiff(
         const e = diff_res.edits[i];
         if (e.op == DiffOp.Equal) {
             if (old_cursor >= old_count) return DiffError.PatchFailed;
-            if (!std.mem.eql(u8, old_buf[old_cursor].text, e.text)) {
+            if (!bytesEq(old_buf[old_cursor].text, e.text)) {
                 return DiffError.PatchFailed;
             }
             w.writeSlice(e.text)?;
             old_cursor += 1;
         } else if (e.op == DiffOp.Delete) {
             if (old_cursor >= old_count) return DiffError.PatchFailed;
-            if (!std.mem.eql(u8, old_buf[old_cursor].text, e.text)) {
+            if (!bytesEq(old_buf[old_cursor].text, e.text)) {
                 return DiffError.PatchFailed;
             }
             old_cursor += 1;

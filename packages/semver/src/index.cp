@@ -5,6 +5,7 @@
 
 import { isSpace, isDigit, isAlnum, trim, strEq } from "cap:ascii";
 import { writeU64, writeStr } from "cap:fmt";
+import { findByteInBytes, bytesEq } from "cap:bin";
 
 fn svrIsIdentChar(c: u8): bool {
     return isAlnum(c) || c == 45;
@@ -185,54 +186,32 @@ pub fn parseSemver(s: string): SemVer {
     }
 
     const b = trimmed.len;
-    // Split off +build first, then -pre
+    // Split off +build first, then -pre using 16-lane SIMD findByteInBytes
     let core_end = b;
     let build_start = b;
     let has_build = false;
-    let k = i;
-    while (k < b) : (k += 1) {
-        if (trimmed[k] == 43) { // '+'
-            core_end = k;
-            build_start = k + 1;
-            has_build = true;
-            break;
-        }
+    if (plus_pos := findByteInBytes(trimmed, 43, i)) {
+        core_end = plus_pos;
+        build_start = plus_pos + 1;
+        has_build = true;
     }
 
     let num_end = core_end;
     let pre_start = core_end;
     let has_pre = false;
-    k = i;
-    while (k < core_end) : (k += 1) {
-        if (trimmed[k] == 45) { // '-'
-            num_end = k;
-            pre_start = k + 1;
-            has_pre = true;
-            break;
-        }
+    if (dash_pos := findByteInBytes(trimmed[0..core_end], 45, i)) {
+        num_end = dash_pos;
+        pre_start = dash_pos + 1;
+        has_pre = true;
     }
 
-    // Parse major.minor.patch
-    let dot1 = num_end;
-    k = i;
-    while (k < num_end) : (k += 1) {
-        if (trimmed[k] == 46) {
-            dot1 = k;
-            break;
-        }
-    }
+    // Parse major.minor.patch via SIMD dot scan
+    const num_slice = trimmed[0..num_end];
+    const dot1 = findByteInBytes(num_slice, 46, i) ?? num_end;
     if (dot1 >= num_end) {
         return SemVer.invalid();
     }
-
-    let dot2 = num_end;
-    k = dot1 + 1;
-    while (k < num_end) : (k += 1) {
-        if (trimmed[k] == 46) {
-            dot2 = k;
-            break;
-        }
-    }
+    const dot2 = findByteInBytes(num_slice, 46, dot1 + 1) ?? num_end;
     if (dot2 >= num_end) {
         return SemVer.invalid();
     }
@@ -250,19 +229,30 @@ pub fn parseSemver(s: string): SemVer {
         if (!svrValidatePre(pre_s)) {
             return SemVer.invalid();
         }
-        out.pre_len = writeStr(pre_s, out.pre[0..32], 0);
+        const pre_copy = if (pre_s.len < 32) pre_s.len else 32;
+        if (pre_copy > 0) {
+            @memcpy(out.pre[0..pre_copy], pre_s[0..pre_copy]);
+        }
+        out.pre_len = pre_copy;
     }
     if (has_build) {
         const bld_s = trimmed[build_start..b];
         if (!svrValidateBuild(bld_s)) {
             return SemVer.invalid();
         }
-        out.build_len = writeStr(bld_s, out.build[0..32], 0);
+        const bld_copy = if (bld_s.len < 32) bld_s.len else 32;
+        if (bld_copy > 0) {
+            @memcpy(out.build[0..bld_copy], bld_s[0..bld_copy]);
+        }
+        out.build_len = bld_copy;
     }
     return out;
 }
 
 fn svrComparePreIdent(a: []const u8, b: []const u8): i32 {
+    if (bytesEq(a, b)) {
+        return 0;
+    }
     const a_num = svrIsAllDigits(a);
     const b_num = svrIsAllDigits(b);
     if (a_num && b_num) {
@@ -302,20 +292,24 @@ pub fn compareSemver(a: SemVer, b: SemVer): i32 {
     if (a.pre_len == 0 && b.pre_len > 0) { return 1; }
     if (a.pre_len > 0 && b.pre_len == 0) { return -1; }
 
+    const a_pre = a.pre[0..a.pre_len];
+    const b_pre = b.pre[0..b.pre_len];
+    if (bytesEq(a_pre, b_pre)) { return 0; }
+
     let ia: usize = 0;
     let ib: usize = 0;
     while (ia < a.pre_len && ib < b.pre_len) {
         const sa = ia;
-        while (ia < a.pre_len && a.pre[ia] != 46) { ia += 1; }
+        ia = findByteInBytes(a_pre, 46, ia) ?? a.pre_len;
         const sb = ib;
-        while (ib < b.pre_len && b.pre[ib] != 46) { ib += 1; }
+        ib = findByteInBytes(b_pre, 46, ib) ?? b.pre_len;
 
-        const cmp = svrComparePreIdent(a.pre[sa..ia], b.pre[sb..ib]);
+        const cmp = svrComparePreIdent(a_pre[sa..ia], b_pre[sb..ib]);
         if (cmp != 0) {
             return cmp;
         }
-        if (ia < a.pre_len && a.pre[ia] == 46) { ia += 1; }
-        if (ib < b.pre_len && b.pre[ib] == 46) { ib += 1; }
+        if (ia < a.pre_len && a_pre[ia] == 46) { ia += 1; }
+        if (ib < b.pre_len && b_pre[ib] == 46) { ib += 1; }
     }
 
     if (ia < a.pre_len) { return 1; }
@@ -362,38 +356,26 @@ fn svrParsePartial(raw: string): SvrPartial {
         return p;
     }
 
-    // Strip +build
-    let core_end = b;
-    let k = i;
-    while (k < b) : (k += 1) {
-        if (s[k] == 43) {
-            core_end = k;
-            break;
-        }
-    }
+    // Strip +build via 16-lane SIMD findByteInBytes
+    const core_end = findByteInBytes(s, 43, i) ?? b;
 
     // Split -pre
     let num_end = core_end;
     let has_pre = false;
     let pre_start = core_end;
-    k = i;
-    while (k < core_end) : (k += 1) {
-        if (s[k] == 45) {
-            num_end = k;
-            pre_start = k + 1;
-            has_pre = true;
-            break;
-        }
+    if (dash_pos := findByteInBytes(s[0..core_end], 45, i)) {
+        num_end = dash_pos;
+        pre_start = dash_pos + 1;
+        has_pre = true;
     }
 
-    // Split by '.' into up to 3 parts
+    // Split by '.' into up to 3 parts via 16-lane SIMD findByteInBytes
+    const num_slice = s[0..num_end];
     let seg_idx: usize = 0;
     let cur = i;
     while (cur <= num_end) {
         const s0 = cur;
-        while (cur < num_end && s[cur] != 46) {
-            cur += 1;
-        }
+        cur = findByteInBytes(num_slice, 46, cur) ?? num_end;
         const seg = s[s0..cur];
         if (seg.len == 0) { return p; }
 
@@ -445,7 +427,11 @@ fn svrParsePartial(raw: string): SvrPartial {
         if (!p.has_patch) { return p; }
         const pre_s = s[pre_start..core_end];
         if (!svrValidatePre(pre_s)) { return p; }
-        p.pre_len = writeStr(pre_s, p.pre[0..32], 0);
+        const pre_copy = if (pre_s.len < 32) pre_s.len else 32;
+        if (pre_copy > 0) {
+            @memcpy(p.pre[0..pre_copy], pre_s[0..pre_copy]);
+        }
+        p.pre_len = pre_copy;
     }
 
     p.valid = true;
@@ -458,9 +444,8 @@ fn svrPartialToSemver(p: SvrPartial): SemVer {
         if (p.has_minor) p.minor else 0,
         if (p.has_patch) p.patch else 0,
     );
-    let i: usize = 0;
-    while (i < p.pre_len) : (i += 1) {
-        v.pre[i] = p.pre[i];
+    if (p.pre_len > 0) {
+        @memcpy(v.pre[0..p.pre_len], p.pre[0..p.pre_len]);
     }
     v.pre_len = p.pre_len;
     return v;
@@ -619,12 +604,17 @@ fn svrMatchClause(v: SemVer, clause: string): bool {
         return v.pre_len == 0; // empty clause == '*'
     }
 
-    // Check hyphen range: "<left> - <right>"
+    // Check hyphen range: "<left> - <right>" via 16-lane SIMD '-' scan
     let hyphen_pos: usize = s.len;
     let k: usize = 1;
-    while (k + 1 < s.len) : (k += 1) {
-        if (s[k] == 45 && isSpace(s[k - 1]) && isSpace(s[k + 1])) {
-            hyphen_pos = k;
+    while (k + 1 < s.len) {
+        if (dash := findByteInBytes(s, 45, k)) {
+            if (dash + 1 < s.len && isSpace(s[dash - 1]) && isSpace(s[dash + 1])) {
+                hyphen_pos = dash;
+                break;
+            }
+            k = dash + 1;
+        } else {
             break;
         }
     }
@@ -703,19 +693,22 @@ fn svrSatisfiesVer(v: SemVer, range: string): bool {
     let i: usize = 0;
     let start: usize = 0;
     while (i <= range.len) {
-        const is_or = (i + 1 < range.len) && range[i] == 124 && range[i + 1] == 124;
-        if (i == range.len || is_or) {
-            if (svrMatchClause(v, range[start..i])) {
-                return true;
+        if (bar := findByteInBytes(range, 124, i)) {
+            if (bar + 1 < range.len && range[bar + 1] == 124) {
+                if (svrMatchClause(v, range[start..bar])) {
+                    return true;
+                }
+                i = bar + 2;
+                start = i;
+                continue;
             }
-            if (i == range.len) {
-                break;
-            }
-            i += 2;
-            start = i;
+            i = bar + 1;
             continue;
         }
-        i += 1;
+        if (svrMatchClause(v, range[start..range.len])) {
+            return true;
+        }
+        break;
     }
     return false;
 }
@@ -741,8 +734,7 @@ fn svrMatchesVersionReq(v: SemVer, req: string): bool {
     let pos: usize = 0;
     let clause_count: usize = 0;
     while (pos <= trimmed.len) {
-        let sep = pos;
-        while (sep < trimmed.len && trimmed[sep] != 44) { sep += 1; }
+        const sep = findByteInBytes(trimmed, 44, pos) ?? trimmed.len;
         const part = trim(trimmed[pos..sep]);
         if (part.len > 0) {
             clause_count += 1;
@@ -759,10 +751,7 @@ fn svrMatchesVersionReq(v: SemVer, req: string): bool {
                 let buf: [64]u8 = undefined;
                 if (part.len + 1 <= 64) {
                     buf[0] = 94; // '^'
-                    let i: usize = 0;
-                    while (i < part.len) : (i += 1) {
-                        buf[i + 1] = part[i];
-                    }
+                    @memcpy(buf[1..(part.len + 1)], part[0..part.len]);
                     if (!svrSatisfiesVer(v, buf[0..part.len + 1])) {
                         return false;
                     }
@@ -801,8 +790,7 @@ pub struct VersionReq {
         let pos: usize = 0;
         let clause_count: usize = 0;
         while (pos <= trimmed.len) {
-            let sep = pos;
-            while (sep < trimmed.len && trimmed[sep] != 44) { sep += 1; }
+            const sep = findByteInBytes(trimmed, 44, pos) ?? trimmed.len;
             const part = trim(trimmed[pos..sep]);
             if (part.len > 0) {
                 if (!svrValidateReqPart(part)) {

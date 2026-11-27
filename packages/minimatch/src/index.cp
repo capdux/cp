@@ -81,8 +81,39 @@ pub fn minimatchList(
     if (isCommentPattern(pattern, opts)) { return 0; }
     let count: usize = 0;
     let i: usize = 0;
+    if (pattern.len == 0) {
+        while (i < paths.len) {
+            if (paths[i].len == 0) {
+                if (count < out_indices.len) {
+                    out_indices[count] = i;
+                }
+                count = count + 1;
+            }
+            i = i + 1;
+        }
+        if (count > out_indices.len) { return out_indices.len; }
+        return count;
+    }
+
+    const pico = miniToPico(opts);
+    const literalBang = opts.nonegate && pattern[0] == 33;
+    const flip = isNegatedPattern(pattern, opts) && opts.flip_negate;
+    const tailPat = if (literalBang) pattern[1..pattern.len] else pattern;
+
     while (i < paths.len) {
-        if (minimatchWithOptions(paths[i], pattern, opts)) {
+        const p = paths[i];
+        let matched = false;
+        if (literalBang) {
+            if (p.len > 0 && p[0] == 33) {
+                matched = mmIsMatch(p[1..p.len], tailPat, pico);
+            }
+        } else {
+            matched = mmIsMatch(p, pattern, pico);
+            if (flip) {
+                matched = !matched;
+            }
+        }
+        if (matched) {
             if (count < out_indices.len) {
                 out_indices[count] = i;
             }
