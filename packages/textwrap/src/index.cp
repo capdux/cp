@@ -1,10 +1,59 @@
 // @cap/textwrap — Zero-allocation ANSI-aware text wrapping, width, indent/dedent & truncation
 // Clean-room MIT implementation inspired by npm `wrap-ansi`, `word-wrap`, `strip-indent`,
 // and Rust `textwrap`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUT, and @memcpy.
 
 import { charWidth } from "../../unicode-width/src/index.cp";
 import { isSpace, strEq } from "cap:ascii";
 import { writeStr } from "cap:fmt";
+
+type TwVec16 = @Vector(16, u8);
+type TwBool16 = @Vector(16, bool);
+
+fn twFindByteSimd(s: string, target: u8, start: usize) -> usize {
+    let i = start;
+    const len = s.len;
+    const vt: TwVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: TwVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
+fn twFindTwoBytesSimd(s: string, a: u8, b: u8, start: usize) -> usize {
+    let i = start;
+    const len = s.len;
+    const va: TwVec16 = @splat(a);
+    const vb: TwVec16 = @splat(b);
+    while (i + 16 <= len) {
+        const v: TwVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == va) || @reduce(.Or, v == vb)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != a && s[i] != b) {
+        i += 1;
+    }
+    return i;
+}
+
+fn twCopySlice(out: []u8, pos: usize, src: string) -> usize {
+    if (pos >= out.len || src.len == 0) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    const n = if (src.len < avail) src.len else avail;
+    @memcpy(out[pos .. pos + n], src[0..n]);
+    return pos + n;
+}
 
 pub struct WrapOptions {
     pub width: usize,
@@ -111,6 +160,10 @@ fn ansiSeqLen(s: string, pos: usize) -> usize {
     if (next == ']') {
         let i = pos + 2;
         while (i < s.len) {
+            i = twFindTwoBytesSimd(s, 0x07 as u8, 0x1B as u8, i);
+            if (i >= s.len) {
+                break;
+            }
             if (s[i] == 0x07) {
                 return (i + 1) - pos;
             }
@@ -148,7 +201,20 @@ fn isSpaceByte(c: u8) -> bool {
 pub fn displayWidth(s: string) -> usize {
     let width: usize = 0;
     let i: usize = 0;
-    while (i < s.len) {
+    const len = s.len;
+    const v_lo: TwVec16 = @splat(0x20 as u8);
+    const v_hi: TwVec16 = @splat(0x7E as u8);
+    const v_false: TwBool16 = @splat(false);
+    while (i < len) {
+        if (i + 16 <= len) {
+            const v: TwVec16 = s[i .. i + 16][0..16].*;
+            const is_printable = @select(bool, v >= v_lo, v <= v_hi, v_false);
+            if (@reduce(.And, is_printable)) {
+                width += 16;
+                i += 16;
+                continue;
+            }
+        }
         const seq = ansiSeqLen(s, i);
         if (seq > 0) {
             i += seq;
@@ -166,6 +232,14 @@ pub fn stripAnsi(s: string, out: []u8) -> string {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < s.len) {
+        const next_esc = twFindByteSimd(s, 0x1B as u8, i);
+        if (next_esc > i) {
+            pos = twCopySlice(out, pos, s[i..next_esc]);
+            i = next_esc;
+        }
+        if (i >= s.len) {
+            break;
+        }
         const seq = ansiSeqLen(s, i);
         if (seq > 0) {
             i += seq;
@@ -428,20 +502,19 @@ pub fn wrapTextWith(text: string, opts: WrapOptions, out: []u8) -> string {
 
     let pos: usize = 0;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= text.len) {
-        if (i == text.len || text[i] == '\n') {
-            let line_end = i;
-            if (line_end > line_start && text[line_end - 1] == '\r') {
-                line_end -= 1;
-            }
-            pos = wrapSegment(text, line_start, line_end, opts, out, pos);
-            if (i < text.len && text[i] == '\n') {
-                pos = appendByte(out, pos, '\n');
-            }
-            line_start = i + 1;
+    while (true) {
+        const i = twFindByteSimd(text, '\n' as u8, line_start);
+        let line_end = i;
+        if (line_end > line_start && text[line_end - 1] == '\r') {
+            line_end -= 1;
         }
-        i += 1;
+        pos = wrapSegment(text, line_start, line_end, opts, out, pos);
+        if (i < text.len) {
+            pos = appendByte(out, pos, '\n');
+            line_start = i + 1;
+        } else {
+            break;
+        }
     }
     return out[0..pos];
 }
@@ -457,6 +530,19 @@ pub fn wrapText(text: string, width: usize, out: []u8) -> string {
 
 fn lineHasContent(text: string, start: usize, end: usize) -> bool {
     let i = start;
+    const v_sp: TwVec16 = @splat(' ' as u8);
+    const v_tb: TwVec16 = @splat('\t' as u8);
+    const v_cr: TwVec16 = @splat('\r' as u8);
+    const v_true: TwBool16 = @splat(true);
+    while (i + 16 <= end) {
+        const v: TwVec16 = text[i .. i + 16][0..16].*;
+        const is_s1 = @select(bool, v == v_sp, v_true, v == v_tb);
+        const is_ws = @select(bool, is_s1, v_true, v == v_cr);
+        if (!@reduce(.And, is_ws)) {
+            return true;
+        }
+        i += 16;
+    }
     while (i < end) {
         const c = text[i];
         if (c != ' ' && c != '\t' && c != '\r') {
@@ -474,19 +560,18 @@ pub fn indent(text: string, prefix: string, out: []u8) -> string {
     }
     let pos: usize = 0;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= text.len) {
-        if (i == text.len || text[i] == '\n') {
-            if (lineHasContent(text, line_start, i)) {
-                pos = writeStr(prefix, out, pos);
-            }
-            pos = writeStr(text[line_start..i], out, pos);
-            if (i < text.len && text[i] == '\n') {
-                pos = appendByte(out, pos, '\n');
-            }
-            line_start = i + 1;
+    while (true) {
+        const i = twFindByteSimd(text, '\n' as u8, line_start);
+        if (lineHasContent(text, line_start, i)) {
+            pos = twCopySlice(out, pos, prefix);
         }
-        i += 1;
+        pos = twCopySlice(out, pos, text[line_start..i]);
+        if (i < text.len) {
+            pos = appendByte(out, pos, '\n');
+            line_start = i + 1;
+        } else {
+            break;
+        }
     }
     return out[0..pos];
 }
@@ -502,44 +587,44 @@ pub fn dedent(text: string, out: []u8) -> string {
     let has_content_line = false;
     let min_indent: usize = 0;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= text.len) {
-        if (i == text.len || text[i] == '\n') {
-            if (lineHasContent(text, line_start, i)) {
-                let ws: usize = 0;
-                while (line_start + ws < i && (text[line_start + ws] == ' ' || text[line_start + ws] == '\t')) {
-                    ws += 1;
-                }
-                if (!has_content_line || ws < min_indent) {
-                    min_indent = ws;
-                    has_content_line = true;
-                }
+    while (true) {
+        const i = twFindByteSimd(text, '\n' as u8, line_start);
+        if (lineHasContent(text, line_start, i)) {
+            let ws: usize = 0;
+            while (line_start + ws < i && (text[line_start + ws] == ' ' || text[line_start + ws] == '\t')) {
+                ws += 1;
             }
-            line_start = i + 1;
+            if (!has_content_line || ws < min_indent) {
+                min_indent = ws;
+                has_content_line = true;
+            }
         }
-        i += 1;
+        if (i < text.len) {
+            line_start = i + 1;
+        } else {
+            break;
+        }
     }
 
     // Pass 2: strip `min_indent` leading whitespace bytes from non-blank lines
     let pos: usize = 0;
     let line_start2: usize = 0;
-    let j: usize = 0;
-    while (j <= text.len) {
-        if (j == text.len || text[j] == '\n') {
-            if (lineHasContent(text, line_start2, j)) {
-                let skip: usize = min_indent;
-                const line_len: usize = j - line_start2;
-                if (skip > line_len) {
-                    skip = line_len;
-                }
-                pos = writeStr(text[line_start2 + skip..j], out, pos);
+    while (true) {
+        const j = twFindByteSimd(text, '\n' as u8, line_start2);
+        if (lineHasContent(text, line_start2, j)) {
+            let skip: usize = min_indent;
+            const line_len: usize = j - line_start2;
+            if (skip > line_len) {
+                skip = line_len;
             }
-            if (j < text.len && text[j] == '\n') {
-                pos = appendByte(out, pos, '\n');
-            }
-            line_start2 = j + 1;
+            pos = twCopySlice(out, pos, text[line_start2 + skip..j]);
         }
-        j += 1;
+        if (j < text.len) {
+            pos = appendByte(out, pos, '\n');
+            line_start2 = j + 1;
+        } else {
+            break;
+        }
     }
     return out[0..pos];
 }

@@ -1,6 +1,71 @@
 // packages/@cap/es-module-lexer/src/index.cp
 // Clean-room zero-allocation ES Module static/dynamic import & export lexer for CP.
 // Parity with npm:es-module-lexer.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning and comptime 256-entry LUT.
+
+type EsmlVec16 = @Vector(16, u8);
+type EsmlBool16 = @Vector(16, bool);
+
+const ESML_FLAG_WS: u8 = 1;
+const ESML_FLAG_IDENT_START: u8 = 2;
+const ESML_FLAG_IDENT_PART: u8 = 4;
+
+fn esmlBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            f |= ESML_FLAG_WS;
+        }
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$' || c >= 0x80) {
+            f |= ESML_FLAG_IDENT_START | ESML_FLAG_IDENT_PART;
+        } else if (c >= '0' && c <= '9') {
+            f |= ESML_FLAG_IDENT_PART;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const ESML_CHAR_LUT: [256]u8 = esmlBuildCharLut();
+
+fn esmlFindByteSimd(s: string, target: u8, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const vt: EsmlVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: EsmlVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
+fn esmlFindTwoBytesSimd(s: string, a: u8, b: u8, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const va: EsmlVec16 = @splat(a);
+    const vb: EsmlVec16 = @splat(b);
+    while (i + 16 <= len) {
+        const v: EsmlVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == va) || @reduce(.Or, v == vb)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != a && s[i] != b) {
+        i += 1;
+    }
+    return i;
+}
 
 pub enum ImportKind {
     Static,
@@ -58,20 +123,28 @@ struct EsmlSpan {
 }
 
 fn esmlIsWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (ESML_CHAR_LUT[c as usize] & ESML_FLAG_WS) != 0;
 }
 
 fn esmlIsIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$' || c >= 0x80;
+    return (ESML_CHAR_LUT[c as usize] & ESML_FLAG_IDENT_START) != 0;
 }
 
 fn esmlIsIdentPart(c: u8): bool {
-    return esmlIsIdentStart(c) || (c >= '0' && c <= '9');
+    return (ESML_CHAR_LUT[c as usize] & ESML_FLAG_IDENT_PART) != 0;
 }
 
 fn esmlStrEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: EsmlVec16 = a[i .. i + 16][0..16].*;
+        const vb: EsmlVec16 = b[i .. i + 16][0..16].*;
+        if (!@reduce(.And, va == vb)) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -80,29 +153,38 @@ fn esmlStrEq(a: string, b: string): bool {
 
 fn esmlSkipWsAndComments(src: string, start: usize): usize {
     let i = start;
-    while (i < src.len) {
+    const len = src.len;
+    while (i < len) {
         const c = src[i];
-        if (esmlIsWs(c)) {
+        if ((ESML_CHAR_LUT[c as usize] & ESML_FLAG_WS) != 0) {
             i += 1;
+            while (i < len && (ESML_CHAR_LUT[src[i] as usize] & ESML_FLAG_WS) != 0) {
+                i += 1;
+            }
             continue;
         }
-        if (c == '/' && i + 1 < src.len) {
+        if (c == '/' && i + 1 < len) {
             if (src[i + 1] == '/') {
-                i += 2;
-                while (i < src.len && src[i] != '\n') {
-                    i += 1;
-                }
+                i = esmlFindByteSimd(src, '\n' as u8, i + 2);
                 continue;
             }
             if (src[i + 1] == '*') {
                 i += 2;
-                while (i + 1 < src.len && !(src[i] == '*' && src[i + 1] == '/')) {
-                    i += 1;
+                while (i + 1 < len) {
+                    i = esmlFindByteSimd(src, '*' as u8, i);
+                    if (i + 1 < len && src[i + 1] == '/') {
+                        i += 2;
+                        break;
+                    }
+                    if (i + 1 < len) {
+                        i += 1;
+                    } else {
+                        i = len;
+                        break;
+                    }
                 }
-                if (i + 1 < src.len) {
-                    i += 2;
-                } else {
-                    i = src.len;
+                if (i + 1 == len) {
+                    i = len;
                 }
                 continue;
             }
@@ -120,15 +202,16 @@ fn esmlScanString(src: string, start: usize): EsmlSpan {
     }
     let i = start + 1;
     while (i < src.len) {
+        i = esmlFindTwoBytesSimd(src, quote, '\\' as u8, i);
+        if (i >= src.len) {
+            break;
+        }
         const c = src[i];
         if (c == '\\') {
             i += 2;
             continue;
         }
-        if (c == quote) {
-            return EsmlSpan{ start: start + 1, end: i, ok: true };
-        }
-        i += 1;
+        return EsmlSpan{ start: start + 1, end: i, ok: true };
     }
     return EsmlSpan{ start: start + 1, end: src.len, ok: false };
 }
@@ -136,15 +219,16 @@ fn esmlScanString(src: string, start: usize): EsmlSpan {
 fn esmlSkipTemplate(src: string, start: usize): usize {
     let i = start + 1;
     while (i < src.len) {
+        i = esmlFindTwoBytesSimd(src, '`' as u8, '\\' as u8, i);
+        if (i >= src.len) {
+            break;
+        }
         const c = src[i];
         if (c == '\\') {
             i += 2;
             continue;
         }
-        if (c == '`') {
-            return i + 1;
-        }
-        i += 1;
+        return i + 1;
     }
     return src.len;
 }
@@ -154,7 +238,30 @@ fn esmlScanIdent(src: string, start: usize): EsmlSpan {
         return EsmlSpan{ start: start, end: start, ok: false };
     }
     let i = start + 1;
-    while (i < src.len && esmlIsIdentPart(src[i])) {
+    const len = src.len;
+    const v_a: EsmlVec16 = @splat('a' as u8);
+    const v_z: EsmlVec16 = @splat('z' as u8);
+    const v_A: EsmlVec16 = @splat('A' as u8);
+    const v_Z: EsmlVec16 = @splat('Z' as u8);
+    const v_0: EsmlVec16 = @splat('0' as u8);
+    const v_9: EsmlVec16 = @splat('9' as u8);
+    const v_u: EsmlVec16 = @splat('_' as u8);
+    const v_false: EsmlBool16 = @splat(false);
+    const v_true: EsmlBool16 = @splat(true);
+    while (i + 16 <= len) {
+        const v: EsmlVec16 = src[i .. i + 16][0..16].*;
+        const is_lo = @select(bool, v >= v_a, v <= v_z, v_false);
+        const is_hi = @select(bool, v >= v_A, v <= v_Z, v_false);
+        const is_dg = @select(bool, v >= v_0, v <= v_9, v_false);
+        const ok1 = @select(bool, is_lo, v_true, is_hi);
+        const ok2 = @select(bool, is_dg, v_true, v == v_u);
+        const ok_all = @select(bool, ok1, v_true, ok2);
+        if (!@reduce(.And, ok_all)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && (ESML_CHAR_LUT[src[i] as usize] & ESML_FLAG_IDENT_PART) != 0) {
         i += 1;
     }
     return EsmlSpan{ start: start, end: i, ok: true };

@@ -1,9 +1,14 @@
 // ansi-align — Zero-allocation ANSI-aware multiline text alignment for CP
 // Clean-room ISC implementation with full parity to npm `ansi-align`.
 // Composes `string-width` and `widest-line` with zero duplication.
+// Accelerated with 16-lane @Vector(16, u8) SIMD delimiter scanning and bulk @memcpy.
 
 import { stringWidth } from "../../string-width/src/index.cp";
 import { widestLine } from "../../widest-line/src/index.cp";
+
+type AaVec16 = @Vector(16, u8);
+
+const AA_SPACES_64: string = "                                                                ";
 
 /// Horizontal alignment mode for multiline terminal text.
 pub enum AlignMode {
@@ -28,28 +33,58 @@ pub struct AlignOptions {
     }
 }
 
+fn aaFindByteSimd(s: string, target: u8, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const vt: AaVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: AaVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
 fn aaWriteSpaces(out: []u8, pos: usize, count: usize): usize {
+    if (pos >= out.len || count == 0) {
+        return pos;
+    }
+    const avail = out.len - pos;
+    let rem = if (count < avail) count else avail;
     let p = pos;
-    let c: usize = 0;
-    while (c < count && p < out.len) : (c += 1) {
-        out[p] = 32 as u8;
-        p += 1;
+    while (rem >= 64) {
+        @memcpy(out[p .. p + 64], AA_SPACES_64[0..64]);
+        p += 64;
+        rem -= 64;
+    }
+    if (rem > 0) {
+        @memcpy(out[p .. p + rem], AA_SPACES_64[0..rem]);
+        p += rem;
     }
     return p;
 }
 
 fn aaCopyRange(out: []u8, pos: usize, s: string, start: usize, end: usize): usize {
-    let p = pos;
-    let i = start;
-    while (i < end && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
+    if (pos >= out.len || end <= start) {
+        return pos;
     }
-    return p;
+    const avail = out.len - pos;
+    const len = end - start;
+    const n = if (len < avail) len else avail;
+    @memcpy(out[pos .. pos + n], s[start .. start + n]);
+    return pos + n;
 }
 
 fn aaWriteRepeat(out: []u8, pos: usize, unit: string, count: usize): usize {
     const pad_unit = if (unit.len > 0) unit else " ";
+    if (pad_unit.len == 1 && pad_unit[0] == (32 as u8)) {
+        return aaWriteSpaces(out, pos, count);
+    }
     let p = pos;
     let c: usize = 0;
     while (c < count && p < out.len) : (c += 1) {
@@ -71,6 +106,22 @@ fn aaMatchAt(text: string, pos: usize, sep: string): bool {
     return true;
 }
 
+fn aaFindSepSimd(text: string, sep: string, start: usize): usize {
+    const first = sep[0];
+    let i = start;
+    while (i < text.len) {
+        const hit = aaFindByteSimd(text, first, i);
+        if (hit >= text.len) {
+            return text.len;
+        }
+        if (sep.len == 1 || aaMatchAt(text, hit, sep)) {
+            return hit;
+        }
+        i = hit + 1;
+    }
+    return text.len;
+}
+
 /// Returns the ANSI-stripped visible column width of a single line.
 pub fn ansiVisibleWidth(s: string): usize {
     return stringWidth(s);
@@ -87,21 +138,16 @@ pub fn ansiMaxLineWidth(text: string, split: string): usize {
     }
     let max_w: usize = 0;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= text.len) {
-        if (i == text.len || aaMatchAt(text, i, sep)) {
-            const w = stringWidth(text[line_start..i]);
-            if (w > max_w) {
-                max_w = w;
-            }
-            if (i == text.len) {
-                break;
-            }
-            i += sep.len;
-            line_start = i;
-        } else {
-            i += 1;
+    while (true) {
+        const i = aaFindSepSimd(text, sep, line_start);
+        const w = stringWidth(text[line_start..i]);
+        if (w > max_w) {
+            max_w = w;
         }
+        if (i >= text.len) {
+            break;
+        }
+        line_start = i + sep.len;
     }
     return max_w;
 }
@@ -121,37 +167,39 @@ pub fn alignAnsi(text: string, mode: AlignMode, out: []u8): usize {
     const max_w = widestLine(text);
     let p: usize = 0;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= total) : (i += 1) {
-        if (i == total || text[i] == (10 as u8)) {
-            let line_end = i;
-            let has_cr = false;
-            if (line_end > line_start && text[line_end - 1] == (13 as u8)) {
-                line_end -= 1;
-                has_cr = true;
-            }
+    while (true) {
+        const i = aaFindByteSimd(text, 10 as u8, line_start);
+        let line_end = i;
+        let has_cr = false;
+        if (line_end > line_start && text[line_end - 1] == (13 as u8)) {
+            line_end -= 1;
+            has_cr = true;
+        }
 
-            if (line_end > line_start) {
-                const w = stringWidth(text[line_start..line_end]);
-                if (max_w > w) {
-                    const diff = max_w - w;
-                    const pad: usize = if (mode == AlignMode.Center) diff / 2 else diff;
-                    if (pad > 0) {
-                        p = aaWriteSpaces(out, p, pad);
-                    }
+        if (line_end > line_start) {
+            const w = stringWidth(text[line_start..line_end]);
+            if (max_w > w) {
+                const diff = max_w - w;
+                const pad: usize = if (mode == AlignMode.Center) diff / 2 else diff;
+                if (pad > 0) {
+                    p = aaWriteSpaces(out, p, pad);
                 }
-                p = aaCopyRange(out, p, text, line_start, line_end);
             }
+            p = aaCopyRange(out, p, text, line_start, line_end);
+        }
 
-            if (has_cr && p < out.len) {
-                out[p] = 13 as u8;
-                p += 1;
-            }
-            if (i < total && p < out.len) {
+        if (has_cr && p < out.len) {
+            out[p] = 13 as u8;
+            p += 1;
+        }
+        if (i < total) {
+            if (p < out.len) {
                 out[p] = 10 as u8;
                 p += 1;
             }
             line_start = i + 1;
+        } else {
+            break;
         }
     }
     return p;
@@ -177,41 +225,36 @@ pub fn alignAnsiWithOptions(text: string, opts: AlignOptions, out: []u8): usize 
     const max_w = ansiMaxLineWidth(text, sep);
     let p: usize = 0;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= total) {
-        if (i == total || aaMatchAt(text, i, sep)) {
-            let line_end = i;
-            let has_cr = false;
-            if (sep.len == 1 && sep[0] == (10 as u8) && line_end > line_start && text[line_end - 1] == (13 as u8)) {
-                line_end -= 1;
-                has_cr = true;
-            }
+    while (true) {
+        const i = aaFindSepSimd(text, sep, line_start);
+        let line_end = i;
+        let has_cr = false;
+        if (sep.len == 1 && sep[0] == (10 as u8) && line_end > line_start && text[line_end - 1] == (13 as u8)) {
+            line_end -= 1;
+            has_cr = true;
+        }
 
-            if (line_end > line_start) {
-                const w = stringWidth(text[line_start..line_end]);
-                if (max_w > w) {
-                    const diff = max_w - w;
-                    const pad_cnt: usize = if (opts.mode == AlignMode.Center) diff / 2 else diff;
-                    if (pad_cnt > 0) {
-                        p = aaWriteRepeat(out, p, pad_str, pad_cnt);
-                    }
+        if (line_end > line_start) {
+            const w = stringWidth(text[line_start..line_end]);
+            if (max_w > w) {
+                const diff = max_w - w;
+                const pad_cnt: usize = if (opts.mode == AlignMode.Center) diff / 2 else diff;
+                if (pad_cnt > 0) {
+                    p = aaWriteRepeat(out, p, pad_str, pad_cnt);
                 }
-                p = aaCopyRange(out, p, text, line_start, line_end);
             }
+            p = aaCopyRange(out, p, text, line_start, line_end);
+        }
 
-            if (has_cr && p < out.len) {
-                out[p] = 13 as u8;
-                p += 1;
-            }
-            if (i < total) {
-                p = aaCopyRange(out, p, sep, 0, sep.len);
-                i += sep.len;
-                line_start = i;
-            } else {
-                break;
-            }
+        if (has_cr && p < out.len) {
+            out[p] = 13 as u8;
+            p += 1;
+        }
+        if (i < total) {
+            p = aaCopyRange(out, p, sep, 0, sep.len);
+            line_start = i + sep.len;
         } else {
-            i += 1;
+            break;
         }
     }
     return p;

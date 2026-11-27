@@ -1,15 +1,60 @@
 // @cap/picomatch — Zero-allocation glob matcher & static base scanner for CP
 // Clean-room MIT implementation with parity to npm `picomatch` v4.
 // Reuses `@cap/normalize-path` and `@cap/is-extglob` with zero duplication.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUTs, and @memcpy.
 
 import { normalizePath, hasBackslash } from "../../normalize-path/src/index.cp";
 import { isExtglob } from "../../is-extglob/src/index.cp";
-import { toLowerByte, rfindByte } from "cap:ascii";
+import { rfindByte } from "cap:ascii";
 import { findByteInBytes, bytesEq } from "cap:bin";
+
+type PmVec16 = @Vector(16, u8);
 
 const PM_MAX_BUF: usize = 1024;
 const PM_MAX_BRACE_DEPTH: usize = 16;
 const PM_MAX_MATCH_DEPTH: usize = 256;
+
+fn pmBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 65 && c <= 90) {
+            lut[c] = (c + 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const PM_LOWER_LUT: [256]u8 = pmBuildLowerLut();
+
+fn pmFindLitEndSimd(pat: string, start: usize): usize {
+    let i = start;
+    const len = pat.len;
+    const v_st: PmVec16 = @splat(42 as u8);
+    const v_qm: PmVec16 = @splat(63 as u8);
+    const v_lb: PmVec16 = @splat(91 as u8);
+    const v_bs: PmVec16 = @splat(92 as u8);
+    while (i + 16 <= len) {
+        const v: PmVec16 = pat[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_st) || @reduce(.Or, v == v_qm) ||
+            @reduce(.Or, v == v_lb) || @reduce(.Or, v == v_bs)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = pat[i];
+        if (c == 42 || c == 63 || c == 91 || c == 92) {
+            break;
+        }
+        i += 1;
+    }
+    return i;
+}
 
 /// Matching options for `@cap/picomatch`.
 pub struct PicoOptions {
@@ -31,7 +76,7 @@ pub struct PicoOptions {
 
 fn pmCharEq(a: u8, b: u8, nocase: bool): bool {
     if (nocase) {
-        return toLowerByte(a) == toLowerByte(b);
+        return PM_LOWER_LUT[a as usize] == PM_LOWER_LUT[b as usize];
     }
     return a == b;
 }
@@ -124,7 +169,7 @@ fn pmMatchCharClass(ch: u8, pat: string, gIdx: usize, endIdx: usize, nocase: boo
         negated = true;
         i = i + 1;
     }
-    const target: u8 = if (nocase) toLowerByte(ch) else ch;
+    const target: u8 = if (nocase) PM_LOWER_LUT[ch as usize] else ch;
     let matched = false;
     while (i < endIdx) {
         let lo: u8 = pat[i];
@@ -144,13 +189,13 @@ fn pmMatchCharClass(ch: u8, pat: string, gIdx: usize, endIdx: usize, nocase: boo
             } else {
                 i = i + 1;
             }
-            const loC: u8 = if (nocase) toLowerByte(lo) else lo;
-            const hiC: u8 = if (nocase) toLowerByte(hi) else hi;
+            const loC: u8 = if (nocase) PM_LOWER_LUT[lo as usize] else lo;
+            const hiC: u8 = if (nocase) PM_LOWER_LUT[hi as usize] else hi;
             if (target >= loC && target <= hiC) {
                 matched = true;
             }
         } else {
-            const loC: u8 = if (nocase) toLowerByte(lo) else lo;
+            const loC: u8 = if (nocase) PM_LOWER_LUT[lo as usize] else lo;
             if (target == loC) {
                 matched = true;
             }
@@ -290,16 +335,9 @@ fn pmMatchCore(path: string, pIdx: usize, pat: string, gIdx: usize, opts: PicoOp
             continue;
         }
 
-        // Literal character / run match (16-lane SIMD bytesEq when case-sensitive)
+        // Literal character / run match (16-lane SIMD scan + bytesEq when case-sensitive)
         if (!opts.nocase) {
-            let litEnd: usize = gi + 1;
-            while (litEnd < pat.len) {
-                const c = pat[litEnd];
-                if (c == 42 || c == 63 || c == 91 || c == 92) {
-                    break;
-                }
-                litEnd = litEnd + 1;
-            }
+            const litEnd = pmFindLitEndSimd(pat, gi + 1);
             const litLen = litEnd - gi;
             if (litLen > 1) {
                 if (pi + litLen > path.len) {
@@ -327,9 +365,22 @@ fn pmMatchCore(path: string, pIdx: usize, pat: string, gIdx: usize, opts: PicoOp
 // Returns `true` and fills `outBounds[0] = openIdx`, `outBounds[1] = closeIdx`.
 fn pmFindBraceGroup(pat: string, outBounds: []usize): bool {
     let i: usize = 0;
-    while (i < pat.len) {
+    const len = pat.len;
+    const v_bs: PmVec16 = @splat(92 as u8);
+    const v_lb: PmVec16 = @splat(91 as u8);
+    const v_lc: PmVec16 = @splat(123 as u8);
+    const v_rc: PmVec16 = @splat(125 as u8);
+    const v_cm: PmVec16 = @splat(44 as u8);
+    while (i < len) {
+        if (i + 16 <= len) {
+            const v: PmVec16 = pat[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_bs) && !@reduce(.Or, v == v_lb) && !@reduce(.Or, v == v_lc)) {
+                i += 16;
+                continue;
+            }
+        }
         const ch = pat[i];
-        if (ch == 92 && i + 1 < pat.len) {
+        if (ch == 92 && i + 1 < len) {
             i = i + 2;
             continue;
         }
@@ -345,9 +396,17 @@ fn pmFindBraceGroup(pat: string, outBounds: []usize): bool {
             let depth: usize = 1;
             let hasComma = false;
             let j: usize = i + 1;
-            while (j < pat.len && depth > 0) {
+            while (j < len && depth > 0) {
+                if (j + 16 <= len) {
+                    const vj: PmVec16 = pat[j .. j + 16][0..16].*;
+                    if (!@reduce(.Or, vj == v_bs) && !@reduce(.Or, vj == v_lc) &&
+                        !@reduce(.Or, vj == v_rc) && !@reduce(.Or, vj == v_cm)) {
+                        j += 16;
+                        continue;
+                    }
+                }
                 const c2 = pat[j];
-                if (c2 == 92 && j + 1 < pat.len) {
+                if (c2 == 92 && j + 1 < len) {
                     j = j + 2;
                     continue;
                 }
@@ -461,9 +520,27 @@ fn pmSegmentHasGlob(seg: string): bool {
         return true;
     }
     let i: usize = 0;
-    while (i < seg.len) {
+    const len = seg.len;
+    const v_bs: PmVec16 = @splat(92 as u8);
+    const v_st: PmVec16 = @splat(42 as u8);
+    const v_qm: PmVec16 = @splat(63 as u8);
+    const v_lb: PmVec16 = @splat(91 as u8);
+    const v_rb: PmVec16 = @splat(93 as u8);
+    const v_lc: PmVec16 = @splat(123 as u8);
+    const v_rc: PmVec16 = @splat(125 as u8);
+    while (i < len) {
+        if (i + 16 <= len) {
+            const v: PmVec16 = seg[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_bs) && !@reduce(.Or, v == v_st) &&
+                !@reduce(.Or, v == v_qm) && !@reduce(.Or, v == v_lb) &&
+                !@reduce(.Or, v == v_rb) && !@reduce(.Or, v == v_lc) &&
+                !@reduce(.Or, v == v_rc)) {
+                i += 16;
+                continue;
+            }
+        }
         const ch = seg[i];
-        if (ch == 92 && i + 1 < seg.len) {
+        if (ch == 92 && i + 1 < len) {
             i = i + 2;
             continue;
         }

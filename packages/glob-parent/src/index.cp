@@ -1,8 +1,31 @@
 // @cap/glob-parent — Zero-allocation glob parent extractor, glob detector & escaper for CP
 // Clean-room MIT implementation inspired by npm `glob-parent`, reusing `@cap/is-extglob`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUT, and @memcpy.
 
 import { rfindByte } from "cap:ascii";
 import { findExtglobStart } from "../../is-extglob/src/index.cp";
+
+type GpVec16 = @Vector(16, u8);
+
+const GP_FLAG_SPECIAL: u8 = 1;
+
+fn gpBuildSpecialLut() -> [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut['*' as usize] = GP_FLAG_SPECIAL;
+    lut['?' as usize] = GP_FLAG_SPECIAL;
+    lut['[' as usize] = GP_FLAG_SPECIAL;
+    lut[']' as usize] = GP_FLAG_SPECIAL;
+    lut['{' as usize] = GP_FLAG_SPECIAL;
+    lut['}' as usize] = GP_FLAG_SPECIAL;
+    lut['(' as usize] = GP_FLAG_SPECIAL;
+    lut[')' as usize] = GP_FLAG_SPECIAL;
+    lut['!' as usize] = GP_FLAG_SPECIAL;
+    lut['\\' as usize] = GP_FLAG_SPECIAL;
+    return lut;
+}
+
+const GP_SPECIAL_LUT: [256]u8 = gpBuildSpecialLut();
 
 pub struct GlobSplit {
     pub base: string,
@@ -12,15 +35,26 @@ pub struct GlobSplit {
 
 fn findMatchingBracket(s: string, openIdx: usize) -> usize? {
     let i = openIdx + 1;
-    if (i >= s.len) {
+    const len = s.len;
+    if (i >= len) {
         return null;
     }
     if (s[i] == '!' || s[i] == '^') {
         i += 1;
     }
     let contentCount: usize = 0;
-    while (i < s.len) {
-        if (s[i] == '\\' && i + 1 < s.len) {
+    const v_bs: GpVec16 = @splat('\\' as u8);
+    const v_rb: GpVec16 = @splat(']' as u8);
+    while (i < len) {
+        if (i + 16 <= len) {
+            const v: GpVec16 = s[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_bs) && !@reduce(.Or, v == v_rb)) {
+                i += 16;
+                contentCount += 16;
+                continue;
+            }
+        }
+        if (s[i] == '\\' && i + 1 < len) {
             i += 2;
             contentCount += 1;
             continue;
@@ -37,10 +71,27 @@ fn findMatchingBracket(s: string, openIdx: usize) -> usize? {
 fn findMatchingBrace(s: string, openIdx: usize) -> usize? {
     let depth: usize = 1;
     let i = openIdx + 1;
+    const len = s.len;
     let hasComma = false;
     let hasRange = false;
-    while (i < s.len) {
-        if (s[i] == '\\' && i + 1 < s.len) {
+    const v_bs: GpVec16 = @splat('\\' as u8);
+    const v_lb: GpVec16 = @splat('{' as u8);
+    const v_rb: GpVec16 = @splat('}' as u8);
+    const v_cm: GpVec16 = @splat(',' as u8);
+    const v_dt: GpVec16 = @splat('.' as u8);
+    while (i < len) {
+        if (i + 16 <= len) {
+            const v: GpVec16 = s[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_bs) &&
+                !@reduce(.Or, v == v_lb) &&
+                !@reduce(.Or, v == v_rb) &&
+                !@reduce(.Or, v == v_cm) &&
+                !@reduce(.Or, v == v_dt)) {
+                i += 16;
+                continue;
+            }
+        }
+        if (s[i] == '\\' && i + 1 < len) {
             i += 2;
             continue;
         }
@@ -57,7 +108,7 @@ fn findMatchingBrace(s: string, openIdx: usize) -> usize? {
         } else if (depth == 1) {
             if (s[i] == ',') {
                 hasComma = true;
-            } else if (s[i] == '.' && i + 1 < s.len && s[i + 1] == '.') {
+            } else if (s[i] == '.' && i + 1 < len && s[i + 1] == '.') {
                 hasRange = true;
             }
         }
@@ -68,10 +119,27 @@ fn findMatchingBrace(s: string, openIdx: usize) -> usize? {
 
 fn findFirstGlobPos(s: string) -> usize? {
     const extStart = findExtglobStart(s);
+    const scan_limit: usize = if (extStart >= 0) { extStart as usize } else { s.len };
     let i: usize = 0;
+    const v_bs: GpVec16 = @splat('\\' as u8);
+    const v_st: GpVec16 = @splat('*' as u8);
+    const v_qm: GpVec16 = @splat('?' as u8);
+    const v_lb: GpVec16 = @splat('[' as u8);
+    const v_lc: GpVec16 = @splat('{' as u8);
     while (i < s.len) {
-        if (extStart >= 0 && i == (extStart as usize)) {
+        if (extStart >= 0 && i == scan_limit) {
             return i;
+        }
+        if (i + 16 <= scan_limit) {
+            const v: GpVec16 = s[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_bs) &&
+                !@reduce(.Or, v == v_st) &&
+                !@reduce(.Or, v == v_qm) &&
+                !@reduce(.Or, v == v_lb) &&
+                !@reduce(.Or, v == v_lc)) {
+                i += 16;
+                continue;
+            }
         }
         const c = s[i];
         if (c == '\\') {
@@ -191,26 +259,61 @@ pub fn splitGlobBase(pattern: string) -> GlobSplit {
     return GlobSplit{ base: base, glob: rest, is_glob: true };
 }
 
-fn isGlobSpecial(c: u8) -> bool {
-    return c == '*' || c == '?' || c == '[' || c == ']' || c == '{' || c == '}' || c == '(' || c == ')' || c == '!' || c == '\\';
+fn gpFindSpecialSimd(s: string, start: usize) -> usize {
+    let i = start;
+    const len = s.len;
+    const v_st: GpVec16 = @splat('*' as u8);
+    const v_qm: GpVec16 = @splat('?' as u8);
+    const v_lb: GpVec16 = @splat('[' as u8);
+    const v_rb: GpVec16 = @splat(']' as u8);
+    const v_lc: GpVec16 = @splat('{' as u8);
+    const v_rc: GpVec16 = @splat('}' as u8);
+    const v_lp: GpVec16 = @splat('(' as u8);
+    const v_rp: GpVec16 = @splat(')' as u8);
+    const v_ex: GpVec16 = @splat('!' as u8);
+    const v_bs: GpVec16 = @splat('\\' as u8);
+    while (i + 16 <= len) {
+        const v: GpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_st) || @reduce(.Or, v == v_qm) ||
+            @reduce(.Or, v == v_lb) || @reduce(.Or, v == v_rb) ||
+            @reduce(.Or, v == v_lc) || @reduce(.Or, v == v_rc) ||
+            @reduce(.Or, v == v_lp) || @reduce(.Or, v == v_rp) ||
+            @reduce(.Or, v == v_ex) || @reduce(.Or, v == v_bs)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && GP_SPECIAL_LUT[s[i] as usize] == 0) {
+        i += 1;
+    }
+    return i;
 }
 
 pub fn escapeGlob(raw: string, out: []u8) -> string {
     let pos: usize = 0;
     let i: usize = 0;
     while (i < raw.len && pos < out.len) {
-        const c = raw[i];
-        if (isGlobSpecial(c)) {
-            if (pos + 2 > out.len) {
+        const next_sp = gpFindSpecialSimd(raw, i);
+        if (next_sp > i) {
+            const avail = out.len - pos;
+            const run = next_sp - i;
+            const copy_len = if (run < avail) { run } else { avail };
+            @memcpy(out[pos .. pos + copy_len], raw[i .. i + copy_len]);
+            pos += copy_len;
+            i += copy_len;
+            if (pos >= out.len) {
                 break;
             }
-            out[pos] = '\\';
-            out[pos + 1] = c;
-            pos += 2;
-        } else {
-            out[pos] = c;
-            pos += 1;
         }
+        if (i >= raw.len) {
+            break;
+        }
+        if (pos + 2 > out.len) {
+            break;
+        }
+        out[pos] = '\\';
+        out[pos + 1] = raw[i];
+        pos += 2;
         i += 1;
     }
     return out[0..pos];

@@ -1,5 +1,63 @@
 // @cap/parse-json — Zero-allocation RFC 8259 JSON diagnostic validator & codeFrame renderer
 // Clean-room MIT implementation inspired by Sindre Sorhus parse-json v8
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning, comptime 256-entry LUT, and @memcpy.
+
+type PjsVec16 = @Vector(16, u8);
+type PjsBool16 = @Vector(16, bool);
+
+const PJS_SPACES_64: string = "                                                                ";
+
+const PJS_FLAG_WS: u8 = 1;
+const PJS_FLAG_DIGIT: u8 = 2;
+const PJS_FLAG_HEX: u8 = 4;
+const PJS_FLAG_IDENT_START: u8 = 8;
+const PJS_FLAG_SIMPLE_ESC: u8 = 16;
+
+fn pjsBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            f |= PJS_FLAG_WS;
+        }
+        if (c >= '0' && c <= '9') {
+            f |= PJS_FLAG_DIGIT | PJS_FLAG_HEX;
+        }
+        if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+            f |= PJS_FLAG_HEX;
+        }
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$') {
+            f |= PJS_FLAG_IDENT_START;
+        }
+        if (c == '"' || c == '\\' || c == '/' || c == 'b' || c == 'f' || c == 'n' || c == 'r' || c == 't') {
+            f |= PJS_FLAG_SIMPLE_ESC;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+const PJS_CHAR_LUT: [256]u8 = pjsBuildCharLut();
+
+fn pjsFindByteSimd(s: string, target: u8, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const vt: PjsVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: PjsVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            break;
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
 
 pub const JSON_VAL_NONE: u8 = 0;
 pub const JSON_VAL_OBJECT: u8 = 1;
@@ -58,28 +116,39 @@ struct PjsWriter {
 }
 
 fn pjsIsWs(ch: u8): bool {
-    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+    return (PJS_CHAR_LUT[ch as usize] & PJS_FLAG_WS) != 0;
 }
 
 fn pjsIsDigit(ch: u8): bool {
-    return ch >= '0' && ch <= '9';
+    return (PJS_CHAR_LUT[ch as usize] & PJS_FLAG_DIGIT) != 0;
 }
 
 fn pjsIsHex(ch: u8): bool {
-    if (ch >= '0' && ch <= '9') return true;
-    if (ch >= 'a' && ch <= 'f') return true;
-    if (ch >= 'A' && ch <= 'F') return true;
-    return false;
+    return (PJS_CHAR_LUT[ch as usize] & PJS_FLAG_HEX) != 0;
 }
 
 fn pjsIsIdentStart(ch: u8): bool {
-    if (ch >= 'a' && ch <= 'z') return true;
-    if (ch >= 'A' && ch <= 'Z') return true;
-    return ch == '_' || ch == '$';
+    return (PJS_CHAR_LUT[ch as usize] & PJS_FLAG_IDENT_START) != 0;
 }
 
 fn pjsSkipWs(p: *PjsParser) {
-    while (p.pos < p.input.len && pjsIsWs(p.input[p.pos])) {
+    const len = p.input.len;
+    const v_sp: PjsVec16 = @splat(' ' as u8);
+    const v_tb: PjsVec16 = @splat('\t' as u8);
+    const v_nl: PjsVec16 = @splat('\n' as u8);
+    const v_cr: PjsVec16 = @splat('\r' as u8);
+    const v_true: PjsBool16 = @splat(true);
+    while (p.pos + 16 <= len) {
+        const v: PjsVec16 = p.input[p.pos .. p.pos + 16][0..16].*;
+        const w1 = @select(bool, v == v_sp, v_true, v == v_tb);
+        const w2 = @select(bool, v == v_nl, v_true, v == v_cr);
+        const is_ws = @select(bool, w1, v_true, w2);
+        if (!@reduce(.And, is_ws)) {
+            break;
+        }
+        p.pos += 16;
+    }
+    while (p.pos < len && (PJS_CHAR_LUT[p.input[p.pos] as usize] & PJS_FLAG_WS) != 0) {
         p.pos += 1;
     }
 }
@@ -97,7 +166,17 @@ fn pjsLineCol(input: string, offset: usize): PjsLoc {
     let line: usize = 1;
     let col: usize = 1;
     let i: usize = 0;
-    while (i < limit) : (i += 1) {
+    const v_nl: PjsVec16 = @splat('\n' as u8);
+    const v_cr: PjsVec16 = @splat('\r' as u8);
+    while (i < limit) {
+        if (i + 16 <= limit) {
+            const v: PjsVec16 = input[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, v == v_nl) && !@reduce(.Or, v == v_cr)) {
+                col += 16;
+                i += 16;
+                continue;
+            }
+        }
         const ch = input[i];
         if (ch == '\n') {
             line += 1;
@@ -112,6 +191,7 @@ fn pjsLineCol(input: string, offset: usize): PjsLoc {
         } else {
             col += 1;
         }
+        i += 1;
     }
     return PjsLoc{ line: line, column: col };
 }
@@ -119,7 +199,18 @@ fn pjsLineCol(input: string, offset: usize): PjsLoc {
 fn pjsParseString(p: *PjsParser) {
     // caller verified input[p.pos] == '"'
     p.pos += 1;
-    while (p.pos < p.input.len) {
+    const len = p.input.len;
+    const v_qt: PjsVec16 = @splat('"' as u8);
+    const v_bs: PjsVec16 = @splat('\\' as u8);
+    const v_sp: PjsVec16 = @splat(0x20 as u8);
+    while (p.pos < len) {
+        if (p.pos + 16 <= len) {
+            const v: PjsVec16 = p.input[p.pos .. p.pos + 16][0..16].*;
+            if (!@reduce(.Or, v == v_qt) && !@reduce(.Or, v == v_bs) && !@reduce(.Or, v < v_sp)) {
+                p.pos += 16;
+                continue;
+            }
+        }
         const ch = p.input[p.pos];
         if (ch == '"') {
             p.pos += 1;
@@ -127,12 +218,12 @@ fn pjsParseString(p: *PjsParser) {
         }
         if (ch == '\\') {
             p.pos += 1;
-            if (p.pos >= p.input.len) {
+            if (p.pos >= len) {
                 pjsSetErr(p, JsonDiagKind.UnexpectedEnd, p.pos);
                 return;
             }
             const esc = p.input[p.pos];
-            if (esc == '"' || esc == '\\' || esc == '/' || esc == 'b' || esc == 'f' || esc == 'n' || esc == 'r' || esc == 't') {
+            if ((PJS_CHAR_LUT[esc as usize] & PJS_FLAG_SIMPLE_ESC) != 0) {
                 p.pos += 1;
                 continue;
             }
@@ -140,11 +231,11 @@ fn pjsParseString(p: *PjsParser) {
                 p.pos += 1;
                 let k: usize = 0;
                 while (k < 4) : (k += 1) {
-                    if (p.pos >= p.input.len) {
+                    if (p.pos >= len) {
                         pjsSetErr(p, JsonDiagKind.UnexpectedEnd, p.pos);
                         return;
                     }
-                    if (!pjsIsHex(p.input[p.pos])) {
+                    if ((PJS_CHAR_LUT[p.input[p.pos] as usize] & PJS_FLAG_HEX) == 0) {
                         pjsSetErr(p, JsonDiagKind.UnexpectedToken, p.pos);
                         return;
                     }
@@ -481,10 +572,11 @@ fn pjsWriteByte(w: *PjsWriter, b: u8) {
 }
 
 fn pjsWriteStr(w: *PjsWriter, s: string) {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        pjsWriteByte(w, s[i]);
-    }
+    if (w.pos >= w.buf.len || s.len == 0) return;
+    const avail = w.buf.len - w.pos;
+    const n = if (s.len < avail) s.len else avail;
+    @memcpy(w.buf[w.pos .. w.pos + n], s[0..n]);
+    w.pos += n;
 }
 
 fn pjsNumWidth(n: usize): usize {
@@ -516,9 +608,17 @@ fn pjsWriteUsize(w: *PjsWriter, n: usize) {
 }
 
 fn pjsWriteSpaces(w: *PjsWriter, count: usize) {
-    let i: usize = 0;
-    while (i < count) : (i += 1) {
-        pjsWriteByte(w, ' ');
+    if (w.pos >= w.buf.len || count == 0) return;
+    const avail = w.buf.len - w.pos;
+    let rem = if (count < avail) count else avail;
+    while (rem >= 64) {
+        @memcpy(w.buf[w.pos .. w.pos + 64], PJS_SPACES_64[0..64]);
+        w.pos += 64;
+        rem -= 64;
+    }
+    if (rem > 0) {
+        @memcpy(w.buf[w.pos .. w.pos + rem], PJS_SPACES_64[0..rem]);
+        w.pos += rem;
     }
 }
 
@@ -528,21 +628,20 @@ fn pjsFindLineSpan(input: string, target_line: usize): PjsLineSpan {
     }
     let cur_line: usize = 1;
     let line_start: usize = 0;
-    let i: usize = 0;
-    while (i <= input.len) : (i += 1) {
-        const at_end = i == input.len;
-        const is_nl = !at_end && input[i] == '\n';
-        if (at_end || is_nl) {
-            let line_end = i;
-            if (line_end > line_start && input[line_end - 1] == '\r') {
-                line_end -= 1;
-            }
-            if (cur_line == target_line) {
-                return PjsLineSpan{ found: true, start: line_start, end: line_end };
-            }
-            cur_line += 1;
-            line_start = i + 1;
+    while (true) {
+        const i = pjsFindByteSimd(input, '\n' as u8, line_start);
+        let line_end = i;
+        if (line_end > line_start && input[line_end - 1] == '\r') {
+            line_end -= 1;
         }
+        if (cur_line == target_line) {
+            return PjsLineSpan{ found: true, start: line_start, end: line_end };
+        }
+        if (i >= input.len) {
+            break;
+        }
+        cur_line += 1;
+        line_start = i + 1;
     }
     return PjsLineSpan{ found: false, start: 0, end: 0 };
 }
