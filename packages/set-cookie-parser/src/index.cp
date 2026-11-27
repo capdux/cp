@@ -1,8 +1,11 @@
 // @cap/set-cookie-parser — RFC 6265 Set-Cookie HTTP header parser in pure CP
 // Clean-room MIT implementation of npm `set-cookie-parser` (#537, 107M/wk).
+// Accelerated with 16-lane @Vector(16, u8) SIMD delimiter scanning for `;`, `=`, and `,`.
 
-import { eqIgnoreCase, trim, findByte } from "cap:ascii";
+import { eqIgnoreCase, trim } from "cap:ascii";
 import { parseI64 } from "cap:fmt";
+
+type ScpVec16 = @Vector(16, u8);
 
 pub struct ParsedCookie {
     pub name: string,
@@ -16,6 +19,65 @@ pub struct ParsedCookie {
     pub secure: bool,
     pub http_only: bool,
     pub partitioned: bool,
+}
+
+fn scpFindByte(s: string, target: u8, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const vt: ScpVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: ScpVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
+}
+
+fn scpIsNewCookieAfterComma(t: string, comma_pos: usize): bool {
+    let j = comma_pos + 1;
+    const len = t.len;
+    const v_eq: ScpVec16 = @splat(61 as u8);
+    const v_semi: ScpVec16 = @splat(59 as u8);
+    const v_comma: ScpVec16 = @splat(44 as u8);
+    while (j + 16 <= len) {
+        const v: ScpVec16 = t[j .. j + 16][0..16].*;
+        if (@reduce(.Or, (v == v_eq) | (v == v_semi) | (v == v_comma))) {
+            let k: usize = 0;
+            while (k < 16) {
+                const c = t[j + k];
+                if (c == 61) {
+                    return true;
+                }
+                if (c == 59 || c == 44) {
+                    return false;
+                }
+                k += 1;
+            }
+        }
+        j += 16;
+    }
+    while (j < len) {
+        const c = t[j];
+        if (c == 61) {
+            return true;
+        }
+        if (c == 59 || c == 44) {
+            return false;
+        }
+        j += 1;
+    }
+    return false;
 }
 
 fn scpStripQuotes(s: string): string {
@@ -47,20 +109,12 @@ pub fn parseSetCookie(header: string): ParsedCookie {
     }
 
     // Split name=value pair before first ';'
-    let pos: usize = 0;
-    const first_semi = findByte(trimmed, 59, 0);
-    let first_part = trimmed;
-    if (first_semi != null) {
-        const idx: usize = first_semi ?? (0 as usize);
-        first_part = trimmed[0..idx];
-        pos = idx + 1;
-    } else {
-        pos = trimmed.len;
-    }
+    const first_semi = scpFindByte(trimmed, 59, 0);
+    const first_part = trimmed[0..first_semi];
+    let pos: usize = if (first_semi < trimmed.len) { first_semi + 1 } else { trimmed.len };
 
-    const eq_opt = findByte(first_part, 61, 0);
-    if (eq_opt != null) {
-        const eq: usize = eq_opt ?? (0 as usize);
+    const eq = scpFindByte(first_part, 61, 0);
+    if (eq < first_part.len) {
         out.name = trim(first_part[0..eq]);
         out.value = scpStripQuotes(trim(first_part[(eq + 1)..first_part.len]));
     } else {
@@ -69,24 +123,16 @@ pub fn parseSetCookie(header: string): ParsedCookie {
 
     // Parse remaining ';'-delimited attributes
     while (pos < trimmed.len) {
-        const next_semi = findByte(trimmed, 59, pos);
-        let seg = "";
-        if (next_semi != null) {
-            const idx: usize = next_semi ?? trimmed.len;
-            seg = trim(trimmed[pos..idx]);
-            pos = idx + 1;
-        } else {
-            seg = trim(trimmed[pos..trimmed.len]);
-            pos = trimmed.len;
-        }
+        const next_semi = scpFindByte(trimmed, 59, pos);
+        const seg = trim(trimmed[pos..next_semi]);
+        pos = if (next_semi < trimmed.len) { next_semi + 1 } else { trimmed.len };
 
         if (seg.len == 0) {
             continue;
         }
 
-        const attr_eq = findByte(seg, 61, 0);
-        if (attr_eq != null) {
-            const aeq: usize = attr_eq ?? (0 as usize);
+        const aeq = scpFindByte(seg, 61, 0);
+        if (aeq < seg.len) {
             const key = trim(seg[0..aeq]);
             const val = trim(seg[(aeq + 1)..seg.len]);
             if (eqIgnoreCase(key, "path")) {
@@ -128,26 +174,14 @@ pub fn splitCookiesCount(combined: string): usize {
     let count: usize = 1;
     let i: usize = 0;
     while (i < t.len) {
-        if (t[i] == 44) { // ','
-            // Look ahead: if we find '=' before ';' or ',', this comma starts a new cookie
-            let j = i + 1;
-            let is_new_cookie = false;
-            while (j < t.len) {
-                const c = t[j];
-                if (c == 61) { // '='
-                    is_new_cookie = true;
-                    break;
-                }
-                if (c == 59 || c == 44) { // ';' or ','
-                    break;
-                }
-                j += 1;
-            }
-            if (is_new_cookie) {
-                count += 1;
-            }
+        const comma = scpFindByte(t, 44, i);
+        if (comma >= t.len) {
+            break;
         }
-        i += 1;
+        if (scpIsNewCookieAfterComma(t, comma)) {
+            count += 1;
+        }
+        i = comma + 1;
     }
     return count;
 }
@@ -162,29 +196,18 @@ pub fn splitCookiesGet(combined: string, target_idx: usize): string? {
     let seg_start: usize = 0;
     let i: usize = 0;
     while (i < t.len) {
-        if (t[i] == 44) {
-            let j = i + 1;
-            let is_new_cookie = false;
-            while (j < t.len) {
-                const c = t[j];
-                if (c == 61) {
-                    is_new_cookie = true;
-                    break;
-                }
-                if (c == 59 || c == 44) {
-                    break;
-                }
-                j += 1;
-            }
-            if (is_new_cookie) {
-                if (cur_idx == target_idx) {
-                    return trim(t[seg_start..i]);
-                }
-                cur_idx += 1;
-                seg_start = i + 1;
-            }
+        const comma = scpFindByte(t, 44, i);
+        if (comma >= t.len) {
+            break;
         }
-        i += 1;
+        if (scpIsNewCookieAfterComma(t, comma)) {
+            if (cur_idx == target_idx) {
+                return trim(t[seg_start..comma]);
+            }
+            cur_idx += 1;
+            seg_start = comma + 1;
+        }
+        i = comma + 1;
     }
     if (cur_idx == target_idx) {
         return trim(t[seg_start..t.len]);

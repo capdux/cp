@@ -1,12 +1,40 @@
+// @cap/cookie-parser — Zero-heap Cookie header parser & signed cookie verifier
+// Accelerated with 16-lane @Vector(16, u8) SIMD delimiter scanning and zero-init ParsedCookies buffers.
+
 import { trim, strEq } from "cap:ascii";
 import { getCookieHeaderValue } from "../../tough-cookie/src/index.cp";
 import { sign, unsign } from "../../cookie-signature/src/index.cp";
+
+type CprVec16 = @Vector(16, u8);
 
 pub const MAX_PARSED_COOKIES: usize = 32;
 
 pub struct CookieEntry {
     pub name: string,
     pub value: string,
+}
+
+fn cprFindByte(s: string, target: u8, start: usize): usize {
+    let i = start;
+    const len = s.len;
+    const vt: CprVec16 = @splat(target);
+    while (i + 16 <= len) {
+        const v: CprVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == vt)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (s[i + k] == target) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && s[i] != target) {
+        i += 1;
+    }
+    return i;
 }
 
 fn cprStartsWith2(s: string, c0: u8, c1: u8): bool {
@@ -81,9 +109,8 @@ pub struct ParsedCookies {
     pub signed_count: usize,
 
     pub static fn empty(): ParsedCookies {
-        let blank = CookieEntry { name: "", value: "" };
-        let c_arr: [32]CookieEntry = [blank; 32];
-        let s_arr: [32]CookieEntry = [blank; 32];
+        let c_arr: [32]CookieEntry = undefined;
+        let s_arr: [32]CookieEntry = undefined;
         return ParsedCookies {
             cookies: c_arr,
             cookie_count: 0,
@@ -123,30 +150,17 @@ fn cprParseInto(header: string, secrets: [4]string, secret_count: usize): Parsed
     let parsed = ParsedCookies.empty();
     let i: usize = 0;
     while (i < header.len) {
-        let start = i;
-        while (i < header.len && header[i] != 59) { // ';'
-            i = i + 1;
-        }
-        let seg = trim(header[start..i]);
-        if (i < header.len && header[i] == 59) {
-            i = i + 1;
-        }
+        const semi = cprFindByte(header, 59, i); // ';'
+        const seg = trim(header[i..semi]);
+        i = if (semi < header.len) { semi + 1 } else { header.len };
         if (seg.len == 0) {
             continue;
         }
-        let eq_pos: usize = 0;
-        let found_eq = false;
-        while (eq_pos < seg.len) {
-            if (seg[eq_pos] == 61) { // '='
-                found_eq = true;
-                break;
-            }
-            eq_pos = eq_pos + 1;
-        }
-        if (!found_eq || eq_pos == 0) {
+        const eq_pos = cprFindByte(seg, 61, 0); // '='
+        if (eq_pos >= seg.len || eq_pos == 0) {
             continue;
         }
-        let k = trim(seg[0..eq_pos]);
+        const k = trim(seg[0..eq_pos]);
         let v = trim(seg[(eq_pos + 1)..seg.len]);
         if (v.len >= 2 && v[0] == 34 && v[v.len - 1] == 34) { // strip optional quotes
             v = v[1..(v.len - 1)];

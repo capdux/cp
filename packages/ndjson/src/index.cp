@@ -1,5 +1,8 @@
 // @cap/ndjson — Zero-heap NDJSON / JSON Lines streaming splitter & writer
 // MIT License (clean-room CP implementation)
+// Accelerated with 16-lane @Vector(16, u8) SIMD newline/blank/CRLF scanning and @memcpy.
+
+type NdjVec16 = @Vector(16, u8);
 
 pub const MAX_LINE_BYTES: usize = 1024;
 
@@ -9,11 +12,44 @@ pub struct NdjsonLine {
     pub found: bool,
 }
 
+fn ndjFindNewline(src: []const u8, start: usize) -> usize {
+    let i = start;
+    const len = src.len;
+    const v_nl: NdjVec16 = @splat(10 as u8);
+    while (i + 16 <= len) {
+        const v: NdjVec16 = src[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_nl)) {
+            let k: usize = 0;
+            while (k < 16) {
+                if (src[i + k] == 10) {
+                    return i + k;
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
+    while (i < len && src[i] != 10) {
+        i += 1;
+    }
+    return i;
+}
+
 fn isBlankSlice(s: []const u8) -> bool {
     let i: usize = 0;
-    while (i < s.len) {
+    const len = s.len;
+    const v_sp: NdjVec16 = @splat(32 as u8);
+    const v_tab: NdjVec16 = @splat(9 as u8);
+    while (i + 16 <= len) {
+        const v: NdjVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.And, (v == v_sp) | (v == v_tab))) {
+            return false;
+        }
+        i += 16;
+    }
+    while (i < len) {
         const c: u8 = s[i];
-        if (c != ' ' as u8 && c != '\t' as u8) {
+        if (c != 32 && c != 9) {
             return false;
         }
         i += 1;
@@ -21,13 +57,32 @@ fn isBlankSlice(s: []const u8) -> bool {
     return true;
 }
 
+fn ndjHasCrOrLf(s: []const u8) -> bool {
+    let i: usize = 0;
+    const len = s.len;
+    const v_nl: NdjVec16 = @splat(10 as u8);
+    const v_cr: NdjVec16 = @splat(13 as u8);
+    while (i + 16 <= len) {
+        const v: NdjVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_nl) | (v == v_cr))) {
+            return true;
+        }
+        i += 16;
+    }
+    while (i < len) {
+        const c = s[i];
+        if (c == 10 || c == 13) {
+            return true;
+        }
+        i += 1;
+    }
+    return false;
+}
+
 pub fn nextLine(src: []const u8, start_pos: usize, out_next_pos: *usize) -> NdjsonLine {
     let pos: usize = start_pos;
     while (pos < src.len) {
-        let line_end: usize = pos;
-        while (line_end < src.len && src[line_end] != '\n' as u8) {
-            line_end += 1;
-        }
+        const line_end = ndjFindNewline(src, pos);
         let raw_end: usize = line_end;
         if (raw_end > pos && src[raw_end - 1] == '\r' as u8) {
             raw_end -= 1;
@@ -149,15 +204,10 @@ pub fn writeLine(json_record: []const u8, dst: []u8) -> i64 {
     if (json_record.len == 0 || json_record.len + 1 > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < json_record.len) {
-        const c: u8 = json_record[i];
-        if (c == '\n' as u8 || c == '\r' as u8) {
-            return -1;
-        }
-        dst[i] = c;
-        i += 1;
+    if (ndjHasCrOrLf(json_record)) {
+        return -1;
     }
+    @memcpy(dst[0..json_record.len], json_record);
     dst[json_record.len] = '\n' as u8;
     return (json_record.len + 1) as i64;
 }
