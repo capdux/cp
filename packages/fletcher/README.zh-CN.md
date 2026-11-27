@@ -1,114 +1,95 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)
 
 # fletcher
 
-零堆分配的 Fletcher-16、Fletcher-32 与 Fletcher-64 位置敏感校验和库，同时提供一次性快捷函数与流式增量哈希器（`Fletcher16`、`Fletcher32`、`Fletcher64`）。移植自 Rust `fletcher`。
+纯 CP 实现的零堆分配 Fletcher-16、Fletcher-32 与 Fletcher-64 位置敏感校验和库，同时支持一次性计算与流式增量更新。
 
-## 源包溯源与零成本迁移
+- **包名**：`fletcher`（`v1.0.0`）
+- **上游对齐**：洁净室移植自 `crates.io/fletcher`（`MIT`，`rust-fletcher`），支持字节切片、字切片、字符串输入及自定义初始种子。
 
-| 项目 | 说明 |
-| :--- | :--- |
-| **源平台** | crates.io |
-| **上游原包** | `fletcher` (`aaronriekenberg/rust-fletcher`) |
-| **CP 包名** | `fletcher` (`v1.0.0`) |
-| **许可证** | MIT |
-
-CP 生态保持原包名 `fletcher` 不变，无需 `@cap/*` 前缀或改名：
-
-```rust
-// Rust (crates.io: fletcher)
-use fletcher::{calc_fletcher16, Fletcher16};
-let sum = calc_fletcher16(b"abcde");
-```
-
-```typescript
-// CP（保持原包名 "fletcher"）
-import { fletcher16, calcFletcher16, Fletcher16 } from "fletcher";
-let sum = fletcher16("abcde");
-```
-
-## 安装
+## 安装与导入
 
 ```bash
 cap add fletcher
 ```
 
-## 快速上手与实战示例
-
-### 1. 一次性校验和（字符串、字节切片与字切片）
-
 ```typescript
 import {
-    fletcher16,
-    fletcher16Bytes,
-    calcFletcher16,
-    fletcher32,
-    fletcher32Bytes,
-    calcFletcher32,
-    fletcher64,
-    fletcher64Bytes,
-    calcFletcher64,
+    Fletcher16, Fletcher32, Fletcher64,
+    fletcher16, fletcher16Bytes, calcFletcher16,
+    fletcher32, fletcher32Bytes, calcFletcher32,
+    fletcher64, fletcher64Bytes, calcFletcher64,
 } from "fletcher";
-
-fn oneShotChecksums(): void {
-    // Fletcher-16（模 255）
-    let s16 = fletcher16("abcde");
-    let raw: [5]u8 = [97, 98, 99, 100, 101];
-    let b16 = fletcher16Bytes(raw[0..5]);
-    let c16 = calcFletcher16(raw[0..5]); // 对齐 Rust calc_fletcher16
-
-    // Fletcher-32（模 65535，支持 16 位字切片或字节流）
-    let s32 = fletcher32("abcde");
-    let b32 = fletcher32Bytes(raw[0..5]);
-    let words16: [2]u16 = [0x6261, 0x6463];
-    let c32 = calcFletcher32(words16[0..2]);
-
-    // Fletcher-64（模 4294967295，支持 32 位字切片或字节流）
-    let s64 = fletcher64("abcdefgh");
-    let b64 = fletcher64Bytes(raw[0..5]);
-    let words32: [2]u32 = [0x64636261, 0x68676665];
-    let c64 = calcFletcher64(words32[0..2]);
-}
 ```
 
-### 2. 流式增量校验器（`Fletcher16`、`Fletcher32`、`Fletcher64`）
+## 核心 API
+
+### 流式校验和类
+
+| 类型 | 构造与方法 | 说明 |
+| --- | --- | --- |
+| `Fletcher16` | `new()`, `init()`, `withInitialValues(a: u8, b: u8)`, `update(data: string)`, `updateBytes(data: &[]u8)`, `digest(): u16`, `value(): u16`, `reset()` | 16 位流式 Fletcher 校验和（按字节，`mod 255`）。 |
+| `Fletcher32` | `new()`, `init()`, `withInitialValues(a: u16, b: u16)`, `updateWords(words: &[]u16)`, `updateBytes(data: &[]u8)`, `update(data: string)`, `digest(): u32`, `value(): u32`, `reset()` | 32 位流式 Fletcher 校验和（按 16 位字，`mod 65535`），自动缓冲奇数末尾字节。 |
+| `Fletcher64` | `new()`, `init()`, `withInitialValues(a: u32, b: u32)`, `updateWords(words: &[]u32)`, `updateBytes(data: &[]u8)`, `update(data: string)`, `digest(): u64`, `value(): u64`, `reset()` | 64 位流式 Fletcher 校验和（按 32 位字，`mod 0xFFFFFFFF`），自动缓冲不足 4 字节的尾部。 |
+
+### 一次性校验和函数
+
+| 函数 | 签名 | 说明 |
+| --- | --- | --- |
+| `fletcher16` | `(data: string): u16` | 对字符串一次性计算 Fletcher-16。 |
+| `fletcher16Bytes` / `calcFletcher16` | `(data: &[]u8): u16` | 对字节切片一次性计算 Fletcher-16。 |
+| `fletcher32` | `(data: string): u32` | 对字符串一次性计算 Fletcher-32。 |
+| `fletcher32Bytes` | `(data: &[]u8): u32` | 对字节切片一次性计算 Fletcher-32。 |
+| `calcFletcher32` | `(words: &[]u16): u32` | 对 `u16` 字切片计算 Fletcher-32（对齐 Rust `calc_fletcher32`）。 |
+| `fletcher64` | `(data: string): u64` | 对字符串一次性计算 Fletcher-64。 |
+| `fletcher64Bytes` | `(data: &[]u8): u64` | 对字节切片一次性计算 Fletcher-64。 |
+| `calcFletcher64` | `(words: &[]u32): u64` | 对 `u32` 字切片计算 Fletcher-64（对齐 Rust `calc_fletcher64`）。 |
+
+## 使用示例
+
+### 1. 一次性计算
 
 ```typescript
-import { Fletcher16, Fletcher32, Fletcher64 } from "fletcher";
+import { fletcher16, fletcher32, fletcher64 } from "fletcher";
 
-fn streamingChecksums(): void {
-    // Fletcher16 分块增量更新与自定义初始种子
-    let mut h16 = Fletcher16.new(); // 别名：Fletcher16.init()
-    h16.update("abc");
-    h16.update("de");
-    let d16 = h16.digest(); // 别名：h16.value()
-    h16.reset();
-
-    let mut seeded16 = Fletcher16.withInitialValues(1, 2);
-    seeded16.update("hello");
-
-    // Fletcher32 内部自动缓存奇数长度分块的尾部残留字节
-    let mut h32 = Fletcher32.new();
-    h32.update("abc");
-    h32.update("de");
-    let d32 = h32.digest();
-
-    // Fletcher64 支持任意非 4 字节对齐分块或 u32 字切片
-    let mut h64 = Fletcher64.new();
-    h64.update("abcd");
-    h64.update("efgh");
-    let d64 = h64.value();
+fn main() {
+    let c16 = fletcher16("abcde");   // 0xC8F0
+    let c32 = fletcher32("abcdef");  // 32 位校验和
+    let c64 = fletcher64("abcdefgh");
 }
 ```
 
-## API 速览
+### 2. 流式分块计算
 
-### 流式类
-- `Fletcher16`：`new()` / `init()`、`withInitialValues(a: u8, b: u8)`、`update(string)`、`updateBytes(&[]u8)`、`digest(): u16` / `value(): u16`、`reset()`
-- `Fletcher32`：`new()` / `init()`、`withInitialValues(a: u16, b: u16)`、`update(string)`、`updateBytes(&[]u8)`、`updateWords(&[]u16)`、`digest(): u32` / `value(): u32`、`reset()`
-- `Fletcher64`：`new()` / `init()`、`withInitialValues(a: u32, b: u32)`、`update(string)`、`updateBytes(&[]u8)`、`updateWords(&[]u32)`、`digest(): u64` / `value(): u64`、`reset()`
+```typescript
+import { Fletcher32 } from "fletcher";
 
-### 一次性函数
-- `fletcher16(string): u16`、`fletcher16Bytes(&[]u8): u16`、`calcFletcher16(&[]u8): u16`
-- `fletcher32(string): u32`、`fletcher32Bytes(&[]u8): u32`、`calcFletcher32(&[]u16): u32`
-- `fletcher64(string): u64`、`fletcher64Bytes(&[]u8): u64`、`calcFletcher64(&[]u32): u64`
+fn main() {
+    let h = Fletcher32.new();
+    h.update("abc");
+    h.update("def");
+    let sum = h.digest();
+    h.reset();
+}
+```
+
+### 3. 自定义初始值与字切片
+
+```typescript
+import { Fletcher16, calcFletcher32 } from "fletcher";
+
+fn main() {
+    let h = Fletcher16.withInitialValues(0xFF, 0xFF);
+    h.update("hello");
+    let seeded = h.value();
+
+    let words: [3]u16 = [0x0102, 0x0304, 0x0506];
+    let wsum = calcFletcher32(words[0..]);
+}
+```
+
+## 与源包差异及零拷贝安全亮点
+
+- **零堆分配与尾字节缓冲**：`Fletcher32` 与 `Fletcher64` 在栈对象内部缓存未满字长的尾字节，任意分块喂入与整块输入结果完全一致。
+- **字/字节双接口**：同时提供对齐 Rust 上游的 `calcFletcher32(&[]u16)` / `calcFletcher64(&[]u32)` 与面向原始字节流的 `fletcher32Bytes` / `fletcher64Bytes`。
+- **非破坏性读取**：`digest()` / `value()` 不会清空累加状态，复用实例需显式调用 `reset()`。

@@ -1,114 +1,95 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # fletcher
 
-Zero-heap Fletcher-16, Fletcher-32, and Fletcher-64 position-sensitive checksums with both one-shot helpers and streaming incremental hashers (`Fletcher16`, `Fletcher32`, `Fletcher64`). Ported from Rust `fletcher`.
+Zero-heap Fletcher-16, Fletcher-32, and Fletcher-64 position-sensitive checksums with both one-shot functions and streaming hashers in pure CP.
 
-## Provenance & Zero-Friction Migration
+- **Package**: `fletcher` (`v1.0.0`)
+- **Upstream Alignment**: Clean-room CP port of `crates.io/fletcher` (`MIT`, `rust-fletcher`), supporting byte, word, and string feeds plus custom initial seeds.
 
-| Field | Value |
-| :--- | :--- |
-| **Source Registry** | crates.io |
-| **Upstream Package** | `fletcher` (`aaronriekenberg/rust-fletcher`) |
-| **CP Package** | `fletcher` (`v1.0.0`) |
-| **License** | MIT |
-
-Keep the exact package name in CP — no `@cap/*` prefix or renaming required:
-
-```rust
-// Rust (crates.io: fletcher)
-use fletcher::{calc_fletcher16, Fletcher16};
-let sum = calc_fletcher16(b"abcde");
-```
-
-```typescript
-// CP (same package name: "fletcher")
-import { fletcher16, calcFletcher16, Fletcher16 } from "fletcher";
-let sum = fletcher16("abcde");
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add fletcher
 ```
 
-## Quick Start & Practical Examples
-
-### 1. One-Shot Checksums (Strings, Byte Slices & Word Slices)
-
 ```typescript
 import {
-    fletcher16,
-    fletcher16Bytes,
-    calcFletcher16,
-    fletcher32,
-    fletcher32Bytes,
-    calcFletcher32,
-    fletcher64,
-    fletcher64Bytes,
-    calcFletcher64,
+    Fletcher16, Fletcher32, Fletcher64,
+    fletcher16, fletcher16Bytes, calcFletcher16,
+    fletcher32, fletcher32Bytes, calcFletcher32,
+    fletcher64, fletcher64Bytes, calcFletcher64,
 } from "fletcher";
-
-fn oneShotChecksums(): void {
-    // Fletcher-16 (mod 255)
-    let s16 = fletcher16("abcde");
-    let raw: [5]u8 = [97, 98, 99, 100, 101];
-    let b16 = fletcher16Bytes(raw[0..5]);
-    let c16 = calcFletcher16(raw[0..5]); // alias matching Rust calc_fletcher16
-
-    // Fletcher-32 (mod 65535, 16-bit words or byte stream)
-    let s32 = fletcher32("abcde");
-    let b32 = fletcher32Bytes(raw[0..5]);
-    let words16: [2]u16 = [0x6261, 0x6463];
-    let c32 = calcFletcher32(words16[0..2]);
-
-    // Fletcher-64 (mod 4294967295, 32-bit words or byte stream)
-    let s64 = fletcher64("abcdefgh");
-    let b64 = fletcher64Bytes(raw[0..5]);
-    let words32: [2]u32 = [0x64636261, 0x68676665];
-    let c64 = calcFletcher64(words32[0..2]);
-}
 ```
 
-### 2. Streaming Incremental Hashers (`Fletcher16`, `Fletcher32`, `Fletcher64`)
+## Core API
+
+### Streaming Hasher Classes
+
+| Class | Constructors & Methods | Description |
+| --- | --- | --- |
+| `Fletcher16` | `new()`, `init()`, `withInitialValues(a: u8, b: u8)`, `update(data: string)`, `updateBytes(data: &[]u8)`, `digest(): u16`, `value(): u16`, `reset()` | 16-bit streaming Fletcher checksum over bytes (`mod 255`). |
+| `Fletcher32` | `new()`, `init()`, `withInitialValues(a: u16, b: u16)`, `updateWords(words: &[]u16)`, `updateBytes(data: &[]u8)`, `update(data: string)`, `digest(): u32`, `value(): u32`, `reset()` | 32-bit streaming Fletcher checksum over 16-bit words (`mod 65535`), handling odd trailing bytes automatically. |
+| `Fletcher64` | `new()`, `init()`, `withInitialValues(a: u32, b: u32)`, `updateWords(words: &[]u32)`, `updateBytes(data: &[]u8)`, `update(data: string)`, `digest(): u64`, `value(): u64`, `reset()` | 64-bit streaming Fletcher checksum over 32-bit words (`mod 0xFFFFFFFF`), buffering partial 4-byte tails. |
+
+### One-Shot Checksum Functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `fletcher16` | `(data: string): u16` | One-shot Fletcher-16 over a string. |
+| `fletcher16Bytes` / `calcFletcher16` | `(data: &[]u8): u16` | One-shot Fletcher-16 over a byte slice. |
+| `fletcher32` | `(data: string): u32` | One-shot Fletcher-32 over a string. |
+| `fletcher32Bytes` | `(data: &[]u8): u32` | One-shot Fletcher-32 over a byte slice. |
+| `calcFletcher32` | `(words: &[]u16): u32` | One-shot Fletcher-32 over a `u16` word slice (matches Rust `calc_fletcher32`). |
+| `fletcher64` | `(data: string): u64` | One-shot Fletcher-64 over a string. |
+| `fletcher64Bytes` | `(data: &[]u8): u64` | One-shot Fletcher-64 over a byte slice. |
+| `calcFletcher64` | `(words: &[]u32): u64` | One-shot Fletcher-64 over a `u32` word slice (matches Rust `calc_fletcher64`). |
+
+## Examples
+
+### 1. One-Shot Checksums
 
 ```typescript
-import { Fletcher16, Fletcher32, Fletcher64 } from "fletcher";
+import { fletcher16, fletcher32, fletcher64 } from "fletcher";
 
-fn streamingChecksums(): void {
-    // Fletcher16 with chunked updates & custom initial seed
-    let mut h16 = Fletcher16.new(); // alias: Fletcher16.init()
-    h16.update("abc");
-    h16.update("de");
-    let d16 = h16.digest(); // alias: h16.value()
-    h16.reset();
-
-    let mut seeded16 = Fletcher16.withInitialValues(1, 2);
-    seeded16.update("hello");
-
-    // Fletcher32 handles odd-length byte chunks seamlessly via internal pending byte
-    let mut h32 = Fletcher32.new();
-    h32.update("abc");
-    h32.update("de");
-    let d32 = h32.digest();
-
-    // Fletcher64 handles arbitrary unaligned byte chunks or u32 word slices
-    let mut h64 = Fletcher64.new();
-    h64.update("abcd");
-    h64.update("efgh");
-    let d64 = h64.value();
+fn main() {
+    let c16 = fletcher16("abcde");   // 0xC8F0
+    let c32 = fletcher32("abcdef");  // 32-bit checksum
+    let c64 = fletcher64("abcdefgh");
 }
 ```
 
-## API Reference
+### 2. Streaming Multi-Chunk Hashing
 
-### Streaming Classes
-- `Fletcher16`: `new()` / `init()`, `withInitialValues(a: u8, b: u8)`, `update(data: string)`, `updateBytes(data: &[]u8)`, `digest(): u16` / `value(): u16`, `reset()`
-- `Fletcher32`: `new()` / `init()`, `withInitialValues(a: u16, b: u16)`, `update(data: string)`, `updateBytes(data: &[]u8)`, `updateWords(words: &[]u16)`, `digest(): u32` / `value(): u32`, `reset()`
-- `Fletcher64`: `new()` / `init()`, `withInitialValues(a: u32, b: u32)`, `update(data: string)`, `updateBytes(data: &[]u8)`, `updateWords(words: &[]u32)`, `digest(): u64` / `value(): u64`, `reset()`
+```typescript
+import { Fletcher32 } from "fletcher";
 
-### One-Shot Functions
-- `fletcher16(data: string): u16`, `fletcher16Bytes(data: &[]u8): u16`, `calcFletcher16(data: &[]u8): u16`
-- `fletcher32(data: string): u32`, `fletcher32Bytes(data: &[]u8): u32`, `calcFletcher32(words: &[]u16): u32`
-- `fletcher64(data: string): u64`, `fletcher64Bytes(data: &[]u8): u64`, `calcFletcher64(words: &[]u32): u64`
+fn main() {
+    let h = Fletcher32.new();
+    h.update("abc");
+    h.update("def");
+    let sum = h.digest();
+    h.reset();
+}
+```
+
+### 3. Custom Initial Values & Word Slices
+
+```typescript
+import { Fletcher16, calcFletcher32 } from "fletcher";
+
+fn main() {
+    let h = Fletcher16.withInitialValues(0xFF, 0xFF);
+    h.update("hello");
+    let seeded = h.value();
+
+    let words: [3]u16 = [0x0102, 0x0304, 0x0506];
+    let wsum = calcFletcher32(words[0..]);
+}
+```
+
+## Differences from Upstream & Highlights
+
+- **Zero Heap & Pending Byte Buffering**: `Fletcher32` and `Fletcher64` store incomplete trailing bytes inline (`pending`), so arbitrary chunk boundaries produce identical digests to contiguous input.
+- **Word & Byte Overloads**: Provides both `calcFletcher32(&[]u16)` / `calcFletcher64(&[]u32)` matching upstream Rust word semantics and `fletcher32Bytes` / `fletcher64Bytes` for raw byte streams.
+- **Non-Destructive Digest**: `digest()` / `value()` read the current checksum without resetting internal state; call `reset()` explicitly to reuse a hasher.

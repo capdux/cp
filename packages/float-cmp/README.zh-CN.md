@@ -1,133 +1,98 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent 速查](./README_AGENT.md)
 
 # float-cmp
 
-零堆分配的 IEEE-754 浮点数近似相等、比例容差、近似排序（`approxOrd`）、有符号 ULPs 差值及相邻可表示浮点步进（`nextUp` / `nextDown`）库。净室移植自 Rust `float-cmp`。
+纯 CP 实现的零堆分配 IEEE-754 浮点数近似相等、ULPs 距离、相邻浮点步进、比例比较与近似排序库。
 
-## 源包溯源与零成本迁移
+- **包名**：`float-cmp`（`v1.0.0`）
+- **上游对齐**：洁净室移植自 `crates.io/float-cmp`（`MIT`），底层复用 `approx` 的 IEEE-754 epsilon 与 ULP 原语。
 
-| 项目 | 说明 |
-| :--- | :--- |
-| **源平台** | crates.io |
-| **上游原包** | `float-cmp` (`mikedilger/float-cmp`) |
-| **CP 包名** | `float-cmp` (`v1.0.0`) |
-| **许可证** | MIT |
-
-CP 生态保持原包名 `float-cmp` 不变，无需 `@cap/*` 前缀或改名：
-
-```rust
-// Rust (crates.io: float-cmp)
-use float_cmp::{approx_eq, F64Margin};
-let ok = approx_eq!(f64, 0.1 + 0.2, 0.3, F64Margin { epsilon: 1e-12, ulps: 2 });
-```
-
-```typescript
-// CP（保持原包名 "float-cmp"）
-import { approxEqF64, F64Margin } from "float-cmp";
-let margin = F64Margin.fromTuple(1e-12, 2);
-let ok = approxEqF64(0.1 + 0.2, 0.3, margin);
-```
-
-## 安装
+## 安装与导入
 
 ```bash
 cap add float-cmp
 ```
 
-## 快速上手与实战示例
-
-### 1. 双容差配置（`F64Margin` / `F32Margin`）
-
 ```typescript
 import {
-    F64Margin,
-    F32Margin,
-    approxEqF64,
-    approxNeF64,
-    approxEqF32,
-    approxNeF32,
+    F64Margin, F32Margin,
+    approxEqF64, approxNeF64, approxOrdF64, approxEqRatioF64,
+    ulpsDiffF64, nextUpF64, nextDownF64,
 } from "float-cmp";
+```
 
-fn marginChecks(): void {
-    let m_def = F64Margin.defaultMargin();
-    let m_zero = F64Margin.zero();
-    let m_custom = F64Margin.fromTuple(1e-12, 4);
-    let m_eps = F64Margin.withEpsilon(1e-9);
-    let m_ulps = F64Margin.withUlps(2);
+## 核心 API
 
-    let eq = approxEqF64(0.1 + 0.2, 0.3, m_custom);
-    let ne = approxNeF64(1.0, 2.0, m_def);
+### 容差构造器（Margin）
 
-    let m32 = F32Margin.fromTuple(1e-5 as f32, 4);
-    let eq32 = approxEqF32(1.0 as f32, 1.000001 as f32, m32);
-    let ne32 = approxNeF32(1.0 as f32, 2.0 as f32, m32);
+| 类型 | 字段与方法 | 说明 |
+| --- | --- | --- |
+| `F64Margin` | `epsilon: f64`, `ulps: u64`；`defaultMargin()`, `zero()`, `fromTuple(epsilon, ulps)`, `withEpsilon(eps)`, `withUlps(u)` | `f64` 双重容差配置（绝对 epsilon + ULPs）。 |
+| `F32Margin` | `epsilon: f32`, `ulps: u32`；`defaultMargin()`, `zero()`, `fromTuple(epsilon, ulps)`, `withEpsilon(eps)`, `withUlps(u)` | `f32` 双重容差配置（绝对 epsilon + ULPs）。 |
+
+### 近似相等、比例与排序
+
+| 函数 | 签名 | 说明 |
+| --- | --- | --- |
+| `approxEqF64` / `approxNeF64` | `(a: f64, b: f64, margin: F64Margin): bool` | 基于 `epsilon` 与 `ulps` 双重容差判定 `f64` 近似相等/不等。 |
+| `approxEqF32` / `approxNeF32` | `(a: f32, b: f32, margin: F32Margin): bool` | 基于 `epsilon` 与 `ulps` 双重容差判定 `f32` 近似相等/不等。 |
+| `approxEqRatioF64` | `(a: f64, b: f64, ratio: f64): bool` | 检查 `|a - b| <= max(|a|, |b|) * ratio`（`f64`）。 |
+| `approxEqRatioF32` | `(a: f32, b: f32, ratio: f32): bool` | 检查 `|a - b| <= max(|a|, |b|) * ratio`（`f32`）。 |
+| `approxOrdF64` | `(a: f64, b: f64, margin: F64Margin): i32` | 近似相等返回 `0`，`a < b` 返回 `-1`，`a > b` 返回 `1`。 |
+| `approxOrdF32` | `(a: f32, b: f32, margin: F32Margin): i32` | 近似相等返回 `0`，`a < b` 返回 `-1`，`a > b` 返回 `1`。 |
+
+### IEEE-754 分类、ULPs 与相邻浮点
+
+| 函数 | 签名 | 说明 |
+| --- | --- | --- |
+| `fcmpIsNanF64` / `fcmpIsNanF32` | `(x: f64/f32): bool` | 判断是否为 NaN。 |
+| `fcmpIsInfF64` / `fcmpIsInfF32` | `(x: f64/f32): bool` | 判断是否为 `+inf` 或 `-inf`。 |
+| `f64ToOrderedI64` / `f32ToOrderedI32` | `(x: f64): i64` / `(x: f32): i32` | 将有限 IEEE-754 位模式映射为保序有符号整数。 |
+| `ulpsDiffF64` / `ulpsDiffF32` | `(a, b): i64?` / `i32?` | 计算有符号 ULP 差值（`a - b`）；遇 NaN/Inf 返回 `null`。 |
+| `nextUpF64` / `nextDownF64` | `(x: f64): f64` | 朝 `+inf` / `-inf` 步进至下一个可表示的 `f64`（别名 `nextUp`, `nextDown`）。 |
+| `nextUpF32` / `nextDownF32` | `(x: f32): f32` | 朝 `+inf` / `-inf` 步进至下一个可表示的 `f32`。 |
+
+## 使用示例
+
+### 1. 双重容差比较与排序
+
+```typescript
+import { F64Margin, approxEqF64, approxOrdF64 } from "float-cmp";
+
+fn main() {
+    let m = F64Margin.defaultMargin().withUlps(4);
+    let ok = approxEqF64(0.1 + 0.2, 0.3, m); // true
+    let ord = approxOrdF64(1.0, 2.0, m);     // -1
 }
 ```
 
-### 2. 比例容差与近似排序
+### 2. ULPs 距离与相邻浮点步进
 
 ```typescript
-import {
-    F64Margin,
-    approxEqRatioF64,
-    approxEqRatioF32,
-    approxOrdF64,
-    approxOrdF32,
-} from "float-cmp";
+import { nextUpF64, ulpsDiffF64 } from "float-cmp";
 
-fn ratioAndOrder(): void {
-    // 比例比较：|a - b| <= ratio * max(|a|, |b|)
-    let close = approxEqRatioF64(1000.0, 1000.5, 0.001);
-    let close32 = approxEqRatioF32(100.0 as f32, 100.05 as f32, 0.001 as f32);
-
-    // 近似三路排序：-1（小于）、0（近似相等）、+1（大于）
-    let m = F64Margin.fromTuple(1e-9, 4);
-    let ord = approxOrdF64(1.0, 1.0 + 1e-10, m); // 0
-}
-```
-
-### 3. 有符号 ULPs 差值与相邻浮点步进（`nextUp` / `nextDown`）
-
-```typescript
-import {
-    ulpsDiffF64,
-    ulpsDiffF32,
-    nextUp,
-    nextDown,
-    nextUpF32,
-    nextDownF32,
-    f64ToOrderedI64,
-    f32ToOrderedI32,
-} from "float-cmp";
-
-fn ulpsStepping(): void {
-    let up = nextUp(1.0);       // nextUpF64 别名
-    let down = nextDown(1.0);   // nextDownF64 别名
-    if (let diff = ulpsDiffF64(1.0, up)) {
-        // diff == -1
+fn main() {
+    let a: f64 = 1.0;
+    let b = nextUpF64(nextUpF64(a));
+    if (let diff = ulpsDiffF64(b, a)) {
+        // diff == 2
     }
-    let up32 = nextUpF32(1.0 as f32);
-    let down32 = nextDownF32(1.0 as f32);
-    let diff32 = ulpsDiffF32(up32, 1.0 as f32); // +1
-
-    // 保持字典序的整数映射键（可用于基数排序或二进制索引）
-    let key64 = f64ToOrderedI64(1.0);
-    let key32 = f32ToOrderedI32(1.0 as f32);
 }
 ```
 
-## API 速览
+### 3. 比例容差比较
 
-### 容差类
-- `F64Margin { epsilon: f64, ulps: u64 }`：`defaultMargin()`、`zero()`、`fromTuple(epsilon, ulps)`、`withEpsilon(eps)`、`withUlps(u)`
-- `F32Margin { epsilon: f32, ulps: u32 }`：`defaultMargin()`、`zero()`、`fromTuple(epsilon, ulps)`、`withEpsilon(eps)`、`withUlps(u)`
+```typescript
+import { approxEqRatioF64, approxEqRatioF32 } from "float-cmp";
 
-### 近似比较与排序
-- `approxEqF64` / `approxNeF64`、`approxEqF32` / `approxNeF32`
-- `approxEqRatioF64` / `approxEqRatioF32`
-- `approxOrdF64` / `approxOrdF32`（返回 `-1`、`0`、`+1`）
+fn main() {
+    let close64 = approxEqRatioF64(1000.0, 1000.5, 0.001); // true
+    let close32 = approxEqRatioF32(10.0, 10.01, 0.005);    // true
+}
+```
 
-### ULPs、步进与分类
-- `ulpsDiffF64(a, b): i64?`、`ulpsDiffF32(a, b): i32?`
-- `nextUp` / `nextUpF64`、`nextDown` / `nextDownF64`、`nextUpF32`、`nextDownF32`
-- `f64ToOrderedI64`、`f32ToOrderedI32`、`fcmpIsNanF64/F32`、`fcmpIsInfF64/F32`
+## 与源包差异及零拷贝安全亮点
+
+- **显式位宽函数**：用 `approxEqF64`/`approxEqF32`、`F64Margin`/`F32Margin` 替代 Rust 的 `ApproxEq` Trait 与 `approx_eq!` 宏。
+- **可选类型安全**：`ulpsDiffF64`/`ulpsDiffF32` 返回 CP 可选类型 `i64?`/`i32?`，遇到 NaN 或无穷大时返回 `null`。
+- **零堆分配与链式构造**：纯栈值类型，支持 `.withEpsilon()` / `.withUlps()` 不可变链式配置。

@@ -1,42 +1,46 @@
-# nibble_vec — AI Agent Quick Ref
+# nibble_vec (AI Agent Quick Ref)
 
-- **Import**: `import { NIBBLE_MAX_BYTES, nvecMaxNibbles, nvecGetRaw, NibbleVec } from "nibble_vec";`
-- **Source**: crates.io `nibble_vec` (`v0.1.0`, zero-heap inline 64-byte / 128-nibble vector)
+Zero-heap 4-bit nibble vector (`NibbleVec`, max 128 nibbles / 64 bytes inline) for radix tries and prefix compression.
 
-## Core Signatures
-```cp
-NIBBLE_MAX_BYTES: usize = 64
-nvecMaxNibbles(): usize                    // 128
-nvecGetRaw(data: [64]u8, idx: usize): u8
+## Import
+```typescript
+import { NibbleVec, nvecMaxNibbles, nvecGetRaw } from "nibble_vec";
+```
 
-class NibbleVec {
-    data: [64]u8,
-    nibble_len: usize,
-    static new(): NibbleVec;
-    static fromBytes(bytes: &[]u8): NibbleVec;       // alias: fromByteSlice
-    len(): usize;
-    isEmpty(): bool;
-    byteLen(): usize;                                // (nibble_len + 1) / 2
-    asBytes(): &[]u8;
-    copyBytes(dst: []u8): usize;
-    push(nib: u8): bool;                             // false if full (>= 128)
-    pop(): u8?;
-    get(idx: usize): u8?;                            // null if idx >= len
-    set(idx: usize, nib: u8): bool;
-    clear();
-    truncate(new_len: usize);
-    split(idx: usize): NibbleVec;                    // mutates self to [0..idx), returns [idx..len)
-    join(other: NibbleVec): NibbleVec;
-    extend(other: NibbleVec): bool;                  // false if combined > 128
-    slice(start: usize, end: usize): NibbleVec;
-    commonPrefixLen(other: NibbleVec): usize;
-    hasPrefix(prefix: NibbleVec): bool;
-    equals(other: NibbleVec): bool;
+## API Signatures
+- `nvecMaxNibbles(): usize` (`128`, backed by `[64]u8`)
+- `nvecGetRaw(data: [64]u8, idx: usize): u8`
+- `class NibbleVec { data: [64]u8, nibble_len: usize }`
+  - Constructors:
+    - `NibbleVec.new(): NibbleVec`
+    - `NibbleVec.fromBytes(bytes: &[]u8): NibbleVec`
+    - `NibbleVec.fromByteSlice(bytes: &[]u8): NibbleVec`
+  - Read-only queries & value transforms:
+    - `len(): usize`, `isEmpty(): bool`, `byteLen(): usize`
+    - `copyBytes(dst: []u8): usize`, `get(idx: usize): u8?`
+    - `join(other: NibbleVec): NibbleVec`, `slice(start: usize, end: usize): NibbleVec`
+    - `commonPrefixLen(other: NibbleVec): usize`, `hasPrefix(prefix: NibbleVec): bool`, `equals(other: NibbleVec): bool`
+  - Mutable receiver (`*self`):
+    - `asBytes(): &[]u8`
+    - `push(nib: u8): bool`, `pop(): u8?`, `set(idx: usize, nib: u8): bool`
+    - `clear()`, `truncate(new_len: usize)`
+    - `split(idx: usize): NibbleVec`, `extend(other: NibbleVec): bool`
+
+## Minimal Example
+```typescript
+import { NibbleVec } from "nibble_vec";
+
+fn splitCommon(a_raw: &[]u8, b_raw: &[]u8): NibbleVec {
+    let a = NibbleVec.fromBytes(a_raw);
+    let b = NibbleVec.fromBytes(b_raw);
+    let lcp = a.commonPrefixLen(b);
+    return a.split(lcp);
 }
 ```
 
-## Pitfalls
-- Fixed inline capacity is **128 nibbles (64 bytes)**; `fromBytes` truncates beyond 64 bytes, and `push`/`extend` return `false` when capacity is exceeded.
-- Nibble values are 4-bit (`0..15`); higher bits are masked (`nib & 0x0F`).
-- Even indices occupy the high nibble (`byte >> 4`), odd indices occupy the low nibble (`byte & 0x0F`).
-- `split`, `push`, `pop`, `set`, `clear`, `truncate`, `extend`, and `asBytes` take a mutable receiver (`let mut nv = ...`).
+## Pitfalls & Borrowing Rules
+- Hard capacity limit is `128` nibbles (`64` bytes); `push`/`extend` return `false` when full, and `fromBytes` silently clamps inputs >64 bytes.
+- `asBytes()` requires `*self` in `src/index.cp` so the returned `&[]u8` borrows `self.data`; bind with `let nv = ...` before calling `asBytes()`, `push`, `pop`, `set`, `clear`, `truncate`, `split`, or `extend`.
+- `get(idx)` and `pop()` return optional `u8?`; unwrap with `if (let v = nv.get(i))`.
+- High nibble is stored at even indices (`0, 2, ...`), low nibble at odd indices (`1, 3, ...`); `push`/`set` mask `nib & 0x0F`.
+- `split(idx)` mutates `self` to keep `[0..idx)` and returns the suffix `[idx..len)` by value.

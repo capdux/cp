@@ -1,131 +1,121 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # zigzag
 
-Zero-allocation ZigZag signed↔unsigned integer bijection (`i8`/`i16`/`i32`/`i64` scalars and slices) plus Protobuf/Avro/Parquet-compatible ZigZag-Varint streaming codec in pure CP.
+Zero-allocation 8/16/32/64-bit ZigZag signed-to-unsigned bijection and ZigZag-Varint streaming codec (Protobuf / Avro / Parquet / CBOR) in pure CP.
 
-## Provenance & Zero-Friction Migration
+- **Package**: `zigzag` (`v1.0.0`)
+- **Upstream Alignment**: Clean-room CP port of `crates.io/zigzag` (`MIT`), extended with batch slice codecs and LEB128 ZigZag-Varint streaming primitives.
 
-| Field | Value |
-| :--- | :--- |
-| **Source Registry** | crates.io |
-| **Upstream Package** | `zigzag` |
-| **CP Package** | `zigzag` (`v1.0.0`) |
-| **License** | MIT |
-
-Keep the exact package name in CP — no `@cap/*` prefix or renaming required:
-
-```rust
-// Rust (crates.io: zigzag)
-use zigzag::ZigZag;
-let enc: u64 = ZigZag::encode(-1_i64); // 1
-let dec: i64 = ZigZag::decode(enc);    // -1
-```
-
-```typescript
-// CP (same package name: "zigzag")
-import { encodeI64, decodeU64 } from "zigzag";
-let enc = encodeI64(-1); // 1
-let dec = decodeU64(enc); // -1
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add zigzag
 ```
 
-## Quick Start & Practical Examples
-
-### 1. Scalar Bijection (`i8`, `i16`, `i32`, `i64`)
-
-Maps small-magnitude signed integers (`0, -1, 1, -2, 2, ...`) to small unsigned integers (`0, 1, 2, 3, 4, ...`) so varint/LEB128 encoders compress negative numbers efficiently.
-
 ```typescript
 import {
-    encodeI8, decodeU8,
-    encodeI16, decodeU16,
-    encodeI32, decodeU32,
-    encodeI64, decodeU64,
-} from "zigzag";
-
-fn scalarCodec(): void {
-    let e8 = encodeI8(-1);       // 1
-    let d8 = decodeU8(e8);       // -1 (alias: decodeI8)
-
-    let e16 = encodeI16(-2);     // 3
-    let d16 = decodeU16(e16);    // -2 (alias: decodeI16)
-
-    let e32 = encodeI32(-100);   // 199
-    let d32 = decodeU32(e32);    // -100 (alias: decodeI32)
-
-    let e64 = encodeI64(-42);    // 83
-    let d64 = decodeU64(e64);    // -42 (alias: decodeI64)
-}
-```
-
-### 2. Batch Slice Encode & Decode
-
-```typescript
-import { encodeI32Slice, decodeU32Slice, encodeI64Slice, decodeU64Slice } from "zigzag";
-
-fn sliceCodec(): void {
-    let src: [4]i32 = [0, -1, 1, -1000];
-    let mut enc: [4]u32 = undefined;
-    let mut dec: [4]i32 = undefined;
-
-    let n_enc = encodeI32Slice(src[0..4], enc[0..4]); // 4
-    let n_dec = decodeU32Slice(enc[0..4], dec[0..4]); // 4
-}
-```
-
-### 3. ZigZag-Varint Streaming & Slice Codec (Protobuf `sint64` / Avro)
-
-```typescript
-import {
+    VarintResult,
+    encodeI32, decodeI32,
+    encodeI64, decodeI64,
+    encodeZigzagVarint, decodeZigzagVarint,
     varintLen,
-    encodeZigzagVarint,
-    decodeZigzagVarint,
-    encodeZigzagVarintSlice,
-    decodeZigzagVarintSlice,
 } from "zigzag";
+```
 
-fn varintCodec(): void {
-    // Single value
-    let needed = varintLen(-150); // 2 bytes
-    let mut buf: [16]u8 = undefined;
-    let written = encodeZigzagVarint(-150, buf[0..16]);
+## Core API
+
+### Data Types
+
+| Type | Fields | Description |
+| --- | --- | --- |
+| `VarintResult` | `value: i64`, `consumed: usize`, `valid: bool` | Decoded ZigZag-Varint value, byte count consumed, and validity flag. |
+
+### Scalar ZigZag Bijection
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `encodeI8` | `(n: i8): u8` | Maps signed `i8` to `u8` (`0 -> 0, -1 -> 1, 1 -> 2, ...`). |
+| `decodeU8` / `decodeI8` | `(u: u8): i8` | Inverse bijection from `u8` back to `i8`. |
+| `encodeI16` | `(n: i16): u16` | Maps signed `i16` to `u16`. |
+| `decodeU16` / `decodeI16` | `(u: u16): i16` | Inverse bijection from `u16` back to `i16`. |
+| `encodeI32` | `(n: i32): u32` | Maps signed `i32` to `u32`. |
+| `decodeI32` / `decodeU32` | `(u: u32): i32` | Inverse bijection from `u32` back to `i32`. |
+| `encodeI64` | `(n: i64): u64` | Maps signed `i64` to `u64`. |
+| `decodeI64` / `decodeU64` | `(u: u64): i64` | Inverse bijection from `u64` back to `i64`. |
+
+### Batch Slice Codecs
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `encodeI8Slice` | `(src: &[]i8, dst: []u8): usize` | Batch-encodes `src` into `dst`, returns element count written (`min(src.len, dst.len)`). |
+| `decodeU8Slice` | `(src: &[]u8, dst: []i8): usize` | Batch-decodes `u8` slice into `i8` slice. |
+| `encodeI16Slice` | `(src: &[]i16, dst: []u16): usize` | Batch-encodes `i16` slice into `u16` slice. |
+| `decodeU16Slice` | `(src: &[]u16, dst: []i16): usize` | Batch-decodes `u16` slice into `i16` slice. |
+| `encodeI32Slice` | `(src: &[]i32, dst: []u32): usize` | Batch-encodes `i32` slice into `u32` slice. |
+| `decodeU32Slice` | `(src: &[]u32, dst: []i32): usize` | Batch-decodes `u32` slice into `i32` slice. |
+| `encodeI64Slice` | `(src: &[]i64, dst: []u64): usize` | Batch-encodes `i64` slice into `u64` slice. |
+| `decodeU64Slice` | `(src: &[]u64, dst: []i64): usize` | Batch-decodes `u64` slice into `i64` slice. |
+
+### ZigZag-Varint Streaming Codec
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `varintLen` | `(n: i64): usize` | Computes exact encoded LEB128 ZigZag-Varint byte length (`1..=10`). |
+| `encodeZigzagVarint` | `(n: i64, out: []u8): usize` | Encodes `n` into `out`; returns bytes written (`0` if buffer too small). |
+| `decodeZigzagVarint` | `(data: &[]u8, start: usize): VarintResult` | Decodes one ZigZag-Varint starting at `start`; check `.valid`. |
+| `encodeZigzagVarintSlice` | `(src: &[]i64, dst: []u8): usize` | Encodes a slice of `i64` values sequentially into `dst`, returns total bytes written. |
+| `decodeZigzagVarintSlice` | `(src: &[]u8, dst: []i64): usize` | Decodes sequential ZigZag-Varints from `src` into `dst`, returns element count decoded. |
+
+## Examples
+
+### 1. Scalar Bijection
+
+```typescript
+import { encodeI32, decodeI32, encodeI64, decodeI64 } from "zigzag";
+
+fn main() {
+    let u = encodeI32(-1);        // 1
+    let s = decodeI32(u);         // -1
+    let big = encodeI64(-100000); // 199999
+    let orig = decodeI64(big);    // -100000
+}
+```
+
+### 2. Streaming ZigZag-Varint Encoding & Decoding
+
+```typescript
+import { encodeZigzagVarint, decodeZigzagVarint, varintLen } from "zigzag";
+
+fn main() {
+    let buf: [16]u8 = undefined;
+    let needed = varintLen(-300);
+    let written = encodeZigzagVarint(-300, buf[0..]);
     let res = decodeZigzagVarint(buf[0..written], 0);
     if (res.valid) {
-        // res.value == -150, res.consumed == 2
+        // res.value == -300, res.consumed == needed
     }
-
-    // Batch pack / unpack of i64 sequences
-    let vals: [4]i64 = [0, -1, 150, -100000];
-    let mut packed: [64]u8 = undefined;
-    let total_bytes = encodeZigzagVarintSlice(vals[0..4], packed[0..64]);
-
-    let mut unpacked: [4]i64 = undefined;
-    let count = decodeZigzagVarintSlice(packed[0..total_bytes], unpacked[0..4]); // 4
 }
 ```
 
-## API Reference
+### 3. Batch Slice Round-Trip
 
-### Scalar Bijection
-- `encodeI8(n: i8): u8`, `decodeU8(u: u8): i8` / `decodeI8(u: u8): i8`
-- `encodeI16(n: i16): u16`, `decodeU16(u: u16): i16` / `decodeI16(u: u16): i16`
-- `encodeI32(n: i32): u32`, `decodeU32(u: u32): i32` / `decodeI32(u: u32): i32`
-- `encodeI64(n: i64): u64`, `decodeU64(u: u64): i64` / `decodeI64(u: u64): i64`
+```typescript
+import { encodeZigzagVarintSlice, decodeZigzagVarintSlice } from "zigzag";
 
-### Batch Slice Bijection
-- `encodeI8Slice` / `decodeU8Slice`, `encodeI16Slice` / `decodeU16Slice`
-- `encodeI32Slice` / `decodeU32Slice`, `encodeI64Slice` / `decodeU64Slice`
+fn main() {
+    let nums: [4]i64 = [-1, 0, 1, -1000];
+    let wire: [40]u8 = undefined;
+    let bytes_written = encodeZigzagVarintSlice(nums[0..], wire[0..]);
 
-### ZigZag-Varint Codec
-- `VarintResult { value: i64, consumed: usize, valid: bool }`
-- `varintLen(n: i64): usize`
-- `encodeZigzagVarint(n: i64, out: []u8): usize`
-- `decodeZigzagVarint(data: &[]u8, start: usize): VarintResult`
-- `encodeZigzagVarintSlice(src: &[]i64, dst: []u8): usize`
-- `decodeZigzagVarintSlice(src: &[]u8, dst: []i64): usize`
+    let decoded: [4]i64 = undefined;
+    let count = decodeZigzagVarintSlice(wire[0..bytes_written], decoded[0..]);
+    // count == 4, decoded == [-1, 0, 1, -1000]
+}
+```
+
+## Differences from Upstream & Highlights
+
+- **Zero Heap Allocation**: All batch and Varint APIs write directly into caller-provided slices (`dst: []u8`, `out: []u8`) with no allocator required.
+- **Explicit Width Functions**: Replaces Rust `ZigZag` trait dispatch with monomorphic `encodeI8`/`I16`/`I32`/`I64` and `decodeU*`/`decodeI*` aliases for zero-overhead inlining.
+- **Safe Varint Bounds**: `decodeZigzagVarint` guards against truncated streams and >10-byte overflow varints via `VarintResult.valid`.
