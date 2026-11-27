@@ -5,6 +5,36 @@
 import { PercentEncoding } from "./percent";
 const std = @import("std");
 
+type UrlSpVec16 = @Vector(16, u8);
+
+fn urlSpSimdFindSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_amp: UrlSpVec16 = @splat(38);  // '&'
+    const v_eq: UrlSpVec16 = @splat(61);   // '='
+    const v_pct: UrlSpVec16 = @splat(37);  // '%'
+    const v_plus: UrlSpVec16 = @splat(43); // '+'
+    while (i + 16 <= n) {
+        const chunk: UrlSpVec16 = s[i..][0..16].*;
+        const m_amp: u16 = @bitCast(chunk == v_amp);
+        const m_eq: u16 = @bitCast(chunk == v_eq);
+        const m_pct: u16 = @bitCast(chunk == v_pct);
+        const m_plus: u16 = @bitCast(chunk == v_plus);
+        const mask: u16 = m_amp | m_eq | m_pct | m_plus;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == (38 as u8) or c == (61 as u8) or c == (37 as u8) or c == (43 as u8)) {
+            return i;
+        }
+    }
+    return n;
+}
+
 pub struct QueryParam {
     pub key: string = "",
     pub value: string = "",
@@ -45,8 +75,11 @@ pub struct Scanner {
         let name_needs_dec = false;
         let val_needs_dec = false;
 
-        while (_.i < _.query_string.len and _.query_string[_.i] != (38 as u8)) {
+        while (_.i < _.query_string.len) {
+            _.i = urlSpSimdFindSpecial(_.query_string, _.i);
+            if (_.i >= _.query_string.len) break;
             let c = _.query_string[_.i];
+            if (c == (38 as u8)) break; // '&'
             if (c == (61 as u8) and eq_pos == null) { // '='
                 eq_pos = _.i;
             } else if (c == (37 as u8) or c == (43 as u8)) { // '%' or '+'

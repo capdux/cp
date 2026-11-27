@@ -8,6 +8,169 @@ import { TomlError, TomlKind, TomlEntry, TomlArray, TomlTable, TomlValue, TomlDo
 
 pub const TOML_MAX_DEPTH: usize = 64;
 
+type TomlCodecVec16 = @Vector(16, u8);
+
+fn tomlSimdFindEol(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_lf: TomlCodecVec16 = @splat('\n');
+    const v_cr: TomlCodecVec16 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_lf | m_cr;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && s[i] != '\n' && s[i] != '\r') : (i += 1) {}
+    return i;
+}
+
+fn tomlSimdSkipBareKey(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_A: TomlCodecVec16 = @splat('A');
+    const v_Z: TomlCodecVec16 = @splat('Z');
+    const v_a: TomlCodecVec16 = @splat('a');
+    const v_z: TomlCodecVec16 = @splat('z');
+    const v_0: TomlCodecVec16 = @splat('0');
+    const v_9: TomlCodecVec16 = @splat('9');
+    const v_us: TomlCodecVec16 = @splat('_');
+    const v_hy: TomlCodecVec16 = @splat('-');
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const m_up: u16 = @as(u16, @bitCast(chunk >= v_A)) & @as(u16, @bitCast(chunk <= v_Z));
+        const m_lo: u16 = @as(u16, @bitCast(chunk >= v_a)) & @as(u16, @bitCast(chunk <= v_z));
+        const m_dg: u16 = @as(u16, @bitCast(chunk >= v_0)) & @as(u16, @bitCast(chunk <= v_9));
+        const m_us: u16 = @bitCast(chunk == v_us);
+        const m_hy: u16 = @bitCast(chunk == v_hy);
+        const m_bad: u16 = ~(m_up | m_lo | m_dg | m_us | m_hy);
+        if (m_bad != 0) {
+            return i + (@ctz(m_bad) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && TomlParser.isBareKeyChar(s[i])) : (i += 1) {}
+    return i;
+}
+
+fn tomlSimdFindBasicStrSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: TomlCodecVec16 = @splat('"');
+    const v_bs: TomlCodecVec16 = @splat('\\');
+    const v_lf: TomlCodecVec16 = @splat('\n');
+    const v_cr: TomlCodecVec16 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_q | m_b | m_lf | m_cr;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\\' || c == '\n' || c == '\r') return i;
+    }
+    return n;
+}
+
+fn tomlSimdFindMlBasicSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: TomlCodecVec16 = @splat('"');
+    const v_bs: TomlCodecVec16 = @splat('\\');
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const mask: u16 = m_q | m_b;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\\') return i;
+    }
+    return n;
+}
+
+fn tomlSimdFindLiteralStrSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: TomlCodecVec16 = @splat('\'');
+    const v_lf: TomlCodecVec16 = @splat('\n');
+    const v_cr: TomlCodecVec16 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_q | m_lf | m_cr;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '\'' || c == '\n' || c == '\r') return i;
+    }
+    return n;
+}
+
+fn tomlSimdFindByte(s: []const u8, start: usize, target: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_t: TomlCodecVec16 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_t);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && s[i] != target) : (i += 1) {}
+    return i;
+}
+
+fn tomlSimdFindEscSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: TomlCodecVec16 = @splat('"');
+    const v_bs: TomlCodecVec16 = @splat('\\');
+    const v_ctrl: TomlCodecVec16 = @splat(0x20);
+    const v_del: TomlCodecVec16 = @splat(0x7F);
+    while (i + 16 <= n) {
+        const chunk: TomlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_c: u16 = @bitCast(chunk < v_ctrl);
+        const m_d: u16 = @bitCast(chunk == v_del);
+        const mask: u16 = m_q | m_b | m_c | m_d;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\\' || c < 0x20 || c == 0x7F) return i;
+    }
+    return n;
+}
+
 pub struct TomlParser {
     allocator: std.mem.Allocator,
     src: []const u8,
@@ -117,10 +280,7 @@ pub struct TomlParser {
             if (c == ' ' || c == '\t') {
                 _.pos += 1;
             } else if (c == '#') {
-                _.pos += 1;
-                while (_.pos < _.src.len && _.src[_.pos] != '\n' && _.src[_.pos] != '\r') {
-                    _.pos += 1;
-                }
+                _.pos = tomlSimdFindEol(_.src, _.pos + 1);
                 break;
             } else {
                 break;
@@ -134,10 +294,7 @@ pub struct TomlParser {
             if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
                 _.pos += 1;
             } else if (c == '#') {
-                _.pos += 1;
-                while (_.pos < _.src.len && _.src[_.pos] != '\n' && _.src[_.pos] != '\r') {
-                    _.pos += 1;
-                }
+                _.pos = tomlSimdFindEol(_.src, _.pos + 1);
             } else {
                 break;
             }
@@ -180,9 +337,7 @@ pub struct TomlParser {
             return TomlError.UnexpectedChar;
         }
         const start = _.pos;
-        while (_.pos < _.src.len && TomlParser.isBareKeyChar(_.src[_.pos])) {
-            _.pos += 1;
-        }
+        _.pos = tomlSimdSkipBareKey(_.src, _.pos);
         return _.allocator.dupe(u8, _.src[start.._.pos]) catch return TomlError.OutOfMemory;
     }
 
@@ -503,7 +658,7 @@ pub struct TomlParser {
         if (codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
             return TomlError.InvalidEscape;
         }
-        let utf8_buf: [4]u8 = [0; 4];
+        let utf8_buf: [4]u8 = undefined;
         const n = std.unicode.utf8Encode(@intCast(codepoint), &utf8_buf) catch return TomlError.InvalidEscape;
         out.appendSlice(_.allocator, utf8_buf[0..n]) catch return TomlError.OutOfMemory;
     }
@@ -514,6 +669,12 @@ pub struct TomlParser {
         errdefer out.deinit(_.allocator);
 
         while (_.pos < _.src.len) {
+            const hit = tomlSimdFindBasicStrSpecial(_.src, _.pos);
+            if (hit > _.pos) {
+                out.appendSlice(_.allocator, _.src[_.pos..hit]) catch return TomlError.OutOfMemory;
+                _.pos = hit;
+            }
+            if (_.pos >= _.src.len) break;
             const c = _.src[_.pos];
             if (c == '"') {
                 _.pos += 1;
@@ -522,13 +683,9 @@ pub struct TomlParser {
             if (c == '\n' || c == '\r') {
                 return TomlError.UnterminatedString;
             }
-            if (c == '\\') {
-                _.pos += 1;
-                _.parseEscape(&out)?;
-                continue;
-            }
-            out.append(_.allocator, c) catch return TomlError.OutOfMemory;
+            // c == '\\'
             _.pos += 1;
+            _.parseEscape(&out)?;
         }
         return TomlError.UnterminatedString;
     }
@@ -546,6 +703,12 @@ pub struct TomlParser {
         errdefer out.deinit(_.allocator);
 
         while (_.pos < _.src.len) {
+            const hit = tomlSimdFindMlBasicSpecial(_.src, _.pos);
+            if (hit > _.pos) {
+                out.appendSlice(_.allocator, _.src[_.pos..hit]) catch return TomlError.OutOfMemory;
+                _.pos = hit;
+            }
+            if (_.pos >= _.src.len) break;
             const c = _.src[_.pos];
             if (c == '"') {
                 let q_count: usize = 0;
@@ -567,34 +730,29 @@ pub struct TomlParser {
                 continue;
             }
 
-            if (c == '\\') {
-                _.pos += 1;
-                if (_.pos >= _.src.len) return TomlError.UnterminatedString;
+            // c == '\\'
+            _.pos += 1;
+            if (_.pos >= _.src.len) return TomlError.UnterminatedString;
 
-                // Check line-ending backslash (trim whitespace + newlines)
-                let look = _.pos;
-                while (look < _.src.len && (_.src[look] == ' ' || _.src[look] == '\t')) {
-                    look += 1;
-                }
-                if (look < _.src.len && (_.src[look] == '\n' || _.src[look] == '\r')) {
-                    _.pos = look;
-                    while (_.pos < _.src.len) {
-                        const wc = _.src[_.pos];
-                        if (wc == ' ' || wc == '\t' || wc == '\n' || wc == '\r') {
-                            _.pos += 1;
-                        } else {
-                            break;
-                        }
+            // Check line-ending backslash (trim whitespace + newlines)
+            let look = _.pos;
+            while (look < _.src.len && (_.src[look] == ' ' || _.src[look] == '\t')) {
+                look += 1;
+            }
+            if (look < _.src.len && (_.src[look] == '\n' || _.src[look] == '\r')) {
+                _.pos = look;
+                while (_.pos < _.src.len) {
+                    const wc = _.src[_.pos];
+                    if (wc == ' ' || wc == '\t' || wc == '\n' || wc == '\r') {
+                        _.pos += 1;
+                    } else {
+                        break;
                     }
-                    continue;
                 }
-
-                _.parseEscape(&out)?;
                 continue;
             }
 
-            out.append(_.allocator, c) catch return TomlError.OutOfMemory;
-            _.pos += 1;
+            _.parseEscape(&out)?;
         }
         return TomlError.UnterminatedString;
     }
@@ -602,17 +760,11 @@ pub struct TomlParser {
     fn parseLiteralString(*_): ([]const u8)! {
         _.pos += 1; // skip opening '\''
         const start = _.pos;
-        while (_.pos < _.src.len) {
-            const c = _.src[_.pos];
-            if (c == '\'') {
-                const s = _.src[start.._.pos];
-                _.pos += 1;
-                return _.allocator.dupe(u8, s) catch return TomlError.OutOfMemory;
-            }
-            if (c == '\n' || c == '\r') {
-                return TomlError.UnterminatedString;
-            }
+        _.pos = tomlSimdFindLiteralStrSpecial(_.src, _.pos);
+        if (_.pos < _.src.len && _.src[_.pos] == '\'') {
+            const s = _.src[start.._.pos];
             _.pos += 1;
+            return _.allocator.dupe(u8, s) catch return TomlError.OutOfMemory;
         }
         return TomlError.UnterminatedString;
     }
@@ -629,27 +781,27 @@ pub struct TomlParser {
         errdefer out.deinit(_.allocator);
 
         while (_.pos < _.src.len) {
-            const c = _.src[_.pos];
-            if (c == '\'') {
-                let q_count: usize = 0;
-                while (_.pos + q_count < _.src.len && _.src[_.pos + q_count] == '\'' && q_count < 6) {
-                    q_count += 1;
-                }
-                if (q_count >= 3) {
-                    if (q_count > 5) return TomlError.UnexpectedChar;
-                    const extra = q_count - 3;
-                    let k: usize = 0;
-                    while (k < extra) : (k += 1) {
-                        out.append(_.allocator, '\'') catch return TomlError.OutOfMemory;
-                    }
-                    _.pos += q_count;
-                    return out.toOwnedSlice(_.allocator) catch return TomlError.OutOfMemory;
-                }
-                out.append(_.allocator, '\'') catch return TomlError.OutOfMemory;
-                _.pos += 1;
-                continue;
+            const hit = tomlSimdFindByte(_.src, _.pos, '\'');
+            if (hit > _.pos) {
+                out.appendSlice(_.allocator, _.src[_.pos..hit]) catch return TomlError.OutOfMemory;
+                _.pos = hit;
             }
-            out.append(_.allocator, c) catch return TomlError.OutOfMemory;
+            if (_.pos >= _.src.len) break;
+            let q_count: usize = 0;
+            while (_.pos + q_count < _.src.len && _.src[_.pos + q_count] == '\'' && q_count < 6) {
+                q_count += 1;
+            }
+            if (q_count >= 3) {
+                if (q_count > 5) return TomlError.UnexpectedChar;
+                const extra = q_count - 3;
+                let k: usize = 0;
+                while (k < extra) : (k += 1) {
+                    out.append(_.allocator, '\'') catch return TomlError.OutOfMemory;
+                }
+                _.pos += q_count;
+                return out.toOwnedSlice(_.allocator) catch return TomlError.OutOfMemory;
+            }
+            out.append(_.allocator, '\'') catch return TomlError.OutOfMemory;
             _.pos += 1;
         }
         return TomlError.UnterminatedString;
@@ -975,16 +1127,20 @@ pub struct TomlParser {
 pub static class TomlSerializer {
     fn isBareKey(key: []const u8): bool {
         if (key.len == 0) return false;
-        for (c of key) {
-            const ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-';
-            if (!ok) return false;
-        }
-        return true;
+        return tomlSimdSkipBareKey(key, 0) == key.len;
     }
 
     fn writeQuotedString(out: *std.ArrayList(u8), alloc: std.mem.Allocator, s: []const u8): ! {
         out.append(alloc, '"') catch return TomlError.OutOfMemory;
-        for (c of s) {
+        let i: usize = 0;
+        while (i < s.len) {
+            const hit = tomlSimdFindEscSpecial(s, i);
+            if (hit > i) {
+                out.appendSlice(alloc, s[i..hit]) catch return TomlError.OutOfMemory;
+                i = hit;
+            }
+            if (i >= s.len) break;
+            const c = s[i];
             switch (c) {
                 '"' => out.appendSlice(alloc, "\\\"") catch return TomlError.OutOfMemory,
                 '\\' => out.appendSlice(alloc, "\\\\") catch return TomlError.OutOfMemory,
@@ -994,15 +1150,12 @@ pub static class TomlSerializer {
                 0x08 => out.appendSlice(alloc, "\\b") catch return TomlError.OutOfMemory,
                 0x0C => out.appendSlice(alloc, "\\f") catch return TomlError.OutOfMemory,
                 else => {
-                    if (c < 0x20 || c == 0x7F) {
-                        let buf: [8]u8 = [0; 8];
-                        const hex = std.fmt.bufPrint(&buf, "\\u{X:0>4}", .{c}) catch return TomlError.OutOfMemory;
-                        out.appendSlice(alloc, hex) catch return TomlError.OutOfMemory;
-                    } else {
-                        out.append(alloc, c) catch return TomlError.OutOfMemory;
-                    }
+                    let buf: [8]u8 = undefined;
+                    const hex = std.fmt.bufPrint(&buf, "\\u{X:0>4}", .{c}) catch return TomlError.OutOfMemory;
+                    out.appendSlice(alloc, hex) catch return TomlError.OutOfMemory;
                 },
             }
+            i += 1;
         }
         out.append(alloc, '"') catch return TomlError.OutOfMemory;
     }
@@ -1020,7 +1173,7 @@ pub static class TomlSerializer {
             .String => TomlSerializer.writeQuotedString(out, alloc, val.str_val)?,
             .DateTime => out.appendSlice(alloc, val.str_val) catch return TomlError.OutOfMemory,
             .Integer => {
-                let buf: [32]u8 = [0; 32];
+                let buf: [32]u8 = undefined;
                 const s = std.fmt.bufPrint(&buf, "{d}", .{val.int_val}) catch return TomlError.OutOfMemory;
                 out.appendSlice(alloc, s) catch return TomlError.OutOfMemory;
             },
@@ -1032,7 +1185,7 @@ pub static class TomlSerializer {
                 } else if (std.math.isNegativeInf(val.float_val)) {
                     out.appendSlice(alloc, "-inf") catch return TomlError.OutOfMemory;
                 } else {
-                    let buf: [64]u8 = [0; 64];
+                    let buf: [64]u8 = undefined;
                     const s = std.fmt.bufPrint(&buf, "{d}", .{val.float_val}) catch return TomlError.OutOfMemory;
                     out.appendSlice(alloc, s) catch return TomlError.OutOfMemory;
                     let has_dot_or_e = false;
@@ -1165,7 +1318,7 @@ pub static class TomlSerializer {
         switch (val.kind) {
             .String | .DateTime => TomlSerializer.writeQuotedString(out, alloc, val.str_val)?,
             .Integer => {
-                let buf: [32]u8 = [0; 32];
+                let buf: [32]u8 = undefined;
                 const s = std.fmt.bufPrint(&buf, "{d}", .{val.int_val}) catch return TomlError.OutOfMemory;
                 out.appendSlice(alloc, s) catch return TomlError.OutOfMemory;
             },
@@ -1173,7 +1326,7 @@ pub static class TomlSerializer {
                 if (std.math.isNan(val.float_val) || std.math.isInf(val.float_val)) {
                     out.appendSlice(alloc, "null") catch return TomlError.OutOfMemory;
                 } else {
-                    let buf: [64]u8 = [0; 64];
+                    let buf: [64]u8 = undefined;
                     const s = std.fmt.bufPrint(&buf, "{d}", .{val.float_val}) catch return TomlError.OutOfMemory;
                     out.appendSlice(alloc, s) catch return TomlError.OutOfMemory;
                 }

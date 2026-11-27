@@ -3,6 +3,48 @@
 const DEFAULT_ALT_SVC_MAX_AGE: u64 = 86400;
 const U64_MAX: u64 = 18446744073709551615;
 
+type AltSvcVec16 = @Vector(16, u8);
+
+fn altsvcSimdFindByte(s: []const u8, start: usize, target: u8): usize? {
+    let i: usize = start;
+    const n = s.len;
+    const v_t: AltSvcVec16 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: AltSvcVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_t);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return null;
+}
+
+fn altsvcSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const va: AltSvcVec16 = @splat(a);
+    const vb: AltSvcVec16 = @splat(b);
+    while (i + 16 <= n) {
+        const chunk: AltSvcVec16 = s[i..][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == a || c == b) return i;
+    }
+    return n;
+}
+
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -143,10 +185,8 @@ fn writeSlice(out: []u8, pos: *usize, s: []const u8): bool {
     if (out.len - pos.* < s.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos.* + i] = s[i];
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos.* .. pos.* + s.len], s);
     }
     pos.* += s.len;
     return true;
@@ -156,7 +196,7 @@ fn writeU64Dec(out: []u8, pos: *usize, val: u64): bool {
     if (val == 0) {
         return writeSlice(out, pos, "0");
     }
-    let tmp: [20]u8 = [0; 20];
+    let tmp: [20]u8 = undefined;
     let n: usize = 0;
     let v = val;
     while (v > 0) {
@@ -203,18 +243,7 @@ export fn isAltSvcClear(header: []const u8): bool {
 
 fn parseSingleAltSvc(seg: []const u8): AltSvcEntry? {
     // 1. protocol_id = "<alt-authority>"
-    let eq_pos: usize = 0;
-    let found_eq = false;
-    while (eq_pos < seg.len) {
-        if (seg[eq_pos] == '=') {
-            found_eq = true;
-            break;
-        }
-        eq_pos += 1;
-    }
-    if (!found_eq) {
-        return null;
-    }
+    const eq_pos = altsvcSimdFindByte(seg, 0, '=') ?? return null;
 
     const proto = trimAscii(seg[0..eq_pos]);
     if (!isValidProtoId(proto)) {
@@ -234,6 +263,8 @@ fn parseSingleAltSvc(seg: []const u8): AltSvcEntry? {
     const auth_start = i;
     let found_quote_end = false;
     while (i < seg.len) {
+        i = altsvcSimdFindAny2(seg, i, '"', '\\');
+        if (i >= seg.len) break;
         const c = seg[i];
         if (c == '\\') {
             if (i + 1 >= seg.len) {
@@ -242,11 +273,8 @@ fn parseSingleAltSvc(seg: []const u8): AltSvcEntry? {
             i += 2;
             continue;
         }
-        if (c == '"') {
-            found_quote_end = true;
-            break;
-        }
-        i += 1;
+        found_quote_end = true;
+        break;
     }
     if (!found_quote_end) {
         return null;
@@ -263,33 +291,14 @@ fn parseSingleAltSvc(seg: []const u8): AltSvcEntry? {
         return null;
     }
     if (auth[0] == '[') {
-        let close_br: usize = 1;
-        let found_br = false;
-        while (close_br < auth.len) {
-            if (auth[close_br] == ']') {
-                found_br = true;
-                break;
-            }
-            close_br += 1;
-        }
-        if (!found_br || close_br + 1 >= auth.len || auth[close_br + 1] != ':') {
+        const close_br = altsvcSimdFindByte(auth, 1, ']') ?? return null;
+        if (close_br + 1 >= auth.len || auth[close_br + 1] != ':') {
             return null;
         }
         host = auth[0..(close_br + 1)];
         port_str = auth[(close_br + 2)..];
     } else {
-        let colon: usize = 0;
-        let found_colon = false;
-        while (colon < auth.len) {
-            if (auth[colon] == ':') {
-                found_colon = true;
-                break;
-            }
-            colon += 1;
-        }
-        if (!found_colon) {
-            return null;
-        }
+        const colon = altsvcSimdFindByte(auth, 0, ':') ?? return null;
         host = auth[0..colon];
         port_str = auth[(colon + 1)..];
     }
@@ -318,23 +327,30 @@ fn parseSingleAltSvc(seg: []const u8): AltSvcEntry? {
         let p_in_quote = false;
         let p_escaped = false;
         while (i < seg.len) {
-            const c = seg[i];
             if (p_in_quote) {
                 if (p_escaped) {
                     p_escaped = false;
-                } else if (c == '\\') {
+                    i += 1;
+                    continue;
+                }
+                i = altsvcSimdFindAny2(seg, i, '"', '\\');
+                if (i >= seg.len) break;
+                if (seg[i] == '\\') {
                     p_escaped = true;
-                } else if (c == '"') {
+                } else {
                     p_in_quote = false;
                 }
+                i += 1;
             } else {
-                if (c == '"') {
+                i = altsvcSimdFindAny2(seg, i, '"', ';');
+                if (i >= seg.len) break;
+                if (seg[i] == '"') {
                     p_in_quote = true;
-                } else if (c == ';') {
+                    i += 1;
+                } else {
                     break;
                 }
             }
-            i += 1;
         }
         if (p_in_quote) {
             return null;
@@ -345,18 +361,7 @@ fn parseSingleAltSvc(seg: []const u8): AltSvcEntry? {
             continue;
         }
 
-        let peq: usize = 0;
-        let has_peq = false;
-        while (peq < param.len) {
-            if (param[peq] == '=') {
-                has_peq = true;
-                break;
-            }
-            peq += 1;
-        }
-        if (!has_peq) {
-            continue;
-        }
+        const peq = altsvcSimdFindByte(param, 0, '=') ?? continue;
 
         const pkey = trimAscii(param[0..peq]);
         const pval_raw = trimAscii(param[(peq + 1)..]);
@@ -407,23 +412,30 @@ export struct AltSvcIter {
             let escaped = false;
 
             while (_.pos < _.src.len) {
-                const c = _.src[_.pos];
                 if (in_quote) {
                     if (escaped) {
                         escaped = false;
-                    } else if (c == '\\') {
+                        _.pos += 1;
+                        continue;
+                    }
+                    _.pos = altsvcSimdFindAny2(_.src, _.pos, '"', '\\');
+                    if (_.pos >= _.src.len) break;
+                    if (_.src[_.pos] == '\\') {
                         escaped = true;
-                    } else if (c == '"') {
+                    } else {
                         in_quote = false;
                     }
+                    _.pos += 1;
                 } else {
-                    if (c == '"') {
+                    _.pos = altsvcSimdFindAny2(_.src, _.pos, '"', ',');
+                    if (_.pos >= _.src.len) break;
+                    if (_.src[_.pos] == '"') {
                         in_quote = true;
-                    } else if (c == ',') {
+                        _.pos += 1;
+                    } else {
                         break;
                     }
                 }
-                _.pos += 1;
             }
 
             const seg = trimAscii(_.src[seg_start.._.pos]);

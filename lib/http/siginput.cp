@@ -2,6 +2,98 @@
 
 const I64_MAX: i64 = 9223372036854775807;
 
+type SigInputVec16 = @Vector(16, u8);
+
+fn siginSimdFindByte(s: []const u8, start: usize, target: u8): usize? {
+    let i: usize = start;
+    const n = s.len;
+    const v_t: SigInputVec16 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: SigInputVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_t);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        if (s[i] == target) return i;
+    }
+    return null;
+}
+
+fn siginSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const va: SigInputVec16 = @splat(a);
+    const vb: SigInputVec16 = @splat(b);
+    while (i + 16 <= n) {
+        const chunk: SigInputVec16 = s[i..][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == a || c == b) return i;
+    }
+    return n;
+}
+
+fn siginSimdFindAny3(s: []const u8, start: usize, a: u8, b: u8, c0: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const va: SigInputVec16 = @splat(a);
+    const vb: SigInputVec16 = @splat(b);
+    const vc: SigInputVec16 = @splat(c0);
+    while (i + 16 <= n) {
+        const chunk: SigInputVec16 = s[i..][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mc: u16 = @bitCast(chunk == vc);
+        const mask: u16 = ma | mb | mc;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const ch = s[i];
+        if (ch == a || ch == b || ch == c0) return i;
+    }
+    return n;
+}
+
+fn siginSimdFindAny4(s: []const u8, start: usize, a: u8, b: u8, c0: u8, d: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const va: SigInputVec16 = @splat(a);
+    const vb: SigInputVec16 = @splat(b);
+    const vc: SigInputVec16 = @splat(c0);
+    const vd: SigInputVec16 = @splat(d);
+    while (i + 16 <= n) {
+        const chunk: SigInputVec16 = s[i..][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mc: u16 = @bitCast(chunk == vc);
+        const md: u16 = @bitCast(chunk == vd);
+        const mask: u16 = ma | mb | mc | md;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const ch = s[i];
+        if (ch == a || ch == b || ch == c0 || ch == d) return i;
+    }
+    return n;
+}
+
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -74,6 +166,8 @@ fn parseQuotedStringExact(s: []const u8): ([]const u8)? {
     }
     let i: usize = 1;
     while (i < s.len) {
+        i = siginSimdFindAny2(s, i, '"', '\\');
+        if (i >= s.len) return null;
         const c = s[i];
         if (c == '\\') {
             if (i + 1 >= s.len) {
@@ -82,13 +176,10 @@ fn parseQuotedStringExact(s: []const u8): ([]const u8)? {
             i += 2;
             continue;
         }
-        if (c == '"') {
-            if (i + 1 != s.len) {
-                return null;
-            }
-            return s[1..i];
+        if (i + 1 != s.len) {
+            return null;
         }
-        i += 1;
+        return s[1..i];
     }
     return null;
 }
@@ -205,8 +296,9 @@ export struct ComponentIter {
             const start = _.pos;
             let closed = false;
             while (_.pos < _.src.len) {
-                const c = _.src[_.pos];
-                if (c == '\\') {
+                _.pos = siginSimdFindAny2(_.src, _.pos, '"', '\\');
+                if (_.pos >= _.src.len) break;
+                if (_.src[_.pos] == '\\') {
                     if (_.pos + 1 >= _.src.len) {
                         _.pos = _.src.len;
                         return null;
@@ -214,11 +306,8 @@ export struct ComponentIter {
                     _.pos += 2;
                     continue;
                 }
-                if (c == '"') {
-                    closed = true;
-                    break;
-                }
-                _.pos += 1;
+                closed = true;
+                break;
             }
             if (!closed) {
                 _.pos = _.src.len;
@@ -296,24 +385,31 @@ fn parseSignatureInputEntry(seg: []const u8): SignatureInput? {
     let escaped = false;
     let found_close = false;
     while (i < seg.len) {
-        const c = seg[i];
         if (in_quote) {
             if (escaped) {
                 escaped = false;
-            } else if (c == '\\') {
+                i += 1;
+                continue;
+            }
+            i = siginSimdFindAny2(seg, i, '"', '\\');
+            if (i >= seg.len) break;
+            if (seg[i] == '\\') {
                 escaped = true;
-            } else if (c == '"') {
+            } else {
                 in_quote = false;
             }
+            i += 1;
         } else {
-            if (c == '"') {
+            i = siginSimdFindAny2(seg, i, '"', ')');
+            if (i >= seg.len) break;
+            if (seg[i] == '"') {
                 in_quote = true;
-            } else if (c == ')') {
+                i += 1;
+            } else {
                 found_close = true;
                 break;
             }
         }
-        i += 1;
     }
     if (!found_close || in_quote) {
         return null;
@@ -345,23 +441,30 @@ fn parseSignatureInputEntry(seg: []const u8): SignatureInput? {
         let p_in_quote = false;
         let p_escaped = false;
         while (i < seg.len) {
-            const c = seg[i];
             if (p_in_quote) {
                 if (p_escaped) {
                     p_escaped = false;
-                } else if (c == '\\') {
+                    i += 1;
+                    continue;
+                }
+                i = siginSimdFindAny2(seg, i, '"', '\\');
+                if (i >= seg.len) break;
+                if (seg[i] == '\\') {
                     p_escaped = true;
-                } else if (c == '"') {
+                } else {
                     p_in_quote = false;
                 }
+                i += 1;
             } else {
-                if (c == '"') {
+                i = siginSimdFindAny2(seg, i, '"', ';');
+                if (i >= seg.len) break;
+                if (seg[i] == '"') {
                     p_in_quote = true;
-                } else if (c == ';') {
+                    i += 1;
+                } else {
                     break;
                 }
             }
-            i += 1;
         }
         if (p_in_quote) {
             return null;
@@ -372,19 +475,7 @@ fn parseSignatureInputEntry(seg: []const u8): SignatureInput? {
             continue;
         }
 
-        let peq: usize = 0;
-        let has_eq = false;
-        while (peq < param.len) {
-            if (param[peq] == '=') {
-                has_eq = true;
-                break;
-            }
-            peq += 1;
-        }
-        if (!has_eq) {
-            // 无值布尔参数，合法但非标准字段，忽略
-            continue;
-        }
+        const peq = siginSimdFindByte(param, 0, '=') ?? continue;
 
         const pkey = trimAscii(param[0..peq]);
         const pval = trimAscii(param[(peq + 1)..]);
@@ -460,16 +551,24 @@ export struct SignatureInputIter {
             let paren_depth: usize = 0;
 
             while (_.pos < _.src.len) {
-                const c = _.src[_.pos];
                 if (in_quote) {
                     if (escaped) {
                         escaped = false;
-                    } else if (c == '\\') {
+                        _.pos += 1;
+                        continue;
+                    }
+                    _.pos = siginSimdFindAny2(_.src, _.pos, '"', '\\');
+                    if (_.pos >= _.src.len) break;
+                    if (_.src[_.pos] == '\\') {
                         escaped = true;
-                    } else if (c == '"') {
+                    } else {
                         in_quote = false;
                     }
+                    _.pos += 1;
                 } else {
+                    _.pos = siginSimdFindAny4(_.src, _.pos, '"', '(', ')', ',');
+                    if (_.pos >= _.src.len) break;
+                    const c = _.src[_.pos];
                     if (c == '"') {
                         in_quote = true;
                     } else if (c == '(') {
@@ -481,8 +580,8 @@ export struct SignatureInputIter {
                     } else if (c == ',' && paren_depth == 0) {
                         break;
                     }
+                    _.pos += 1;
                 }
-                _.pos += 1;
             }
 
             const seg = trimAscii(_.src[seg_start.._.pos]);
@@ -529,29 +628,42 @@ export fn findSignatureValue(sig_header: []const u8, label: []const u8): ([]cons
         let in_bseq = false;
 
         while (pos < sig_header.len) {
-            const c = sig_header[pos];
             if (in_quote) {
                 if (escaped) {
                     escaped = false;
-                } else if (c == '\\') {
+                    pos += 1;
+                    continue;
+                }
+                pos = siginSimdFindAny2(sig_header, pos, '"', '\\');
+                if (pos >= sig_header.len) break;
+                if (sig_header[pos] == '\\') {
                     escaped = true;
-                } else if (c == '"') {
+                } else {
                     in_quote = false;
                 }
+                pos += 1;
             } else if (in_bseq) {
-                if (c == ':') {
+                if (col := siginSimdFindByte(sig_header, pos, ':')) {
                     in_bseq = false;
+                    pos = col + 1;
+                } else {
+                    pos = sig_header.len;
+                    break;
                 }
             } else {
+                pos = siginSimdFindAny3(sig_header, pos, '"', ':', ',');
+                if (pos >= sig_header.len) break;
+                const c = sig_header[pos];
                 if (c == '"') {
                     in_quote = true;
+                    pos += 1;
                 } else if (c == ':') {
                     in_bseq = true;
-                } else if (c == ',') {
+                    pos += 1;
+                } else {
                     break;
                 }
             }
-            pos += 1;
         }
 
         const seg = trimAscii(sig_header[seg_start..pos]);
@@ -562,18 +674,7 @@ export fn findSignatureValue(sig_header: []const u8, label: []const u8): ([]cons
             continue;
         }
 
-        let eq_pos: usize = 0;
-        let found_eq = false;
-        while (eq_pos < seg.len) {
-            if (seg[eq_pos] == '=') {
-                found_eq = true;
-                break;
-            }
-            eq_pos += 1;
-        }
-        if (!found_eq) {
-            continue;
-        }
+        const eq_pos = siginSimdFindByte(seg, 0, '=') ?? continue;
 
         const key = trimAscii(seg[0..eq_pos]);
         if (!isValidSfKey(key) || !eqlBytes(key, label)) {

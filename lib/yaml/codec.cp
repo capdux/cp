@@ -14,6 +14,115 @@ import {
 
 const MAX_YAML_DEPTH: usize = 64;
 
+type YamlCodecVec16 = @Vector(16, u8);
+
+fn yamlSimdSkipSpaces(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_sp: YamlCodecVec16 = @splat(' ');
+    while (i + 16 <= n) {
+        const chunk: YamlCodecVec16 = s[i..][0..16].*;
+        const m_non: u16 = ~@as(u16, @bitCast(chunk == v_sp));
+        if (m_non != 0) {
+            return i + (@ctz(m_non) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && s[i] == ' ') : (i += 1) {}
+    return i;
+}
+
+fn yamlSimdFindEol(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_lf: YamlCodecVec16 = @splat('\n');
+    const v_cr: YamlCodecVec16 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: YamlCodecVec16 = s[i..][0..16].*;
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_lf | m_cr;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n && s[i] != '\n' && s[i] != '\r') : (i += 1) {}
+    return i;
+}
+
+fn yamlSimdFindDqSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: YamlCodecVec16 = @splat('"');
+    const v_bs: YamlCodecVec16 = @splat('\\');
+    const v_cr: YamlCodecVec16 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: YamlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_r: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_q | m_b | m_r;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\\' || c == '\r') return i;
+    }
+    return n;
+}
+
+fn yamlSimdFindSqSpecial(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: YamlCodecVec16 = @splat('\'');
+    const v_cr: YamlCodecVec16 = @splat('\r');
+    while (i + 16 <= n) {
+        const chunk: YamlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_r: u16 = @bitCast(chunk == v_cr);
+        const mask: u16 = m_q | m_r;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '\'' || c == '\r') return i;
+    }
+    return n;
+}
+
+fn yamlSimdFindQuoteEsc(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_q: YamlCodecVec16 = @splat('"');
+    const v_bs: YamlCodecVec16 = @splat('\\');
+    const v_ctrl: YamlCodecVec16 = @splat(0x20);
+    const v_del: YamlCodecVec16 = @splat(0x7F);
+    while (i + 16 <= n) {
+        const chunk: YamlCodecVec16 = s[i..][0..16].*;
+        const m_q: u16 = @bitCast(chunk == v_q);
+        const m_b: u16 = @bitCast(chunk == v_bs);
+        const m_c: u16 = @bitCast(chunk < v_ctrl);
+        const m_d: u16 = @bitCast(chunk == v_del);
+        const mask: u16 = m_q | m_b | m_c | m_d;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == '"' || c == '\\' || c < 0x20 || c == 0x7F) return i;
+    }
+    return n;
+}
+
 struct AnchorEntry {
     name: []const u8 = "",
     value: YamlValue = .{},
@@ -92,9 +201,7 @@ pub struct YamlParser {
     }
 
     fn skipToNextLine(*_) {
-        while (_.pos < _.src.len && !_.isEolChar(_.src[_.pos])) {
-            _.pos += 1;
-        }
+        _.pos = yamlSimdFindEol(_.src, _.pos);
         _.pos = _.consumeNewlineAt(_.pos);
     }
 
@@ -144,12 +251,8 @@ pub struct YamlParser {
     fn peekNextLine(*_): LinePeek! {
         while (_.pos < _.src.len) {
             let line_start = _.pos;
-            let cur = line_start;
-            let spaces: usize = 0;
-            while (cur < _.src.len && _.src[cur] == ' ') {
-                spaces += 1;
-                cur += 1;
-            }
+            let cur = yamlSimdSkipSpaces(_.src, line_start);
+            let spaces: usize = cur - line_start;
             if (cur < _.src.len && _.src[cur] == '\t') {
                 return YamlError.TabIndentationForbidden;
             }
@@ -263,6 +366,12 @@ pub struct YamlParser {
         errdefer buf.deinit(_.alloc);
 
         while (_.pos < _.src.len) {
+            const hit = yamlSimdFindDqSpecial(_.src, _.pos);
+            if (hit > _.pos) {
+                buf.appendSlice(_.alloc, _.src[_.pos..hit]) catch return YamlError.OutOfMemory;
+                _.pos = hit;
+            }
+            if (_.pos >= _.src.len) break;
             const c = _.src[_.pos];
             if (c == '"') {
                 _.pos += 1;
@@ -333,7 +442,7 @@ pub struct YamlParser {
     }
 
     fn appendUtf8(*_, buf: *std.ArrayList(u8), cp: u21): ! {
-        let tmp: [4]u8 = [0; 4];
+        let tmp: [4]u8 = undefined;
         const len = std.unicode.utf8Encode(cp, &tmp) catch return YamlError.UnterminatedString;
         buf.appendSlice(_.alloc, tmp[0..len]) catch return YamlError.OutOfMemory;
     }
@@ -345,6 +454,12 @@ pub struct YamlParser {
         errdefer buf.deinit(_.alloc);
 
         while (_.pos < _.src.len) {
+            const hit = yamlSimdFindSqSpecial(_.src, _.pos);
+            if (hit > _.pos) {
+                buf.appendSlice(_.alloc, _.src[_.pos..hit]) catch return YamlError.OutOfMemory;
+                _.pos = hit;
+            }
+            if (_.pos >= _.src.len) break;
             const c = _.src[_.pos];
             if (c == '\'') {
                 if (_.pos + 1 < _.src.len && _.src[_.pos + 1] == '\'') {
@@ -510,12 +625,8 @@ pub struct YamlParser {
 
         while (_.pos < _.src.len) {
             const line_start = _.pos;
-            let spaces: usize = 0;
-            let cur = line_start;
-            while (cur < _.src.len && _.src[cur] == ' ') {
-                spaces += 1;
-                cur += 1;
-            }
+            const cur = yamlSimdSkipSpaces(_.src, line_start);
+            const spaces: usize = cur - line_start;
             if (cur < _.src.len && _.src[cur] == '\t') {
                 if (content_indent == 0 || spaces < content_indent) {
                     return YamlError.TabIndentationForbidden;
@@ -542,10 +653,7 @@ pub struct YamlParser {
                 break;
             }
 
-            let eol = cur;
-            while (eol < _.src.len && !_.isEolChar(_.src[eol])) {
-                eol += 1;
-            }
+            const eol = yamlSimdFindEol(_.src, cur);
             lines.append(_.alloc, _.src[line_start + content_indent..eol]) catch return YamlError.OutOfMemory;
             _.pos = _.consumeNewlineAt(eol);
         }
@@ -854,9 +962,7 @@ pub struct YamlParser {
                 val = YamlValue{ kind: .String, str_val: s };
             } else {
                 const start = _.pos;
-                while (_.pos < _.src.len && !_.isEolChar(_.src[_.pos])) {
-                    _.pos += 1;
-                }
+                _.pos = yamlSimdFindEol(_.src, _.pos);
                 const raw = _.src[start.._.pos];
                 _.pos = _.consumeNewlineAt(_.pos);
                 val = _.inferPlainScalar(raw)?;
@@ -1208,7 +1314,15 @@ pub static class YamlSerializer {
 
     fn writeQuotedString(alloc: std.mem.Allocator, buf: *std.ArrayList(u8), s: []const u8): ! {
         buf.append(alloc, '"') catch return YamlError.OutOfMemory;
-        for (c of s) {
+        let i: usize = 0;
+        while (i < s.len) {
+            const hit = yamlSimdFindQuoteEsc(s, i);
+            if (hit > i) {
+                buf.appendSlice(alloc, s[i..hit]) catch return YamlError.OutOfMemory;
+                i = hit;
+            }
+            if (i >= s.len) break;
+            const c = s[i];
             switch (c) {
                 '"' => buf.appendSlice(alloc, "\\\"") catch return YamlError.OutOfMemory,
                 '\\' => buf.appendSlice(alloc, "\\\\") catch return YamlError.OutOfMemory,
@@ -1216,15 +1330,12 @@ pub static class YamlSerializer {
                 '\r' => buf.appendSlice(alloc, "\\r") catch return YamlError.OutOfMemory,
                 '\t' => buf.appendSlice(alloc, "\\t") catch return YamlError.OutOfMemory,
                 else => {
-                    if (c < 0x20 || c == 0x7F) {
-                        const hex = "0123456789ABCDEF";
-                        let esc: [6]u8 = ['\\', 'u', '0', '0', hex[(c >> 4) & 0xF], hex[c & 0xF]];
-                        buf.appendSlice(alloc, &esc) catch return YamlError.OutOfMemory;
-                    } else {
-                        buf.append(alloc, c) catch return YamlError.OutOfMemory;
-                    }
+                    const hex = "0123456789ABCDEF";
+                    let esc: [6]u8 = ['\\', 'u', '0', '0', hex[(c >> 4) & 0xF], hex[c & 0xF]];
+                    buf.appendSlice(alloc, &esc) catch return YamlError.OutOfMemory;
                 },
             }
+            i += 1;
         }
         buf.append(alloc, '"') catch return YamlError.OutOfMemory;
     }
@@ -1240,7 +1351,7 @@ pub static class YamlSerializer {
                 }
             },
             .Int => {
-                let num_buf: [32]u8 = [0; 32];
+                let num_buf: [32]u8 = undefined;
                 const num_str = std.fmt.bufPrint(&num_buf, "{d}", .{val.int_val}) catch return YamlError.OutOfMemory;
                 buf.appendSlice(alloc, num_str) catch return YamlError.OutOfMemory;
             },
@@ -1254,7 +1365,7 @@ pub static class YamlSerializer {
                         buf.appendSlice(alloc, ".inf") catch return YamlError.OutOfMemory;
                     }
                 } else {
-                    let f_buf: [64]u8 = [0; 64];
+                    let f_buf: [64]u8 = undefined;
                     const f_str = std.fmt.bufPrint(&f_buf, "{d}", .{val.float_val}) catch return YamlError.OutOfMemory;
                     buf.appendSlice(alloc, f_str) catch return YamlError.OutOfMemory;
                     if (std.mem.indexOfScalar(u8, f_str, '.') == null && std.mem.indexOfScalar(u8, f_str, 'e') == null) {
@@ -1365,7 +1476,7 @@ pub static class YamlSerializer {
                 }
             },
             .Int => {
-                let num_buf: [32]u8 = [0; 32];
+                let num_buf: [32]u8 = undefined;
                 const num_str = std.fmt.bufPrint(&num_buf, "{d}", .{val.int_val}) catch return YamlError.OutOfMemory;
                 buf.appendSlice(alloc, num_str) catch return YamlError.OutOfMemory;
             },
@@ -1373,7 +1484,7 @@ pub static class YamlSerializer {
                 if (std.math.isNan(val.float_val) || std.math.isInf(val.float_val)) {
                     buf.appendSlice(alloc, "null") catch return YamlError.OutOfMemory;
                 } else {
-                    let f_buf: [64]u8 = [0; 64];
+                    let f_buf: [64]u8 = undefined;
                     const f_str = std.fmt.bufPrint(&f_buf, "{d}", .{val.float_val}) catch return YamlError.OutOfMemory;
                     buf.appendSlice(alloc, f_str) catch return YamlError.OutOfMemory;
                 }

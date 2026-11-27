@@ -1,6 +1,8 @@
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (RFC 9110 Accept / Accept-Encoding / Accept-Language Content Negotiation)
 // Pure-CP RFC 9110 content negotiation: q-value parser, header iterators, and best-match selection.
 
+type AcceptVec16 = @Vector(16, u8);
+
 fn isAsciiSpace(b: u8): bool {
     return b == ' ' || b == '\t' || b == '\r' || b == '\n';
 }
@@ -25,6 +27,20 @@ fn toLowerAscii(b: u8): u8 {
 fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: AcceptVec16 = a[i..][0..16].*;
+        const vb: AcceptVec16 = b[i..][0..16].*;
+        const m_eq: u16 = @bitCast(va == vb);
+        if (m_eq == 0xFFFF) {
+            i += 16;
+            continue;
+        }
+        let j: usize = 0;
+        while (j < 16) : (j += 1) {
+            if (toLowerAscii(a[i + j]) != toLowerAscii(b[i + j])) return false;
+        }
+        i += 16;
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) return false;
         i += 1;
@@ -34,11 +50,43 @@ fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
 
 fn indexOfByte(s: []const u8, target: u8): usize? {
     let i: usize = 0;
-    while (i < s.len) {
+    const n = s.len;
+    const v_t: AcceptVec16 = @splat(target);
+    while (i + 16 <= n) {
+        const chunk: AcceptVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_t);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) {
         if (s[i] == target) return i;
         i += 1;
     }
     return null;
+}
+
+fn acceptSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i: usize = start;
+    const n = s.len;
+    const va: AcceptVec16 = @splat(a);
+    const vb: AcceptVec16 = @splat(b);
+    while (i + 16 <= n) {
+        const chunk: AcceptVec16 = s[i..][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+        i += 16;
+    }
+    while (i < n) : (i += 1) {
+        const c = s[i];
+        if (c == a || c == b) return i;
+    }
+    return n;
 }
 
 /// Strict RFC 9110 §12.4.2 quality value parser -> integer millis in [0, 1000].
@@ -81,26 +129,33 @@ fn nextCommaItem(src: []const u8, pos: *usize): ([]const u8)? {
         let in_quote = false;
         let escaped = false;
         while (pos.* < src.len) {
-            const c = src[pos.*];
             if (in_quote) {
                 if (escaped) {
                     escaped = false;
-                } else if (c == '\\') {
+                    pos.* += 1;
+                    continue;
+                }
+                pos.* = acceptSimdFindAny2(src, pos.*, '"', '\\');
+                if (pos.* >= src.len) break;
+                if (src[pos.*] == '\\') {
                     escaped = true;
-                } else if (c == '"') {
+                } else {
                     in_quote = false;
                 }
+                pos.* += 1;
             } else {
-                if (c == '"') {
+                pos.* = acceptSimdFindAny2(src, pos.*, '"', ',');
+                if (pos.* >= src.len) break;
+                if (src[pos.*] == '"') {
                     in_quote = true;
-                } else if (c == ',') {
+                    pos.* += 1;
+                } else {
                     const seg = trimAscii(src[start..pos.*]);
                     pos.* += 1;
                     if (seg.len > 0) return seg;
                     break;
                 }
             }
-            pos.* += 1;
         }
         if (pos.* >= src.len) {
             const seg = trimAscii(src[start..src.len]);
@@ -124,23 +179,30 @@ fn parseQFromParams(params: []const u8): u16? {
         let in_quote = false;
         let escaped = false;
         while (i < params.len) {
-            const c = params[i];
             if (in_quote) {
                 if (escaped) {
                     escaped = false;
-                } else if (c == '\\') {
+                    i += 1;
+                    continue;
+                }
+                i = acceptSimdFindAny2(params, i, '"', '\\');
+                if (i >= params.len) break;
+                if (params[i] == '\\') {
                     escaped = true;
-                } else if (c == '"') {
+                } else {
                     in_quote = false;
                 }
+                i += 1;
             } else {
-                if (c == '"') {
+                i = acceptSimdFindAny2(params, i, '"', ';');
+                if (i >= params.len) break;
+                if (params[i] == '"') {
                     in_quote = true;
-                } else if (c == ';') {
+                    i += 1;
+                } else {
                     break;
                 }
             }
-            i += 1;
         }
         const kv = trimAscii(params[start..i]);
         if (eq_pos := indexOfByte(kv, '=')) {
