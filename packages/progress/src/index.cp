@@ -1,6 +1,9 @@
 // @cap/progress — Zero-heap terminal progress bar renderer in pure CP
 // Clean-room MIT implementation of npm `progress` (#726, 80.6M/wk).
 
+import { startsWith } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct ProgressBar {
     pub total: u64,
     pub current: u64,
@@ -63,55 +66,6 @@ pub fn newProgressBar(total: u64, width: usize): ProgressBar {
     };
 }
 
-fn prgWriteStr(s: string, out: []u8, pos: usize): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn prgWriteU64(val: u64, out: []u8, pos: usize): usize {
-    let digits: [24]u8 = [0; 24];
-    let n: usize = 0;
-    let v = val;
-    if (v == 0) {
-        digits[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0 && n < 24) {
-            digits[n] = ((v % 10) as u8) + 48;
-            v = v / 10;
-            n += 1;
-        }
-    }
-    let p = pos;
-    let k = n;
-    while (k > 0 && p < out.len) {
-        k -= 1;
-        out[p] = digits[k];
-        p += 1;
-    }
-    return p;
-}
-
-fn prgStartsWithAt(s: string, offset: usize, prefix: string): bool {
-    if (offset + prefix.len > s.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[offset + i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn prgWriteBar(bar: ProgressBar, out: []u8, pos: usize): usize {
     let p = pos;
     const filled = (bar.ratio() * (bar.width as f64)) as usize;
@@ -138,42 +92,43 @@ pub fn renderProgress(bar: ProgressBar, template: string, out: []u8): usize {
     let i: usize = 0;
     while (i < template.len) {
         if (template[i] == 58) { // ':'
-            if (prgStartsWithAt(template, i, ":bar")) {
+            const tail = template[i..];
+            if (startsWith(tail, ":bar")) {
                 p = prgWriteBar(bar, out, p);
                 i += 4;
                 continue;
             }
-            if (prgStartsWithAt(template, i, ":percent")) {
-                p = prgWriteU64(bar.percent() as u64, out, p);
-                p = prgWriteStr("%", out, p);
+            if (startsWith(tail, ":percent")) {
+                p = writeU64(bar.percent() as u64, out, p);
+                p = writeStr("%", out, p);
                 i += 8;
                 continue;
             }
-            if (prgStartsWithAt(template, i, ":current")) {
-                p = prgWriteU64(bar.current, out, p);
+            if (startsWith(tail, ":current")) {
+                p = writeU64(bar.current, out, p);
                 i += 8;
                 continue;
             }
-            if (prgStartsWithAt(template, i, ":total")) {
-                p = prgWriteU64(bar.total, out, p);
+            if (startsWith(tail, ":total")) {
+                p = writeU64(bar.total, out, p);
                 i += 6;
                 continue;
             }
-            if (prgStartsWithAt(template, i, ":etas")) {
+            if (startsWith(tail, ":etas")) {
                 const eta_tenths = (bar.etaSeconds() * 10.0 + 0.5) as u64;
-                p = prgWriteU64(eta_tenths / 10, out, p);
-                p = prgWriteStr(".", out, p);
-                p = prgWriteU64(eta_tenths % 10, out, p);
-                p = prgWriteStr("s", out, p);
+                p = writeU64(eta_tenths / 10, out, p);
+                p = writeStr(".", out, p);
+                p = writeU64(eta_tenths % 10, out, p);
+                p = writeStr("s", out, p);
                 i += 5;
                 continue;
             }
-            if (prgStartsWithAt(template, i, ":elapseds")) {
+            if (startsWith(tail, ":elapseds")) {
                 const el_tenths = (bar.elapsed_ms + 50) / 100;
-                p = prgWriteU64(el_tenths / 10, out, p);
-                p = prgWriteStr(".", out, p);
-                p = prgWriteU64(el_tenths % 10, out, p);
-                p = prgWriteStr("s", out, p);
+                p = writeU64(el_tenths / 10, out, p);
+                p = writeStr(".", out, p);
+                p = writeU64(el_tenths % 10, out, p);
+                p = writeStr("s", out, p);
                 i += 9;
                 continue;
             }

@@ -1,6 +1,8 @@
 // @cap/statuses — Zero-heap RFC 9110 / IANA HTTP status codes & predicates
 // MIT License (clean-room CP implementation)
 
+import { eqIgnoreCase } from "cap:ascii";
+
 const STATUS_COUNT: usize = 62;
 
 const STATUS_CODES: [62]u16 = [
@@ -77,27 +79,6 @@ const STATUS_MSGS: [62]string = [
     "Not Extended",
     "Network Authentication Required",
 ];
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
 
 pub fn message(code: u16) -> string {
     let lo: usize = 0;

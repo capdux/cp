@@ -1,8 +1,7 @@
 // Type definitions for CP
 
-export fn toLowerAscii(c: u8): u8;
+import { eqIgnoreCase } from "cap:ascii";
 export fn isSpaceOrTab(c: u8): bool;
-export fn eqIgnoreCase(a: &[]u8, b: &[]u8): bool;
 export class VCardData {
     full_name: &[]u8,
     org: &[]u8,

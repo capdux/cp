@@ -1,10 +1,7 @@
 // Type definitions for CP
 
-export fn rwbIsSpace(b: u8): bool;
-export fn rwbIsDigit(b: u8): bool;
-export fn rwbToLower(b: u8): u8;
+import { isSpace, isDigit, trim, eqIgnoreCase } from "cap:ascii";
 export fn rwbIsCont(b: u8): bool;
-export fn rwbUnitEq(unit: string, target: string): bool;
 export fn rwbUnitMultiplier(unit: string): u64;
 export fn isValidUtf8(data: &[]u8): bool;
 export fn parseByteLimit(spec: string): usize?;

@@ -1,7 +1,6 @@
 // Type definitions for CP
 
-export fn toLowerAscii(c: u8): u8;
-export fn eqIgnoreCase(a: string, b: string): bool;
+import { eqIgnoreCase } from "cap:ascii";
 export fn message(code: u16): string;
 export fn codeFromMessage(msg: string): u16;
 export fn isValid(code: u16): bool;

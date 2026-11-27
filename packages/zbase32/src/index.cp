@@ -2,17 +2,12 @@
 // Clean-room MIT implementation in pure CP.
 // Alphabet: "ybndrfg8ejkmcpqxot1uwisza345h769" (unpadded, big-endian 5-bit groups).
 
+import { toLowerByte } from "cap:ascii";
+
 const ALPHABET: string = "ybndrfg8ejkmcpqxot1uwisza345h769";
 
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn decodeChar(b: u8) -> i32 {
-    const c = toLowerAscii(b);
+    const c = toLowerByte(b);
     if (c == 121) { return 0; }  // y
     if (c == 98) { return 1; }   // b
     if (c == 110) { return 2; }  // n

@@ -1,22 +1,15 @@
 // @cap/path-key — Zero-heap cross-platform PATH env key resolver (matching npm path-key 250M+/wk)
 // Clean-room MIT implementation in pure CP.
 
+import { eqIgnoreCase, strEq } from "cap:ascii";
+
 pub struct PathSpan {
     pub start: usize,
     pub len: usize,
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 65 && c <= 90) { return c + 32; }
-    return c;
-}
-
 pub fn isPathKeyName(key: string): bool {
-    if (key.len != 4) { return false; }
-    return toLowerAscii(key[0]) == 112
-        && toLowerAscii(key[1]) == 97
-        && toLowerAscii(key[2]) == 116
-        && toLowerAscii(key[3]) == 104;
+    return eqIgnoreCase(key, "path");
 }
 
 // Given a list of environment variable names and whether platform is Windows,
@@ -26,8 +19,7 @@ pub fn findPathKeyIndex(keys: []string, is_windows: bool): i64 {
     if (!is_windows) {
         let i: usize = 0;
         while (i < keys.len) {
-            let k = keys[i];
-            if (k.len == 4 && k[0] == 80 && k[1] == 65 && k[2] == 84 && k[3] == 72) {
+            if (strEq(keys[i], "PATH")) {
                 return i as i64;
             }
             i = i + 1;

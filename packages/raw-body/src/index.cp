@@ -2,59 +2,32 @@
 // Content-Length validator, streaming chunk accumulator & RFC 3629 UTF-8 validator.
 // Clean-room MIT implementation inspired by npm `raw-body` v3.
 
+import { isSpace, isDigit, trim, eqIgnoreCase } from "cap:ascii";
+
 pub const RAW_OK: u16 = 0;
 pub const RAW_ERR_TOO_LARGE: u16 = 413;
 pub const RAW_ERR_LENGTH_MISMATCH: u16 = 400;
 pub const RAW_ERR_INVALID_UTF8: u16 = 400;
 pub const RAW_ERR_ABORTED: u16 = 499;
 
-fn rwbIsSpace(b: u8): bool {
-    return b == 0x20 || b == 0x09 || b == 0x0A || b == 0x0D;
-}
-
-fn rwbIsDigit(b: u8): bool {
-    return b >= 48 && b <= 57;
-}
-
-fn rwbToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
 fn rwbIsCont(b: u8): bool {
     return (b & 0xC0) == 0x80;
 }
 
-fn rwbUnitEq(unit: string, target: string): bool {
-    if (unit.len != target.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < unit.len) {
-        if (rwbToLower(unit[i]) != target[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn rwbUnitMultiplier(unit: string): u64 {
-    if (unit.len == 0 || rwbUnitEq(unit, "b")) {
+    if (unit.len == 0 || eqIgnoreCase(unit, "b")) {
         return 1 as u64;
     }
-    if (rwbUnitEq(unit, "k") || rwbUnitEq(unit, "kb")) {
+    if (eqIgnoreCase(unit, "k") || eqIgnoreCase(unit, "kb")) {
         return 1024 as u64;
     }
-    if (rwbUnitEq(unit, "m") || rwbUnitEq(unit, "mb")) {
+    if (eqIgnoreCase(unit, "m") || eqIgnoreCase(unit, "mb")) {
         return 1048576 as u64;
     }
-    if (rwbUnitEq(unit, "g") || rwbUnitEq(unit, "gb")) {
+    if (eqIgnoreCase(unit, "g") || eqIgnoreCase(unit, "gb")) {
         return 1073741824 as u64;
     }
-    if (rwbUnitEq(unit, "t") || rwbUnitEq(unit, "tb")) {
+    if (eqIgnoreCase(unit, "t") || eqIgnoreCase(unit, "tb")) {
         return 1099511627776 as u64;
     }
     return 0 as u64;
@@ -133,23 +106,17 @@ pub fn isValidUtf8(data: []const u8): bool {
 /// Parses human-readable byte limits such as `"100kb"`, `"1mb"`, `"512b"`, `"1.5kb"`, or `"1024"`.
 /// Returns `null` on empty, negative, overflowing, or unrecognized specifications.
 pub fn parseByteLimit(spec: string): usize? {
-    let start: usize = 0;
-    let end: usize = spec.len;
-    while (start < end && rwbIsSpace(spec[start])) {
-        start = start + 1;
-    }
-    while (end > start && rwbIsSpace(spec[end - 1])) {
-        end = end - 1;
-    }
-    if (start >= end) {
+    const s = trim(spec);
+    if (s.len == 0) {
         return null;
     }
 
-    let i = start;
+    let i: usize = 0;
+    const end: usize = s.len;
     let int_part: u64 = 0;
     let digits: usize = 0;
-    while (i < end && rwbIsDigit(spec[i])) {
-        let d = (spec[i] - 48) as u64;
+    while (i < end && isDigit(s[i])) {
+        let d = (s[i] - 48) as u64;
         if (int_part > ((0xFFFFFFFFFFFFFFFF as u64) - d) / (10 as u64)) {
             return null;
         }
@@ -161,13 +128,13 @@ pub fn parseByteLimit(spec: string): usize? {
     let frac_num: u64 = 0;
     let frac_den: u64 = 1;
     let has_dot = false;
-    if (i < end && spec[i] == 0x2E) { // '.'
+    if (i < end && s[i] == 0x2E) { // '.'
         has_dot = true;
         i = i + 1;
         let frac_digits: usize = 0;
-        while (i < end && rwbIsDigit(spec[i])) {
+        while (i < end && isDigit(s[i])) {
             if (frac_digits < 6) {
-                frac_num = frac_num * (10 as u64) + ((spec[i] - 48) as u64);
+                frac_num = frac_num * (10 as u64) + ((s[i] - 48) as u64);
                 frac_den = frac_den * (10 as u64);
             }
             frac_digits = frac_digits + 1;
@@ -180,10 +147,10 @@ pub fn parseByteLimit(spec: string): usize? {
         return null;
     }
 
-    while (i < end && rwbIsSpace(spec[i])) {
+    while (i < end && isSpace(s[i])) {
         i = i + 1;
     }
-    let unit = spec[i..end];
+    let unit = s[i..end];
     let mult: u64 = rwbUnitMultiplier(unit);
     if (mult == 0) {
         return null;
@@ -288,10 +255,8 @@ pub struct RawBodyReader {
             _.failed_status = RAW_ERR_TOO_LARGE;
             return RAW_ERR_TOO_LARGE;
         }
-        let i: usize = 0;
-        while (i < chunk.len) {
-            out[_.received + i] = chunk[i];
-            i = i + 1;
+        if (chunk.len > 0) {
+            @memcpy(out[_.received .. (_.received + chunk.len)], chunk);
         }
         _.received = _.received + chunk.len;
         return RAW_OK;

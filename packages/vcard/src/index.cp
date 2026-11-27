@@ -2,29 +2,10 @@
 // Zero-allocation RFC 6350 vCard 4.0 (.vcf) formatter and parser.
 // MIT clean-room pure CP implementation.
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
+import { eqIgnoreCase } from "cap:ascii";
 
 fn isSpaceOrTab(c: u8): bool {
     return c == (' ' as u8) || c == ('\t' as u8);
-}
-
-fn eqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Input contact fields for generating an RFC 6350 vCard 4.0 payload.

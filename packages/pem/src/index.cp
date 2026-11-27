@@ -1,6 +1,10 @@
 // @cap/pem — Zero-heap RFC 7468 PEM Armor Parser & Encoder
 // Clean-room MIT implementation in pure CP (replaces Rust `pem` [55M] & npm `pem-jwk`/`sshpk`).
 
+import { findByte } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+import { writeStr } from "cap:fmt";
+
 pub struct PemBlock {
     pub valid: bool,
     pub label: string,
@@ -12,26 +16,6 @@ pub struct PemBlock {
 pub struct PemBundle {
     pub blocks: [16]PemBlock,
     pub count: usize,
-}
-
-fn findSubstr(haystack: string, start: usize, needle: string) -> usize? {
-    if (needle.len == 0) { return start; }
-    if (start + needle.len > haystack.len) { return null; }
-    let i: usize = start;
-    while (i + needle.len <= haystack.len) {
-        let ok: bool = true;
-        let j: usize = 0;
-        while (j < needle.len) {
-            if (haystack[i + j] != needle[j]) {
-                ok = false;
-                break;
-            }
-            j += 1;
-        }
-        if (ok) { return i; }
-        i += 1;
-    }
-    return null;
 }
 
 fn isValidLabel(label: string) -> bool {
@@ -59,12 +43,12 @@ pub fn parsePemFrom(input: string, from_offset: usize) -> PemBlock {
     const beginPrefix: string = "-----BEGIN ";
     const dashes: string = "-----";
 
-    const bOpt = findSubstr(input, from_offset, beginPrefix);
+    const bOpt = indexOfBytes(input, beginPrefix, from_offset);
     if (bOpt == null) { return invalid; }
     const bPos: usize = bOpt ?? (0 as usize);
 
     const labelStart: usize = bPos + beginPrefix.len;
-    const bEndOpt = findSubstr(input, labelStart, dashes);
+    const bEndOpt = indexOfBytes(input, dashes, labelStart);
     if (bEndOpt == null) { return invalid; }
     const labelEnd: usize = bEndOpt ?? (0 as usize);
     const label: string = input[labelStart..labelEnd];
@@ -83,11 +67,11 @@ pub fn parsePemFrom(input: string, from_offset: usize) -> PemBlock {
     const endPrefix: string = "-----END ";
     let searchPos: usize = bodyStart;
     while (searchPos < input.len) {
-        const eOpt = findSubstr(input, searchPos, endPrefix);
+        const eOpt = indexOfBytes(input, endPrefix, searchPos);
         if (eOpt == null) { return invalid; }
         const ePos: usize = eOpt ?? (0 as usize);
         const eLabelStart: usize = ePos + endPrefix.len;
-        const eEndOpt = findSubstr(input, eLabelStart, dashes);
+        const eEndOpt = indexOfBytes(input, dashes, eLabelStart);
         if (eEndOpt == null) { return invalid; }
         const eLabelEnd: usize = eEndOpt ?? (0 as usize);
         const eLabel: string = input[eLabelStart..eLabelEnd];
@@ -151,15 +135,9 @@ pub fn extractBase64(blk: PemBlock, out: []u8) -> string {
         i = if (lineEnd < body.len) lineEnd + 1 else body.len;
 
         // Skip RFC 1421 header lines containing ':'
-        let hasColon: bool = false;
-        let k: usize = 0;
-        while (k < line.len) {
-            if (line[k] == ':') { hasColon = true; break; }
-            k += 1;
-        }
-        if (hasColon) { continue; }
+        if (findByte(line, ':', 0) != null) { continue; }
 
-        k = 0;
+        let k: usize = 0;
         while (k < line.len) {
             const c: u8 = line[k];
             if (c != ' ' && c != '\t' && c != '\r' && c != '\n') {
@@ -174,21 +152,12 @@ pub fn extractBase64(blk: PemBlock, out: []u8) -> string {
     return out[0..pos];
 }
 
-fn writeStr(out: []u8, pos: *usize, s: string) {
-    let i: usize = 0;
-    while (i < s.len && pos.* < out.len) {
-        out[pos.*] = s[i];
-        pos.* += 1;
-        i += 1;
-    }
-}
-
 /// Encode a label and Base64 payload into RFC 7468 PEM format with 64-character line wrapping.
 pub fn encodePem(label: string, base64_payload: string, out: []u8) -> string {
     let pos: usize = 0;
-    writeStr(out, &pos, "-----BEGIN ");
-    writeStr(out, &pos, label);
-    writeStr(out, &pos, "-----\n");
+    pos = writeStr("-----BEGIN ", out, pos);
+    pos = writeStr(label, out, pos);
+    pos = writeStr("-----\n", out, pos);
 
     let col: usize = 0;
     let i: usize = 0;
@@ -201,18 +170,18 @@ pub fn encodePem(label: string, base64_payload: string, out: []u8) -> string {
             }
             col += 1;
             if (col == 64) {
-                writeStr(out, &pos, "\n");
+                pos = writeStr("\n", out, pos);
                 col = 0;
             }
         }
         i += 1;
     }
     if (col > 0) {
-        writeStr(out, &pos, "\n");
+        pos = writeStr("\n", out, pos);
     }
 
-    writeStr(out, &pos, "-----END ");
-    writeStr(out, &pos, label);
-    writeStr(out, &pos, "-----\n");
+    pos = writeStr("-----END ", out, pos);
+    pos = writeStr(label, out, pos);
+    pos = writeStr("-----\n", out, pos);
     return out[0..pos];
 }

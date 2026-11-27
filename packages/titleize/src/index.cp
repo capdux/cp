@@ -1,30 +1,10 @@
 // @cap/titleize — Zero-allocation string title-case utility for CP
 // Clean-room MIT implementation with parity to npm `titleize` v3.
 
-fn titIsLower(c: u8): bool {
-    return c >= 'a' && c <= 'z';
-}
-
-fn titIsUpper(c: u8): bool {
-    return c >= 'A' && c <= 'Z';
-}
-
-fn titToUpper(c: u8): u8 {
-    if (titIsLower(c)) {
-        return c - 32;
-    }
-    return c;
-}
-
-fn titToLower(c: u8): u8 {
-    if (titIsUpper(c)) {
-        return c + 32;
-    }
-    return c;
-}
+import { isAlnum, toUpperByte, toLowerByte } from "cap:ascii";
 
 fn titIsWordChar(c: u8): bool {
-    return titIsLower(c) || titIsUpper(c) || (c >= '0' && c <= '9') || c == '\'';
+    return isAlnum(c) || c == '\'';
 }
 
 /// Capitalizes the first character of `input` (if ASCII lowercase) while keeping
@@ -33,12 +13,12 @@ pub fn upperCaseFirst(input: string, out: []u8): usize {
     if (input.len == 0 || out.len == 0) {
         return 0;
     }
-    out[0] = titToUpper(input[0]);
-    let i: usize = 1;
-    while (i < input.len && i < out.len) : (i += 1) {
-        out[i] = input[i];
+    out[0] = toUpperByte(input[0]);
+    const n = if (input.len < out.len) input.len else out.len;
+    if (n > 1) {
+        @memcpy(out[1..n], input[1..n]);
     }
-    return i;
+    return n;
 }
 
 /// Capitalizes the first letter of every word (after start of string, whitespace,
@@ -54,10 +34,10 @@ pub fn titleize(input: string, out: []u8): usize {
         const c = input[i];
         if (titIsWordChar(c)) {
             if (at_word_start) {
-                out[i] = titToUpper(c);
+                out[i] = toUpperByte(c);
                 at_word_start = false;
             } else {
-                out[i] = titToLower(c);
+                out[i] = toLowerByte(c);
             }
         } else {
             out[i] = c;
