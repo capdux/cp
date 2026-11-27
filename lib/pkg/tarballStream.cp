@@ -199,10 +199,8 @@ fn trimNullAndSpace(field: []const u8): []const u8 {
 
 fn copyBytes(dst: []u8, src: []const u8)! {
     if (src.len > dst.len) return TarStreamError.BufferTooSmall;
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(dst[0..src.len], src);
     }
 }
 
@@ -557,7 +555,7 @@ pub fn parsePaxRecords(
 pub struct TarStreamDecoder {
     opts: TarStreamOptions = TarStreamOptions.defaults(),
     phase: TarStreamPhase = TarStreamPhase.ReadHeader,
-    hdr_buf: [512]u8 = [0; 512],
+    hdr_buf: [512]u8 = undefined,
     hdr_filled: usize = 0,
     zero_blocks_seen: u8 = 0,
 
@@ -846,7 +844,7 @@ pub struct TarStreamDecoder {
             }
 
             // Assemble raw path (PAX/GNU LongName > USTAR prefix+name > name)
-            let raw_path_tmp: [4096]u8 = [0; 4096];
+            let raw_path_tmp: [4096]u8 = undefined;
             let raw_path_len: usize = 0;
             if (_.pending_path_len > 0) {
                 copyBytes(raw_path_tmp[0..], _.path_buf[0.._.pending_path_len])?;
@@ -1096,7 +1094,7 @@ pub fn encodeTarPaxHeader(
         total_len = decimalDigitsLen(total_len) + body_len;
     }
 
-    let rec_buf: [2048]u8 = [0; 2048];
+    let rec_buf: [2048]u8 = undefined;
     if (total_len > rec_buf.len) return TarStreamError.BufferTooSmall;
 
     // Write decimal length

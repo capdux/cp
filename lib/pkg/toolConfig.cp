@@ -618,8 +618,8 @@ fn parseStringExpanded(
     keep_unresolved: bool,
     storage: *ToolConfigStorage,
 ): ([]const u8)! {
-    let tmp1: [1024]u8 = [0; 1024];
-    let tmp2: [1024]u8 = [0; 1024];
+    let tmp1: [1024]u8 = undefined;
+    let tmp2: [1024]u8 = undefined;
     const unesc_len = unescapeTomlString(raw_token, tmp1[0..])?;
     const exp_len = expandEnvVars(tmp1[0..unesc_len], env_vars, keep_unresolved, tmp2[0..])?;
     return storage.allocCopy(tmp2[0..exp_len]);
@@ -723,7 +723,7 @@ fn parseRegistryValue(
                 reg.token = userinfo;
             }
             // Reconstruct sanitized URL without embedded userinfo
-            let url_buf: [512]u8 = [0; 512];
+            let url_buf: [512]u8 = undefined;
             let upos: usize = 0;
             appendBytes(url_buf[0..], &upos, expanded[0..scheme_len])?;
             appendBytes(url_buf[0..], &upos, host_and_path)?;
@@ -905,7 +905,7 @@ fn findEqualsOutsideQuotes(line: []const u8): usize? {
 fn unquoteKey(raw_key: []const u8, storage: *ToolConfigStorage): ([]const u8)! {
     const k = trimWs(raw_key);
     if (k.len >= 2 && (k[0] == '"' || k[0] == '\'')) {
-        let tmp: [256]u8 = [0; 256];
+        let tmp: [256]u8 = undefined;
         const n = unescapeTomlString(k, tmp[0..])?;
         return storage.allocCopy(tmp[0..n]);
     }
@@ -1117,7 +1117,7 @@ pub fn parseToolConfig(
             // Normalize scope name to always start with '@'
             let norm_scope = key;
             if (key.len > 0 && key[0] != '@') {
-                let sbuf: [128]u8 = [0; 128];
+                let sbuf: [128]u8 = undefined;
                 let spos: usize = 0;
                 appendBytes(sbuf[0..], &spos, "@")?;
                 appendBytes(sbuf[0..], &spos, key)?;
@@ -1485,7 +1485,7 @@ pub fn formatRedactedRegistryRoute(route: ResolvedRegistryRoute, out_buf: []u8):
     appendBytes(out_buf, &pos, route.url)?;
     if (route.token.len > 0) {
         appendBytes(out_buf, &pos, " token=")?;
-        let red_buf: [64]u8 = [0; 64];
+        let red_buf: [64]u8 = undefined;
         const rlen = redactSecretToken(route.token, red_buf[0..])?;
         appendBytes(out_buf, &pos, red_buf[0..rlen])?;
     } else if (route.username.len > 0) {

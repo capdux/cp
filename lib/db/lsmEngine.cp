@@ -1023,7 +1023,7 @@ pub struct SstBuilder {
     entry_count: usize = 0;
     block_count: usize = 0;
     max_seq: u64 = 0;
-    prev_key_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+    prev_key_buf: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
     prev_key_len: usize = 0;
     prev_seq: u64 = 0;
     has_prev: bool = false;
@@ -1441,7 +1441,7 @@ pub struct SstReader {
             bloom_bits: bloom_bits,
             bloom_bitset: bloom_bitset,
         });
-        let prev_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let prev_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let prev_len: usize = 0;
         let prev_seq: u64 = 0;
         let has_prev: bool = false;
@@ -1490,9 +1490,9 @@ pub struct SstReader {
             bloom_bits: bloom_bits,
             bloom_bitset: bloom_bitset,
         });
-        let scratch: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let scratch: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let scratch_s: []u8 = scratch[0..];
-        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let last_key_len: usize = 0;
         let has_last: bool = false;
         let last_resolved: bool = false;
@@ -1544,7 +1544,7 @@ pub struct SstReader {
         if (prefix.len == 0) {
             return try scanRange("", "", snapshot_seq, key_arena, out_items);
         }
-        let upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let upper_s: []u8 = upper_buf[0..];
         const upper_len_opt: usize? = computePrefixUpperBound(prefix, upper_s) catch |e| return e;
         let end_key: []const u8 = "";
@@ -1568,7 +1568,7 @@ pub struct SstReader {
 
         let out_count: usize = 0;
         let arena_used: usize = 0;
-        let cur_upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let cur_upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let cur_upper_len: usize = end_key.len;
         let has_upper: bool = end_key.len > 0;
         if (has_upper) {
@@ -1579,10 +1579,10 @@ pub struct SstReader {
 
         // Exact zero-heap reverse stepping: on each step pick the greatest visible user key in
         // `[start_key, cur_upper)` so even tiny `out_items` buffers always yield the true top-N keys.
-        let scratch: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let scratch: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let scratch_s: []u8 = scratch[0..];
-        let best_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
-        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let best_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
+        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
 
         while (out_count < out_items.len) {
             let cur: SstCursor = SstCursor.init(SstReader{
@@ -1855,7 +1855,7 @@ pub fn compactSstables(
 
     let builder: SstBuilder = try SstBuilder.init(cfg.builder_cfg, out_sst, index_work, bloom_work);
 
-    let last_user_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+    let last_user_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
     let last_user_key_len: usize = 0;
     let last_emitted_seq: u64 = 0;
     let has_emitted_for_key: bool = false;
@@ -1886,7 +1886,7 @@ pub fn compactSstables(
         stats.input_entries += 1;
         const bw_start: usize = best_way * LSM_CURSOR_KEY_STRIDE;
         const cur_key_len: usize = cursors_work[best_way].cur_key_len;
-        let cur_key_copy: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let cur_key_copy: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let c_i: usize = 0;
         while (c_i < cur_key_len) : (c_i += 1) {
             cur_key_copy[c_i] = key_bufs_work[bw_start + c_i];
@@ -2198,7 +2198,7 @@ pub struct LsmDbEngine {
         }
 
         let mem_pos: usize = if (start_key.len == 0) 0 else mem.lowerBoundUserKey(start_key);
-        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let last_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let last_key_len: usize = 0;
         let has_last: bool = false;
         let last_resolved: bool = false;
@@ -2248,7 +2248,7 @@ pub struct LsmDbEngine {
 
             if (!pick_mem && pick_way == k) break;
 
-            let cur_key_copy: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+            let cur_key_copy: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
             if (best_key.len > LSM_CURSOR_KEY_STRIDE) return LsmKvError.BufferTooSmall;
             let ci: usize = 0;
             while (ci < best_key.len) : (ci += 1) cur_key_copy[ci] = best_key[ci];
@@ -2316,7 +2316,7 @@ pub struct LsmDbEngine {
         if (prefix.len == 0) {
             return try scanRangeLayered("", "", snapshot_seq, sst_levels, cursors_work, key_bufs_work, key_arena, out_items);
         }
-        let upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let upper_s: []u8 = upper_buf[0..];
         const upper_len_opt: usize? = computePrefixUpperBound(prefix, upper_s) catch |e| return e;
         let end_key: []const u8 = "";
@@ -2343,7 +2343,7 @@ pub struct LsmDbEngine {
 
         let out_count: usize = 0;
         let arena_used: usize = 0;
-        let cur_upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let cur_upper_buf: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let cur_upper_len: usize = end_key.len;
         let has_upper: bool = end_key.len > 0;
         if (has_upper) {
@@ -2353,9 +2353,9 @@ pub struct LsmDbEngine {
         }
 
         let single_item: [1]LsmMemScanItem = [LsmMemScanItem{}; 1];
-        let single_arena: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
-        let best_key: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
-        let scratch_k: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+        let single_arena: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
+        let best_key: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
+        let scratch_k: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
         let sk_s: []u8 = scratch_k[0..];
         * = cursors_work;
         * = key_bufs_work;
@@ -2395,7 +2395,7 @@ pub struct LsmDbEngine {
             while (li < sst_levels.len) : (li += 1) {
                 if (sst_levels[li].len == 0) continue;
                 const reader: SstReader = try SstReader.open(sst_levels[li]);
-                let probe_upper: [LSM_CURSOR_KEY_STRIDE]u8 = [0; LSM_CURSOR_KEY_STRIDE];
+                let probe_upper: [LSM_CURSOR_KEY_STRIDE]u8 = undefined;
                 let probe_upper_len: usize = cur_end.len;
                 let probe_has_upper: bool = cur_end.len > 0;
                 let pi: usize = 0;

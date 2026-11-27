@@ -336,7 +336,7 @@ pub struct CertPinStore {
 
     /// Find exact normalized host policy slot, or `null` if absent.
     pub fn findExactHost(host: []const u8): usize? {
-        let norm_buf: [CERT_PIN_HOST_MAX_LEN]u8 = [0; CERT_PIN_HOST_MAX_LEN];
+        let norm_buf: [CERT_PIN_HOST_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = normalizeHost(host, *norm_s) ?? return null;
         const norm = norm_buf[0..norm_len];
@@ -368,7 +368,7 @@ pub struct CertPinStore {
         mode: CertPinMode,
         expires_epoch_s: i64,
     ): CertPinOpStatus {
-        let norm_buf: [CERT_PIN_HOST_MAX_LEN]u8 = [0; CERT_PIN_HOST_MAX_LEN];
+        let norm_buf: [CERT_PIN_HOST_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len = normalizeHost(host, *norm_s) ?? return CertPinOpStatus.invalid_host;
         const norm = norm_buf[0..norm_len];
@@ -506,7 +506,7 @@ pub struct CertPinStore {
             };
         }
 
-        let norm_buf: [CERT_PIN_HOST_MAX_LEN]u8 = [0; CERT_PIN_HOST_MAX_LEN];
+        let norm_buf: [CERT_PIN_HOST_MAX_LEN]u8 = undefined;
         let norm_s: []u8 = norm_buf[0..];
         const norm_len_opt = normalizeHost(host, *norm_s);
         if (norm_len_opt == null) {

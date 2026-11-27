@@ -192,7 +192,7 @@ fn lowerMediaPrelude(prelude: []const u8, opts: CssCompileOptions, out_buf: []u8
                 const paren_chunk = prelude[i .. j + 1];
                 if (std.mem.indexOfAny(u8, paren_chunk, "<>=") != null) {
                     if (mrq := MediaRangeQuery.parse(paren_chunk)) {
-                        let lb: [128]u8 = [0; 128];
+                        let lb: [128]u8 = undefined;
                         pos = engAppendBytes(out_buf, pos, mrq.lowerToLegacy(lb[0..128]));
                         lowered_here = true;
                         i = j + 1;
@@ -241,7 +241,7 @@ pub struct CssCompiler {
         let stats = CssCompileStats {};
 
         // Stage 1: Nesting lowering (if enabled & target lacks native nesting)
-        let working_buf: [16384]u8 = [0; 16384];
+        let working_buf: [16384]u8 = undefined;
         let src = std.mem.trim(u8, css_text, " \t\r\n");
         if (opts.lower_nesting && opts.targets.shouldCompile(Feature.Nesting)) {
             const flat = CssNesting.flatten(src, working_buf[0..16384]);
@@ -360,7 +360,7 @@ pub struct CssCompiler {
 
         // At-rule handling (@media, @container, @supports, @layer, @keyframes, @scope)
         if (prelude.len > 0 && prelude[0] == '@') {
-            let mq_buf: [512]u8 = [0; 512];
+            let mq_buf: [512]u8 = undefined;
             if (std.ascii.startsWithIgnoreCase(prelude, "@media") || std.ascii.startsWithIgnoreCase(prelude, "@container")) {
                 const lowered_len = lowerMediaPrelude(prelude, opts, mq_buf[0..512]);
                 if (lowered_len > 0) {
@@ -401,7 +401,7 @@ pub struct CssCompiler {
         }
 
         // Style rule: CSS Modules scoping
-        let scoped_buf: [512]u8 = [0; 512];
+        let scoped_buf: [512]u8 = undefined;
         if (opts.css_modules) {
             const scoped = CssModulesHasher.scopeSelector(prelude, opts.module_hash_seed, scoped_buf[0..512]);
             if (!std.mem.eql(u8, scoped, prelude)) stats.scoped_selectors += 1;
@@ -470,9 +470,9 @@ pub struct CssCompiler {
         let out_count: usize = 0;
 
         // Scratch storage for transformed slices during this rule
-        let val_arena: [4096]u8 = [0; 4096];
+        let val_arena: [4096]u8 = undefined;
         let arena_pos: usize = 0;
-        let pfx_arena: [1024]u8 = [0; 1024];
+        let pfx_arena: [1024]u8 = undefined;
         let pfx_pos: usize = 0;
 
         let idx: usize = 0;
@@ -494,7 +494,7 @@ pub struct CssCompiler {
             let step_a = val_part;
             if (opts.minify_properties) {
                 if (RectShorthand.isRectShorthand(prop_name)) {
-                    let mb: [256]u8 = [0; 256];
+                    let mb: [256]u8 = undefined;
                     const mv = RectShorthand.minifyValue(val_part, mb[0..256]);
                     if (!std.mem.eql(u8, mv, val_part) && arena_pos + mv.len <= val_arena.len) {
                         @memcpy(val_arena[arena_pos .. arena_pos + mv.len], mv);
@@ -504,7 +504,7 @@ pub struct CssCompiler {
                     }
                 } else if (std.ascii.eqlIgnoreCase(prop_name, "border-radius")) {
                     if (br := BorderRadius.parse(val_part)) {
-                        let brb: [256]u8 = [0; 256];
+                        let brb: [256]u8 = undefined;
                         const bs = br.format(brb[0..256], opts.minify);
                         if (!std.mem.eql(u8, bs, val_part) && arena_pos + bs.len <= val_arena.len) {
                             @memcpy(val_arena[arena_pos .. arena_pos + bs.len], bs);
@@ -515,7 +515,7 @@ pub struct CssCompiler {
                     }
                 } else if (std.ascii.eqlIgnoreCase(prop_name, "flex")) {
                     if (fl := FlexShorthand.parse(val_part)) {
-                        let fb: [128]u8 = [0; 128];
+                        let fb: [128]u8 = undefined;
                         const fs = fl.format(fb[0..128], opts.minify);
                         if (!std.mem.eql(u8, fs, val_part) && arena_pos + fs.len <= val_arena.len) {
                             @memcpy(val_arena[arena_pos .. arena_pos + fs.len], fs);
@@ -526,7 +526,7 @@ pub struct CssCompiler {
                     }
                 } else if (std.ascii.eqlIgnoreCase(prop_name, "display")) {
                     if (dv := DisplayValue.parse(val_part)) {
-                        let db: [64]u8 = [0; 64];
+                        let db: [64]u8 = undefined;
                         const ds = dv.format(db[0..64]);
                         if (!std.mem.eql(u8, ds, val_part) && arena_pos + ds.len <= val_arena.len) {
                             @memcpy(val_arena[arena_pos .. arena_pos + ds.len], ds);
@@ -541,7 +541,7 @@ pub struct CssCompiler {
                     std.ascii.eqlIgnoreCase(prop_name, "animation-delay"))
                 {
                     if (tm := Time.parse(val_part)) {
-                        let tb: [64]u8 = [0; 64];
+                        let tb: [64]u8 = undefined;
                         const ts = tm.format(tb[0..64], opts.minify);
                         if (!std.mem.eql(u8, ts, val_part) && arena_pos + ts.len <= val_arena.len) {
                             @memcpy(val_arena[arena_pos .. arena_pos + ts.len], ts);
@@ -554,7 +554,7 @@ pub struct CssCompiler {
                     if (gr := Gradient.parse(val_part)) {
                         const lower_dp = !opts.targets.isCompatible(Feature.DoublePositionGradients) && gr.hasDoublePositionStops();
                         if (lower_dp || opts.minify) {
-                            let gb: [512]u8 = [0; 512];
+                            let gb: [512]u8 = undefined;
                             const gs = gr.format(gb[0..512], opts.minify, lower_dp);
                             if (arena_pos + gs.len <= val_arena.len) {
                                 @memcpy(val_arena[arena_pos .. arena_pos + gs.len], gs);

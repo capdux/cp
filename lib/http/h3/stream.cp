@@ -65,7 +65,7 @@ pub struct H3RequestStream {
     status_code: u16 = 0,
     headers: [32]H3DecodedHeader = [H3DecodedHeader{}; 32],
     header_count: usize = 0,
-    body_buf: [4096]u8 = [0; 4096],
+    body_buf: [4096]u8 = undefined,
     body_len: usize = 0,
     total_body_bytes: u64 = 0,
     pending_body: []const u8 = "",
@@ -231,10 +231,8 @@ pub struct H3RequestStream {
             if (chunk.len > H3_REQ_STREAM_MAX_BODY_BUF - _.body_len) {
                 return H3RequestStreamError.BodyBufferOverflow;
             }
-            let i: usize = 0;
-            while (i < chunk.len) {
-                _.body_buf[_.body_len + i] = chunk[i];
-                i += 1;
+            if (chunk.len > 0) {
+                @memcpy(_.body_buf[_.body_len .. _.body_len + chunk.len], chunk);
             }
             _.body_len += chunk.len;
         }

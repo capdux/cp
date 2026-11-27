@@ -335,10 +335,8 @@ pub struct NumberScopeRenamer {
             if (out.len < prefix.len) {
                 return err.BufferTooSmall;
             }
-            let i: usize = 0;
-            while (i < prefix.len) {
-                out[i] = prefix[i];
-                i += 1;
+            if (prefix.len > 0) {
+                @memcpy(out[0..prefix.len], prefix);
             }
             _.reserve(prefix)?;
             return out[0..prefix.len];
@@ -356,10 +354,8 @@ pub struct NumberScopeRenamer {
             if (prefix.len >= INLINE_NAME_CAP) {
                 return err.NameTooLong;
             }
-            let i: usize = 0;
-            while (i < prefix.len) {
-                cand_buf[i] = prefix[i];
-                i += 1;
+            if (prefix.len > 0) {
+                @memcpy(cand_buf[0..prefix.len], prefix);
             }
             const num_len = appendU32Decimal(tries, cand_buf[prefix.len..]) catch return err.NameTooLong;
             const total_len = prefix.len + num_len;
@@ -449,7 +445,7 @@ pub struct MinifySlotAssigner {
     /// 按引用频率降序（平局按原始 slot 顺序升序）分配最短合法标识符
     fn assignByFrequency(*_, ns: SlotNamespace): ! {
         // Build index permutation sorted by (count desc, original_idx asc) via insertion sort (stable, zero alloc)
-        let order: [MAX_MINIFY_SLOTS]usize = [0; MAX_MINIFY_SLOTS];
+        let order: [MAX_MINIFY_SLOTS]usize = undefined;
         let i: usize = 0;
         while (i < _.slot_len) {
             order[i] = i;

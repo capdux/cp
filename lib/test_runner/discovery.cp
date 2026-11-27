@@ -276,11 +276,9 @@ pub fn matchesDiscoveryGlob(pattern: []const u8, rel_path: []const u8): bool {
         rel_path[rel_path.len - 1] != '/' &&
         containsSlice(pattern, "**"))
     {
-        let buf: [4096]u8 = [0; 4096];
-        let i: usize = 0;
-        while (i < rel_path.len) {
-            buf[i] = rel_path[i];
-            i += 1;
+        let buf: [4096]u8 = undefined;
+        if (rel_path.len > 0) {
+            @memcpy(buf[0..rel_path.len], rel_path);
         }
         buf[rel_path.len] = '/';
         if (matchGlobCore(pattern, buf[0 .. rel_path.len + 1])) {

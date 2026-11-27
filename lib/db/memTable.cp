@@ -110,7 +110,7 @@ pub struct SortedMemTable {
     entry_count: usize = 0;
     live_count: usize = 0;
     tombstone_count: usize = 0;
-    arena: [8192]u8 = [0; 8192];
+    arena: [8192]u8 = undefined;
     arena_used: usize = 0;
     min_seq_num: u64 = 0;
     max_seq_num: u64 = 0;
@@ -156,9 +156,9 @@ pub struct SortedMemTable {
             let new_val_off: u16 = existing.val_off;
             if (!existing.is_tombstone && value.len <= (existing.val_len as usize)) {
                 // Reuse existing value slice in-place
-                let i: usize = 0;
-                while (i < value.len) : (i += 1) {
-                    _.arena[(new_val_off as usize) + i] = value[i];
+                const off = new_val_off as usize;
+                if (value.len > 0) {
+                    @memcpy(_.arena[off .. off + value.len], value);
                 }
             } else {
                 // Append new value bytes to arena
@@ -166,9 +166,8 @@ pub struct SortedMemTable {
                     return MemTableWriteStatus.arena_full;
                 }
                 new_val_off = _.arena_used as u16;
-                let i: usize = 0;
-                while (i < value.len) : (i += 1) {
-                    _.arena[_.arena_used + i] = value[i];
+                if (value.len > 0) {
+                    @memcpy(_.arena[_.arena_used .. _.arena_used + value.len], value);
                 }
                 _.arena_used += value.len;
             }
@@ -194,16 +193,12 @@ pub struct SortedMemTable {
         }
 
         const k_off = _.arena_used;
-        let i: usize = 0;
-        while (i < key.len) : (i += 1) {
-            _.arena[k_off + i] = key[i];
-        }
+        @memcpy(_.arena[k_off .. k_off + key.len], key);
         _.arena_used += key.len;
 
         const v_off = _.arena_used;
-        i = 0;
-        while (i < value.len) : (i += 1) {
-            _.arena[v_off + i] = value[i];
+        if (value.len > 0) {
+            @memcpy(_.arena[v_off .. v_off + value.len], value);
         }
         _.arena_used += value.len;
 
@@ -263,10 +258,7 @@ pub struct SortedMemTable {
         }
 
         const k_off = _.arena_used;
-        let i: usize = 0;
-        while (i < key.len) : (i += 1) {
-            _.arena[k_off + i] = key[i];
-        }
+        @memcpy(_.arena[k_off .. k_off + key.len], key);
         _.arena_used += key.len;
 
         let shift_i = _.entry_count;
