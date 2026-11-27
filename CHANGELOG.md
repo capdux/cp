@@ -1452,3 +1452,17 @@
 - **Phase 4C (Batch 9~12, 23 核心包)**：升级 `crc32fast`/`crc64fast` Slice-by-4 LUT、`utf8parse`/`marked`/`toml_writer`/`hexdump-nodejs` 16-lane `@Vector(16, u8)` SIMD、`lz4_flex`/`snap`/`url`/`qs`/`ini`/`picomatch`/`semver`/`bytes`/`diff` 等 16-lane SIMD & `@memcpy`；产出实测基准报告 [ECOSYSTEM_PERF_REPORT.md](file:///data/dev/cp/bench/ECOSYSTEM_PERF_REPORT.md)（`utf8parse` **17.8 GB/s**、`lz4_flex` **3.1 GB/s**、`crc32fast` **1.1 GB/s**）。
 - **“做全不做薄”API 补全 (Batch 1~2, 16 包)**：补齐 `type-is`/`dom-accessibility-api`/`zod-validation-error`/`miniz_oxide`/`p-map`/`bit_field`/`deranged`/`bytemuck`/`hdrhistogram`/`p-queue`/`zerocopy`/`immer`/`schema-utils`/`jest-docblock`/`finalhandler`/`media-typer` 完整源包接口（+6,635 LOC，124/124 PASS），刷新全部 904 包文档。
 - **全仓 854/854 (100.0%) 生态回归大满贯**：运行全部 854 套 `cap/test/testCap*.cp` 并清零全部 35 项失败（含修复 `cookie-signature` 标准 Base64 `+/ ` 与抽离 `negotiator/src/core.cp` 消除与 `accepts` 扁平重名冲突）。
+
+## [2026-11-27] - 全仓 904 包文档 100% 达标 + 76 短包补全收官 + `cap fix`/`cap from` 升级 + 16 项健康门禁 + Phase 4D/4E/4F & Stdlib 提速
+- **“做全不做薄”短包补全收官 (Batch 3~8, +60 包 → 累计 76 包)**：补齐 `snowflake`、`rand_pcg`、`hkdf`、`base64url`、`encodeurl`、`smawk`、`nohash-hasher`、`accepts`、`damerau-levenshtein`、`simplify-js`、`b-spline`、`hmac`、`adler2`、`depd`、`semver-diff`、`dunce` 等 60 个核心短包完整上游 API 与单测（累计 **76 包、+17,828 LOC、623/623 PASS**）。
+- **全仓 904/904 (100.0%) 三语文档生产级达标**：人工深度精修突破 **Top 202 明星包（606 份 EN/ZH/AGENT）**；新增 [scripts/enrich_tail_docs.py](file:///data/dev/cp/scripts/enrich_tail_docs.py) 基于真实 `src/index.d.cp` 批量富化其余 **763 包（2,221 份文档）**，实现 **904/904 (100%)** EN/ZH 顶部三栏切换导航与 **0 处非原生 `@cap/` 残留**。
+- **AI-First 工具链 & 元数据闭环**：
+  - 清零 [packages/registry.json](file:///data/dev/cp/packages/registry.json) 22 条尾项（8 条旧 `@cap/*` 别名 + 补齐 8 份缺失英文 `README.md`），**1,037/1,037 零死链**；
+  - 升级 [cap/src/fix.zig](file:///data/dev/cp/cap/src/fix.zig) 与 [cap/src/main.zig](file:///data/dev/cp/cap/src/main.zig)：接入 `packages/registry.json`（2,342 源包/别名映射），一键修正 `.cp` 引用与 `cap.json` `dependencies`/`devDependencies`（自动移除内置 `cap:*` 依赖），`cap from -ts/-rs/-npm/-crate` 自动联动执行；
+  - 沉淀 41 断言 E2E 回归脚本 [scripts/test_cap_ai_toolchain.py](file:///data/dev/cp/scripts/test_cap_ai_toolchain.py)（41/41 PASS）并修复 [cap/src/brief.zig](file:///data/dev/cp/cap/src/brief.zig) 动态截断行数与 `cap check` 跳过 `.cap/`/`.git/`；
+  - 自动修复 **204 个 `packages/**/cap.json`**（补齐 119 处 `"main"`、清零 13 处 `dep` / 15 处 `repository` / 82 处描述旧 `@cap/`），沉淀 300ms 一键门禁 [scripts/check_ecosystem_health.py](file:///data/dev/cp/scripts/check_ecosystem_health.py)（16/16 PASS）；同步刷新 [cp_agent_lib_ref.md](file:///data/dev/cp/cp_agent_lib_ref.md)（37.53 KB）。
+- **全仓内置标准库 QA + Phase 4D/4E/4F & Phase 4-Stdlib 性能提速**：
+  - 全仓 `cap/test/test_*_production_deep.cp` **1,402 / 1,402 (100%) `cpc check` 全绿** + 尾部 20 关键模块 `-m` 深测 20/20 PASS；
+  - Phase 4D/4E/4F（24 个高频包：`html-escape`, `encodeurl`, `escape-string-regexp`, `jsesc`, `bstr`, `strip-json-comments`, `shell-escape`, `content-type`, `utf-8`, `punycode`, `slugify`, `etag`, `pathe`, `quoted-printable`, `escape-html`, `querystring`, `hex`, `bs58`, `urlencoding`, `zbase32`, `xml-name-validator`, `ndjson`, `cookie-parser`, `set-cookie-parser`）全面升级 16-lane `@Vector(16, u8)` SIMD + `comptime` LUT + `@memcpy` + `= undefined`（100% PASS）；
+  - Phase 4-Stdlib Batch 1（10 个 `lib/` 核心模块）消除 **151 KB/call** 栈清零并新增 9 处 `@memcpy`（10/10 `-m` 深测 PASS）；
+  - 第 11 轮 3h 效率审计固化进 [GEMINI.md](file:///data/dev/cp/GEMINI.md) §6.11。

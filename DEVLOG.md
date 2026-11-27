@@ -621,3 +621,8 @@
 - **性能实测**：在 LLVM ReleaseFast 下实测 8 个 Phase 4C 核心包，`utf8parse` 达 **17.8 GB/s**、`lz4_flex` 解压 **3.1 GB/s**、`crc32fast` **1.1 GB/s**、`semver` **6.39M ops/s**、`qs` **5.87M ops/s**，验证了 16-lane SIMD / Slice-by-4 LUT / `@memcpy` 的真实加速收益。
 - **全仓大考**：854 套 `testCap*.cp` 首轮 819/854 (95.90%) 通过，剩余 35 项精准归类为旧别名路径越界(18)、测试内重名冲突(9)、API/断言(5)与并发偶发超时(3)，由 Worker AP 一次性全部清零达成 **854/854 (100.0%) PASS**。
 - **持续推进**：启动 Worker AQ & Worker AR 双路并行精修 Top 24 明星包的中英双语与 Agent 极简文档。
+
+## 2026-11-27: 904 包文档 100% 达标 + 76 短包收官 + `cap fix`/`cap from` 联动升级 + 16 项门禁 + Phase 4D~4F/Stdlib 提速
+- **架构闭环**：通过人工精修（Top 202）+ AST 真实签名富化（其余 763 包）双轨结合，彻底达成 904/904 三语文档与三栏导航 100% 达标；同步清理 `packages/registry.json` 22 尾项与 204 个 `cap.json` 缺失 `main`/旧 `@cap/` 描述残留，并固化 300ms 一键健康门禁 `scripts/check_ecosystem_health.py`（16/16 PASS）。
+- **一键迁移体验**：升级 `cap/src/fix.zig` 与 `cap/src/main.zig`（`handleFrom`），基于 `packages/registry.json` 的 2,342 源包/别名映射表实现 `.cp` 引用与 `cap.json` 依赖自动改写（主包 `source_name` 优先于 `aliases`、保护原生 `@cap/*` 与本地独立裸包、内置 `cap:*` 依赖自动清理），并以 41 断言脚本 `scripts/test_cap_ai_toolchain.py` 锁定零退化。
+- **双轨物理隔离持续提速**：在 `packages/`（Phase 4D/4E/4F 24 个高频包 16-lane SIMD + `comptime` LUT + `@memcpy`）与 `lib/`（Phase 4-Stdlib Batch 1 消除 151 KB/call 栈清零）采用目录级物理隔离双路并行，0 冲突、0 返工持续推进。
