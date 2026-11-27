@@ -213,7 +213,7 @@ struct Parser {
     fn parseTypeRef(*_): GqlError!GqlTypeRef {
         let base: GqlTypeRef = undefined;
         if (_.skip(.BracketL)) {
-            const inner = try _.alloc.create(GqlTypeRef);
+            let inner = try _.alloc.create(GqlTypeRef);
             errdefer _.alloc.destroy(inner);
             inner.* = try _.parseTypeRef();
             * = try _.expect(.BracketR);
@@ -223,7 +223,7 @@ struct Parser {
             base = GqlTypeRef{ .Named = name_tok.lexeme };
         }
         if (_.skip(.Bang)) {
-            const inner = try _.alloc.create(GqlTypeRef);
+            let inner = try _.alloc.create(GqlTypeRef);
             errdefer {
                 freeTypeRef(&base, _.alloc);
                 _.alloc.destroy(inner);
