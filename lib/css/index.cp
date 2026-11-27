@@ -648,7 +648,7 @@ export {
     CssNestingDecl,
     hasNestingSelectorAmp,
     isValidAtNestSelector,
-    resolveNestedSelector,
+    resolveNestedSelector as resolveNestingRuleSelector,
     CssNestingRule,
 } from "./nestingRule.cp";
 

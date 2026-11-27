@@ -1114,7 +1114,7 @@ export {
 } from "./exePe.cp";
 
 export {
-    MH_MAGIC_64,
+    MH_MAGIC_64 as EXE_MH_MAGIC_64,
     MACH_HEADER_64_SIZE,
     MachO64HeaderInfo,
     parseMachO64Header,

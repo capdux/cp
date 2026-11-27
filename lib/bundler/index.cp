@@ -374,7 +374,7 @@ export {
     GRAPH_MAX_ENTRY_POINTS,
     GRAPH_MAX_HTML_IMPORTS,
     GRAPH_MAX_PATH_LEN,
-    GraphError,
+    GraphError as BundlerGraphError,
     GraphLoaderKind,
     GraphScanTransition,
     GraphInputFileFlags,

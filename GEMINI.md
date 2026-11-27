@@ -820,3 +820,11 @@ git status --porcelain cpc_dev/src
    - `cap:fmt.writeStr(s, out, pos)` 参数顺序 `s` 在首位；`cap:bin.readU32LE/readU64LE` 返回 `?u32`/`?u64`；
    - `cap brief <pkg|cap:stdlib>` 已统一覆盖 904 生态包 + 208 内置标准库通道，查库直接调用 `cap brief` 替代整文件读取。
 4. **批量代码改写工具必须限定语法上下文**：`cap fix` 重写旧 `@cap/<pkg>` 导入时必须限定匹配 `from "@cap/` 而非裸 `"@cap/`，彻底杜绝误伤测试字符串字面量与返工。
+
+### 6.10 第 10 轮 3 小时效率与 Token 审计固化铁律（2026-11-27 15:20）
+
+1. **内置标准库多文件深测优先使用 `cap test -m`（模块化隔离）**：`lib/<mod>/index.cp` 往往聚合 10~40 个子文件，默认单文件展平模式（flatten）会触发各子文件私有 helper（如 `isOws`/`isTokenChar`）假碰撞；运行 `cap/test/test_*_production_deep.cp` 一律优先带 `-m` 参数，利用 `.cap/test-mod/` 模块级隔离与增量缓存（单测 <1s），彻底省去无意义的“排查假碰撞”试错轮次。
+2. **并行子智能体强制按路径字母分片（Zero-Conflict Sharding）**：生态去重 / 批量重构波次严格按 `packages/[a-m]*` 与 `packages/[n-z]*` 分片派发，实现多路并发 0 文件冲突、0 回滚重做。
+3. **1 秒静态扫描先行，拒绝盲跑全量测试**：排查 `lib/*/index.cp` 真正的跨子文件导出冲突（如重复 `export { sym }`）时，先用 1 秒 Python 正则脚本定位全部 6 处真实导出冲突再精准批量修复，而非盲跑 1,402 个深测逐个看日志，节省 >95% 探测时间与 Token。
+4. **结构化无 receiver 工厂方法必须显式标 `static`**：在 `struct` 中定义不消费 `self` 的工厂方法（除 `init`/`new` 等特例名外，如 `fromState`）须写作 `pub static fn`，否则 Zig 后端会生成未使用的 `self` 形参导致 `BuildFailed`。
+

@@ -616,7 +616,7 @@ export {
     X509_ALT_NAME_MAX_ENTRIES,
     X509AltNameKind,
     X509AltNameError,
-    isSafeAltName,
+    isSafeAltName as isSafeX509AltName,
     X509AltNameEntry,
     parseX509AltNameEntry,
     formatX509AltNameList,

@@ -258,7 +258,7 @@ pub struct JksEntryIter {
             _.remaining = 0;
             return null;
         }
-        const tag = tag_opt ?? unreachable;
+        const tag = tag_opt.?;
 
         const alias_opt = readUtf8Be(_.data, *_.pos, _.body_end);
         if (alias_opt == null) {
@@ -266,7 +266,7 @@ pub struct JksEntryIter {
             _.remaining = 0;
             return null;
         }
-        const alias = alias_opt ?? unreachable;
+        const alias = alias_opt.?;
 
         const ts_opt = readI64Be(_.data, *_.pos, _.body_end);
         if (ts_opt == null) {
@@ -274,7 +274,7 @@ pub struct JksEntryIter {
             _.remaining = 0;
             return null;
         }
-        const timestamp_ms = ts_opt ?? unreachable;
+        const timestamp_ms = ts_opt.?;
 
         const empty = _.data[0..0];
 
@@ -285,14 +285,14 @@ pub struct JksEntryIter {
                 _.remaining = 0;
                 return null;
             }
-            const klen = klen_opt ?? unreachable;
+            const klen = klen_opt.?;
             const key_der_opt = readBytes(_.data, *_.pos, _.body_end, usize(klen));
             if (key_der_opt == null) {
                 _.malformed = true;
                 _.remaining = 0;
                 return null;
             }
-            const protected_key_der = key_der_opt ?? unreachable;
+            const protected_key_der = key_der_opt.?;
 
             const cc_opt = readU32Be(_.data, *_.pos, _.body_end);
             if (cc_opt == null) {
@@ -300,7 +300,7 @@ pub struct JksEntryIter {
                 _.remaining = 0;
                 return null;
             }
-            const cert_count = cc_opt ?? unreachable;
+            const cert_count = cc_opt.?;
 
             const certs_start = _.pos;
             let ci: u32 = 0;
@@ -334,7 +334,7 @@ pub struct JksEntryIter {
                 _.remaining = 0;
                 return null;
             }
-            const cert = cert_opt ?? unreachable;
+            const cert = cert_opt.?;
 
             _.remaining -= 1;
             return JksEntry{

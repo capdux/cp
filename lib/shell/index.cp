@@ -406,11 +406,11 @@ export {
     PathBuiltinError,
     BasenameOpts,
     DirnameOpts,
-    posixBasename,
+    posixBasename as pathBuiltinBasename,
     posixBasenameStripSuffix,
-    posixDirname,
+    posixDirname as pathBuiltinDirname,
     runBasenameBuiltin,
-    runDirnameBuiltin,
+    runDirnameBuiltin as runPathDirnameBuiltin,
 } from "./pathBuiltin.cp";
 
 export {

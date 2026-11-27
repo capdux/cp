@@ -220,7 +220,7 @@ pub struct MonotonicUlidGenerator {
     }
 
     /// Restores generator state from a previous `(last_timestamp_ms, last_rand80)` pair.
-    pub fn fromState(last_timestamp_ms: u64, last_rand80: u128): MonotonicUlidGenerator ! IdError {
+    pub static fn fromState(last_timestamp_ms: u64, last_rand80: u128): MonotonicUlidGenerator ! IdError {
         if (last_timestamp_ms > MAX_TIMESTAMP_MS) {
             return IdError.TimestampOutOfRange;
         }

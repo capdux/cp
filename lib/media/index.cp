@@ -304,7 +304,7 @@ export {
     parseFmp4Fragment,
     OggPageHeader,
     encodeOggPage,
-    parseOggPage,
+    parseOggPage as parseFmp4OggPage,
     OpusHeadInfo,
     encodeOpusHead,
     parseOpusHeadInfo,
