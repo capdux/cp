@@ -1,6 +1,55 @@
 // @cap/cssparser — Zero-heap CSS Syntax Level 3 lexer in pure CP.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning and comptime 256-entry character classification LUT.
 
-import { isSpace, isAlpha, isDigit } from "cap:ascii";
+type CsspVec16 = @Vector(16, u8);
+
+const CSSP_FLAG_WS: u8 = 1;
+const CSSP_FLAG_DIGIT: u8 = 2;
+const CSSP_FLAG_IDENT_START: u8 = 4;
+const CSSP_FLAG_IDENT_CHAR: u8 = 8;
+
+fn csspBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    // Whitespace: ' ', '\t', '\n', '\r', '\x0b', '\x0c'
+    lut[9] = CSSP_FLAG_WS;
+    lut[10] = CSSP_FLAG_WS;
+    lut[11] = CSSP_FLAG_WS;
+    lut[12] = CSSP_FLAG_WS;
+    lut[13] = CSSP_FLAG_WS;
+    lut[32] = CSSP_FLAG_WS;
+
+    // Digits '0'..'9'
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = CSSP_FLAG_DIGIT | CSSP_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    // Uppercase 'A'..'Z'
+    c = 65;
+    while (c <= 90) {
+        lut[c] = CSSP_FLAG_IDENT_START | CSSP_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    // Lowercase 'a'..'z'
+    c = 97;
+    while (c <= 122) {
+        lut[c] = CSSP_FLAG_IDENT_START | CSSP_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    // '_' and '-'
+    lut[95] = CSSP_FLAG_IDENT_START | CSSP_FLAG_IDENT_CHAR;
+    lut[45] = CSSP_FLAG_IDENT_CHAR;
+    // Non-ASCII >= 0x80
+    c = 128;
+    while (c < 256) {
+        lut[c] = CSSP_FLAG_IDENT_START | CSSP_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    return lut;
+}
+
+const CSSP_CHAR_LUT: [256]u8 = csspBuildCharLut();
 
 pub enum CssTokKind {
     Ident,
@@ -32,12 +81,20 @@ pub struct CssToken {
     end: usize,
 }
 
+fn csspIsSpace(c: u8): bool {
+    return (CSSP_CHAR_LUT[c as usize] & CSSP_FLAG_WS) != 0;
+}
+
+fn csspIsDigit(c: u8): bool {
+    return (CSSP_CHAR_LUT[c as usize] & CSSP_FLAG_DIGIT) != 0;
+}
+
 fn csspIsIdentStart(c: u8): bool {
-    return isAlpha(c) || c == '_' || c >= 0x80;
+    return (CSSP_CHAR_LUT[c as usize] & CSSP_FLAG_IDENT_START) != 0;
 }
 
 fn csspIsIdentChar(c: u8): bool {
-    return csspIsIdentStart(c) || isDigit(c) || c == '-';
+    return (CSSP_CHAR_LUT[c as usize] & CSSP_FLAG_IDENT_CHAR) != 0;
 }
 
 fn csspStartsIdent(s: string, pos: usize): bool {
@@ -62,17 +119,17 @@ fn csspStartsNumber(s: string, pos: usize): bool {
         return false;
     }
     const c = s[pos];
-    if (isDigit(c)) {
+    if (csspIsDigit(c)) {
         return true;
     }
     if (c == '.') {
-        return pos + 1 < s.len && isDigit(s[pos + 1]);
+        return pos + 1 < s.len && csspIsDigit(s[pos + 1]);
     }
     if (c == '+' || c == '-') {
-        if (pos + 1 < s.len && isDigit(s[pos + 1])) {
+        if (pos + 1 < s.len && csspIsDigit(s[pos + 1])) {
             return true;
         }
-        if (pos + 2 < s.len && s[pos + 1] == '.' && isDigit(s[pos + 2])) {
+        if (pos + 2 < s.len && s[pos + 1] == '.' && csspIsDigit(s[pos + 2])) {
             return true;
         }
     }
@@ -81,7 +138,53 @@ fn csspStartsNumber(s: string, pos: usize): bool {
 
 fn csspScanIdent(s: string, start: usize): usize {
     let p = start;
+    const v_zero: CsspVec16 = @splat(0 as u8);
+    const v_one: CsspVec16 = @splat(1 as u8);
+    const v_lo_a: CsspVec16 = @splat(97 as u8);
+    const v_lo_z: CsspVec16 = @splat(122 as u8);
+    const v_up_a: CsspVec16 = @splat(65 as u8);
+    const v_up_z: CsspVec16 = @splat(90 as u8);
+    const v_d0: CsspVec16 = @splat(48 as u8);
+    const v_d9: CsspVec16 = @splat(57 as u8);
+    const v_us: CsspVec16 = @splat(95 as u8);
+    const v_hy: CsspVec16 = @splat(45 as u8);
+    const v_hi: CsspVec16 = @splat(128 as u8);
+
+    while (p + 16 <= s.len) {
+        const v: CsspVec16 = s[p .. p + 16][0..16].*;
+        const m_lo = @select(u8, v >= v_lo_a, v_one, v_zero) & @select(u8, v <= v_lo_z, v_one, v_zero);
+        const m_up = @select(u8, v >= v_up_a, v_one, v_zero) & @select(u8, v <= v_up_z, v_one, v_zero);
+        const m_dg = @select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero);
+        const m_sp = @select(u8, v == v_us, v_one, v_zero)
+            | @select(u8, v == v_hy, v_one, v_zero)
+            | @select(u8, v >= v_hi, v_one, v_zero);
+        const ok = m_lo | m_up | m_dg | m_sp;
+        if (@reduce(.And, ok != v_zero)) {
+            p += 16;
+            continue;
+        }
+        break;
+    }
     while (p < s.len && csspIsIdentChar(s[p])) : (p += 1) {}
+    return p;
+}
+
+fn csspScanDigits(s: string, start: usize): usize {
+    let p = start;
+    const v_zero: CsspVec16 = @splat(0 as u8);
+    const v_one: CsspVec16 = @splat(1 as u8);
+    const v_d0: CsspVec16 = @splat(48 as u8);
+    const v_d9: CsspVec16 = @splat(57 as u8);
+    while (p + 16 <= s.len) {
+        const v: CsspVec16 = s[p .. p + 16][0..16].*;
+        const ok = @select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero);
+        if (@reduce(.And, ok != v_zero)) {
+            p += 16;
+            continue;
+        }
+        break;
+    }
+    while (p < s.len && csspIsDigit(s[p])) : (p += 1) {}
     return p;
 }
 
@@ -90,19 +193,18 @@ fn csspScanNumber(s: string, start: usize): usize {
     if (p < s.len && (s[p] == '+' || s[p] == '-')) {
         p += 1;
     }
-    while (p < s.len && isDigit(s[p])) : (p += 1) {}
-    if (p + 1 < s.len && s[p] == '.' && isDigit(s[p + 1])) {
+    p = csspScanDigits(s, p);
+    if (p + 1 < s.len && s[p] == '.' && csspIsDigit(s[p + 1])) {
         p += 1;
-        while (p < s.len && isDigit(s[p])) : (p += 1) {}
+        p = csspScanDigits(s, p);
     }
     if (p < s.len && (s[p] == 'e' || s[p] == 'E')) {
         let ep = p + 1;
         if (ep < s.len && (s[ep] == '+' || s[ep] == '-')) {
             ep += 1;
         }
-        if (ep < s.len && isDigit(s[ep])) {
-            p = ep;
-            while (p < s.len && isDigit(s[p])) : (p += 1) {}
+        if (ep < s.len && csspIsDigit(s[ep])) {
+            p = csspScanDigits(s, ep);
         }
     }
     return p;
@@ -110,14 +212,47 @@ fn csspScanNumber(s: string, start: usize): usize {
 
 fn csspSkipWsAndComments(s: string, start: usize): usize {
     let p = start;
+    const v_zero: CsspVec16 = @splat(0 as u8);
+    const v_one: CsspVec16 = @splat(1 as u8);
+    const v_sp: CsspVec16 = @splat(32 as u8);
+    const v_t0: CsspVec16 = @splat(9 as u8);
+    const v_t1: CsspVec16 = @splat(13 as u8);
+    const v_star: CsspVec16 = @splat(42 as u8);
+
     while (p < s.len) {
-        if (isSpace(s[p])) {
-            p += 1;
+        if (csspIsSpace(s[p])) {
+            while (p + 16 <= s.len) {
+                const v: CsspVec16 = s[p .. p + 16][0..16].*;
+                const m_sp = @select(u8, v == v_sp, v_one, v_zero);
+                const m_ctl = @select(u8, v >= v_t0, v_one, v_zero) & @select(u8, v <= v_t1, v_one, v_zero);
+                const ws = m_sp | m_ctl;
+                if (@reduce(.And, ws != v_zero)) {
+                    p += 16;
+                    continue;
+                }
+                break;
+            }
+            while (p < s.len && csspIsSpace(s[p])) {
+                p += 1;
+            }
             continue;
         }
         if (p + 1 < s.len && s[p] == '/' && s[p + 1] == '*') {
             p += 2;
-            while (p + 1 < s.len && !(s[p] == '*' && s[p + 1] == '/')) : (p += 1) {}
+            while (p + 1 < s.len) {
+                while (p + 16 < s.len) {
+                    const v: CsspVec16 = s[p .. p + 16][0..16].*;
+                    if (!@reduce(.Or, v == v_star)) {
+                        p += 16;
+                        continue;
+                    }
+                    break;
+                }
+                if (p + 1 < s.len && s[p] == '*' && s[p + 1] == '/') {
+                    break;
+                }
+                p += 1;
+            }
             if (p + 1 < s.len) {
                 p += 2;
             } else {
@@ -126,6 +261,31 @@ fn csspSkipWsAndComments(s: string, start: usize): usize {
             continue;
         }
         break;
+    }
+    return p;
+}
+
+fn csspScanStringEnd(s: string, start: usize, quote: u8): usize {
+    let p = start;
+    const v_q: CsspVec16 = @splat(quote);
+    const v_bs: CsspVec16 = @splat(92 as u8);
+    while (p < s.len) {
+        while (p + 16 <= s.len) {
+            const v: CsspVec16 = s[p .. p + 16][0..16].*;
+            if (!@reduce(.Or, v == v_q) && !@reduce(.Or, v == v_bs)) {
+                p += 16;
+                continue;
+            }
+            break;
+        }
+        if (p >= s.len || s[p] == quote) {
+            break;
+        }
+        if (s[p] == '\\' && p + 1 < s.len) {
+            p += 2;
+        } else {
+            p += 1;
+        }
     }
     return p;
 }
@@ -195,14 +355,7 @@ pub struct CssLexer {
 
         if (c == '"' || c == '\'') {
             const quote = c;
-            let p = start + 1;
-            while (p < _.src.len && _.src[p] != quote) {
-                if (_.src[p] == '\\' && p + 1 < _.src.len) {
-                    p += 2;
-                } else {
-                    p += 1;
-                }
-            }
+            let p = csspScanStringEnd(_.src, start + 1, quote);
             const contentEnd = p;
             if (p < _.src.len && _.src[p] == quote) {
                 p += 1;

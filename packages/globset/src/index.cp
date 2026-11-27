@@ -35,18 +35,31 @@ pub struct GlobSetOptions {
 
 // ============================================================================
 // Private helpers (`gs` prefix to avoid module-flattening symbol collisions)
+// Accelerated with 16-lane @Vector(16, u8) SIMD prefix matching and comptime 256-entry LUT.
 // ============================================================================
 
-fn gsToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
+type GsVec16 = @Vector(16, u8);
+
+fn gsBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let c: usize = 0;
+    while (c < 256) {
+        lut[c] = if (c >= 65 && c <= 90) (c + 32) as u8 else c as u8;
+        c += 1;
     }
-    return b;
+    return lut;
+}
+
+const GS_LOWER_LUT: [256]u8 = gsBuildLowerLut();
+
+fn gsToLower(b: u8): u8 {
+    return GS_LOWER_LUT[b as usize];
 }
 
 fn gsByteEq(a: u8, b: u8, nocase: bool): bool {
     if (nocase) {
-        return gsToLower(a) == gsToLower(b);
+        return GS_LOWER_LUT[a as usize] == GS_LOWER_LUT[b as usize];
     }
     return a == b;
 }
@@ -59,8 +72,43 @@ fn gsHasPrefix(path: string, prefix: []const u8, nocase: bool): bool {
         return false;
     }
     let i: usize = 0;
+    if (!nocase) {
+        while (i + 16 <= prefix.len) {
+            const va: GsVec16 = path[i .. i + 16][0..16].*;
+            const vb: GsVec16 = prefix[i .. i + 16][0..16].*;
+            if (@reduce(.Or, va != vb)) {
+                return false;
+            }
+            i += 16;
+        }
+        while (i < prefix.len) {
+            if (path[i] != prefix[i]) {
+                return false;
+            }
+            i = i + 1;
+        }
+        return true;
+    }
+
+    const v_zero: GsVec16 = @splat(0 as u8);
+    const v_one: GsVec16 = @splat(1 as u8);
+    const v_up_a: GsVec16 = @splat(65 as u8);
+    const v_up_z: GsVec16 = @splat(90 as u8);
+    const v_diff: GsVec16 = @splat(32 as u8);
+    while (i + 16 <= prefix.len) {
+        const va: GsVec16 = path[i .. i + 16][0..16].*;
+        const vb: GsVec16 = prefix[i .. i + 16][0..16].*;
+        const ma = @select(u8, va >= v_up_a, v_one, v_zero) & @select(u8, va <= v_up_z, v_one, v_zero);
+        const mb = @select(u8, vb >= v_up_a, v_one, v_zero) & @select(u8, vb <= v_up_z, v_one, v_zero);
+        const la: GsVec16 = va + @select(u8, ma != v_zero, v_diff, v_zero);
+        const lb: GsVec16 = vb + @select(u8, mb != v_zero, v_diff, v_zero);
+        if (@reduce(.Or, la != lb)) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < prefix.len) {
-        if (!gsByteEq(path[i], prefix[i], nocase)) {
+        if (GS_LOWER_LUT[path[i] as usize] != GS_LOWER_LUT[prefix[i] as usize]) {
             return false;
         }
         i = i + 1;

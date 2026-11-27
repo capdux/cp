@@ -1,5 +1,43 @@
 // @cap/lexical-parse-float — Zero-allocation pure CP strict numeric string parser
 // Parity with Alexhuszagh/rust-lexical crates.io:lexical-parse-float / lexical-parse-integer / lexical-util (MIT)
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning/comparison and comptime 256-entry digit/lowercase LUTs.
+
+type LexpVec16 = @Vector(16, u8);
+
+fn lexpBuildDigitLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [255; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = (c - 48) as u8;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = (c - 65 + 10) as u8;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = (c - 97 + 10) as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+fn lexpBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let c: usize = 0;
+    while (c < 256) {
+        lut[c] = if (c >= 65 && c <= 90) (c + 32) as u8 else c as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const LEXP_DIGIT_LUT: [256]u8 = lexpBuildDigitLut();
+const LEXP_LOWER_LUT: [256]u8 = lexpBuildLowerLut();
 
 /// Result of parsing a floating-point string.
 pub struct ParseFloatResult {
@@ -22,10 +60,7 @@ const LEXP_POW10: [23]f64 = @as([23]f64, [
 ]);
 
 fn lexpToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
+    return LEXP_LOWER_LUT[c as usize];
 }
 
 fn lexpEqIgnoreCase(a: string, b: string): bool {
@@ -33,8 +68,25 @@ fn lexpEqIgnoreCase(a: string, b: string): bool {
         return false;
     }
     let i: usize = 0;
+    const v_zero: LexpVec16 = @splat(0 as u8);
+    const v_one: LexpVec16 = @splat(1 as u8);
+    const v_up_a: LexpVec16 = @splat(65 as u8);
+    const v_up_z: LexpVec16 = @splat(90 as u8);
+    const v_diff: LexpVec16 = @splat(32 as u8);
+    while (i + 16 <= a.len) {
+        const va: LexpVec16 = a[i .. i + 16][0..16].*;
+        const vb: LexpVec16 = b[i .. i + 16][0..16].*;
+        const ma = @select(u8, va >= v_up_a, v_one, v_zero) & @select(u8, va <= v_up_z, v_one, v_zero);
+        const mb = @select(u8, vb >= v_up_a, v_one, v_zero) & @select(u8, vb <= v_up_z, v_one, v_zero);
+        const la: LexpVec16 = va + @select(u8, ma != v_zero, v_diff, v_zero);
+        const lb: LexpVec16 = vb + @select(u8, mb != v_zero, v_diff, v_zero);
+        if (@reduce(.Or, la != lb)) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < a.len) {
-        if (lexpToLower(a[i]) != lexpToLower(b[i])) {
+        if (LEXP_LOWER_LUT[a[i] as usize] != LEXP_LOWER_LUT[b[i] as usize]) {
             return false;
         }
         i += 1;
@@ -42,17 +94,50 @@ fn lexpEqIgnoreCase(a: string, b: string): bool {
     return true;
 }
 
+fn lexpSkipZeros(s: string, start: usize): usize {
+    let p = start;
+    const v_z: LexpVec16 = @splat(48 as u8);
+    while (p + 16 <= s.len) {
+        const v: LexpVec16 = s[p .. p + 16][0..16].*;
+        if (@reduce(.And, v == v_z)) {
+            p += 16;
+            continue;
+        }
+        break;
+    }
+    while (p < s.len && s[p] == (48 as u8)) {
+        p += 1;
+    }
+    return p;
+}
+
+fn lexpSkipDigits(s: string, start: usize): usize {
+    let p = start;
+    const v_zero: LexpVec16 = @splat(0 as u8);
+    const v_one: LexpVec16 = @splat(1 as u8);
+    const v_d0: LexpVec16 = @splat(48 as u8);
+    const v_d9: LexpVec16 = @splat(57 as u8);
+    while (p + 16 <= s.len) {
+        const v: LexpVec16 = s[p .. p + 16][0..16].*;
+        const ok = @select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero);
+        if (@reduce(.And, ok != v_zero)) {
+            p += 16;
+            continue;
+        }
+        break;
+    }
+    while (p < s.len && s[p] >= (48 as u8) && s[p] <= (57 as u8)) {
+        p += 1;
+    }
+    return p;
+}
+
 fn lexpDecodeDigit(c: u8): i32 {
-    if (c >= ('0' as u8) && c <= ('9' as u8)) {
-        return (c - ('0' as u8)) as i32;
+    const d = LEXP_DIGIT_LUT[c as usize];
+    if (d == 255) {
+        return -1;
     }
-    if (c >= ('a' as u8) && c <= ('z' as u8)) {
-        return ((c - ('a' as u8)) as i32) + 10;
-    }
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return ((c - ('A' as u8)) as i32) + 10;
-    }
-    return -1;
+    return d as i32;
 }
 
 fn lexpScalePow10(val_in: f64, exp10: i32): f64 {
@@ -116,8 +201,21 @@ pub fn parseFloat(s: string): ParseFloatResult {
     let expAdjust: i32 = 0;
     let rounded: bool = false;
 
-    // Integer part
+    // Integer part (SIMD fast-skip for leading zeros and post-rounding trailing digits)
+    if (pos < s.len && s[pos] == ('0' as u8)) {
+        const z_end = lexpSkipZeros(s, pos);
+        totalDigits += z_end - pos;
+        pos = z_end;
+    }
     while (pos < s.len) {
+        if (sigDigits >= 19 && rounded) {
+            const d_end = lexpSkipDigits(s, pos);
+            const skipped = d_end - pos;
+            totalDigits += skipped;
+            expAdjust += skipped as i32;
+            pos = d_end;
+            break;
+        }
         const c: u8 = s[pos];
         if (c < ('0' as u8) || c > ('9' as u8)) {
             break;
@@ -141,10 +239,23 @@ pub fn parseFloat(s: string): ParseFloatResult {
         pos += 1;
     }
 
-    // Fractional part
+    // Fractional part (SIMD fast-skip for leading fractional zeros and post-rounding digits)
     if (pos < s.len && s[pos] == ('.' as u8)) {
         pos += 1;
+        if (sigDigits == 0 && pos < s.len && s[pos] == ('0' as u8)) {
+            const z_end = lexpSkipZeros(s, pos);
+            const z_cnt = z_end - pos;
+            totalDigits += z_cnt;
+            expAdjust -= z_cnt as i32;
+            pos = z_end;
+        }
         while (pos < s.len) {
+            if (sigDigits >= 19 && rounded) {
+                const d_end = lexpSkipDigits(s, pos);
+                totalDigits += d_end - pos;
+                pos = d_end;
+                break;
+            }
             const c: u8 = s[pos];
             if (c < ('0' as u8) || c > ('9' as u8)) {
                 break;

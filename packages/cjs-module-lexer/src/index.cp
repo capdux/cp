@@ -1,5 +1,41 @@
 // @cap/cjs-module-lexer — Zero-allocation CommonJS static export & re-export lexer
 // Clean-room MIT implementation inspired by Node.js cjs-module-lexer
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning and comptime 256-entry character classification LUT.
+
+type CjslVec16 = @Vector(16, u8);
+
+const CJSL_FLAG_WS: u8 = 1;
+const CJSL_FLAG_IDENT_START: u8 = 2;
+const CJSL_FLAG_IDENT_CHAR: u8 = 4;
+
+fn cjslBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[9] = CJSL_FLAG_WS;
+    lut[10] = CJSL_FLAG_WS;
+    lut[13] = CJSL_FLAG_WS;
+    lut[32] = CJSL_FLAG_WS;
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = CJSL_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = CJSL_FLAG_IDENT_START | CJSL_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = CJSL_FLAG_IDENT_START | CJSL_FLAG_IDENT_CHAR;
+        c += 1;
+    }
+    lut[95] = CJSL_FLAG_IDENT_START | CJSL_FLAG_IDENT_CHAR; // '_'
+    lut[36] = CJSL_FLAG_IDENT_START | CJSL_FLAG_IDENT_CHAR; // '$'
+    return lut;
+}
+
+const CJSL_CHAR_LUT: [256]u8 = cjslBuildCharLut();
 
 pub const CJSL_MAX_EXPORTS: usize = 32;
 pub const CJSL_MAX_REEXPORTS: usize = 16;
@@ -22,23 +58,26 @@ struct CjslStrRes {
 }
 
 fn cjslIsWs(ch: u8): bool {
-    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+    return (CJSL_CHAR_LUT[ch as usize] & CJSL_FLAG_WS) != 0;
 }
 
 fn cjslIsIdentStart(ch: u8): bool {
-    if (ch >= 'a' && ch <= 'z') return true;
-    if (ch >= 'A' && ch <= 'Z') return true;
-    return ch == '_' || ch == '$';
+    return (CJSL_CHAR_LUT[ch as usize] & CJSL_FLAG_IDENT_START) != 0;
 }
 
 fn cjslIsIdentChar(ch: u8): bool {
-    if (cjslIsIdentStart(ch)) return true;
-    return ch >= '0' && ch <= '9';
+    return (CJSL_CHAR_LUT[ch as usize] & CJSL_FLAG_IDENT_CHAR) != 0;
 }
 
 fn cjslStrEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: CjslVec16 = a[i .. i + 16][0..16].*;
+        const vb: CjslVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va != vb)) return false;
+        i += 16;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -73,7 +112,18 @@ fn cjslSkipString(lex: *CjslLexer) {
     if (lex.pos >= lex.src.len) return;
     const q = lex.src[lex.pos];
     lex.pos += 1;
+    const v_q: CjslVec16 = @splat(q);
+    const v_bs: CjslVec16 = @splat(92 as u8);
     while (lex.pos < lex.src.len) {
+        while (lex.pos + 16 <= lex.src.len) {
+            const v: CjslVec16 = lex.src[lex.pos .. lex.pos + 16][0..16].*;
+            if (!@reduce(.Or, v == v_q) && !@reduce(.Or, v == v_bs)) {
+                lex.pos += 16;
+                continue;
+            }
+            break;
+        }
+        if (lex.pos >= lex.src.len) return;
         const ch = lex.src[lex.pos];
         if (ch == '\\' && lex.pos + 1 < lex.src.len) {
             lex.pos += 2;
@@ -88,16 +138,46 @@ fn cjslSkipString(lex: *CjslLexer) {
 }
 
 fn cjslSkipWsAndComments(lex: *CjslLexer) {
+    const v_zero: CjslVec16 = @splat(0 as u8);
+    const v_one: CjslVec16 = @splat(1 as u8);
+    const v_sp: CjslVec16 = @splat(32 as u8);
+    const v_tab: CjslVec16 = @splat(9 as u8);
+    const v_nl: CjslVec16 = @splat(10 as u8);
+    const v_cr: CjslVec16 = @splat(13 as u8);
+    const v_star: CjslVec16 = @splat(42 as u8);
+
     while (lex.pos < lex.src.len) {
         const ch = lex.src[lex.pos];
         if (cjslIsWs(ch)) {
-            lex.pos += 1;
+            while (lex.pos + 16 <= lex.src.len) {
+                const v: CjslVec16 = lex.src[lex.pos .. lex.pos + 16][0..16].*;
+                const ws = @select(u8, v == v_sp, v_one, v_zero)
+                    | @select(u8, v == v_tab, v_one, v_zero)
+                    | @select(u8, v == v_nl, v_one, v_zero)
+                    | @select(u8, v == v_cr, v_one, v_zero);
+                if (@reduce(.And, ws != v_zero)) {
+                    lex.pos += 16;
+                    continue;
+                }
+                break;
+            }
+            while (lex.pos < lex.src.len && cjslIsWs(lex.src[lex.pos])) {
+                lex.pos += 1;
+            }
             continue;
         }
         if (ch == '/' && lex.pos + 1 < lex.src.len) {
             const nxt = lex.src[lex.pos + 1];
             if (nxt == '/') {
                 lex.pos += 2;
+                while (lex.pos + 16 <= lex.src.len) {
+                    const v: CjslVec16 = lex.src[lex.pos .. lex.pos + 16][0..16].*;
+                    if (!@reduce(.Or, v == v_nl)) {
+                        lex.pos += 16;
+                        continue;
+                    }
+                    break;
+                }
                 while (lex.pos < lex.src.len && lex.src[lex.pos] != '\n') {
                     lex.pos += 1;
                 }
@@ -106,7 +186,15 @@ fn cjslSkipWsAndComments(lex: *CjslLexer) {
             if (nxt == '*') {
                 lex.pos += 2;
                 while (lex.pos + 1 < lex.src.len) {
-                    if (lex.src[lex.pos] == '*' && lex.src[lex.pos + 1] == '/') {
+                    while (lex.pos + 16 < lex.src.len) {
+                        const v: CjslVec16 = lex.src[lex.pos .. lex.pos + 16][0..16].*;
+                        if (!@reduce(.Or, v == v_star)) {
+                            lex.pos += 16;
+                            continue;
+                        }
+                        break;
+                    }
+                    if (lex.pos + 1 < lex.src.len && lex.src[lex.pos] == '*' && lex.src[lex.pos + 1] == '/') {
                         lex.pos += 2;
                         break;
                     }
@@ -123,6 +211,29 @@ fn cjslReadIdent(lex: *CjslLexer): string {
     if (lex.pos >= lex.src.len || !cjslIsIdentStart(lex.src[lex.pos])) return "";
     const start = lex.pos;
     lex.pos += 1;
+    const v_zero: CjslVec16 = @splat(0 as u8);
+    const v_one: CjslVec16 = @splat(1 as u8);
+    const v_lo_a: CjslVec16 = @splat(97 as u8);
+    const v_lo_z: CjslVec16 = @splat(122 as u8);
+    const v_up_a: CjslVec16 = @splat(65 as u8);
+    const v_up_z: CjslVec16 = @splat(90 as u8);
+    const v_d0: CjslVec16 = @splat(48 as u8);
+    const v_d9: CjslVec16 = @splat(57 as u8);
+    const v_us: CjslVec16 = @splat(95 as u8);
+    const v_dl: CjslVec16 = @splat(36 as u8);
+    while (lex.pos + 16 <= lex.src.len) {
+        const v: CjslVec16 = lex.src[lex.pos .. lex.pos + 16][0..16].*;
+        const ok = (@select(u8, v >= v_lo_a, v_one, v_zero) & @select(u8, v <= v_lo_z, v_one, v_zero))
+            | (@select(u8, v >= v_up_a, v_one, v_zero) & @select(u8, v <= v_up_z, v_one, v_zero))
+            | (@select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero))
+            | @select(u8, v == v_us, v_one, v_zero)
+            | @select(u8, v == v_dl, v_one, v_zero);
+        if (@reduce(.And, ok != v_zero)) {
+            lex.pos += 16;
+            continue;
+        }
+        break;
+    }
     while (lex.pos < lex.src.len && cjslIsIdentChar(lex.src[lex.pos])) {
         lex.pos += 1;
     }
@@ -135,7 +246,18 @@ fn cjslReadStringLit(lex: *CjslLexer): CjslStrRes {
     if (q != '\'' && q != '"') return CjslStrRes{ ok: false, val: "" };
     lex.pos += 1;
     const start = lex.pos;
+    const v_q: CjslVec16 = @splat(q);
+    const v_bs: CjslVec16 = @splat(92 as u8);
     while (lex.pos < lex.src.len) {
+        while (lex.pos + 16 <= lex.src.len) {
+            const v: CjslVec16 = lex.src[lex.pos .. lex.pos + 16][0..16].*;
+            if (!@reduce(.Or, v == v_q) && !@reduce(.Or, v == v_bs)) {
+                lex.pos += 16;
+                continue;
+            }
+            break;
+        }
+        if (lex.pos >= lex.src.len) break;
         const ch = lex.src[lex.pos];
         if (ch == '\\' && lex.pos + 1 < lex.src.len) {
             lex.pos += 2;

@@ -1,20 +1,79 @@
 // @cap/kebabcase-keys — Zero-heap object key & string kebab-case converter.
 // Clean-room MIT port of npm `kebabcase-keys` v1, composing `@cap/decamelize-keys`, `@cap/map-obj` & `cap:ascii`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD fast-paths, comptime 256-entry LUTs, and @memcpy.
 
-import { isDigit, toLowerByte, strEq } from "cap:ascii";
+import { strEq } from "cap:ascii";
 import { MapObjResult, MAP_OBJ_MAX_ENTRIES } from "../../map-obj/src/index.cp";
 import { DecamelizeKeysResult, decamelizeKeys, DCK_MAX_ENTRIES, DCK_KEY_BUF_CAP } from "../../decamelize-keys/src/index.cp";
 
+type KckVec16 = @Vector(16, u8);
+
+const KCK_FLAG_UPPER: u8 = 1;
+const KCK_FLAG_LOWER: u8 = 2;
+const KCK_FLAG_DIGIT: u8 = 4;
+const KCK_FLAG_SEP: u8 = 8;
+
+fn kckBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = KCK_FLAG_DIGIT;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = KCK_FLAG_UPPER;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = KCK_FLAG_LOWER;
+        c += 1;
+    }
+    // Separators: '-', '_', ' ', '\t', '\n', '\r', '.'
+    lut[45] = KCK_FLAG_SEP;
+    lut[95] = KCK_FLAG_SEP;
+    lut[32] = KCK_FLAG_SEP;
+    lut[9] = KCK_FLAG_SEP;
+    lut[10] = KCK_FLAG_SEP;
+    lut[13] = KCK_FLAG_SEP;
+    lut[46] = KCK_FLAG_SEP;
+    return lut;
+}
+
+fn kckBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 65 && c <= 90) {
+            lut[c] = (c + 32) as u8;
+        } else {
+            lut[c] = c as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const KCK_CHAR_LUT: [256]u8 = kckBuildCharLut();
+const KCK_LOWER_LUT: [256]u8 = kckBuildLowerLut();
+
 fn kckIsUpper(c: u8): bool {
-    return c >= 65 && c <= 90;
+    return (KCK_CHAR_LUT[c as usize] & KCK_FLAG_UPPER) != 0;
 }
 
 fn kckIsLower(c: u8): bool {
-    return c >= 97 && c <= 122;
+    return (KCK_CHAR_LUT[c as usize] & KCK_FLAG_LOWER) != 0;
+}
+
+fn kckIsDigit(c: u8): bool {
+    return (KCK_CHAR_LUT[c as usize] & KCK_FLAG_DIGIT) != 0;
 }
 
 fn kckIsSep(c: u8): bool {
-    return c == 45 || c == 95 || c == 32 || c == 9 || c == 10 || c == 13 || c == 46;
+    return (KCK_CHAR_LUT[c as usize] & KCK_FLAG_SEP) != 0;
 }
 
 fn kckIsExcluded(k: string, exclude: []const string): bool {
@@ -40,9 +99,33 @@ pub fn kebabcaseString(input: string, out: []u8): usize {
     let prev_was_lower_or_digit = false;
     let prev_was_upper = false;
 
+    const v_zero: KckVec16 = @splat(0 as u8);
+    const v_one: KckVec16 = @splat(1 as u8);
+    const v_lo_a: KckVec16 = @splat(97 as u8);
+    const v_lo_z: KckVec16 = @splat(122 as u8);
+    const v_d0: KckVec16 = @splat(48 as u8);
+    const v_d9: KckVec16 = @splat(57 as u8);
+
     while (i < n && w < out.len) {
+        // 16-lane SIMD fast-path: copy pure lowercase/digit chunks verbatim via @memcpy
+        if (i + 16 <= n && w + 16 <= out.len) {
+            const v: KckVec16 = input[i .. i + 16][0..16].*;
+            const ok = (@select(u8, v >= v_lo_a, v_one, v_zero) & @select(u8, v <= v_lo_z, v_one, v_zero))
+                | (@select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero));
+            if (@reduce(.And, ok != v_zero)) {
+                @memcpy(out[w .. w + 16], input[i .. i + 16]);
+                i += 16;
+                w += 16;
+                prev_hyphen = false;
+                prev_was_upper = false;
+                prev_was_lower_or_digit = true;
+                continue;
+            }
+        }
+
         let c = input[i];
-        if (kckIsSep(c)) {
+        let flags = KCK_CHAR_LUT[c as usize];
+        if ((flags & KCK_FLAG_SEP) != 0) {
             if (!prev_hyphen) {
                 out[w] = 45; // '-'
                 w = w + 1;
@@ -54,12 +137,11 @@ pub fn kebabcaseString(input: string, out: []u8): usize {
             continue;
         }
 
-        let is_up = kckIsUpper(c);
-        let is_lo = kckIsLower(c);
-        let is_dg = isDigit(c);
-        let next_is_lo = (i + 1 < n) && kckIsLower(input[i + 1]);
+        let is_up = (flags & KCK_FLAG_UPPER) != 0;
+        let is_lo_or_dg = (flags & (KCK_FLAG_LOWER | KCK_FLAG_DIGIT)) != 0;
 
         if (is_up) {
+            let next_is_lo = (i + 1 < n) && kckIsLower(input[i + 1]);
             if (!prev_hyphen && (prev_was_lower_or_digit || (prev_was_upper && next_is_lo))) {
                 if (w < out.len) {
                     out[w] = 45;
@@ -67,7 +149,7 @@ pub fn kebabcaseString(input: string, out: []u8): usize {
                 }
             }
             if (w < out.len) {
-                out[w] = toLowerByte(c);
+                out[w] = KCK_LOWER_LUT[c as usize];
                 w = w + 1;
             }
             prev_hyphen = false;
@@ -78,7 +160,7 @@ pub fn kebabcaseString(input: string, out: []u8): usize {
             w = w + 1;
             prev_hyphen = false;
             prev_was_upper = false;
-            prev_was_lower_or_digit = is_lo || is_dg;
+            prev_was_lower_or_digit = is_lo_or_dg;
         }
         i = i + 1;
     }
@@ -96,12 +178,32 @@ pub fn isKebabCase(s: string): bool {
     if (s[0] == 45 || s[s.len - 1] == 45) { return false; }
     let prev_dash = false;
     let i: usize = 0;
+
+    const v_zero: KckVec16 = @splat(0 as u8);
+    const v_one: KckVec16 = @splat(1 as u8);
+    const v_lo_a: KckVec16 = @splat(97 as u8);
+    const v_lo_z: KckVec16 = @splat(122 as u8);
+    const v_d0: KckVec16 = @splat(48 as u8);
+    const v_d9: KckVec16 = @splat(57 as u8);
+
     while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: KckVec16 = s[i .. i + 16][0..16].*;
+            const ok = (@select(u8, v >= v_lo_a, v_one, v_zero) & @select(u8, v <= v_lo_z, v_one, v_zero))
+                | (@select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero));
+            if (@reduce(.And, ok != v_zero)) {
+                prev_dash = false;
+                i += 16;
+                continue;
+            }
+            break;
+        }
+        if (i >= s.len) { break; }
         let c = s[i];
         if (c == 45) {
             if (prev_dash) { return false; }
             prev_dash = true;
-        } else if (kckIsLower(c) || isDigit(c)) {
+        } else if ((KCK_CHAR_LUT[c as usize] & (KCK_FLAG_LOWER | KCK_FLAG_DIGIT)) != 0) {
             prev_dash = false;
         } else {
             return false;

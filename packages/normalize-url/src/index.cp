@@ -1,6 +1,7 @@
 // @cap/normalize-url — Zero-allocation URL normalization utility for CP
 // Clean-room MIT implementation with parity to npm `normalize-url`.
 // Composes `@cap/prepend-http` with zero duplication.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning/lowercasing, comptime 256-entry LUT, and @memcpy.
 
 import {
     prependHttp,
@@ -13,9 +14,23 @@ import {
     eqIgnoreCase,
     findByte,
     rfindByte,
-    toLower,
 } from "cap:ascii";
 import { writeStr } from "cap:fmt";
+
+type NurlVec16 = @Vector(16, u8);
+
+fn nurlBuildLowerLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = undefined;
+    let c: usize = 0;
+    while (c < 256) {
+        lut[c] = if (c >= 65 && c <= 90) (c + 32) as u8 else c as u8;
+        c += 1;
+    }
+    return lut;
+}
+
+const NURL_LOWER_LUT: [256]u8 = nurlBuildLowerLut();
 
 const NURL_SCRATCH_CAP: usize = 8192;
 const NURL_MAX_SEGMENTS: usize = 256;
@@ -56,8 +71,65 @@ fn nurlWriteByte(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn nurlWriteLower(out: []u8, pos: usize, s: string): usize {
-    if (pos >= out.len) { return pos; }
-    return pos + toLower(s, out[pos..]);
+    if (pos >= out.len || s.len == 0) { return pos; }
+    const avail = out.len - pos;
+    const limit = if (s.len < avail) s.len else avail;
+    const v_zero: NurlVec16 = @splat(0 as u8);
+    const v_one: NurlVec16 = @splat(1 as u8);
+    const v_up_a: NurlVec16 = @splat(65 as u8);
+    const v_up_z: NurlVec16 = @splat(90 as u8);
+    const v_diff: NurlVec16 = @splat(32 as u8);
+    let i: usize = 0;
+    while (i + 16 <= limit) {
+        const v: NurlVec16 = s[i .. i + 16][0..16].*;
+        const is_up = @select(u8, v >= v_up_a, v_one, v_zero) & @select(u8, v <= v_up_z, v_one, v_zero);
+        const low: NurlVec16 = v + @select(u8, is_up != v_zero, v_diff, v_zero);
+        const arr: [16]u8 = low;
+        @memcpy(out[pos + i .. pos + i + 16], arr[0..16]);
+        i += 16;
+    }
+    while (i < limit) {
+        out[pos + i] = NURL_LOWER_LUT[s[i] as usize];
+        i += 1;
+    }
+    return pos + limit;
+}
+
+fn nurlFindAuthEnd(s: string, start: usize): usize {
+    let i = start;
+    const v_sl: NurlVec16 = @splat(47 as u8); // '/'
+    const v_q: NurlVec16 = @splat(63 as u8);  // '?'
+    const v_h: NurlVec16 = @splat(35 as u8);  // '#'
+    while (i + 16 <= s.len) {
+        const v: NurlVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.Or, v == v_sl) && !@reduce(.Or, v == v_q) && !@reduce(.Or, v == v_h)) {
+            i += 16;
+            continue;
+        }
+        break;
+    }
+    while (i < s.len && s[i] != '/' && s[i] != '?' && s[i] != '#') {
+        i += 1;
+    }
+    return i;
+}
+
+fn nurlFindFirstQH(s: string, start: usize): usize {
+    let i = start;
+    const v_q: NurlVec16 = @splat(63 as u8); // '?'
+    const v_h: NurlVec16 = @splat(35 as u8); // '#'
+    while (i + 16 <= s.len) {
+        const v: NurlVec16 = s[i .. i + 16][0..16].*;
+        if (!@reduce(.Or, v == v_q) && !@reduce(.Or, v == v_h)) {
+            i += 16;
+            continue;
+        }
+        break;
+    }
+    while (i < s.len && s[i] != '?' && s[i] != '#') {
+        i += 1;
+    }
+    return i;
 }
 
 fn nurlFindSchemeSep(s: string): usize {
@@ -211,11 +283,8 @@ pub fn normalizeUrlWithOptions(url: string, opts: NormalizeUrlOptions, out: []u8
         return pos;
     }
 
-    // Find end of authority ('/', '?', or '#')
-    let auth_end: usize = auth_start;
-    while (auth_end < work.len && work[auth_end] != '/' && work[auth_end] != '?' && work[auth_end] != '#') {
-        auth_end += 1;
-    }
+    // Find end of authority ('/', '?', or '#') via 16-lane SIMD
+    const auth_end = nurlFindAuthEnd(work, auth_start);
     const authority = work[auth_start..auth_end];
 
     // Split userinfo@hostport (use last '@' in authority)
@@ -261,17 +330,17 @@ pub fn normalizeUrlWithOptions(url: string, opts: NormalizeUrlOptions, out: []u8
         }
     }
 
-    // Split remainder into path, query, hash
+    // Split remainder into path, query, hash via 16-lane SIMD
     const rest = work[auth_end..work.len];
+    const first_qh = nurlFindFirstQH(rest, 0);
     let q_idx: usize = rest.len;
     let h_idx: usize = rest.len;
-    let ri: usize = 0;
-    while (ri < rest.len) : (ri += 1) {
-        if (rest[ri] == '?' && q_idx == rest.len && h_idx == rest.len) {
-            q_idx = ri;
-        } else if (rest[ri] == '#' && h_idx == rest.len) {
-            h_idx = ri;
-            break;
+    if (first_qh < rest.len) {
+        if (rest[first_qh] == '?') {
+            q_idx = first_qh;
+            h_idx = findByte(rest, '#', first_qh + 1) ?? rest.len;
+        } else {
+            h_idx = first_qh;
         }
     }
 

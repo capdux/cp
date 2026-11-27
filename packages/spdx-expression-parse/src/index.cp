@@ -1,9 +1,47 @@
 // packages/@cap/spdx-expression-parse/src/index.cp
 // Zero-allocation SPDX license expression AST parser and evaluator for CP.
 // Clean-room MIT pure CP implementation reusing `@cap/spdx`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning and comptime 256-entry character classification LUT.
 
 import { lookupLicense } from "../../spdx/src/index.cp";
-import { strEq, startsWith, isSpace, isAlnum } from "cap:ascii";
+import { strEq, startsWith } from "cap:ascii";
+
+type SpdxpVec16 = @Vector(16, u8);
+
+const SPDXP_FLAG_WS: u8 = 1;
+const SPDXP_FLAG_ID: u8 = 2;
+
+fn spdxpBuildCharLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    lut[9] = SPDXP_FLAG_WS;
+    lut[10] = SPDXP_FLAG_WS;
+    lut[11] = SPDXP_FLAG_WS;
+    lut[12] = SPDXP_FLAG_WS;
+    lut[13] = SPDXP_FLAG_WS;
+    lut[32] = SPDXP_FLAG_WS;
+
+    let c: usize = 48;
+    while (c <= 57) {
+        lut[c] = SPDXP_FLAG_ID;
+        c += 1;
+    }
+    c = 65;
+    while (c <= 90) {
+        lut[c] = SPDXP_FLAG_ID;
+        c += 1;
+    }
+    c = 97;
+    while (c <= 122) {
+        lut[c] = SPDXP_FLAG_ID;
+        c += 1;
+    }
+    lut[45] = SPDXP_FLAG_ID; // '-'
+    lut[46] = SPDXP_FLAG_ID; // '.'
+    return lut;
+}
+
+const SPDXP_CHAR_LUT: [256]u8 = spdxpBuildCharLut();
 
 pub const SPDX_NODE_LICENSE: u8 = 1;
 pub const SPDX_NODE_AND: u8 = 2;
@@ -64,8 +102,12 @@ fn spdxpEmptyAst(): SpdxAst {
     };
 }
 
+fn spdxpIsSpace(ch: u8): bool {
+    return (SPDXP_CHAR_LUT[ch as usize] & SPDXP_FLAG_WS) != 0;
+}
+
 fn spdxpIsIdChar(ch: u8): bool {
-    return isAlnum(ch) || ch == ('-' as u8) || ch == ('.' as u8);
+    return (SPDXP_CHAR_LUT[ch as usize] & SPDXP_FLAG_ID) != 0;
 }
 
 fn spdxpIsKeyword(tok: string): bool {
@@ -77,6 +119,29 @@ fn spdxpIsAllIdChars(s: string): bool {
         return false;
     }
     let i: usize = 0;
+    const v_zero: SpdxpVec16 = @splat(0 as u8);
+    const v_one: SpdxpVec16 = @splat(1 as u8);
+    const v_lo_a: SpdxpVec16 = @splat(97 as u8);
+    const v_lo_z: SpdxpVec16 = @splat(122 as u8);
+    const v_up_a: SpdxpVec16 = @splat(65 as u8);
+    const v_up_z: SpdxpVec16 = @splat(90 as u8);
+    const v_d0: SpdxpVec16 = @splat(48 as u8);
+    const v_d9: SpdxpVec16 = @splat(57 as u8);
+    const v_hy: SpdxpVec16 = @splat(45 as u8);
+    const v_dot: SpdxpVec16 = @splat(46 as u8);
+
+    while (i + 16 <= s.len) {
+        const v: SpdxpVec16 = s[i .. i + 16][0..16].*;
+        const ok = (@select(u8, v >= v_lo_a, v_one, v_zero) & @select(u8, v <= v_lo_z, v_one, v_zero))
+            | (@select(u8, v >= v_up_a, v_one, v_zero) & @select(u8, v <= v_up_z, v_one, v_zero))
+            | (@select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero))
+            | @select(u8, v == v_hy, v_one, v_zero)
+            | @select(u8, v == v_dot, v_one, v_zero);
+        if (!@reduce(.And, ok != v_zero)) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < s.len) {
         if (!spdxpIsIdChar(s[i])) {
             return false;
@@ -129,9 +194,62 @@ fn spdxpIsValidExceptionId(exc: string): bool {
 }
 
 fn spdxpSkipSpaces(st: *SpdxpState) {
-    while (st.*.pos < st.*.src.len && isSpace(st.*.src[st.*.pos])) {
-        st.*.pos = st.*.pos + 1;
+    let p = st.*.pos;
+    const src = st.*.src;
+    const v_zero: SpdxpVec16 = @splat(0 as u8);
+    const v_one: SpdxpVec16 = @splat(1 as u8);
+    const v_sp: SpdxpVec16 = @splat(32 as u8);
+    const v_t0: SpdxpVec16 = @splat(9 as u8);
+    const v_t1: SpdxpVec16 = @splat(13 as u8);
+    while (p + 16 <= src.len) {
+        const v: SpdxpVec16 = src[p .. p + 16][0..16].*;
+        const ws = @select(u8, v == v_sp, v_one, v_zero)
+            | (@select(u8, v >= v_t0, v_one, v_zero) & @select(u8, v <= v_t1, v_one, v_zero));
+        if (@reduce(.And, ws != v_zero)) {
+            p += 16;
+            continue;
+        }
+        break;
     }
+    while (p < src.len && spdxpIsSpace(src[p])) {
+        p += 1;
+    }
+    st.*.pos = p;
+}
+
+fn spdxpScanIdRun(src: string, start: usize, allow_colon: bool): usize {
+    let p = start;
+    const v_zero: SpdxpVec16 = @splat(0 as u8);
+    const v_one: SpdxpVec16 = @splat(1 as u8);
+    const v_lo_a: SpdxpVec16 = @splat(97 as u8);
+    const v_lo_z: SpdxpVec16 = @splat(122 as u8);
+    const v_up_a: SpdxpVec16 = @splat(65 as u8);
+    const v_up_z: SpdxpVec16 = @splat(90 as u8);
+    const v_d0: SpdxpVec16 = @splat(48 as u8);
+    const v_d9: SpdxpVec16 = @splat(57 as u8);
+    const v_hy: SpdxpVec16 = @splat(45 as u8);
+    const v_dot: SpdxpVec16 = @splat(46 as u8);
+    const v_col: SpdxpVec16 = @splat(58 as u8);
+    while (p + 16 <= src.len) {
+        const v: SpdxpVec16 = src[p .. p + 16][0..16].*;
+        let ok = (@select(u8, v >= v_lo_a, v_one, v_zero) & @select(u8, v <= v_lo_z, v_one, v_zero))
+            | (@select(u8, v >= v_up_a, v_one, v_zero) & @select(u8, v <= v_up_z, v_one, v_zero))
+            | (@select(u8, v >= v_d0, v_one, v_zero) & @select(u8, v <= v_d9, v_one, v_zero))
+            | @select(u8, v == v_hy, v_one, v_zero)
+            | @select(u8, v == v_dot, v_one, v_zero);
+        if (allow_colon) {
+            ok = ok | @select(u8, v == v_col, v_one, v_zero);
+        }
+        if (@reduce(.And, ok != v_zero)) {
+            p += 16;
+            continue;
+        }
+        break;
+    }
+    while (p < src.len && (spdxpIsIdChar(src[p]) || (allow_colon && src[p] == (':' as u8)))) {
+        p += 1;
+    }
+    return p;
 }
 
 fn spdxpAllocNode(st: *SpdxpState, node: SpdxAstNode): i32 {
@@ -170,10 +288,7 @@ fn spdxpParseSimple(st: *SpdxpState): i32 {
         return -1;
     }
 
-    let i: usize = start;
-    while (i < st.*.src.len && (spdxpIsIdChar(st.*.src[i]) || st.*.src[i] == (':' as u8))) {
-        i += 1;
-    }
+    let i: usize = spdxpScanIdRun(st.*.src, start, true);
     if (i == start) {
         st.*.failed = true;
         return -1;
@@ -206,10 +321,7 @@ fn spdxpParseSimple(st: *SpdxpState): i32 {
     if (spdxpConsumeKeyword(st, "WITH")) {
         spdxpSkipSpaces(st);
         let exc_start: usize = st.*.pos;
-        let j: usize = exc_start;
-        while (j < st.*.src.len && spdxpIsIdChar(st.*.src[j])) {
-            j += 1;
-        }
+        let j: usize = spdxpScanIdRun(st.*.src, exc_start, false);
         if (j == exc_start) {
             st.*.failed = true;
             return -1;
