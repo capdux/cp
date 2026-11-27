@@ -1,10 +1,8 @@
 // Type definitions for CP
 
-export fn isSpace(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn trimSlice(s: &[]u8): &[]u8;
+import { trim, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 export fn unquote(s_in: &[]u8): &[]u8;
-export fn eqIgnoreCase(a: &[]u8, b: string): bool;
 export fn parseNonNegI64(s_in: &[]u8): i64;
 export fn writeStrChecked(dst: []u8, pos: usize, s: string): i64;
 export fn writeU64Checked(dst: []u8, pos: usize, v_in: u64): i64;

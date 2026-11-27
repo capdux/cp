@@ -1,71 +1,11 @@
 // @cap/predicates — Zero-heap composable boolean predicates for CP
 // Ported from crates.io:predicates (https://github.com/assert-rs/predicates-rs)
 
-fn prdToLowerAscii(b: u8): u8 {
-    if (b >= 0x41 && b <= 0x5A) return b + 32;
-    return b;
-}
+import { strEq, eqIgnoreCase, startsWith, endsWith } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 
-fn prdStrEq(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn prdStrEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (prdToLowerAscii(a[i]) != prdToLowerAscii(b[i])) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn prdStrHasPrefix(s: string, prefix: string): bool {
-    if (prefix.len > s.len) return false;
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[i] != prefix[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn prdStrHasSuffix(s: string, suffix: string): bool {
-    if (suffix.len > s.len) return false;
-    const off = s.len - suffix.len;
-    let i: usize = 0;
-    while (i < suffix.len) {
-        if (s[off + i] != suffix[i]) return false;
-        i += 1;
-    }
-    return true;
-}
-
-fn prdStrContains(s: string, needle: string): bool {
-    if (needle.len == 0) return true;
-    if (needle.len > s.len) return false;
-    let i: usize = 0;
-    const limit = s.len - needle.len;
-    while (i <= limit) {
-        let j: usize = 0;
-        let ok: bool = true;
-        while (j < needle.len) {
-            if (s[i + j] != needle[j]) {
-                ok = false;
-                break;
-            }
-            j += 1;
-        }
-        if (ok) return true;
-        i += 1;
-    }
-    return false;
+fn prdEqIgnoreCase(a: string, b: string): bool {
+    return eqIgnoreCase(a, b);
 }
 
 fn prdIsFinite(x: f64): bool {
@@ -212,7 +152,7 @@ pub struct IntPredicate {
     }
 
     fn eval(x: i64): bool {
-        let stack: [16]bool = [false; 16];
+        let stack: [16]bool = undefined;
         let sp: usize = 0;
         let i: usize = 0;
         while (i < _.len) {
@@ -403,7 +343,7 @@ pub struct StrPredicate {
     }
 
     fn eval(s: string): bool {
-        let stack: [16]bool = [false; 16];
+        let stack: [16]bool = undefined;
         let sp: usize = 0;
         let i: usize = 0;
         while (i < _.len) {
@@ -428,14 +368,14 @@ pub struct StrPredicate {
                 }
             } else {
                 let res: bool = false;
-                if (op.kind == StrPredKind.Eq) res = prdStrEq(s, op.target);
-                else if (op.kind == StrPredKind.Contains) res = prdStrContains(s, op.target);
-                else if (op.kind == StrPredKind.HasPrefix) res = prdStrHasPrefix(s, op.target);
-                else if (op.kind == StrPredKind.HasSuffix) res = prdStrHasSuffix(s, op.target);
+                if (op.kind == StrPredKind.Eq) res = strEq(s, op.target);
+                else if (op.kind == StrPredKind.Contains) res = indexOfBytes(s, op.target, 0) != null;
+                else if (op.kind == StrPredKind.HasPrefix) res = startsWith(s, op.target);
+                else if (op.kind == StrPredKind.HasSuffix) res = endsWith(s, op.target);
                 else if (op.kind == StrPredKind.IsEmpty) res = s.len == 0;
                 else if (op.kind == StrPredKind.LenEq) res = s.len == op.lo;
                 else if (op.kind == StrPredKind.LenBetween) res = s.len >= op.lo && s.len <= op.hi;
-                else if (op.kind == StrPredKind.EqIgnoreCase) res = prdStrEqIgnoreCase(s, op.target);
+                else if (op.kind == StrPredKind.EqIgnoreCase) res = prdEqIgnoreCase(s, op.target);
                 else if (op.kind == StrPredKind.Always) res = true;
                 else res = false;
                 if (sp < 16) {
@@ -602,7 +542,7 @@ pub struct FloatPredicate {
     }
 
     fn eval(x: f64): bool {
-        let stack: [16]bool = [false; 16];
+        let stack: [16]bool = undefined;
         let sp: usize = 0;
         let i: usize = 0;
         while (i < _.len) {

@@ -1,49 +1,15 @@
 // @cap/cache-control — Zero-allocation RFC 9111 HTTP Cache-Control parser, formatter & TTL engine for CP
 // Clean-room MIT implementation inspired by npm `cache-control-parser` and Rust `http-cache-semantics`.
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn trimSlice(s: []const u8) -> []const u8 {
-    let start: usize = 0;
-    while (start < s.len && isSpace(s[start])) {
-        start += 1;
-    }
-    let end: usize = s.len;
-    while (end > start && isSpace(s[end - (1 as usize)])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
+import { trim, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
 
 fn unquote(s_in: []const u8) -> []const u8 {
-    const s = trimSlice(s_in);
+    const s = trim(s_in);
     if (s.len >= (2 as usize) && s[0] == '"' && s[s.len - (1 as usize)] == '"') {
         return s[1..(s.len - (1 as usize))];
     }
     return s;
-}
-
-fn eqIgnoreCase(a: []const u8, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 fn parseNonNegI64(s_in: []const u8) -> i64 {
@@ -68,39 +34,16 @@ fn writeStrChecked(dst: []u8, pos: usize, s: string) -> i64 {
     if (pos + s.len > dst.len) {
         return -1 as i64;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        dst[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, dst, pos) as i64;
 }
 
 fn writeU64Checked(dst: []u8, pos: usize, v_in: u64) -> i64 {
     let tmp: [24]u8 = undefined;
-    let n: usize = 0;
-    let v = v_in;
-    if (v == (0 as u64)) {
-        tmp[0] = '0';
-        n = 1 as usize;
-    } else {
-        while (v > (0 as u64) && n < (24 as usize)) {
-            tmp[n] = ((v % (10 as u64)) as u8) + '0';
-            v = v / (10 as u64);
-            n += 1;
-        }
-    }
+    const n: usize = writeU64(v_in, tmp[0..24], 0);
     if (pos + n > dst.len) {
         return -1 as i64;
     }
-    let p = pos;
-    let k = n;
-    while (k > (0 as usize)) {
-        k -= 1;
-        dst[p] = tmp[k];
-        p += 1;
-    }
-    return p as i64;
+    return writeStr(tmp[0..n], dst, pos) as i64;
 }
 
 fn appendDirectiveFlag(dst: []u8, pos_in: usize, written: *usize, name: string) -> i64 {
@@ -189,18 +132,10 @@ pub struct CacheControl {
             }
 
             if (atEnd || isComma) {
-                const part = trimSlice(header[segStart..pos]);
+                const part = trim(header[segStart..pos]);
                 if (part.len > (0 as usize)) {
-                    let eqIdx: usize = part.len;
-                    let k: usize = 0;
-                    while (k < part.len) {
-                        if (part[k] == '=') {
-                            eqIdx = k;
-                            break;
-                        }
-                        k += 1;
-                    }
-                    const key = trimSlice(part[0..eqIdx]);
+                    const eqIdx: usize = findByte(part, '=' as u8, 0) ?? part.len;
+                    const key = trim(part[0..eqIdx]);
                     const hasVal = eqIdx < part.len;
 
                     if (eqIgnoreCase(key, "no-cache")) {

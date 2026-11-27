@@ -1,6 +1,9 @@
 // @cap/mailto-uri — Zero-allocation RFC 6068 mailto: URI Parser & Builder
 // Clean-room MIT implementation in pure CP.
 
+import { eqIgnoreCase, isAlnum, hexCharUpper, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct MailtoUri {
     pub to: string,
     pub cc: string,
@@ -21,41 +24,20 @@ fn invalidMailto() -> MailtoUri {
     };
 }
 
-fn isSpace(b: u8) -> bool {
+fn mailtoIsSpace(b: u8) -> bool {
     return b == 32 || b == 9;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
 }
 
 fn trimSlice(s: string) -> string {
     let a: usize = 0;
     let b: usize = s.len;
-    while (a < b && isSpace(s[a])) {
+    while (a < b && mailtoIsSpace(s[a])) {
         a += 1;
     }
-    while (b > a && isSpace(s[b - 1])) {
+    while (b > a && mailtoIsSpace(s[b - 1])) {
         b -= 1;
     }
     return s[a..b];
-}
-
-fn eqIgnoreCase(a: string, lower_b: string) -> bool {
-    if (a.len != lower_b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != lower_b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 /// Parses an RFC 6068 `mailto:` URI (zero-copy).
@@ -67,10 +49,7 @@ pub fn parseMailto(uri: string) -> MailtoUri {
     }
 
     const rest = s[7..s.len];
-    let q_idx: usize = 0;
-    while (q_idx < rest.len && rest[q_idx] != 63) {
-        q_idx += 1; // '?'
-    }
+    const q_idx: usize = findByte(rest, 63, 0) ?? rest.len;
 
     let res = invalidMailto();
     res.to = trimSlice(rest[0..q_idx]);
@@ -184,17 +163,8 @@ pub fn isBasicEmail(addr: string) -> bool {
     return has_dot;
 }
 
-fn hexUpper(nibble: u8) -> u8 {
-    if (nibble < 10) {
-        return 48 + nibble;
-    }
-    return 55 + nibble;
-}
-
 fn isUnreserved(b: u8) -> bool {
-    if (b >= 65 && b <= 90) { return true; }
-    if (b >= 97 && b <= 122) { return true; }
-    if (b >= 48 && b <= 57) { return true; }
+    if (isAlnum(b)) { return true; }
     return b == 45 || b == 46 || b == 95 || b == 126; // - . _ ~
 }
 
@@ -202,12 +172,7 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushPctEncoded(dst: []u8, pos: usize, src: string, allow_addr_chars: bool) -> i64 {
@@ -223,8 +188,8 @@ fn pushPctEncoded(dst: []u8, pos: usize, src: string, allow_addr_chars: bool) ->
         } else {
             if (w + 3 > dst.len) { return -1; }
             dst[w] = 37; // '%'
-            dst[w + 1] = hexUpper((b >> 4) & 0x0F);
-            dst[w + 2] = hexUpper(b & 0x0F);
+            dst[w + 1] = hexCharUpper((b >> 4) & 0x0F);
+            dst[w + 2] = hexCharUpper(b & 0x0F);
             w += 3;
         }
         i += 1;

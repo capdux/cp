@@ -1,6 +1,8 @@
 // @cap/ahash — Zero-allocation randomized high-speed hasher with 4-key RandomState & folded-multiply rounds for CP
 // Clean-room MIT implementation inspired by Rust `ahash` (946M downloads).
 
+import { readU64LE } from "cap:bin";
+
 fn makeU64(hi: u32, lo: u32) -> u64 {
     return ((hi as u64) * (0x100000000 as u64)) | (lo as u64);
 }
@@ -79,20 +81,6 @@ fn pi1() -> u64 { return makeU64(0x13198A2E as u32, 0x03707344 as u32); }
 fn pi2() -> u64 { return makeU64(0xA4093822 as u32, 0x299F31D0 as u32); }
 fn pi3() -> u64 { return makeU64(0x082EFA98 as u32, 0xEC4E6C89 as u32); }
 
-fn readU64Le(data: []const u8, offset: usize) -> u64 {
-    let v: u64 = 0;
-    let mul: u64 = 1;
-    let i: usize = 0;
-    while (i < 8) {
-        v = v | ((data[offset + i] as u64) * mul);
-        if (i < 7) {
-            mul = mul * (256 as u64);
-        }
-        i += 1;
-    }
-    return v;
-}
-
 fn packTail(tail: [8]u8, tail_len: usize) -> u64 {
     let v: u64 = 0;
     let mul: u64 = 1;
@@ -120,12 +108,7 @@ pub struct AHasher {
         ek[0] = k2 ^ pi2();
         ek[1] = k3 ^ pi3();
 
-        let t: [8]u8 = undefined;
-        let i: usize = 0;
-        while (i < 8) {
-            t[i] = 0 as u8;
-            i += 1;
-        }
+        const t: [8]u8 = undefined;
 
         const mult = multipleConst();
         const b0 = foldedMultiply(k0 ^ pi0(), mult);
@@ -146,7 +129,7 @@ pub struct AHasher {
         _.tail_len += 1;
         _.total_len += 1 as u64;
         if (_.tail_len == 8) {
-            const word = packTail(_.tail, 8 as usize);
+            const word = readU64LE(_.tail[0..8], 0) ?? 0;
             const mult = multipleConst();
             _.buffer = rotl64(foldedMultiply(addWrap64(word, _.buffer), mult), 23 as u32);
             _.pad = addWrap64(_.pad, word ^ _.extra_keys[0]);
@@ -186,7 +169,7 @@ pub struct AHasher {
         }
         const mult = multipleConst();
         while (i + 8 <= data.len) {
-            const word = readU64Le(data, i);
+            const word = readU64LE(data, i) ?? 0;
             _.buffer = rotl64(foldedMultiply(addWrap64(word, _.buffer), mult), 23 as u32);
             _.pad = addWrap64(_.pad, word ^ _.extra_keys[0]);
             _.total_len += 8 as u64;

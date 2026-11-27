@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { readU64LE } from "cap:bin";
 export fn makeU64(hi: u32, lo: u32): u64;
 export fn addWrap64(a: u64, b: u64): u64;
 export fn mulWrap64(a: u64, b: u64): u64;
@@ -11,7 +12,6 @@ export fn pi0(): u64;
 export fn pi1(): u64;
 export fn pi2(): u64;
 export fn pi3(): u64;
-export fn readU64Le(data: &[]u8, offset: usize): u64;
 export fn packTail(tail: [8]u8, tail_len: usize): u64;
 export class AHasher {
     buffer: u64,

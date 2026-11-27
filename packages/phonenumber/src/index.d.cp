@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class TelUri {
     number: string,
     is_global: bool,
@@ -8,11 +10,8 @@ export class TelUri {
     valid: bool,
 }
 
-export fn isDigit(c: u8): bool;
 export fn isVisualSep(c: u8): bool;
 export fn isWs(c: u8): bool;
-export fn toLowerAscii(c: u8): u8;
-export fn eqIgnoreCase(a: string, b: string): bool;
 export fn isValidE164(number: string): bool;
 export fn normalizeE164(input: string, out: []u8): usize;
 export fn parseTelUri(uri: string): TelUri;

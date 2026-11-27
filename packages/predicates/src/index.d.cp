@@ -1,11 +1,8 @@
 // Type definitions for CP
 
-export fn prdToLowerAscii(b: u8): u8;
-export fn prdStrEq(a: string, b: string): bool;
-export fn prdStrEqIgnoreCase(a: string, b: string): bool;
-export fn prdStrHasPrefix(s: string, prefix: string): bool;
-export fn prdStrHasSuffix(s: string, suffix: string): bool;
-export fn prdStrContains(s: string, needle: string): bool;
+import { strEq, eqIgnoreCase, startsWith, endsWith } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+export fn prdEqIgnoreCase(a: string, b: string): bool;
 export fn prdIsFinite(x: f64): bool;
 export enum IntPredKind {
     Eq,

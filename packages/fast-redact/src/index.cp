@@ -1,6 +1,9 @@
 // @cap/redact — Zero-allocation PII & secret redaction/masking engine for CP
 // Clean-room MIT implementation inspired by npm `fast-redact`, `maskdata`, and Rust `secrecy`.
 
+import { isDigit, isAlnum, eqIgnoreCase, startsWith, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct RedactOptions {
     pub redact_emails: bool,
     pub redact_tokens: bool,
@@ -29,46 +32,20 @@ pub struct RedactOptions {
     }
 }
 
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn isAlphaNum(c: u8) -> bool {
-    return isAlpha(c) || isDigit(c);
-}
-
-fn toLower(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
 fn isTokenChar(c: u8) -> bool {
-    return isAlphaNum(c) || c == '_' || c == '-' || c == '.' || c == '+' || c == '/' || c == '=';
+    return isAlnum(c) || c == '_' || c == '-' || c == '.' || c == '+' || c == '/' || c == '=';
 }
 
 fn isEmailLocalChar(c: u8) -> bool {
-    return isAlphaNum(c) || c == '.' || c == '_' || c == '-' || c == '+' || c == '%';
+    return isAlnum(c) || c == '.' || c == '_' || c == '-' || c == '+' || c == '%';
 }
 
 fn isDomainChar(c: u8) -> bool {
-    return isAlphaNum(c) || c == '.' || c == '-';
+    return isAlnum(c) || c == '.' || c == '-';
 }
 
 fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
+    return writeStr(s, out, pos);
 }
 
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
@@ -80,31 +57,10 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
 }
 
 fn startsWithAt(s: string, idx: usize, prefix: string) -> bool {
-    if (idx + prefix.len > s.len) {
+    if (idx > s.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < prefix.len) {
-        if (s[idx + i] != prefix[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLower(a[i]) != toLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return startsWith(s[idx..s.len], prefix);
 }
 
 // ---------------------------------------------------------------------------
@@ -112,15 +68,7 @@ fn eqIgnoreCase(a: string, b: string) -> bool {
 // ---------------------------------------------------------------------------
 
 pub fn maskEmail(email: string, out: []u8) -> string {
-    let at: usize = email.len;
-    let i: usize = 0;
-    while (i < email.len) {
-        if (email[i] == '@') {
-            at = i;
-            break;
-        }
-        i += 1;
-    }
+    const at: usize = findByte(email, '@' as u8, 0) ?? email.len;
     if (at == 0 || at >= email.len - 1) {
         const n = appendStr(out, 0 as usize, "***");
         return out[0..n];
@@ -322,7 +270,7 @@ fn matchTokenEnd(s: string, idx: usize) -> usize {
 }
 
 fn matchEmailEnd(s: string, idx: usize) -> usize {
-    if (!isAlphaNum(s[idx])) {
+    if (!isAlnum(s[idx])) {
         return 0;
     }
     // Must be at word boundary
@@ -404,7 +352,7 @@ fn matchCardEnd(s: string, idx: usize) -> usize {
 fn matchPhoneEnd(s: string, idx: usize) -> usize {
     // Match E.164 (+[1-9]...) or CN 11-digit mobile (1[3-9]xxxxxxxxx)
     if (s[idx] == '+') {
-        if (idx > 0 && isAlphaNum(s[idx - 1])) {
+        if (idx > 0 && isAlnum(s[idx - 1])) {
             return 0;
         }
         if (idx + 1 >= s.len || s[idx + 1] < '1' || s[idx + 1] > '9') {
@@ -423,7 +371,7 @@ fn matchPhoneEnd(s: string, idx: usize) -> usize {
     }
     // CN 11-digit mobile starting with 1[3-9]
     if (s[idx] == '1' && idx + 11 <= s.len && s[idx + 1] >= '3' && s[idx + 1] <= '9') {
-        if (idx > 0 && isAlphaNum(s[idx - 1])) {
+        if (idx > 0 && isAlnum(s[idx - 1])) {
             return 0;
         }
         let k: usize = 0;
@@ -445,7 +393,7 @@ fn matchIpv4End(s: string, idx: usize) -> usize {
     if (!isDigit(s[idx])) {
         return 0;
     }
-    if (idx > 0 && (isAlphaNum(s[idx - 1]) || s[idx - 1] == '.')) {
+    if (idx > 0 && (isAlnum(s[idx - 1]) || s[idx - 1] == '.')) {
         return 0;
     }
     let i = idx;
@@ -469,7 +417,7 @@ fn matchIpv4End(s: string, idx: usize) -> usize {
             i += 1;
         }
     }
-    if (i < s.len && (isAlphaNum(s[i]) || s[i] == '.')) {
+    if (i < s.len && (isAlnum(s[i]) || s[i] == '.')) {
         return 0;
     }
     return i;

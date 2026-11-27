@@ -1,10 +1,10 @@
 // Type definitions for CP
 
+import { readU64LE } from "cap:bin";
 export fn makeU64(hi: u32, lo: u32): u64;
 export fn addWrap64(a: u64, b: u64): u64;
 export fn foldedMultiply(x: u64, y: u64): u64;
 export fn byteShift64(idx: u8): u64;
-export fn readU64Le(data: &[]u8, offset: usize): u64;
 export fn initFoldSeed(seed: u64): u64;
 export fn initAccum(seed: u64): u64;
 export class FoldHasher {

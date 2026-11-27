@@ -1,6 +1,9 @@
 // @cap/digest-auth — Zero-allocation RFC 7616 / RFC 2617 HTTP Digest Authentication Parser & Formatter
 // Clean-room MIT implementation in pure CP.
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct DigestChallenge {
     pub realm: string,
     pub nonce: string,
@@ -24,56 +27,25 @@ pub struct DigestResponse {
     pub valid: bool,
 }
 
-fn isSpace(b: u8) -> bool {
+fn digIsSpace(b: u8) -> bool {
     return b == 32 || b == 9;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
 }
 
 fn trimSlice(s: string) -> string {
     let a: usize = 0;
     let b: usize = s.len;
-    while (a < b && isSpace(s[a])) {
+    while (a < b && digIsSpace(s[a])) {
         a += 1;
     }
-    while (b > a && isSpace(s[b - 1])) {
+    while (b > a && digIsSpace(s[b - 1])) {
         b -= 1;
     }
     return s[a..b];
 }
 
-fn eqIgnoreCase(a: string, lower_b: string) -> bool {
-    if (a.len != lower_b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != lower_b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn stripDigestPrefix(header: string) -> string {
     const s = trimSlice(header);
-    if (s.len < 7) {
-        return "";
-    }
-    if (toLowerAscii(s[0]) != 100
-        || toLowerAscii(s[1]) != 105
-        || toLowerAscii(s[2]) != 103
-        || toLowerAscii(s[3]) != 101
-        || toLowerAscii(s[4]) != 115
-        || toLowerAscii(s[5]) != 116
-        || !isSpace(s[6]))
-    {
+    if (s.len < 7 || !eqIgnoreCase(s[0..6], "digest") || !digIsSpace(s[6])) {
         return "";
     }
     return trimSlice(s[7..s.len]);
@@ -258,19 +230,8 @@ pub fn supportsQop(qop_list: string, target: string) -> bool {
             pos += 1;
         }
         const item = trimSlice(qop_list[start..pos]);
-        if (item.len == target.len) {
-            let ok = true;
-            let i: usize = 0;
-            while (i < item.len) {
-                if (toLowerAscii(item[i]) != toLowerAscii(target[i])) {
-                    ok = false;
-                    break;
-                }
-                i += 1;
-            }
-            if (ok) {
-                return true;
-            }
+        if (eqIgnoreCase(item, target)) {
+            return true;
         }
         if (pos < n && qop_list[pos] == 44) {
             pos += 1;
@@ -283,12 +244,7 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushQuotedField(dst: []u8, pos: usize, first: bool, key: string, val: string) -> i64 {

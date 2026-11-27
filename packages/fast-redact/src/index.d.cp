@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, isAlnum, eqIgnoreCase, startsWith, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class RedactOptions {
     redact_emails: bool,
     redact_tokens: bool,
@@ -10,17 +12,12 @@ export class RedactOptions {
     fn strict(): RedactOptions;
 }
 
-export fn isDigit(c: u8): bool;
-export fn isAlpha(c: u8): bool;
-export fn isAlphaNum(c: u8): bool;
-export fn toLower(c: u8): u8;
 export fn isTokenChar(c: u8): bool;
 export fn isEmailLocalChar(c: u8): bool;
 export fn isDomainChar(c: u8): bool;
 export fn appendStr(out: []u8, pos: usize, s: string): usize;
 export fn appendByte(out: []u8, pos: usize, c: u8): usize;
 export fn startsWithAt(s: string, idx: usize, prefix: string): bool;
-export fn eqIgnoreCase(a: string, b: string): bool;
 export fn maskEmail(email: string, out: []u8): string;
 export fn maskPhone(phone: string, out: []u8): string;
 export fn maskCard(card: string, out: []u8): string;

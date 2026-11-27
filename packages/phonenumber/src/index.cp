@@ -1,6 +1,9 @@
 // @cap/tel-uri — Zero-heap RFC 3966 tel: URI & E.164 phone number codec
 // MIT License (clean-room CP implementation)
 
+import { isDigit, eqIgnoreCase, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct TelUri {
     pub number: string,
     pub is_global: bool,
@@ -9,37 +12,12 @@ pub struct TelUri {
     pub valid: bool,
 }
 
-fn isDigit(c: u8) -> bool {
-    return c >= '0' as u8 && c <= '9' as u8;
-}
-
 fn isVisualSep(c: u8) -> bool {
     return c == '-' as u8 || c == '.' as u8 || c == '(' as u8 || c == ')' as u8;
 }
 
 fn isWs(c: u8) -> bool {
     return c == ' ' as u8 || c == '\t' as u8;
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' as u8 && c <= 'Z' as u8) {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub fn isValidE164(number: string) -> bool {
@@ -115,10 +93,7 @@ pub fn parseTelUri(uri: string) -> TelUri {
     }
 
     // Split number from optional ";param=val..."
-    let semi: usize = 4;
-    while (semi < uri.len && uri[semi] != ';' as u8) {
-        semi += 1;
-    }
+    const semi: usize = findByte(uri, ';' as u8, 4) ?? uri.len;
     const num_part: string = uri[4..semi];
     if (num_part.len == 0) {
         return fail;
@@ -191,12 +166,7 @@ fn appendSlice(out: []u8, pos: usize, s: string) -> i64 {
     if (s.len > out.len - pos) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, out, pos) as i64;
 }
 
 pub fn formatTelUri(e164_number: string, ext: string, out: []u8) -> usize {

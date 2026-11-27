@@ -1,6 +1,8 @@
 // @cap/uuencode — Zero-heap POSIX/Unix uuencode & uudecode codec
 // MIT License (clean-room CP implementation)
 
+import { strEq, startsWith, findByte } from "cap:ascii";
+
 pub const MAX_LINE_BYTES: usize = 45;
 
 fn uuEncChar(v: u8) -> u8 {
@@ -19,27 +21,6 @@ fn uuDecVal(c: u8) -> i32 {
         return (c - 32) as i32;
     }
     return -1;
-}
-
-fn bytesEq(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn startsWith(s: string, prefix: string) -> bool {
-    if (s.len < prefix.len) {
-        return false;
-    }
-    return bytesEq(s[0..prefix.len], prefix);
 }
 
 pub fn encodeLine(data: []const u8, out: []u8) -> usize {
@@ -167,10 +148,7 @@ pub fn decode(input: string, out: []u8) -> i64 {
     let out_pos: usize = 0;
 
     while (pos < input.len) {
-        let line_end: usize = pos;
-        while (line_end < input.len && input[line_end] != '\n' as u8) {
-            line_end += 1;
-        }
+        const line_end: usize = findByte(input, '\n' as u8, pos) ?? input.len;
         let raw_end: usize = line_end;
         if (raw_end > pos && input[raw_end - 1] == '\r' as u8) {
             raw_end -= 1;
@@ -188,7 +166,7 @@ pub fn decode(input: string, out: []u8) -> i64 {
         if (startsWith(line, "begin ")) {
             continue;
         }
-        if (bytesEq(line, "end")) {
+        if (strEq(line, "end")) {
             break;
         }
 

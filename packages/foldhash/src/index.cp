@@ -1,6 +1,8 @@
 // @cap/foldhash — Zero-allocation 64x64->128-bit folded-multiply hasher (Fast & Quality modes) for CP
 // Clean-room MIT implementation inspired by Rust `foldhash` (895M downloads, default hasher in hashbrown 0.15+).
 
+import { readU64LE } from "cap:bin";
+
 fn makeU64(hi: u32, lo: u32) -> u64 {
     return ((hi as u64) * (0x100000000 as u64)) | (lo as u64);
 }
@@ -45,20 +47,6 @@ fn byteShift64(idx: u8) -> u64 {
         i += 1 as u8;
     }
     return s;
-}
-
-fn readU64Le(data: []const u8, offset: usize) -> u64 {
-    let v: u64 = 0;
-    let mul: u64 = 1;
-    let i: usize = 0;
-    while (i < 8) {
-        v = v | ((data[offset + i] as u64) * mul);
-        if (i < 7) {
-            mul = mul * (256 as u64);
-        }
-        i += 1;
-    }
-    return v;
 }
 
 fn initFoldSeed(seed: u64) -> u64 {
@@ -146,7 +134,7 @@ pub struct FoldHasher {
         }
         // Fast 8-byte bulk loop
         while (i + 8 <= data.len) {
-            const word = readU64Le(data, i);
+            const word = readU64LE(data, i) ?? 0;
             _.accum = foldedMultiply(_.accum ^ word, _.fold_seed);
             _.total_len += 8 as u64;
             i += 8;

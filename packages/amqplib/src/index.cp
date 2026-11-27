@@ -1,6 +1,9 @@
 // @cap/amqp-url — Zero-allocation AMQP 0-9-1 / RabbitMQ URI Parser & Redacting Formatter
 // Clean-room MIT implementation in pure CP.
 
+import { eqIgnoreCase, findByte, rfindByte } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct AmqpConfig {
     pub tls: bool,
     pub host: string,
@@ -25,29 +28,8 @@ fn invalidAmqp() -> AmqpConfig {
     };
 }
 
-fn isSpace(b: u8) -> bool {
+fn amqpIsSpace(b: u8) -> bool {
     return b == 32 || b == 9;
-}
-
-fn toLowerAscii(b: u8) -> u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn eqIgnoreCase(a: string, lower_b: string) -> bool {
-    if (a.len != lower_b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != lower_b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 fn parseU16Strict(s: string) -> i32 {
@@ -76,10 +58,10 @@ fn parseU16Strict(s: string) -> i32 {
 pub fn parseAmqpUrl(url: string) -> AmqpConfig {
     let a: usize = 0;
     let b: usize = url.len;
-    while (a < b && isSpace(url[a])) {
+    while (a < b && amqpIsSpace(url[a])) {
         a += 1;
     }
-    while (b > a && isSpace(url[b - 1])) {
+    while (b > a && amqpIsSpace(url[b - 1])) {
         b -= 1;
     }
     const s = url[a..b];
@@ -105,10 +87,7 @@ pub fn parseAmqpUrl(url: string) -> AmqpConfig {
     let heartbeat: u16 = 0;
 
     // 1. Strip optional ?query
-    let q_idx = rest_start;
-    while (q_idx < rest_end && s[q_idx] != 63) {
-        q_idx += 1;
-    }
+    const q_idx: usize = findByte(s[0..rest_end], 63, rest_start) ?? rest_end;
     if (q_idx < rest_end) {
         const query = s[q_idx + 1..rest_end];
         rest_end = q_idx;
@@ -138,10 +117,7 @@ pub fn parseAmqpUrl(url: string) -> AmqpConfig {
     }
 
     // 2. Split authority and optional /vhost
-    let slash_idx = rest_start;
-    while (slash_idx < rest_end && s[slash_idx] != 47) {
-        slash_idx += 1;
-    }
+    const slash_idx: usize = findByte(s[0..rest_end], 47, rest_start) ?? rest_end;
 
     let vhost: string = "/";
     if (slash_idx < rest_end) {
@@ -163,22 +139,10 @@ pub fn parseAmqpUrl(url: string) -> AmqpConfig {
     let password: string = "guest";
     let hostport = authority;
 
-    let at_idx = authority.len;
-    let scan = authority.len;
-    while (scan > 0) {
-        scan -= 1;
-        if (authority[scan] == 64) {
-            at_idx = scan;
-            break;
-        }
-    }
-    if (at_idx < authority.len) {
+    if (at_idx := rfindByte(authority, 64)) {
         const userinfo = authority[0..at_idx];
         hostport = authority[at_idx + 1..authority.len];
-        let colon: usize = 0;
-        while (colon < userinfo.len && userinfo[colon] != 58) {
-            colon += 1;
-        }
+        const colon: usize = findByte(userinfo, 58, 0) ?? userinfo.len;
         if (colon < userinfo.len) {
             username = userinfo[0..colon];
             password = userinfo[colon + 1..userinfo.len];
@@ -251,48 +215,16 @@ fn pushSlice(dst: []u8, pos: usize, src: string) -> i64 {
     if (pos + src.len > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        dst[pos + i] = src[i];
-        i += 1;
-    }
-    return (pos + src.len) as i64;
+    return writeStr(src, dst, pos) as i64;
 }
 
 fn pushU16(dst: []u8, pos: usize, val: u16) -> i64 {
-    let rev: [5]u8 = undefined;
-    let n: usize = 0;
-    let v = val as u32;
-    if (v == 0) {
-        rev[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0) {
-            rev[n] = (48 + (v % 10)) as u8;
-            v = v / 10;
-            n += 1;
-        }
-    }
+    let tmp: [8]u8 = undefined;
+    const n: usize = writeU64(val as u64, tmp[0..8], 0);
     if (pos + n > dst.len) {
         return -1;
     }
-    let i: usize = 0;
-    while (i < n) {
-        dst[pos + i] = rev[n - 1 - i];
-        i += 1;
-    }
-    return (pos + n) as i64;
-}
-
-fn containsColon(s: string) -> bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == 58) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return writeStr(tmp[0..n], dst, pos) as i64;
 }
 
 /// Formats an `AmqpConfig` as a standard AMQP URI into `out`.
@@ -328,7 +260,7 @@ pub fn formatAmqpUrl(cfg: AmqpConfig, redact_password: bool, out: []u8) -> usize
         if (p < 0) { return 0; }
     }
 
-    if (containsColon(cfg.host)) {
+    if (findByte(cfg.host, 58, 0) != null) {
         p = pushSlice(out, p as usize, "[");
         if (p < 0) { return 0; }
         p = pushSlice(out, p as usize, cfg.host);
