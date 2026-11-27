@@ -21,10 +21,8 @@ fn appendBytes(out: []u8, pos: usize, src: []const u8): usize! {
     if (src.len > out.len - pos) {
         return err.BufferTooSmall;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos + i] = src[i];
-        i += 1;
+    if (src.len > 0) {
+        @memcpy(out[pos .. pos + src.len], src);
     }
     return pos + src.len;
 }
@@ -81,7 +79,7 @@ pub fn normalizePosixPath(path: []const u8, out: []u8): usize! {
     }
 
     const is_abs = path[0] == '/';
-    let segs: [SHELL_CD_MAX_SEGMENTS][]const u8 = [""; SHELL_CD_MAX_SEGMENTS];
+    let segs: [SHELL_CD_MAX_SEGMENTS][]const u8 = undefined;
     let seg_len: usize = 0;
 
     let i: usize = 0;
@@ -145,7 +143,7 @@ pub fn resolveCdTarget(
     target: CdTarget,
     out: []u8,
 ): usize! {
-    let joined: [SHELL_CD_MAX_PATH]u8 = [0; SHELL_CD_MAX_PATH];
+    let joined: [SHELL_CD_MAX_PATH]u8 = undefined;
     let jlen: usize = 0;
 
     switch (target.kind) {
@@ -202,9 +200,9 @@ pub fn formatCdError(err_kind: ShellCdError, target_path: []const u8, out: []u8)
 
 /// 零堆分配 Shell `(cwd, prev_cwd)` 目录切换状态机
 pub struct ShellDirState {
-    cwd_buf: [SHELL_CD_MAX_PATH]u8 = [0; SHELL_CD_MAX_PATH],
+    cwd_buf: [SHELL_CD_MAX_PATH]u8 = undefined,
     cwd_len: usize = 0,
-    prev_buf: [SHELL_CD_MAX_PATH]u8 = [0; SHELL_CD_MAX_PATH],
+    prev_buf: [SHELL_CD_MAX_PATH]u8 = undefined,
     prev_len: usize = 0,
 
     static fn init(initial_cwd: []const u8): ShellDirState! {
@@ -225,7 +223,7 @@ pub struct ShellDirState {
     /// 执行一次 `cd` 切换：更新 `prev_cwd` 为旧 `cwd`，写入规范化后的新 `cwd` 并返回其切片
     fn applyCd(*_, args: []const []const u8, home: []const u8): ([]const u8)! {
         const target = CdTarget.parseArgs(args)?;
-        let next_buf: [SHELL_CD_MAX_PATH]u8 = [0; SHELL_CD_MAX_PATH];
+        let next_buf: [SHELL_CD_MAX_PATH]u8 = undefined;
         const next_len = resolveCdTarget(
             _.cwd_buf[0.._.cwd_len],
             _.prev_buf[0.._.prev_len],
@@ -235,18 +233,14 @@ pub struct ShellDirState {
         )?;
 
         // 保存旧 cwd -> prev_cwd
-        let i: usize = 0;
-        while (i < _.cwd_len) {
-            _.prev_buf[i] = _.cwd_buf[i];
-            i += 1;
+        if (_.cwd_len > 0) {
+            @memcpy(_.prev_buf[0.._.cwd_len], _.cwd_buf[0.._.cwd_len]);
         }
         _.prev_len = _.cwd_len;
 
         // 写入新 cwd
-        let j: usize = 0;
-        while (j < next_len) {
-            _.cwd_buf[j] = next_buf[j];
-            j += 1;
+        if (next_len > 0) {
+            @memcpy(_.cwd_buf[0..next_len], next_buf[0..next_len]);
         }
         _.cwd_len = next_len;
         return _.cwd_buf[0.._.cwd_len];

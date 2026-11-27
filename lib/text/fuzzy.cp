@@ -185,8 +185,8 @@ pub fn jaroWinkler(a: string, b: string): f64 {
     if (a.len == 0 || b.len == 0) return 0.0;
     if (std.mem.eql(u8, a, b)) return 1.0;
 
-    let cp_a: [JW_MAX_STACK_CPS]u32 = [0; JW_MAX_STACK_CPS];
-    let cp_b: [JW_MAX_STACK_CPS]u32 = [0; JW_MAX_STACK_CPS];
+    let cp_a: [JW_MAX_STACK_CPS]u32 = undefined;
+    let cp_b: [JW_MAX_STACK_CPS]u32 = undefined;
     let len_a: usize = 0;
     let len_b: usize = 0;
 

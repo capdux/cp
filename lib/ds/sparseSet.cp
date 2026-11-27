@@ -35,7 +35,7 @@ pub struct SparseSetStats {
 /// `id < SPARSE_SET_UNIVERSE && sparse[id] < dense_len && dense[sparse[id]] == id`,
 /// enabling O(1) `clear()` without touching the `sparse` array.
 pub struct SparseSet {
-    dense: [SPARSE_SET_UNIVERSE]u16 = [0; SPARSE_SET_UNIVERSE];
+    dense: [SPARSE_SET_UNIVERSE]u16 = undefined;
     sparse: [SPARSE_SET_UNIVERSE]u16 = [SPARSE_SET_INVALID_IDX; SPARSE_SET_UNIVERSE];
     dense_len: usize = 0;
     insert_ops: u64 = 0;
@@ -187,8 +187,8 @@ pub struct SparseSet {
 /// Zero-heap-allocation ECS-style dense map from integer entity ID (`0..1023`) to `u64` value,
 /// maintaining strictly aligned parallel slices `denseIds()` and `denseValues()`.
 pub struct SparseMapU64 {
-    dense_ids: [SPARSE_SET_UNIVERSE]u16 = [0; SPARSE_SET_UNIVERSE];
-    dense_vals: [SPARSE_SET_UNIVERSE]u64 = [0; SPARSE_SET_UNIVERSE];
+    dense_ids: [SPARSE_SET_UNIVERSE]u16 = undefined;
+    dense_vals: [SPARSE_SET_UNIVERSE]u64 = undefined;
     sparse: [SPARSE_SET_UNIVERSE]u16 = [SPARSE_SET_INVALID_IDX; SPARSE_SET_UNIVERSE];
     dense_len: usize = 0;
 

@@ -553,8 +553,8 @@ pub struct HnswFlatIndex {
         if (ef > HNSW_FLAT_MAX_EF) ef = HNSW_FLAT_MAX_EF;
         if (ef > out_ids.len) ef = out_ids.len;
 
-        let cand_ids: [HNSW_FLAT_MAX_EF]u32 = [0; HNSW_FLAT_MAX_EF];
-        let cand_dists: [HNSW_FLAT_MAX_EF]f32 = [0.0; HNSW_FLAT_MAX_EF];
+        let cand_ids: [HNSW_FLAT_MAX_EF]u32 = undefined;
+        let cand_dists: [HNSW_FLAT_MAX_EF]f32 = undefined;
         let cand_ids_s: []u32 = cand_ids[0..];
         let cand_dists_s: []f32 = cand_dists[0..];
 
@@ -616,7 +616,7 @@ pub struct HnswFlatIndex {
         out_selected: *[]u32,
     ): usize {
         let sel_len: usize = 0;
-        let disc_ids: [HNSW_FLAT_MAX_EF]u32 = [0; HNSW_FLAT_MAX_EF];
+        let disc_ids: [HNSW_FLAT_MAX_EF]u32 = undefined;
         let disc_len: usize = 0;
 
         let i: usize = 0;
@@ -679,8 +679,8 @@ pub struct HnswFlatIndex {
         }
 
         // Overflow: gather existing neighbors + new_id, sort by distance to nb_id, and heuristic-prune.
-        let c_ids: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = [0; HNSW_FLAT_MAX_PRUNE_CANDS];
-        let c_dists: [HNSW_FLAT_MAX_PRUNE_CANDS]f32 = [0.0; HNSW_FLAT_MAX_PRUNE_CANDS];
+        let c_ids: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = undefined;
+        let c_dists: [HNSW_FLAT_MAX_PRUNE_CANDS]f32 = undefined;
         let c_ids_s: []u32 = c_ids[0..];
         let c_dists_s: []f32 = c_dists[0..];
         let c_len: usize = 0;
@@ -694,7 +694,7 @@ pub struct HnswFlatIndex {
         const d_new: f32 = distNodeToNode(nb_idx, @as(usize, new_id));
         c_len = sortedInsertBounded(c_ids_s, c_dists_s, c_len, HNSW_FLAT_MAX_PRUNE_CANDS, new_id, d_new);
 
-        let pruned: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = [0; HNSW_FLAT_MAX_PRUNE_CANDS];
+        let pruned: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = undefined;
         let pruned_s: []u32 = pruned[0..];
         const kept: usize = selectNeighborsHeuristic(c_ids[0..], c_dists[0..], c_len, max_deg, pruned_s);
         setNeighbors(nb_idx, level, pruned[0..], kept);
@@ -758,9 +758,9 @@ pub struct HnswFlatIndex {
 
         // 2. From min(lvl, max_level) down to 0: beam search + Algorithm 4 Heuristic linking.
         const start_lvl: usize = if (lvl < max_level) lvl else max_level;
-        let w_ids: [HNSW_FLAT_MAX_EF]u32 = [0; HNSW_FLAT_MAX_EF];
-        let w_dists: [HNSW_FLAT_MAX_EF]f32 = [0.0; HNSW_FLAT_MAX_EF];
-        let sel_ids: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = [0; HNSW_FLAT_MAX_PRUNE_CANDS];
+        let w_ids: [HNSW_FLAT_MAX_EF]u32 = undefined;
+        let w_dists: [HNSW_FLAT_MAX_EF]f32 = undefined;
+        let sel_ids: [HNSW_FLAT_MAX_PRUNE_CANDS]u32 = undefined;
         let w_ids_s: []u32 = w_ids[0..];
         let w_dists_s: []f32 = w_dists[0..];
         let sel_ids_s: []u32 = sel_ids[0..];
@@ -841,8 +841,8 @@ pub struct HnswFlatIndex {
             eff_ef += boost;
         }
 
-        let w_ids: [HNSW_FLAT_MAX_EF]u32 = [0; HNSW_FLAT_MAX_EF];
-        let w_dists: [HNSW_FLAT_MAX_EF]f32 = [0.0; HNSW_FLAT_MAX_EF];
+        let w_ids: [HNSW_FLAT_MAX_EF]u32 = undefined;
+        let w_dists: [HNSW_FLAT_MAX_EF]f32 = undefined;
         let w_ids_s: []u32 = w_ids[0..];
         let w_dists_s: []f32 = w_dists[0..];
 

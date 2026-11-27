@@ -117,7 +117,7 @@ pub fn mergeTokensF32(
     }
 
     // Validate token values and weights, and precompute inverse L2 norms via SIMD `@dot`.
-    let inv_norms: [TOME_MAX_TOKENS]f32 = [0.0; TOME_MAX_TOKENS];
+    let inv_norms: [TOME_MAX_TOKENS]f32 = undefined;
     let eff_sizes: [TOME_MAX_TOKENS]f32 = [1.0; TOME_MAX_TOKENS];
 
     let t: usize = 0;
@@ -151,8 +151,8 @@ pub fn mergeTokensF32(
     const mergeable = seq_len - prot;
 
     // Partition mergeable tokens into even (set A) and odd (set B).
-    let set_a: [TOME_MAX_TOKENS]usize = [0; TOME_MAX_TOKENS];
-    let set_b: [TOME_MAX_TOKENS]usize = [0; TOME_MAX_TOKENS];
+    let set_a: [TOME_MAX_TOKENS]usize = undefined;
+    let set_b: [TOME_MAX_TOKENS]usize = undefined;
     let num_a: usize = 0;
     let num_b: usize = 0;
 
@@ -194,9 +194,9 @@ pub fn mergeTokensF32(
     }
 
     // 1. Bipartite Soft Matching: for each a in A, find argmax_{b in B} cos(a, b) via SIMD `@dot`.
-    let best_b_idx: [TOME_MAX_TOKENS]usize = [0; TOME_MAX_TOKENS];
-    let best_sim: [TOME_MAX_TOKENS]f32 = [-2.0; TOME_MAX_TOKENS];
-    let order: [TOME_MAX_TOKENS]usize = [0; TOME_MAX_TOKENS];
+    let best_b_idx: [TOME_MAX_TOKENS]usize = undefined;
+    let best_sim: [TOME_MAX_TOKENS]f32 = undefined;
+    let order: [TOME_MAX_TOKENS]usize = undefined;
 
     let ai: usize = 0;
     while (ai < num_a) : (ai += 1) {

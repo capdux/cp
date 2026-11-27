@@ -253,8 +253,8 @@ pub fn applyTemperatureAndTopKMaskInPlace(
         return null;
     }
 
-    let heap_vals: [TOP_K_HEAP_CAP]f32 = [0.0; TOP_K_HEAP_CAP];
-    let heap_ids: [TOP_K_HEAP_CAP]usize = [0; TOP_K_HEAP_CAP];
+    let heap_vals: [TOP_K_HEAP_CAP]f32 = undefined;
+    let heap_ids: [TOP_K_HEAP_CAP]usize = undefined;
     let vals_s: []f32 = heap_vals[0..top_k];
     let ids_s: []usize = heap_ids[0..top_k];
     let count: usize = 0;

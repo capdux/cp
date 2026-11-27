@@ -486,7 +486,7 @@ pub struct Octree {
             return 0;
         }
 
-        let stack: [TRAVERSAL_STACK_CAP]usize = [0; TRAVERSAL_STACK_CAP];
+        let stack: [TRAVERSAL_STACK_CAP]usize = undefined;
         let sp: usize = 0;
         stack[sp] = 0;
         sp += 1;
@@ -545,7 +545,7 @@ pub struct Octree {
             return 0;
         }
 
-        let stack: [TRAVERSAL_STACK_CAP]usize = [0; TRAVERSAL_STACK_CAP];
+        let stack: [TRAVERSAL_STACK_CAP]usize = undefined;
         let sp: usize = 0;
         stack[sp] = 0;
         sp += 1;
@@ -601,8 +601,8 @@ pub struct Octree {
             return null;
         }
 
-        let stack_node: [TRAVERSAL_STACK_CAP]usize = [0; TRAVERSAL_STACK_CAP];
-        let stack_dist: [TRAVERSAL_STACK_CAP]f64 = [0.0; TRAVERSAL_STACK_CAP];
+        let stack_node: [TRAVERSAL_STACK_CAP]usize = undefined;
+        let stack_dist: [TRAVERSAL_STACK_CAP]f64 = undefined;
         let sp: usize = 0;
         stack_node[sp] = 0;
         stack_dist[sp] = _.nodes[0].bounds.distanceSqToPoint(target);
@@ -708,7 +708,7 @@ pub struct Octree {
         }
 
         const r_sq = point_radius * point_radius;
-        let stack: [TRAVERSAL_STACK_CAP]usize = [0; TRAVERSAL_STACK_CAP];
+        let stack: [TRAVERSAL_STACK_CAP]usize = undefined;
         let sp: usize = 0;
         stack[sp] = 0;
         sp += 1;
@@ -777,7 +777,7 @@ pub struct Octree {
             return 0;
         }
 
-        let stack: [TRAVERSAL_STACK_CAP]usize = [0; TRAVERSAL_STACK_CAP];
+        let stack: [TRAVERSAL_STACK_CAP]usize = undefined;
         let sp: usize = 0;
         stack[sp] = 0;
         sp += 1;

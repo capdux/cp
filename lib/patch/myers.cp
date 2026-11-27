@@ -193,9 +193,9 @@ pub struct LineDiffer {
         const m = b.len;
         const max_d = if (n + m < STACK_MAX_D) n + m else STACK_MAX_D;
 
-        let v: [STACK_V_LEN]isize = [0; STACK_V_LEN];
-        let trace: [STACK_TRACE_CAP]isize = [0; STACK_TRACE_CAP];
-        let trace_starts: [STACK_TRACE_STARTS_LEN]usize = [0; STACK_TRACE_STARTS_LEN];
+        let v: [STACK_V_LEN]isize = undefined;
+        let trace: [STACK_TRACE_CAP]isize = undefined;
+        let trace_starts: [STACK_TRACE_STARTS_LEN]usize = undefined;
         const off: isize = (STACK_MAX_D as isize) + 1;
 
         v[(off + 1) as usize] = 0;

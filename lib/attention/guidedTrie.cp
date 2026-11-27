@@ -270,8 +270,8 @@ pub struct GuidedTokenTrie {
 
         // Gather in-bounds allowed token IDs and snapshot their original logits on stack.
         // At most (GUIDED_TRIE_MAX_NODES - 1) children + 1 EOS = GUIDED_TRIE_MAX_NODES entries.
-        let saved_ids: [GUIDED_TRIE_MAX_NODES]usize = [0; GUIDED_TRIE_MAX_NODES];
-        let saved_vals: [GUIDED_TRIE_MAX_NODES]f32 = [0.0; GUIDED_TRIE_MAX_NODES];
+        let saved_ids: [GUIDED_TRIE_MAX_NODES]usize = undefined;
+        let saved_vals: [GUIDED_TRIE_MAX_NODES]f32 = undefined;
         let allowed_count: usize = 0;
         let has_eos: bool = false;
 

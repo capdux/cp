@@ -656,7 +656,7 @@ pub struct RaptorTree {
         if (!isFiniteF32(norm_sq) || norm_sq <= NORM_SQ_EPS) return null;
         const inv_norm: f32 = 1.0 / @sqrt(norm_sq);
 
-        let q_unit: [STACK_UNIT_DIM]f32 = [0.0; STACK_UNIT_DIM];
+        let q_unit: [STACK_UNIT_DIM]f32 = undefined;
         const has_q_unit: bool = dim <= STACK_UNIT_DIM;
         if (has_q_unit) {
             let d: usize = 0;
@@ -914,8 +914,8 @@ pub struct RaptorTree {
             // Compute per-level rank for each candidate, then fuse via level_weight[lvl] / (rrf_k + rank).
             let lvl: usize = 0;
             while (lvl < RAPTOR_MAX_LEVELS) : (lvl += 1) {
-                let lvl_items: [RAPTOR_MAX_NODES]RaptorScoredSlot = [RaptorScoredSlot{}; RAPTOR_MAX_NODES];
-                let lvl_orig_idx: [RAPTOR_MAX_NODES]usize = [0; RAPTOR_MAX_NODES];
+                let lvl_items: [RAPTOR_MAX_NODES]RaptorScoredSlot = undefined;
+                let lvl_orig_idx: [RAPTOR_MAX_NODES]usize = undefined;
                 let lvl_cnt: usize = 0;
 
                 let i: usize = 0;
@@ -998,7 +998,7 @@ pub struct RaptorTree {
         if (!isFiniteF32(norm_sq) || norm_sq <= NORM_SQ_EPS) return 0;
         const inv_q_norm: f32 = 1.0 / @sqrt(norm_sq);
 
-        let q_unit: [STACK_UNIT_DIM]f32 = [0.0; STACK_UNIT_DIM];
+        let q_unit: [STACK_UNIT_DIM]f32 = undefined;
         const has_q_unit: bool = dim <= STACK_UNIT_DIM;
         if (has_q_unit) {
             let d: usize = 0;
@@ -1008,7 +1008,7 @@ pub struct RaptorTree {
         }
         const q_unit_slice: []const f32 = if (has_q_unit) q_unit[0..dim] else q_unit[0..0];
 
-        let candidates: [RAPTOR_MAX_NODES]RaptorScoredSlot = [RaptorScoredSlot{}; RAPTOR_MAX_NODES];
+        let candidates: [RAPTOR_MAX_NODES]RaptorScoredSlot = undefined;
         let cand_count: usize = 0;
 
         let i: usize = 0;
@@ -1055,7 +1055,7 @@ pub struct RaptorTree {
         if (!isFiniteF32(norm_sq) || norm_sq <= NORM_SQ_EPS) return 0;
         const inv_q_norm: f32 = 1.0 / @sqrt(norm_sq);
 
-        let q_unit: [STACK_UNIT_DIM]f32 = [0.0; STACK_UNIT_DIM];
+        let q_unit: [STACK_UNIT_DIM]f32 = undefined;
         const has_q_unit: bool = dim <= STACK_UNIT_DIM;
         if (has_q_unit) {
             let d: usize = 0;
@@ -1066,7 +1066,7 @@ pub struct RaptorTree {
         const q_unit_slice: []const f32 = if (has_q_unit) q_unit[0..dim] else q_unit[0..0];
 
         // Frontier holds slots scheduled for evaluation at the current descent step.
-        let frontier: [RAPTOR_MAX_NODES]u16 = [RAPTOR_NO_NODE; RAPTOR_MAX_NODES];
+        let frontier: [RAPTOR_MAX_NODES]u16 = undefined;
         let frontier_len: usize = 0;
 
         // Seed frontier with all active root nodes (nodes at max_level, or any top-level parentless node at max_level).
@@ -1080,13 +1080,13 @@ pub struct RaptorTree {
         }
         if (frontier_len == 0) return 0;
 
-        let collected: [RAPTOR_MAX_NODES]RaptorScoredSlot = [RaptorScoredSlot{}; RAPTOR_MAX_NODES];
+        let collected: [RAPTOR_MAX_NODES]RaptorScoredSlot = undefined;
         let collected_count: usize = 0;
         let collected_bits: [BITSET_WORDS]u64 = [0; BITSET_WORDS];
 
         let step: usize = 0;
         while (frontier_len > 0 && step < RAPTOR_MAX_LEVELS) : (step += 1) {
-            let level_scored: [RAPTOR_MAX_NODES]RaptorScoredSlot = [RaptorScoredSlot{}; RAPTOR_MAX_NODES];
+            let level_scored: [RAPTOR_MAX_NODES]RaptorScoredSlot = undefined;
             let level_cnt: usize = 0;
 
             let fi: usize = 0;
@@ -1115,7 +1115,7 @@ pub struct RaptorTree {
             sortScoredByRawSimDesc(*level_slice, level_cnt);
 
             const keep: usize = if (beam_per_level < level_cnt) beam_per_level else level_cnt;
-            let next_frontier: [RAPTOR_MAX_NODES]u16 = [RAPTOR_NO_NODE; RAPTOR_MAX_NODES];
+            let next_frontier: [RAPTOR_MAX_NODES]u16 = undefined;
             let next_len: usize = 0;
             let next_bits: [BITSET_WORDS]u64 = [0; BITSET_WORDS];
 
