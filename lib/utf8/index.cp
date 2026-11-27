@@ -91,13 +91,16 @@ pub fn decodeCodepoint(data: []const u8, offset: usize): DecodedChar {
     return DecodedChar{ codepoint: 0xFFFD, len: 1, valid: false };
 }
 
-/// Validates that `data` is strictly well-formed RFC 3629 UTF-8.
+type Lu8Vec16 = @Vector(16, u8);
+
+/// 16-lane hardware SIMD accelerated RFC 3629 UTF-8 validator.
 pub fn isValidUtf8(data: []const u8): bool {
     let i: usize = 0;
+    const hi_mask: Lu8Vec16 = @splat(0x80 as u8);
     while (i < data.len) {
-        while (i + 8 <= data.len) : (i += 8) {
-            const acc: u8 = data[i] | data[i + 1] | data[i + 2] | data[i + 3] | data[i + 4] | data[i + 5] | data[i + 6] | data[i + 7];
-            if ((acc & 0x80) != 0) break;
+        while (i + 16 <= data.len) : (i += 16) {
+            const v: Lu8Vec16 = data[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v & hi_mask) != 0) break;
         }
         if (i >= data.len) break;
         if ((data[i] & 0x80) == 0) {
