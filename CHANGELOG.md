@@ -1406,3 +1406,11 @@
 - 新增 `packages/@cap/{bit-field,nibble-vec,postcard,vte,chrome-trace-event,compressible,serialize-javascript,commondir,yn}/` 及对应 9 套 `cap/test/testCap*.cp`（全部 6/6 PASS）
 - 更新 `packages/@cap/registry.json`（总映射 **1,260**）、`cp_lib_ref.md`、`cp_agent_lib_ref.md`。
 - 补增 Batch 165 Top 1000 收官包：`@cap/plist`（#957）、`@cap/scroll`（#948，覆盖 `endian-type` #928）及对应 2 套 `cap/test/testCap*.cp`（6/6 PASS），本批次共 +11 包，总计 **897 `@cap/*` 官方包**、**1,262 条上游映射**；按指令停止吸收，全部子智能体已安全收回，进入整理待命状态。
+
+### 2026-11-27 — 生态整理 Phase 1（L0 内置标准库 4 大基座 + 8 项自动化体检门禁）
+- 新增内置标准库通道 `cap:ascii`（`lib/ascii/index.cp` + `doc/lib/ascii.md` + `cap/test/testStdAscii.cp`, 6/6 PASS）
+- 新增内置标准库通道 `cap:utf8`（`lib/utf8/index.cp` + `doc/lib/utf8.md` + `cap/test/testStdUtf8.cp`, 6/6 PASS）
+- 新增内置标准库通道 `cap:fmt`（`lib/fmt/index.cp` + `doc/lib/fmt.md` + `cap/test/testStdFmt.cp`, 6/6 PASS）
+- 新增内置标准库通道 `cap:bin`（`lib/bin/index.cp` + `doc/lib/bin.md` + `cap/test/testStdBin.cp`, 6/6 PASS）
+- 新增生态自动化体检与门禁脚本 `scripts/audit_ecosystem.py`
+- 更新 `cp_lib_ref.md` 与 `cp_agent_lib_ref.md`（内置标准库增至 **208 通道**）。

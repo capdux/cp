@@ -1,7 +1,7 @@
 # CP 智能体标准库与生态极简速查手册 (`cp_agent_lib_ref.md`)
 
 > **更新日期**：2026-11-27 | **自动生成**：`python3 scripts/gen_agent_lib_ref.py`
-> **覆盖规模**：内置标准库 **204 通道**（`cap:*`）+ 官方 Web 插件 **34 包**（`@web/*`）+ 官方纯 CP/原生包 **897 包**（`@cap/*`）+ 上游映射 **1262 条**（npm 676 / crates.io 586）。
+> **覆盖规模**：内置标准库 **208 通道**（`cap:*`）+ 官方 Web 插件 **34 包**（`@web/*`）+ 官方纯 CP/原生包 **897 包**（`@cap/*`）+ 上游映射 **1262 条**（npm 676 / crates.io 586）。
 > **AGY 查库铁律（极省 Token）**：
 > 1. **写代码前先查本文件**：优先用内置 `cap:*`（零安装），其次 `import ... from "@cap/<name>"`，**严禁重复造轮子**；
 > 2. **查精确签名不读全量源码**：内置库看 `doc/lib/<mod>.md` 或 `lib/<mod>/index.cp`；`@cap/*` 直接读 **`packages/@cap/<name>/src/index.d.cp`**（极短类型声明）；
@@ -21,6 +21,10 @@
 | :--- | :--- | :--- |
 | `cap:sort` | `Sort`, `asc`, `desc` 等 | 工业级 PDQSort 自适应快速排序、稳定块排序、原… |
 | `cap:hash` | `Hash`, `wyhash`, `xxhash3` 等 | 30~50 GB/s SIMD 极速散列、Wyhash… |
+| `cap:ascii` | `isAscii`, `eqIgnoreCase`, `trim` 等 | 零堆 ASCII 校验/分类/大小写/裁剪与字节查找… |
+| `cap:bin` | `bytesEq`, `ctEqual`, `findByte` 等 | 零堆 16B 展开二进制扫描、常量时间比较与大小端读写… |
+| `cap:fmt` | `BufWriter` 等 | 零堆缓冲格式化写入器与严格整数解析 L0 基座 |
+| `cap:utf8` | `isValidUtf8`, `decodeCodepoint`, `encodeCodepoint` 等 | 严格 RFC 3629 UTF-8 校验与码点编解码… |
 | `cap:bytes` | `BytesError`, `KIB..PIB`, `KB..PB` 等 | 零分配纯整数 SI/IEC 字节大小双向解析与格式化（… |
 | `cap:time/human` | `MsError`, `parseMs`, `parseDurationNs` 等 | 零分配 128-bit 定点人类可读时长解析与格式化（… |
 | `cap:col`（兼容 `cap:collections`） | `Vec<T>`, `VecDeque<T>`, `BinaryHeap<T>` 等 | 完备标准容器与零堆分配紧凑集合 |

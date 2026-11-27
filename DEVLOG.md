@@ -581,3 +581,7 @@
 
 ### 2026-11-27 — Batch 165 开发日志（895 `@cap/*` 包，冲刺双平台 Top 1000 收官）
 - 按用户指令“吸收到 Top 1000 后停止吸收、等待整理”，完成 9 个 Top 900–1000 纯 CP 包与 9 条零重复映射；已收回 Worker N32，待 Worker N33 完成最后 2 个包（`plist` #957、`scroll` #948）后即提交收官批次并全面停止吸收。
+
+### 2026-11-27 — 生态整理 Phase 1 开发日志（L0 基座就绪）
+- 三路并行完成 `cap:ascii`/`cap:utf8`/`cap:fmt`/`cap:bin` 四大 L0 零堆标准库基座（全部 6/6 PASS），为 Phase 3 消灭 400+ 次重复手写辅助函数铺平道路。
+- 编写 `scripts/audit_ecosystem.py` 并跑出 Phase 0 基线：930 包中 `Uses cap:* stdlib = 0`、`Renamed vs source = 339`、`missing_dcp = 46`、`zh-CN = 0`、`AGENT = 0`；并提前发现 31 对同名重复包冲突，将在 Phase 2 彻底消解。
