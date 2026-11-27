@@ -71,12 +71,49 @@ pub struct McpArgValidationReport {
 // Internal Zero-Copy RFC 8259 JSON Scanner Helpers
 // ============================================================================
 
+type McpArgVec16 = @Vector(16, u8);
+
+fn makeMcpArgWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\r'] = 1;
+    lut['\n'] = 1;
+    return lut;
+}
+
+fn makeMcpArgHexLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = '0';
+    while (i <= '9') : (i += 1) { lut[i] = 1; }
+    i = 'a';
+    while (i <= 'f') : (i += 1) { lut[i] = 1; }
+    i = 'A';
+    while (i <= 'F') : (i += 1) { lut[i] = 1; }
+    return lut;
+}
+
+const MCP_ARG_WS_LUT: [u8; 256] = makeMcpArgWsLut();
+const MCP_ARG_HEX_LUT: [u8; 256] = makeMcpArgHexLut();
+
 fn isWs(b: u8): bool {
-    return b == ' ' || b == '\t' || b == '\r' || b == '\n';
+    return MCP_ARG_WS_LUT[@as(usize, b)] != 0;
 }
 
 fn skipWs(s: string, start: usize): usize {
     let i: usize = start;
+    const v_sp: McpArgVec16 = @splat(' ' as u8);
+    const v_tab: McpArgVec16 = @splat('\t' as u8);
+    const v_cr: McpArgVec16 = @splat('\r' as u8);
+    const v_lf: McpArgVec16 = @splat('\n' as u8);
+    while (i + 16 <= s.len) {
+        const v: McpArgVec16 = s[i .. i + 16][0..16].*;
+        const is_ws = (v == v_sp) | (v == v_tab) | (v == v_cr) | (v == v_lf);
+        if (!@reduce(.And, is_ws)) break;
+        i += 16;
+    }
     while (i < s.len && isWs(s[i])) : (i += 1) {}
     return i;
 }
@@ -84,6 +121,11 @@ fn skipWs(s: string, start: usize): usize {
 fn strEq(a: string, b: string): bool {
     if (a.len != b.len) return false;
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: McpArgVec16 = a[i .. i + 16][0..16].*;
+        const vb: McpArgVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) return false;
+    }
     while (i < a.len) : (i += 1) {
         if (a[i] != b[i]) return false;
     }
@@ -102,7 +144,18 @@ fn parseJsonStringSpan(s: string, start: usize): ParsedStringSpan? {
     if (start >= s.len || s[start] != '"') return null;
     let i: usize = start + 1;
     let dlen: usize = 0;
+    const v_dq: McpArgVec16 = @splat('"' as u8);
+    const v_bs: McpArgVec16 = @splat('\\' as u8);
+    const v_ctrl: McpArgVec16 = @splat(0x20 as u8);
     while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: McpArgVec16 = s[i .. i + 16][0..16].*;
+            const special = (v == v_dq) | (v == v_bs) | (v < v_ctrl);
+            if (@reduce(.Or, special)) break;
+            i += 16;
+            dlen += 16;
+        }
+        if (i >= s.len) break;
         const c: u8 = s[i];
         if (c == '"') {
             return ParsedStringSpan{
@@ -121,13 +174,11 @@ fn parseJsonStringSpan(s: string, start: usize): ParsedStringSpan? {
                 dlen += 1;
             } else if (esc == 'u') {
                 if (i + 6 > s.len) return null;
-                let h: usize = 0;
-                while (h < 4) : (h += 1) {
-                    const hc: u8 = s[i + 2 + h];
-                    const is_hex: bool = (hc >= '0' && hc <= '9') ||
-                        (hc >= 'a' && hc <= 'f') ||
-                        (hc >= 'A' && hc <= 'F');
-                    if (!is_hex) return null;
+                if (MCP_ARG_HEX_LUT[@as(usize, s[i + 2])] == 0 ||
+                    MCP_ARG_HEX_LUT[@as(usize, s[i + 3])] == 0 ||
+                    MCP_ARG_HEX_LUT[@as(usize, s[i + 4])] == 0 ||
+                    MCP_ARG_HEX_LUT[@as(usize, s[i + 5])] == 0) {
+                    return null;
                 }
                 i += 6;
                 dlen += 1;
@@ -150,7 +201,21 @@ fn skipComposite(s: string, start: usize): usize? {
 
     let depth: usize = 0;
     let i: usize = start;
+    const v_dq: McpArgVec16 = @splat('"' as u8);
+    const v_lb: McpArgVec16 = @splat('{' as u8);
+    const v_rb: McpArgVec16 = @splat('}' as u8);
+    const v_ls: McpArgVec16 = @splat('[' as u8);
+    const v_rs: McpArgVec16 = @splat(']' as u8);
     while (i < s.len) {
+        if (depth > 0) {
+            while (i + 16 <= s.len) {
+                const v: McpArgVec16 = s[i .. i + 16][0..16].*;
+                const hit = (v == v_dq) | (v == v_lb) | (v == v_rb) | (v == v_ls) | (v == v_rs);
+                if (@reduce(.Or, hit)) break;
+                i += 16;
+            }
+            if (i >= s.len) break;
+        }
         const c: u8 = s[i];
         if (c == '"') {
             const sp = parseJsonStringSpan(s, i) ?? return null;

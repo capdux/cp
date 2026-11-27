@@ -24,24 +24,69 @@ pub err CssPropertyRuleError {
     BufferTooSmall,
 }
 
+type CssPropVec16 = @Vector(16, u8);
+
+fn makeCssPropClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\n'] = 1;
+    lut['\r'] = 1;
+    lut[0x0c] = 1;
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] |= 2 | 4 | 16;
+        }
+        if ((i >= 'a' && i <= 'f') || (i >= 'A' && i <= 'F')) {
+            lut[i] |= 4;
+        }
+        if ((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || i >= 0x80 || i == '_') {
+            lut[i] |= 8 | 16;
+        }
+        if (i == '-') {
+            lut[i] |= 16;
+        }
+    }
+    return lut;
+}
+
+fn makeCssPropLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const CSS_PROP_CLASS_LUT: [u8; 256] = makeCssPropClassLut();
+const CSS_PROP_LOWER_LUT: [u8; 256] = makeCssPropLowerLut();
+
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0c;
+    return (CSS_PROP_CLASS_LUT[@as(usize, c)] & 1) != 0;
 }
 
 fn isDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (CSS_PROP_CLASS_LUT[@as(usize, c)] & 2) != 0;
 }
 
 fn isHexDigit(c: u8): bool {
-    return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    return (CSS_PROP_CLASS_LUT[@as(usize, c)] & 4) != 0;
 }
 
 fn isIdentStart(c: u8): bool {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c >= 0x80 || c == '_';
+    return (CSS_PROP_CLASS_LUT[@as(usize, c)] & 8) != 0;
 }
 
 fn isNameCodePoint(c: u8): bool {
-    return isIdentStart(c) || isDigit(c) || c == '-';
+    return (CSS_PROP_CLASS_LUT[@as(usize, c)] & 16) != 0;
 }
 
 fn trimSpaces(s: string): string {
@@ -69,12 +114,22 @@ fn eqlIgnoreCaseAscii(a: string, b: string): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: CssPropVec16 = @splat(65 as u8);
+    const hi_Z: CssPropVec16 = @splat(90 as u8);
+    const case_bit: CssPropVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssPropVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssPropVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) {
-        let ca = a[i];
-        let cb = b[i];
-        if (ca >= 'A' && ca <= 'Z') { ca += 32; }
-        if (cb >= 'A' && cb <= 'Z') { cb += 32; }
-        if (ca != cb) {
+        if (CSS_PROP_LOWER_LUT[@as(usize, a[i])] != CSS_PROP_LOWER_LUT[@as(usize, b[i])]) {
             return false;
         }
         i += 1;
@@ -92,6 +147,7 @@ fn startsWithIgnoreCaseAscii(s: string, prefix: string): bool {
 /// 跳过前导空白与 CSS `/* ... */` 块注释
 fn skipWsAndComments(s: string, start: usize): usize {
     let i = start;
+    const v_star: CssPropVec16 = @splat('*' as u8);
     while (i < s.len) {
         if (isSpace(s[i])) {
             i += 1;
@@ -99,6 +155,11 @@ fn skipWsAndComments(s: string, start: usize): usize {
         }
         if (i + 1 < s.len && s[i] == '/' && s[i + 1] == '*') {
             i += 2;
+            while (i + 16 < s.len) {
+                const v: CssPropVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == v_star)) break;
+                i += 16;
+            }
             while (i + 1 < s.len && !(s[i] == '*' && s[i + 1] == '/')) {
                 i += 1;
             }

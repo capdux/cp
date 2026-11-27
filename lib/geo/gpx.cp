@@ -43,12 +43,28 @@ pub struct GpxStats {
     max_lon: f64,
 }
 
+type GpxVec16 = @Vector(16, u8);
+
+fn makeGpxClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1 | 2;
+    lut['\t'] = 1 | 2;
+    lut['\r'] = 1 | 2;
+    lut['\n'] = 1 | 2;
+    lut['>'] = 2;
+    lut['/'] = 2;
+    return lut;
+}
+
+const GPX_CLASS_LUT: [u8; 256] = makeGpxClassLut();
+
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return (GPX_CLASS_LUT[@as(usize, c)] & 1) != 0;
 }
 
 fn isTagDelim(c: u8): bool {
-    return isSpace(c) || c == '>' || c == '/';
+    return (GPX_CLASS_LUT[@as(usize, c)] & 2) != 0;
 }
 
 fn startsWithAt(data: []const u8, pos: usize, prefix: []const u8): bool {
@@ -56,6 +72,13 @@ fn startsWithAt(data: []const u8, pos: usize, prefix: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= prefix.len) : (i += 16) {
+        const va: GpxVec16 = data[pos + i .. pos + i + 16][0..16].*;
+        const vb: GpxVec16 = prefix[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
+            return false;
+        }
+    }
     while (i < prefix.len) {
         if (data[pos + i] != prefix[i]) {
             return false;
@@ -161,7 +184,15 @@ fn findBytes(data: []const u8, start: usize, needle: []const u8): usize? {
     }
     let i: usize = start;
     const limit = data.len - needle.len;
+    const v_first: GpxVec16 = @splat(needle[0]);
     while (i <= limit) {
+        if (i + 16 <= limit + 1) {
+            const chunk: GpxVec16 = data[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, chunk == v_first)) {
+                i += 16;
+                continue;
+            }
+        }
         if (startsWithAt(data, i, needle)) {
             return i;
         }
@@ -173,7 +204,26 @@ fn findBytes(data: []const u8, start: usize, needle: []const u8): usize? {
 fn findTagEnd(data: []const u8, lt_pos: usize): usize? {
     let i = lt_pos + 1;
     let quote: u8 = 0;
+    const v_dq: GpxVec16 = @splat('"' as u8);
+    const v_sq: GpxVec16 = @splat('\'' as u8);
+    const v_gt: GpxVec16 = @splat('>' as u8);
     while (i < data.len) {
+        if (quote == 0) {
+            while (i + 16 <= data.len) {
+                const v: GpxVec16 = data[i .. i + 16][0..16].*;
+                const hit = (v == v_dq) | (v == v_sq) | (v == v_gt);
+                if (@reduce(.Or, hit)) break;
+                i += 16;
+            }
+        } else {
+            const v_q: GpxVec16 = @splat(quote);
+            while (i + 16 <= data.len) {
+                const v: GpxVec16 = data[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == v_q)) break;
+                i += 16;
+            }
+        }
+        if (i >= data.len) break;
         const c = data[i];
         if (quote != 0) {
             if (c == quote) {

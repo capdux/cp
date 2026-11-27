@@ -34,31 +34,69 @@ const MAX_JSON_NESTING: usize = 256;
 // Internal ASCII / Zero-Allocation Helpers
 // ============================================================================
 
-fn asciiLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+type PsVec16 = @Vector(16, u8);
+
+fn makePsLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
     }
-    return c;
+    return lut;
+}
+
+fn makePsClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1 | 8;
+    lut['\t'] = 1 | 8;
+    lut['\n'] = 1;
+    lut['\r'] = 1;
+    let i: usize = 'a';
+    while (i <= 'z') : (i += 1) {
+        lut[i] |= 2;
+    }
+    i = 'A';
+    while (i <= 'Z') : (i += 1) {
+        lut[i] |= 2;
+    }
+    i = '0';
+    while (i <= '9') : (i += 1) {
+        lut[i] |= 4;
+    }
+    return lut;
+}
+
+const PS_LOWER_LUT: [u8; 256] = makePsLowerLut();
+const PS_CLASS_LUT: [u8; 256] = makePsClassLut();
+
+fn asciiLower(c: u8): u8 {
+    return PS_LOWER_LUT[@as(usize, c)];
 }
 
 fn isAsciiSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return (PS_CLASS_LUT[@as(usize, c)] & 1) != 0;
 }
 
 fn isSpaceOrTab(c: u8): bool {
-    return c == ' ' || c == '\t';
+    return (PS_CLASS_LUT[@as(usize, c)] & 8) != 0;
 }
 
 fn isAsciiAlpha(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    return (PS_CLASS_LUT[@as(usize, c)] & 2) != 0;
 }
 
 fn isAsciiDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
+    return (PS_CLASS_LUT[@as(usize, c)] & 4) != 0;
 }
 
 fn isAsciiAlnum(c: u8): bool {
-    return isAsciiAlpha(c) || isAsciiDigit(c);
+    return (PS_CLASS_LUT[@as(usize, c)] & 6) != 0;
 }
 
 fn trimAscii(s: string): string {
@@ -78,6 +116,20 @@ fn equalsIgnoreCase(a: string, b: string): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: PsVec16 = @splat(65 as u8);
+    const hi_Z: PsVec16 = @splat(90 as u8);
+    const case_bit: PsVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: PsVec16 = a[i .. i + 16][0..16].*;
+        const vb: PsVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) : (i += 1) {
         if (asciiLower(a[i]) != asciiLower(b[i])) {
             return false;
@@ -91,6 +143,20 @@ fn startsWithIgnoreCaseAt(haystack: string, pos: usize, needle: string): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: PsVec16 = @splat(65 as u8);
+    const hi_Z: PsVec16 = @splat(90 as u8);
+    const case_bit: PsVec16 = @splat(0x20 as u8);
+    while (i + 16 <= needle.len) : (i += 16) {
+        const va: PsVec16 = haystack[pos + i .. pos + i + 16][0..16].*;
+        const vb: PsVec16 = needle[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) {
+            return false;
+        }
+    }
     while (i < needle.len) : (i += 1) {
         if (asciiLower(haystack[pos + i]) != asciiLower(needle[i])) {
             return false;
@@ -104,6 +170,13 @@ fn startsWithExactAt(haystack: string, pos: usize, needle: string): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= needle.len) : (i += 16) {
+        const va: PsVec16 = haystack[pos + i .. pos + i + 16][0..16].*;
+        const vb: PsVec16 = needle[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
+            return false;
+        }
+    }
     while (i < needle.len) : (i += 1) {
         if (haystack[pos + i] != needle[i]) {
             return false;
@@ -116,12 +189,25 @@ fn findIgnoreCase(haystack: string, start_pos: usize, needle: string): usize? {
     if (needle.len == 0 || start_pos + needle.len > haystack.len) {
         return null;
     }
+    const first_lo: u8 = asciiLower(needle[0]);
+    const first_hi: u8 = if (first_lo >= 'a' && first_lo <= 'z') first_lo - 32 else first_lo;
+    const v_lo: PsVec16 = @splat(first_lo);
+    const v_hi: PsVec16 = @splat(first_hi);
     let i: usize = start_pos;
     const limit: usize = haystack.len - needle.len;
-    while (i <= limit) : (i += 1) {
+    while (i <= limit) {
+        if (i + 16 <= limit + 1) {
+            const chunk: PsVec16 = haystack[i .. i + 16][0..16].*;
+            const hit = (chunk == v_lo) | (chunk == v_hi);
+            if (!@reduce(.Or, hit)) {
+                i += 16;
+                continue;
+            }
+        }
         if (startsWithIgnoreCaseAt(haystack, i, needle)) {
             return i;
         }
+        i += 1;
     }
     return null;
 }

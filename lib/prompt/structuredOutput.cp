@@ -10,18 +10,56 @@ const std = @import("std");
 // Internal ASCII, Buffer & Scanning Helpers
 // ============================================================================
 
+type SoVec16 = @Vector(16, u8);
+
+fn makeSoWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\n'] = 1;
+    lut['\r'] = 1;
+    return lut;
+}
+
+fn makeSoLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+const SO_WS_LUT: [u8; 256] = makeSoWsLut();
+const SO_LOWER_LUT: [u8; 256] = makeSoLowerLut();
+
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return SO_WS_LUT[@as(usize, c)] != 0;
 }
 
 fn asciiLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') return c + 32;
-    return c;
+    return SO_LOWER_LUT[@as(usize, c)];
 }
 
 fn matchCaseInsensitiveAt(text: string, pos: usize, target: string): bool {
     if (pos + target.len > text.len) return false;
     let i: usize = 0;
+    const lo_A: SoVec16 = @splat(65 as u8);
+    const hi_Z: SoVec16 = @splat(90 as u8);
+    const case_bit: SoVec16 = @splat(0x20 as u8);
+    while (i + 16 <= target.len) : (i += 16) {
+        const va: SoVec16 = text[pos + i .. pos + i + 16][0..16].*;
+        const vb: SoVec16 = target[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        if (@reduce(.Or, la ^ vb) != 0) return false;
+    }
     while (i < target.len) : (i += 1) {
         if (asciiLower(text[pos + i]) != target[i]) return false;
     }
@@ -30,10 +68,23 @@ fn matchCaseInsensitiveAt(text: string, pos: usize, target: string): bool {
 
 fn findCaseInsensitive(text: string, start_pos: usize, target: string): usize? {
     if (target.len == 0 || start_pos + target.len > text.len) return null;
+    const first_lo: u8 = target[0];
+    const first_hi: u8 = if (first_lo >= 'a' && first_lo <= 'z') first_lo - 32 else first_lo;
+    const v_lo: SoVec16 = @splat(first_lo);
+    const v_hi: SoVec16 = @splat(first_hi);
     let i: usize = start_pos;
     const limit: usize = text.len - target.len;
-    while (i <= limit) : (i += 1) {
+    while (i <= limit) {
+        if (i + 16 <= limit + 1) {
+            const chunk: SoVec16 = text[i .. i + 16][0..16].*;
+            const hit = (chunk == v_lo) | (chunk == v_hi);
+            if (!@reduce(.Or, hit)) {
+                i += 16;
+                continue;
+            }
+        }
         if (matchCaseInsensitiveAt(text, i, target)) return i;
+        i += 1;
     }
     return null;
 }
@@ -42,10 +93,19 @@ fn findTripleBacktick(text: string, start_pos: usize, end: usize): usize? {
     if (start_pos + 3 > end) return null;
     let i: usize = start_pos;
     const limit: usize = end - 3;
-    while (i <= limit) : (i += 1) {
+    const v_bt: SoVec16 = @splat('`' as u8);
+    while (i <= limit) {
+        if (i + 16 <= limit + 1) {
+            const chunk: SoVec16 = text[i .. i + 16][0..16].*;
+            if (!@reduce(.Or, chunk == v_bt)) {
+                i += 16;
+                continue;
+            }
+        }
         if (text[i] == '`' && text[i + 1] == '`' && text[i + 2] == '`') {
             return i;
         }
+        i += 1;
     }
     return null;
 }
@@ -59,9 +119,8 @@ fn writeByte(out_buf: *[]u8, pos: *usize, b: u8): bool {
 
 fn writeRaw(out_buf: *[]u8, pos: *usize, s: string): bool {
     if (s.len > out_buf.len || pos.* > out_buf.len - s.len) return false;
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        out_buf[pos.* + i] = s[i];
+    if (s.len > 0) {
+        @memcpy(out_buf[pos.* .. pos.* + s.len], s);
     }
     pos.* += s.len;
     return true;
@@ -90,6 +149,14 @@ fn scanOuterJsonSpan(
     // Locate first '{' or '[' in [region_start, region_end).
     let start: usize = region_start;
     let found_open = false;
+    const v_lb: SoVec16 = @splat('{' as u8);
+    const v_ls: SoVec16 = @splat('[' as u8);
+    while (start + 16 <= region_end) {
+        const v: SoVec16 = raw[start .. start + 16][0..16].*;
+        const hit = (v == v_lb) | (v == v_ls);
+        if (@reduce(.Or, hit)) break;
+        start += 16;
+    }
     while (start < region_end) : (start += 1) {
         const c: u8 = raw[start];
         if (c == '{' || c == '[') {

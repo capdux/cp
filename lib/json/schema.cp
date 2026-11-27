@@ -10,11 +10,41 @@ pub const SCHEMA_MAX_FIELDS: usize = 32;
 pub const SCHEMA_MAX_ISSUES: usize = 16;
 pub const SCHEMA_MAX_JSON_DEPTH: usize = 32;
 
+type JSchemaVec16 = @Vector(16, u8);
+
+fn makeJSchemaHexLut(): [i8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [i8; 256] = [-1; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= '0' && i <= '9') {
+            lut[i] = @as(i8, @intCast(i - '0'));
+        } else if (i >= 'a' && i <= 'f') {
+            lut[i] = @as(i8, @intCast(i - 'a' + 10));
+        } else if (i >= 'A' && i <= 'F') {
+            lut[i] = @as(i8, @intCast(i - 'A' + 10));
+        }
+    }
+    return lut;
+}
+
+fn makeJSchemaWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\n'] = 1;
+    lut['\r'] = 1;
+    return lut;
+}
+
+const JSCHEMA_HEX_LUT: [i8; 256] = makeJSchemaHexLut();
+const JSCHEMA_WS_LUT: [u8; 256] = makeJSchemaWsLut();
+
 fn hexNibble(c: u8): u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return null;
+    const v = JSCHEMA_HEX_LUT[@as(usize, c)];
+    if (v < 0) return null;
+    return @as(u8, @intCast(v));
 }
 
 // ============================================================================
@@ -237,11 +267,21 @@ struct JsonValueSpan {
 }
 
 fn isJsonWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    return JSCHEMA_WS_LUT[@as(usize, c)] != 0;
 }
 
 fn skipWs(s: string, start: usize): usize {
     let i: usize = start;
+    const v_sp: JSchemaVec16 = @splat(' ' as u8);
+    const v_tab: JSchemaVec16 = @splat('\t' as u8);
+    const v_lf: JSchemaVec16 = @splat('\n' as u8);
+    const v_cr: JSchemaVec16 = @splat('\r' as u8);
+    while (i + 16 <= s.len) {
+        const v: JSchemaVec16 = s[i .. i + 16][0..16].*;
+        const is_ws = (v == v_sp) | (v == v_tab) | (v == v_lf) | (v == v_cr);
+        if (!@reduce(.And, is_ws)) break;
+        i += 16;
+    }
     while (i < s.len && isJsonWs(s[i])) : (i += 1) {}
     return i;
 }
@@ -250,7 +290,17 @@ fn skipWs(s: string, start: usize): usize {
 fn scanJsonStringEnd(s: string, start: usize): usize? {
     if (start >= s.len || s[start] != '"') return null;
     let i: usize = start + 1;
+    const v_dq: JSchemaVec16 = @splat('"' as u8);
+    const v_bs: JSchemaVec16 = @splat('\\' as u8);
+    const v_ctrl: JSchemaVec16 = @splat(0x20 as u8);
     while (i < s.len) {
+        while (i + 16 <= s.len) {
+            const v: JSchemaVec16 = s[i .. i + 16][0..16].*;
+            const special = (v == v_dq) | (v == v_bs) | (v < v_ctrl);
+            if (@reduce(.Or, special)) break;
+            i += 16;
+        }
+        if (i >= s.len) break;
         const c = s[i];
         if (c == '"') return i + 1;
         if (c < 0x20) return null;
@@ -282,7 +332,16 @@ fn unescapeJsonString(raw_quoted: string, out_buf: []u8): usize? {
     const inner = raw_quoted[1 .. raw_quoted.len - 1];
     let i: usize = 0;
     let out_pos: usize = 0;
+    const v_bs: JSchemaVec16 = @splat('\\' as u8);
     while (i < inner.len) {
+        while (i + 16 <= inner.len && out_pos + 16 <= out_buf.len) {
+            const v: JSchemaVec16 = inner[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_bs)) break;
+            @memcpy(out_buf[out_pos .. out_pos + 16], inner[i .. i + 16]);
+            i += 16;
+            out_pos += 16;
+        }
+        if (i >= inner.len) break;
         const c = inner[i];
         if (c != '\\') {
             if (out_pos >= out_buf.len) return null;

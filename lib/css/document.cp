@@ -24,22 +24,59 @@ pub err CssDocumentRuleError {
     BufferTooSmall,
 }
 
+type CssDocVec16 = @Vector(16, u8);
+
+fn makeCssDocWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' '] = 1;
+    lut['\t'] = 1;
+    lut['\r'] = 1;
+    lut['\n'] = 1;
+    lut[0x0C] = 1;
+    return lut;
+}
+
+fn makeCssDocLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+fn makeCssDocIdentLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || (i >= '0' && i <= '9') || i == '_' || i == '-' || i >= 0x80) {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const CSS_DOC_WS_LUT: [u8; 256] = makeCssDocWsLut();
+const CSS_DOC_LOWER_LUT: [u8; 256] = makeCssDocLowerLut();
+const CSS_DOC_IDENT_LUT: [u8; 256] = makeCssDocIdentLut();
+
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0C;
+    return CSS_DOC_WS_LUT[@as(usize, c)] != 0;
 }
 
 fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
+    return CSS_DOC_LOWER_LUT[@as(usize, c)];
 }
 
 fn isIdentChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9') ||
-        c == '_' || c == '-' || c >= 0x80;
+    return CSS_DOC_IDENT_LUT[@as(usize, c)] != 0;
 }
 
 fn bytesEql(a: []const u8, b: []const u8): bool {
@@ -47,6 +84,13 @@ fn bytesEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssDocVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssDocVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va ^ vb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -61,6 +105,20 @@ fn eqlAsciiIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
+    const lo_A: CssDocVec16 = @splat(65 as u8);
+    const hi_Z: CssDocVec16 = @splat(90 as u8);
+    const case_bit: CssDocVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: CssDocVec16 = a[i .. i + 16][0..16].*;
+        const vb: CssDocVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) {
+            return false;
+        }
+    }
     while (i < a.len) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
@@ -79,6 +137,7 @@ fn startsWithBytes(s: []const u8, prefix: []const u8): bool {
 
 fn skipWsAndComments(s: []const u8, start: usize): usize {
     let i = start;
+    const v_star: CssDocVec16 = @splat('*' as u8);
     while (i < s.len) {
         if (isWs(s[i])) {
             i += 1;
@@ -86,6 +145,11 @@ fn skipWsAndComments(s: []const u8, start: usize): usize {
         }
         if (i + 1 < s.len && s[i] == '/' && s[i + 1] == '*') {
             i += 2;
+            while (i + 16 < s.len) {
+                const v: CssDocVec16 = s[i .. i + 16][0..16].*;
+                if (@reduce(.Or, v == v_star)) break;
+                i += 16;
+            }
             while (i + 1 < s.len && !(s[i] == '*' && s[i + 1] == '/')) {
                 i += 1;
             }
@@ -195,10 +259,8 @@ fn writeSlice(out: []u8, pos: *usize, s: []const u8): usize! {
     if (s.len > out.len - pos.*) {
         return err.BufferTooSmall;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        out[pos.* + i] = s[i];
-        i += 1;
+    if (s.len > 0) {
+        @memcpy(out[pos.* .. pos.* + s.len], s);
     }
     pos.* += s.len;
     return s.len;
