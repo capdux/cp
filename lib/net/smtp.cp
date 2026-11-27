@@ -1,7 +1,25 @@
 // Source: cp/lib/smtp/smtp.cp (RFC 5321/5322 SMTP Wire Protocol, Dot-Stuffing & MIME Mail Builder)
+// Accelerated with 16-lane @Vector(16, u8) SIMD header-injection/ASCII/dot-stuffing scanning and comptime 256-entry LUT.
 
 const std = @import("std");
 import { Base64 } from "cap:encoding";
+
+type SmtpVec16 = @Vector(16, u8);
+
+fn makeSmtpEhloBadLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const ch = @as(u8, @intCast(i));
+        if (ch <= 0x20 || ch >= 0x7F || ch == '<' || ch == '>') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const SMTP_EHLO_BAD_LUT: [u8; 256] = makeSmtpEhloBadLut();
 
 /// Errors returned by `cap:smtp` wire protocol codecs, reply parser, and MIME mail builder.
 pub err SmtpError {
@@ -15,7 +33,18 @@ pub err SmtpError {
 
 fn hasCrLfOrNul(s: []const u8): bool {
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
+    const n = s.len;
+    const v_cr: SmtpVec16 = @splat('\r');
+    const v_lf: SmtpVec16 = @splat('\n');
+    const v_nul: SmtpVec16 = @splat(0);
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: SmtpVec16 = s[i..][0..16].*;
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_nul: u16 = @bitCast(chunk == v_nul);
+        if ((m_cr | m_lf | m_nul) != 0) return true;
+    }
+    while (i < n) : (i += 1) {
         const ch = s[i];
         if (ch == '\r' || ch == '\n' || ch == 0) {
             return true;
@@ -26,13 +55,37 @@ fn hasCrLfOrNul(s: []const u8): bool {
 
 fn hasAngleBrackets(s: []const u8): bool {
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
+    const n = s.len;
+    const v_lt: SmtpVec16 = @splat('<');
+    const v_gt: SmtpVec16 = @splat('>');
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: SmtpVec16 = s[i..][0..16].*;
+        const m_lt: u16 = @bitCast(chunk == v_lt);
+        const m_gt: u16 = @bitCast(chunk == v_gt);
+        if ((m_lt | m_gt) != 0) return true;
+    }
+    while (i < n) : (i += 1) {
         const ch = s[i];
         if (ch == '<' || ch == '>') {
             return true;
         }
     }
     return false;
+}
+
+fn simdFindLfSmtp(s: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = s.len;
+    const v_lf: SmtpVec16 = @splat('\n');
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: SmtpVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_lf);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+    }
+    while (i < n && s[i] != '\n') : (i += 1) {}
+    return i;
 }
 
 fn validateAddress(addr: []const u8, allow_empty: bool): void ! SmtpError {
@@ -89,9 +142,21 @@ fn validateAddress(addr: []const u8, allow_empty: bool): void ! SmtpError {
 fn isValidEhloDomain(domain: []const u8): bool {
     if (domain.len == 0 || domain.len > 255) return false;
     let i: usize = 0;
-    while (i < domain.len) : (i += 1) {
-        const ch = domain[i];
-        if (ch <= 0x20 || ch >= 0x7F || ch == '<' || ch == '>') {
+    const n = domain.len;
+    const v_sp: SmtpVec16 = @splat(0x20);
+    const v_del: SmtpVec16 = @splat(0x7F);
+    const v_lt: SmtpVec16 = @splat('<');
+    const v_gt: SmtpVec16 = @splat('>');
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: SmtpVec16 = domain[i..][0..16].*;
+        const m_lo: u16 = @bitCast(chunk <= v_sp);
+        const m_hi: u16 = @bitCast(chunk >= v_del);
+        const m_lt: u16 = @bitCast(chunk == v_lt);
+        const m_gt: u16 = @bitCast(chunk == v_gt);
+        if ((m_lo | m_hi | m_lt | m_gt) != 0) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (SMTP_EHLO_BAD_LUT[domain[i] as usize] != 0) {
             return false;
         }
     }
@@ -347,15 +412,15 @@ pub fn dotStuff(allocator: std.mem.Allocator, raw_mail: []const u8): ([]u8) ! Sm
     let out: std.ArrayListUnmanaged(u8) = .empty;
     errdefer out.deinit(allocator);
 
-    let at_line_start = true;
     let i: usize = 0;
-    while (i < raw_mail.len) : (i += 1) {
-        const ch = raw_mail[i];
-        if (at_line_start && ch == '.') {
+    while (i < raw_mail.len) {
+        if (raw_mail[i] == '.') {
             out.append(allocator, '.') catch return SmtpError.OutOfMemory;
         }
-        out.append(allocator, ch) catch return SmtpError.OutOfMemory;
-        at_line_start = (ch == '\n');
+        const lf_pos = simdFindLfSmtp(raw_mail, i);
+        const next_i = if (lf_pos < raw_mail.len) (lf_pos + 1) else raw_mail.len;
+        out.appendSlice(allocator, raw_mail[i..next_i]) catch return SmtpError.OutOfMemory;
+        i = next_i;
     }
 
     out.appendSlice(allocator, "\r\n.\r\n") catch return SmtpError.OutOfMemory;
@@ -376,16 +441,16 @@ pub fn dotUnstuff(allocator: std.mem.Allocator, stuffed_wire: []const u8): ([]u8
     let out: std.ArrayListUnmanaged(u8) = .empty;
     errdefer out.deinit(allocator);
 
-    let at_line_start = true;
     let i: usize = 0;
-    while (i < content.len) : (i += 1) {
-        const ch = content[i];
-        if (at_line_start && ch == '.' && i + 1 < content.len && content[i + 1] == '.') {
-            at_line_start = false;
-            continue;
+    while (i < content.len) {
+        let start = i;
+        if (content[start] == '.' && start + 1 < content.len && content[start + 1] == '.') {
+            start += 1;
         }
-        out.append(allocator, ch) catch return SmtpError.OutOfMemory;
-        at_line_start = (ch == '\n');
+        const lf_pos = simdFindLfSmtp(content, start);
+        const next_i = if (lf_pos < content.len) (lf_pos + 1) else content.len;
+        out.appendSlice(allocator, content[start..next_i]) catch return SmtpError.OutOfMemory;
+        i = next_i;
     }
 
     return out.toOwnedSlice(allocator) catch return SmtpError.OutOfMemory;
@@ -400,7 +465,14 @@ pub struct SmtpAttachment {
 
 fn containsNonAscii(s: []const u8): bool {
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
+    const n = s.len;
+    const v_hi: SmtpVec16 = @splat(0x80);
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: SmtpVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk >= v_hi);
+        if (mask != 0) return true;
+    }
+    while (i < n) : (i += 1) {
         if (s[i] >= 0x80) return true;
     }
     return false;
@@ -408,7 +480,20 @@ fn containsNonAscii(s: []const u8): bool {
 
 fn hasQuoteOrControl(s: []const u8): bool {
     let i: usize = 0;
-    while (i < s.len) : (i += 1) {
+    const n = s.len;
+    const v_cr: SmtpVec16 = @splat('\r');
+    const v_lf: SmtpVec16 = @splat('\n');
+    const v_nul: SmtpVec16 = @splat(0);
+    const v_qt: SmtpVec16 = @splat('"');
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: SmtpVec16 = s[i..][0..16].*;
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const m_nul: u16 = @bitCast(chunk == v_nul);
+        const m_qt: u16 = @bitCast(chunk == v_qt);
+        if ((m_cr | m_lf | m_nul | m_qt) != 0) return true;
+    }
+    while (i < n) : (i += 1) {
         const ch = s[i];
         if (ch == '\r' || ch == '\n' || ch == 0 || ch == '"') {
             return true;

@@ -1,7 +1,36 @@
 // Source: Absorbed from /data/dev/bun/src/http/http.cp | Synced: 2026-11-23T01:59:15Z (W3C Permissions-Policy Header Parser)
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning/comparison and comptime 256-entry LUTs.
+
+type PermVec16 = @Vector(16, u8);
+
+fn makePermFeatureLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+fn makePermWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' ' as usize] = 1;
+    lut['\t' as usize] = 1;
+    lut['\r' as usize] = 1;
+    lut['\n' as usize] = 1;
+    return lut;
+}
+
+const PERM_FEATURE_LUT: [u8; 256] = makePermFeatureLut();
+const PERM_WS_LUT: [u8; 256] = makePermWsLut();
 
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return PERM_WS_LUT[c as usize] != 0;
 }
 
 fn trimAscii(s: []const u8): []const u8 {
@@ -28,11 +57,17 @@ fn strEql(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
+    const n = a.len;
+    while (i + 16 <= n) : (i += 16) {
+        const va: PermVec16 = a[i..][0..16].*;
+        const vb: PermVec16 = b[i..][0..16].*;
+        const neq: u16 = @bitCast(va != vb);
+        if (neq != 0) return false;
+    }
+    while (i < n) : (i += 1) {
         if (a[i] != b[i]) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
@@ -42,29 +77,55 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
+    const n = a.len;
+    const v_A: PermVec16 = @splat('A');
+    const v_Z: PermVec16 = @splat('Z');
+    const v_case: PermVec16 = @splat(32);
+    while (i + 16 <= n) : (i += 16) {
+        const va: PermVec16 = a[i..][0..16].*;
+        const vb: PermVec16 = b[i..][0..16].*;
+        const ma = (va >= v_A) & (va <= v_Z);
+        const mb = (vb >= v_A) & (vb <= v_Z);
+        const la = @select(u8, ma, va +% v_case, va);
+        const lb = @select(u8, mb, vb +% v_case, vb);
+        const neq: u16 = @bitCast(la != lb);
+        if (neq != 0) return false;
+    }
+    while (i < n) : (i += 1) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
 
 fn isFeatureChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z')
-        || (c >= 'A' && c <= 'Z')
-        || (c >= '0' && c <= '9')
-        || c == '-'
-        || c == '_';
+    return PERM_FEATURE_LUT[c as usize] != 0;
 }
 
 fn isValidFeature(s: []const u8): bool {
     if (s.len == 0) {
         return false;
     }
-    for (c of s) {
-        if (!isFeatureChar(c)) {
+    let i: usize = 0;
+    const n = s.len;
+    const v_0: PermVec16 = @splat('0');
+    const v_10: PermVec16 = @splat(10);
+    const v_a: PermVec16 = @splat('a');
+    const v_26: PermVec16 = @splat(26);
+    const v_case: PermVec16 = @splat(0x20);
+    const v_dash: PermVec16 = @splat('-');
+    const v_under: PermVec16 = @splat('_');
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: PermVec16 = s[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_alp: u16 = @bitCast(((chunk | v_case) -% v_a) < v_26);
+        const m_dash: u16 = @bitCast(chunk == v_dash);
+        const m_under: u16 = @bitCast(chunk == v_under);
+        if ((~(m_dig | m_alp | m_dash | m_under)) != 0) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (PERM_FEATURE_LUT[s[i] as usize] == 0) {
             return false;
         }
     }
@@ -73,11 +134,19 @@ fn isValidFeature(s: []const u8): bool {
 
 fn findByte(s: []const u8, needle: u8): usize? {
     let i: usize = 0;
-    while (i < s.len) {
+    const n = s.len;
+    const v_needle: PermVec16 = @splat(needle);
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: PermVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_needle);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+    }
+    while (i < n) : (i += 1) {
         if (s[i] == needle) {
             return i;
         }
-        i += 1;
     }
     return null;
 }

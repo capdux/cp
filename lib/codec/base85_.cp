@@ -1,8 +1,11 @@
 // Reference Only: Functional overlap with lib/codec/base58_85.cp | Kept for comparison/analysis
 // Source: cp/lib/base85/base85.cp (Pure CP Z85, Adobe Ascii85 & RFC 1924 Base85 Encoding Engine)
 // Zero-C-dependency industrial Base85 codec suite.
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning/zero-block detection, comptime 256-entry LUTs, and @memcpy.
 
 const std = @import("std");
+
+type B85Vec16 = @Vector(16, u8);
 
 /// Unified error set returned by all `cap:base85` encoders and decoders.
 pub err Base85Error {
@@ -22,72 +25,42 @@ const POW85_2: u64 = 7225;     // 85^2
 const POW85_1: u64 = 85;       // 85^1
 const U32_MAX_U64: u64 = 0xFFFFFFFF;
 
+fn makeBase85Lut(alphabet: []const u8): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < alphabet.len) : (i += 1) {
+        lut[alphabet[i] as usize] = @as(u8, @intCast(i));
+    }
+    return lut;
+}
+
+fn makeB85WsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' ' as usize] = 1;
+    lut['\t' as usize] = 1;
+    lut['\n' as usize] = 1;
+    lut['\r' as usize] = 1;
+    lut[0x0B] = 1;
+    lut[0x0C] = 1;
+    return lut;
+}
+
+const Z85_DEC_LUT: [u8; 256] = makeBase85Lut(Z85_ALPHABET);
+const RFC1924_DEC_LUT: [u8; 256] = makeBase85Lut(RFC1924_ALPHABET);
+const B85_WS_LUT: [u8; 256] = makeB85WsLut();
+
 fn z85Val(c: u8): u8 {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'z') return (c - 'a') + 10;
-    if (c >= 'A' && c <= 'Z') return (c - 'A') + 36;
-    return switch (c) {
-        '.' => 62,
-        '-' => 63,
-        ':' => 64,
-        '+' => 65,
-        '=' => 66,
-        '^' => 67,
-        '!' => 68,
-        '/' => 69,
-        '*' => 70,
-        '?' => 71,
-        '&' => 72,
-        '<' => 73,
-        '>' => 74,
-        '(' => 75,
-        ')' => 76,
-        '[' => 77,
-        ']' => 78,
-        '{' => 79,
-        '}' => 80,
-        '@' => 81,
-        '%' => 82,
-        '$' => 83,
-        '#' => 84,
-        else => 0xFF,
-    };
+    return Z85_DEC_LUT[c as usize];
 }
 
 fn rfc1924Val(c: u8): u8 {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'Z') return (c - 'A') + 10;
-    if (c >= 'a' && c <= 'z') return (c - 'a') + 36;
-    return switch (c) {
-        '!' => 62,
-        '#' => 63,
-        '$' => 64,
-        '%' => 65,
-        '&' => 66,
-        '(' => 67,
-        ')' => 68,
-        '*' => 69,
-        '+' => 70,
-        '-' => 71,
-        ';' => 72,
-        '<' => 73,
-        '=' => 74,
-        '>' => 75,
-        '?' => 76,
-        '@' => 77,
-        '^' => 78,
-        '_' => 79,
-        '`' => 80,
-        '{' => 81,
-        '|' => 82,
-        '}' => 83,
-        '~' => 84,
-        else => 0xFF,
-    };
+    return RFC1924_DEC_LUT[c as usize];
 }
 
 fn isAsciiWhitespace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0B || c == 0x0C;
+    return B85_WS_LUT[c as usize] != 0;
 }
 
 /// ZeroMQ Spec 32 Z85 codec (strict 4-byte / 5-char alignment).
@@ -188,6 +161,17 @@ pub struct Ascii85 {
         }
 
         let pos: usize = 0;
+        const v_zero: B85Vec16 = @splat(0);
+        while (pos + 16 <= bytes.len) {
+            const chunk: B85Vec16 = bytes[pos..][0..16].*;
+            const nz: u16 = @bitCast(chunk != v_zero);
+            if (nz == 0) {
+                out.appendSlice(alloc, "zzzz") catch return Base85Error.OutOfMemory;
+                pos += 16;
+                continue;
+            }
+            break;
+        }
         while (pos + 4 <= bytes.len) : (pos += 4) {
             const val: u32 = ((bytes[pos] as u32) << 24) |
                 ((bytes[pos + 1] as u32) << 16) |
@@ -211,10 +195,7 @@ pub struct Ascii85 {
         const rem = bytes.len - pos;
         if (rem > 0) {
             let padded: [4]u8 = [0; 4];
-            let i: usize = 0;
-            while (i < rem) : (i += 1) {
-                padded[i] = bytes[pos + i];
-            }
+            @memcpy(padded[0..rem], bytes[pos .. pos + rem]);
             let v: u32 = ((padded[0] as u32) << 24) |
                 ((padded[1] as u32) << 16) |
                 ((padded[2] as u32) << 8) |
@@ -397,10 +378,7 @@ pub struct Rfc1924 {
 
         if (rem > 0) {
             let padded: [4]u8 = [0; 4];
-            let i: usize = 0;
-            while (i < rem) : (i += 1) {
-                padded[i] = bytes[in_pos + i];
-            }
+            @memcpy(padded[0..rem], bytes[in_pos .. in_pos + rem]);
             let v: u32 = ((padded[0] as u32) << 24) |
                 ((padded[1] as u32) << 16) |
                 ((padded[2] as u32) << 8) |
@@ -412,10 +390,7 @@ pub struct Rfc1924 {
                 digits[d] = RFC1924_ALPHABET[(v % 85) as usize];
                 v /= 85;
             }
-            let j: usize = 0;
-            while (j < rem + 1) : (j += 1) {
-                out[out_pos + j] = digits[j];
-            }
+            @memcpy(out[out_pos .. out_pos + rem + 1], digits[0 .. rem + 1]);
         }
 
         return out;

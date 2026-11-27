@@ -1,4 +1,20 @@
 // Origin: Pure-CP Stdlib (Zero-Alloc RFC 2849 LDAP Data Interchange Format .ldif Parser) | Created: 2026-11-22
+// Accelerated with 16-lane @Vector(16, u8) SIMD line/colon/unfold scanning, comptime 256-entry LUT, and @memcpy.
+
+type LdifVec16 = @Vector(16, u8);
+
+fn makeLdifLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        lut[i] = if (c >= 'A' && c <= 'Z') (c + 32) else c;
+    }
+    return lut;
+}
+
+const LDIF_LOWER_LUT: [u8; 256] = makeLdifLowerLut();
 
 /// LDIF 属性值编码类型（`: ` 普通文本、`:: ` Base64、`:< ` URL）
 pub enum LdifValueKind: u8 {
@@ -28,6 +44,42 @@ pub struct LdifAttr {
         const src = _.raw_value;
         let i: usize = 0;
         let w: usize = 0;
+        const v_cr: LdifVec16 = @splat('\r');
+        const v_lf: LdifVec16 = @splat('\n');
+        while (i + 16 <= src.len) {
+            const chunk: LdifVec16 = src[i..][0..16].*;
+            const m_cr: u16 = @bitCast(chunk == v_cr);
+            const m_lf: u16 = @bitCast(chunk == v_lf);
+            const mask: u16 = m_cr | m_lf;
+            if (mask == 0) {
+                if (out.len - w < 16) return null;
+                out[w..][0..16].* = chunk;
+                w += 16;
+                i += 16;
+                continue;
+            }
+            const run: usize = @ctz(mask) as usize;
+            if (run > 0) {
+                if (out.len - w < run) return null;
+                @memcpy(out[w .. w + run], src[i .. i + run]);
+                w += run;
+                i += run;
+            }
+            if (src[i] == '\r' && i + 2 < src.len && src[i + 1] == '\n' && src[i + 2] == ' ') {
+                i += 3;
+                continue;
+            }
+            if (src[i] == '\n' && i + 1 < src.len && src[i + 1] == ' ') {
+                i += 2;
+                continue;
+            }
+            if (w >= out.len) {
+                return null;
+            }
+            out[w] = src[i];
+            w += 1;
+            i += 1;
+        }
         while (i < src.len) {
             if (src[i] == '\r' && i + 2 < src.len && src[i + 1] == '\n' && src[i + 2] == ' ') {
                 i += 3;
@@ -90,10 +142,7 @@ pub struct LdifStats {
 // ---------------------------------------------------------------------------
 
 fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
+    return LDIF_LOWER_LUT[c as usize];
 }
 
 fn isDigit(c: u8): bool {
@@ -116,16 +165,44 @@ fn trimAscii(s: []const u8): []const u8 {
     return s[start..end];
 }
 
+fn simdFindLfLdif(data: []const u8, start: usize): usize {
+    let i: usize = start;
+    const n = data.len;
+    const v_lf: LdifVec16 = @splat('\n');
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: LdifVec16 = data[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_lf);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+    }
+    while (i < n && data[i] != '\n') : (i += 1) {}
+    return i;
+}
+
 fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+    const n = a.len;
+    const v_A: LdifVec16 = @splat('A');
+    const v_Z: LdifVec16 = @splat('Z');
+    const v_case: LdifVec16 = @splat(32);
+    while (i + 16 <= n) : (i += 16) {
+        const va: LdifVec16 = a[i..][0..16].*;
+        const vb: LdifVec16 = b[i..][0..16].*;
+        const ma = (va >= v_A) & (va <= v_Z);
+        const mb = (vb >= v_A) & (vb <= v_Z);
+        const la = @select(u8, ma, va +% v_case, va);
+        const lb = @select(u8, mb, vb +% v_case, vb);
+        const neq: u16 = @bitCast(la != lb);
+        if (neq != 0) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (LDIF_LOWER_LUT[a[i] as usize] != LDIF_LOWER_LUT[b[i] as usize]) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
@@ -156,10 +233,7 @@ fn nextPhysicalLine(data: []const u8, pos: *usize): ([]const u8)? {
     if (start >= data.len) {
         return null;
     }
-    let i = start;
-    while (i < data.len && data[i] != '\n') {
-        i += 1;
-    }
+    const i = simdFindLfLdif(data, start);
     let end = i;
     if (end > start && data[end - 1] == '\r') {
         end -= 1;
@@ -177,10 +251,7 @@ fn nextLogicalLine(data: []const u8, pos: *usize): ([]const u8)? {
     let line_end = start;
 
     // 读取首行
-    let i = start;
-    while (i < data.len && data[i] != '\n') {
-        i += 1;
-    }
+    const i = simdFindLfLdif(data, start);
     line_end = i;
     if (line_end > start && data[line_end - 1] == '\r') {
         line_end -= 1;
@@ -189,10 +260,7 @@ fn nextLogicalLine(data: []const u8, pos: *usize): ([]const u8)? {
 
     // 合并后续所有以单个 ' ' 开头的 RFC 2849 折行续行
     while (pos.* < data.len && data[pos.*] == ' ') {
-        let j = pos.*;
-        while (j < data.len && data[j] != '\n') {
-            j += 1;
-        }
+        const j = simdFindLfLdif(data, pos.*);
         line_end = j;
         if (line_end > pos.* && data[line_end - 1] == '\r') {
             line_end -= 1;
@@ -205,15 +273,34 @@ fn nextLogicalLine(data: []const u8, pos: *usize): ([]const u8)? {
 
 /// 将单条逻辑行解析为 LdifAttr
 fn parseAttrLogicalLine(line: []const u8): LdifAttr? {
-    // 仅在第一行内查找 ':'
+    // 仅在第一行内查找 ':'（16-lane SIMD 同步扫描 ':', '\r', '\n'）
     let colon: usize = 0;
     let found_colon = false;
-    while (colon < line.len && line[colon] != '\r' && line[colon] != '\n') {
-        if (line[colon] == ':') {
-            found_colon = true;
+    const v_col: LdifVec16 = @splat(':');
+    const v_cr: LdifVec16 = @splat('\r');
+    const v_lf: LdifVec16 = @splat('\n');
+    while (colon + 16 <= line.len) : (colon += 16) {
+        const chunk: LdifVec16 = line[colon..][0..16].*;
+        const m_col: u16 = @bitCast(chunk == v_col);
+        const m_cr: u16 = @bitCast(chunk == v_cr);
+        const m_lf: u16 = @bitCast(chunk == v_lf);
+        const mask: u16 = m_col | m_cr | m_lf;
+        if (mask != 0) {
+            colon += @ctz(mask) as usize;
+            if (line[colon] == ':') {
+                found_colon = true;
+            }
             break;
         }
-        colon += 1;
+    }
+    if (!found_colon) {
+        while (colon < line.len && line[colon] != '\r' && line[colon] != '\n') {
+            if (line[colon] == ':') {
+                found_colon = true;
+                break;
+            }
+            colon += 1;
+        }
     }
     if (!found_colon || colon == 0) {
         return null;

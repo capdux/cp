@@ -1,4 +1,7 @@
 // Source: cp/lib/http_router/types.cp (Radix Trie HTTP Router Core Types)
+// Accelerated with 16-lane @Vector(16, u8) SIMD path segment scanning and @memcpy.
+
+type RouterVec16 = @Vector(16, u8);
 
 pub const MAX_PARAMS: usize = 16;
 
@@ -120,11 +123,7 @@ pub struct AllowInfo {
                 }
                 const s = m.toString();
                 if (info.len + s.len <= info.buf.len) {
-                    let j: usize = 0;
-                    while (j < s.len) {
-                        info.buf[info.len + j] = s[j];
-                        j += 1;
-                    }
+                    @memcpy(info.buf[info.len .. info.len + s.len], s);
                     info.len += s.len;
                 }
                 first = false;
@@ -215,6 +214,8 @@ fn splitSegments(path: []const u8, out_spans: *[MAX_SEGMENTS]SegSpan): usize {
     let count: usize = 0;
     let i: usize = 0;
     const len = path.len;
+    const v_slash: RouterVec16 = @splat('/');
+    const v_q: RouterVec16 = @splat('?');
     while (i < len) {
         if (path[i] == '?') break;
         while (i < len and path[i] == '/') {
@@ -222,6 +223,17 @@ fn splitSegments(path: []const u8, out_spans: *[MAX_SEGMENTS]SegSpan): usize {
         }
         if (i >= len or path[i] == '?') break;
         const start = i;
+        while (i + 16 <= len) {
+            const chunk: RouterVec16 = path[i..][0..16].*;
+            const m_slash: u16 = @bitCast(chunk == v_slash);
+            const m_q: u16 = @bitCast(chunk == v_q);
+            const mask: u16 = m_slash | m_q;
+            if (mask != 0) {
+                i += @ctz(mask) as usize;
+                break;
+            }
+            i += 16;
+        }
         while (i < len and path[i] != '/' and path[i] != '?') {
             i += 1;
         }
@@ -338,12 +350,10 @@ pub struct HttpRouter {
             buf[pos] = '/';
             pos += 1;
             const seg = prefix[p_spans[i].start..p_spans[i].end];
-            let j: usize = 0;
-            while (j < seg.len) {
-                buf[pos + j] = seg[j];
-                j += 1;
+            if (seg.len > 0) {
+                @memcpy(buf[pos .. pos + seg.len], seg);
+                pos += seg.len;
             }
-            pos += seg.len;
             i += 1;
         }
         i = 0;
@@ -351,12 +361,10 @@ pub struct HttpRouter {
             buf[pos] = '/';
             pos += 1;
             const seg = sub[s_spans[i].start..s_spans[i].end];
-            let j: usize = 0;
-            while (j < seg.len) {
-                buf[pos + j] = seg[j];
-                j += 1;
+            if (seg.len > 0) {
+                @memcpy(buf[pos .. pos + seg.len], seg);
+                pos += seg.len;
             }
-            pos += seg.len;
             i += 1;
         }
 

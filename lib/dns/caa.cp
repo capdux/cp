@@ -1,13 +1,40 @@
 // Source: Absorbed from /data/dev/bun/src/dns.zig | Synced: 2026-11-21T16:36:24Z (RFC 8659 DNS CAA Record Parser & Issuer Policy)
+// Accelerated with 16-lane @Vector(16, u8) SIMD scanning/comparison and comptime 256-entry LUTs.
+
+type CaaVec16 = @Vector(16, u8);
+
+fn makeCaaAlnumLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+fn makeCaaWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[' ' as usize] = 1;
+    lut['\t' as usize] = 1;
+    lut['\r' as usize] = 1;
+    lut['\n' as usize] = 1;
+    return lut;
+}
+
+const CAA_ALNUM_LUT: [u8; 256] = makeCaaAlnumLut();
+const CAA_WS_LUT: [u8; 256] = makeCaaWsLut();
 
 fn isSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return CAA_WS_LUT[c as usize] != 0;
 }
 
 fn isAlphaNum(c: u8): bool {
-    return (c >= 'a' && c <= 'z')
-        || (c >= 'A' && c <= 'Z')
-        || (c >= '0' && c <= '9');
+    return CAA_ALNUM_LUT[c as usize] != 0;
 }
 
 fn toLowerAscii(c: u8): u8 {
@@ -37,16 +64,44 @@ fn stripTrailingDot(s: []const u8): []const u8 {
     return s[0..end];
 }
 
+fn simdFindByteCaa(s: []const u8, needle: u8): usize {
+    let i: usize = 0;
+    const n = s.len;
+    const v_needle: CaaVec16 = @splat(needle);
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: CaaVec16 = s[i..][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_needle);
+        if (mask != 0) {
+            return i + (@ctz(mask) as usize);
+        }
+    }
+    while (i < n && s[i] != needle) : (i += 1) {}
+    return i;
+}
+
 fn eqlIgnoreCase(a: []const u8, b: []const u8): bool {
     if (a.len != b.len) {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
+    const n = a.len;
+    const v_A: CaaVec16 = @splat('A');
+    const v_Z: CaaVec16 = @splat('Z');
+    const v_case: CaaVec16 = @splat(32);
+    while (i + 16 <= n) : (i += 16) {
+        const va: CaaVec16 = a[i..][0..16].*;
+        const vb: CaaVec16 = b[i..][0..16].*;
+        const ma = (va >= v_A) & (va <= v_Z);
+        const mb = (vb >= v_A) & (vb <= v_Z);
+        const la = @select(u8, ma, va +% v_case, va);
+        const lb = @select(u8, mb, vb +% v_case, vb);
+        const neq: u16 = @bitCast(la != lb);
+        if (neq != 0) return false;
+    }
+    while (i < n) : (i += 1) {
         if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
@@ -56,11 +111,22 @@ fn isValidCaaTag(s: []const u8): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < s.len) {
-        if (!isAlphaNum(s[i])) {
+    const n = s.len;
+    const v_0: CaaVec16 = @splat('0');
+    const v_10: CaaVec16 = @splat(10);
+    const v_a: CaaVec16 = @splat('a');
+    const v_26: CaaVec16 = @splat(26);
+    const v_case: CaaVec16 = @splat(0x20);
+    while (i + 16 <= n) : (i += 16) {
+        const chunk: CaaVec16 = s[i..][0..16].*;
+        const m_dig: u16 = @bitCast((chunk -% v_0) < v_10);
+        const m_alp: u16 = @bitCast(((chunk | v_case) -% v_a) < v_26);
+        if ((~(m_dig | m_alp)) != 0) return false;
+    }
+    while (i < n) : (i += 1) {
+        if (CAA_ALNUM_LUT[s[i] as usize] == 0) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
@@ -114,10 +180,7 @@ export struct CaaRecord {
 
     /// 剥离 `;param=val` 参数部分并裁剪空白，返回授权 CA 域名
     fn issuerDomain(): []const u8 {
-        let i: usize = 0;
-        while (i < _.value.len && _.value[i] != ';') {
-            i += 1;
-        }
+        const i = simdFindByteCaa(_.value, ';');
         return trimAscii(_.value[0..i]);
     }
 
