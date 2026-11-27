@@ -2,11 +2,16 @@
 // Comprehensive unit tests for @cap/accepts
 
 import { test, expect_eq } from "cap:test";
+import { strEq } from "cap:ascii";
 import {
+    AcceptHeaders,
+    Accepts,
     parseQValue,
     negotiateEncoding,
     negotiateLanguage,
     negotiateMediaType,
+    negotiateCharset,
+    rankMediaTypes,
 } from "../../packages/accepts/src/index.cp";
 
 fn main() {
@@ -51,11 +56,9 @@ fn main() {
         const avail1: [2][]const u8 = ["en", "zh-CN"];
         expect_eq(negotiateLanguage(hdr, avail1[0..2]), 1 as i64);
 
-        // Prefix fallback: header has "zh-CN;q=1.0", candidate is "zh"
         const avail2: [2][]const u8 = ["fr", "zh"];
         expect_eq(negotiateLanguage("zh-CN, fr;q=0.5", avail2[0..2]), 1 as i64);
 
-        // Exact match beats prefix match at equal q
         const avail3: [2][]const u8 = ["zh", "zh-CN"];
         expect_eq(negotiateLanguage("zh-CN", avail3[0..2]), 1 as i64);
     });
@@ -68,7 +71,6 @@ fn main() {
         const avail2: [2][]const u8 = ["application/json", "application/xml"];
         expect_eq(negotiateMediaType(hdr, avail2[0..2]), 1 as i64);
 
-        // Specificity tie-break at equal q=1.0: text/plain > text/* > */*
         const avail3: [2][]const u8 = ["image/png", "text/plain"];
         expect_eq(negotiateMediaType("*/*, text/*", avail3[0..2]), 1 as i64);
     });
@@ -81,5 +83,44 @@ fn main() {
 
         let emptyAvail: [0][]const u8 = undefined;
         expect_eq(negotiateEncoding("gzip", emptyAvail[0..0]), -1 as i64);
+    });
+
+    test("7. @cap/accepts — negotiateCharset exact, wildcard, and q=0 exclusion", () => {
+        const avail: [3][]const u8 = ["iso-8859-1", "utf-8", "utf-16"];
+        expect_eq(negotiateCharset("iso-8859-1;q=0.5, utf-8;q=0.9", avail[0..3]), 1 as i64);
+        expect_eq(negotiateCharset("utf-8;q=0, *;q=0.5", avail[0..3]), 0 as i64);
+        expect_eq(negotiateCharset("gbk", avail[0..3]), -1 as i64);
+        expect_eq(negotiateCharset("", avail[0..3]), 0 as i64);
+    });
+
+    test("8. @cap/accepts — Accepts struct API & rankMediaTypes full preference ordering", () => {
+        const hdrs = AcceptHeaders {
+            accept: "text/html;q=0.7, application/json;q=0.95, text/*;q=0.5, */*;q=0.1",
+            accept_encoding: "gzip;q=0.8, br;q=1.0",
+            accept_charset: "utf-8, iso-8859-1;q=0.5",
+            accept_language: "ja, en-US;q=0.8",
+        };
+        const acc = Accepts.new(hdrs);
+
+        const types_avail: [4][]const u8 = ["image/png", "text/plain", "text/html", "application/json"];
+        expect_eq(strEq(acc.types(types_avail[0..4]).? as string, "application/json"), true);
+
+        const enc_avail: [2][]const u8 = ["gzip", "br"];
+        expect_eq(strEq(acc.encodings(enc_avail[0..2]).? as string, "br"), true);
+
+        const cs_avail: [2][]const u8 = ["iso-8859-1", "utf-8"];
+        expect_eq(strEq(acc.charsets(cs_avail[0..2]).? as string, "utf-8"), true);
+
+        const lang_avail: [2][]const u8 = ["fr", "en"];
+        expect_eq(strEq(acc.languages(lang_avail[0..2]).? as string, "en"), true);
+
+        // Full ranking order: json (0.95) -> html (0.7) -> plain (0.5) -> png (0.1)
+        let ranked: [4]usize = undefined;
+        const n = rankMediaTypes(hdrs.accept, types_avail[0..4], ranked[0..4]);
+        expect_eq(n, 4 as usize);
+        expect_eq(ranked[0], 3 as usize);
+        expect_eq(ranked[1], 2 as usize);
+        expect_eq(ranked[2], 1 as usize);
+        expect_eq(ranked[3], 0 as usize);
     });
 }

@@ -1,9 +1,13 @@
 // cap/test/testCapHumanizeString.cp
-// Comprehensive unit tests for @cap/humanize-string (6 test suites)
+// Comprehensive unit tests for @cap/humanize-string (8 test suites)
 
 import { test, expect_eq } from "cap:test";
 import {
+    HumanizeOptions,
     humanizeString,
+    humanizeStringWithOptions,
+    titleizeString,
+    humanizeLength,
 } from "../../packages/humanize-string/src/index.cp";
 
 fn main() {
@@ -61,5 +65,28 @@ fn main() {
         const nTiny = humanizeString("fooBarBaz", tiny[0..7]);
         expect_eq(nTiny, 7 as usize);
         expect_eq(tiny[0..nTiny], "Foo bar");
+    });
+
+    test("7. @cap/humanize-string — humanizeStringWithOptions preserves acronyms & lowercase option", () => {
+        let buf: [128]u8 = undefined;
+        let opts = HumanizeOptions.defaults();
+        opts.preserve_acronyms = true;
+        const n1 = humanizeStringWithOptions("parseHTTPServerURL", opts, buf[0..128]);
+        expect_eq(buf[0..n1], "Parse HTTP server URL");
+
+        const n2 = humanizeStringWithOptions("getAPIKey", opts, buf[0..128]);
+        expect_eq(buf[0..n2], "Get API key");
+
+        let lower_opts = HumanizeOptions { capitalize_first: false, preserve_acronyms: false };
+        const n3 = humanizeStringWithOptions("fooBarBaz", lower_opts, buf[0..128]);
+        expect_eq(buf[0..n3], "foo bar baz");
+    });
+
+    test("8. @cap/humanize-string — titleizeString & humanizeLength", () => {
+        let buf: [128]u8 = undefined;
+        const n1 = titleizeString("foo_bar-bazQux", buf[0..128]);
+        expect_eq(buf[0..n1], "Foo Bar Baz Qux");
+        expect_eq(humanizeLength("foo_bar-bazQux"), 15 as usize);
+        expect_eq(humanizeLength("   ---  "), 0 as usize);
     });
 }

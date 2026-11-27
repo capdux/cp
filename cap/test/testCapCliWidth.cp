@@ -1,9 +1,14 @@
 import { test, expect_eq } from "cap:test";
 import {
     CliWidthOptions,
+    TtyStreamInfo,
+    CliWidthConfig,
     defaultCliWidth,
+    clampCliWidth,
     parseColumnsEnv,
+    parseColumnsFromEnvList,
     resolveCliWidth,
+    cliWidth,
 } from "../../packages/cli-width/src/index.cp";
 
 fn main() {
@@ -29,11 +34,8 @@ fn main() {
             min_width: 0,
             max_width: 0,
         };
-        // TTY wins over COLUMNS and default
         expect_eq(resolveCliWidth(132, "90", opts), 132);
-        // COLUMNS wins when tty_cols == 0
         expect_eq(resolveCliWidth(0, "90", opts), 90);
-        // default_width wins when both tty_cols == 0 and COLUMNS invalid
         expect_eq(resolveCliWidth(0, "", opts), 100);
         expect_eq(resolveCliWidth(0, "invalid", opts), 100);
     });
@@ -76,5 +78,42 @@ fn main() {
         };
         expect_eq(resolveCliWidth(20, "", max_only), 20);
         expect_eq(resolveCliWidth(150, "", max_only), 100);
+        expect_eq(clampCliWidth(50, 60, 100), 60);
+    });
+
+    test("7. @cap/cli-width — cliWidth(CliWidthConfig) full output > tty > env > default precedence", () => {
+        let cfg = CliWidthConfig.defaults();
+        expect_eq(cliWidth(cfg), 80);
+
+        cfg.default_width = 100;
+        expect_eq(cliWidth(cfg), 100);
+
+        cfg.env_columns = "110";
+        expect_eq(cliWidth(cfg), 110);
+
+        cfg.tty = TtyStreamInfo.tty(128, 40);
+        expect_eq(cliWidth(cfg), 128);
+
+        cfg.output = TtyStreamInfo.tty(160, 48);
+        expect_eq(cliWidth(cfg), 160);
+
+        // Non-TTY output stream is ignored
+        cfg.output = TtyStreamInfo { is_tty: false, columns: 200, rows: 50 };
+        expect_eq(cliWidth(cfg), 128);
+
+        // Clamping applies to cliWidth too
+        cfg.max_width = 120;
+        expect_eq(cliWidth(cfg), 120);
+    });
+
+    test("8. @cap/cli-width — parseColumnsFromEnvList scans KEY=VALUE arrays", () => {
+        const env1: [4]string = ["HOME=/root", "COLUMNS=92", "TERM=xterm", "COLUMNS=144"];
+        expect_eq(parseColumnsFromEnvList(env1[0..4]).?, 144);
+
+        const env2: [2]string = ["TERM=xterm", "COLUMNS=bad"];
+        expect_eq(parseColumnsFromEnvList(env2[0..2]) == null, true);
+
+        const defOpts = CliWidthOptions.defaults();
+        expect_eq(defOpts.default_width, 80);
     });
 }
