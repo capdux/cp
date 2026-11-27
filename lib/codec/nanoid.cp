@@ -64,12 +64,12 @@ pub static struct NanoId {
     const DEFAULT_SIZE: usize = 21;
 
     /// Generates a NanoID of length `len` using the default 64-character URL-safe alphabet.
-    pub fn generate(allocator: std.mem.Allocator, rng: *IdRng, len: usize): ([]u8) ! IdError {
+    pub static fn generate(allocator: std.mem.Allocator, rng: *IdRng, len: usize): ([]u8) ! IdError {
         return NanoId.generateCustom(allocator, rng, NANOID_DEFAULT_ALPHABET, len);
     }
 
     /// Generates an unbiased NanoID of length `len` using a custom `alphabet` (1..=256 bytes).
-    pub fn generateCustom(
+    pub static fn generateCustom(
         allocator: std.mem.Allocator,
         rng: *IdRng,
         alphabet: []const u8,
@@ -155,7 +155,7 @@ pub struct Ulid {
     }
 
     /// Generates a `Ulid` for `timestamp_ms` using `rng` for the 80-bit random component.
-    pub fn generate(rng: *IdRng, timestamp_ms: u64): Ulid ! IdError {
+    pub static fn generate(rng: *IdRng, timestamp_ms: u64): Ulid ! IdError {
         if (timestamp_ms > MAX_TIMESTAMP_MS) {
             return IdError.TimestampOutOfRange;
         }
@@ -187,7 +187,7 @@ pub struct Ulid {
     }
 
     /// Decodes a 26-character Crockford Base32 string (case-insensitive, I/L->1, O->0).
-    pub fn decode(str: []const u8): Ulid ! IdError {
+    pub static fn decode(str: []const u8): Ulid ! IdError {
         if (str.len != 26) {
             return IdError.InvalidUlid;
         }
@@ -263,7 +263,7 @@ pub struct UuidV7 {
     bytes: [16]u8,
 
     /// Generates an RFC 9562 UUID v7 for `timestamp_ms` using `rng`.
-    pub fn generate(rng: *IdRng, timestamp_ms: u64): UuidV7 ! IdError {
+    pub static fn generate(rng: *IdRng, timestamp_ms: u64): UuidV7 ! IdError {
         if (timestamp_ms > MAX_TIMESTAMP_MS) {
             return IdError.TimestampOutOfRange;
         }
