@@ -24,6 +24,82 @@ export struct SfParam {
     val: SfItem;
 }
 
+type SfvVec16 = @Vector(16, u8);
+
+const SFV_TCHAR: u8 = 1;
+const SFV_TOKEN: u8 = 2;
+const SFV_B64: u8 = 4;
+const SFV_KEY: u8 = 8;
+
+fn makeSfvClassLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        let mask: u8 = 0;
+        const is_alpha = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        const is_digit = c >= '0' && c <= '9';
+        const is_tchar = is_alpha || is_digit || c == '!' || c == '#' || c == '$' || c == '%'
+            || c == '&' || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
+            || c == '^' || c == '_' || c == '`' || c == '|' || c == '~';
+        if (is_tchar) {
+            mask |= SFV_TCHAR | SFV_TOKEN;
+        }
+        if (c == ':' || c == '/') {
+            mask |= SFV_TOKEN;
+        }
+        if (is_alpha || is_digit || c == '+' || c == '/' || c == '=') {
+            mask |= SFV_B64;
+        }
+        if ((c >= 'a' && c <= 'z') || is_digit || c == '_' || c == '-' || c == '.' || c == '*') {
+            mask |= SFV_KEY;
+        }
+        lut[i] = mask;
+    }
+    return lut;
+}
+
+const SFV_CLASS_LUT: [u8; 256] = makeSfvClassLut();
+
+fn sfvSimdSkipSpaces(s: []const u8, start: usize): usize {
+    let pos = start;
+    const v_sp: SfvVec16 = @splat(' ' as u8);
+    while (pos + 16 <= s.len) {
+        const chunk: SfvVec16 = s[pos .. pos + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk != v_sp);
+        if (mask != 0) {
+            return pos + usize(@ctz(mask));
+        }
+        pos += 16;
+    }
+    while (pos < s.len && s[pos] == ' ') {
+        pos += 1;
+    }
+    return pos;
+}
+
+fn sfvSimdScanStringPlain(s: []const u8, start: usize): usize {
+    let pos = start;
+    const v_lo: SfvVec16 = @splat(0x20 as u8);
+    const v_hi: SfvVec16 = @splat(0x7E as u8);
+    const v_qt: SfvVec16 = @splat('"' as u8);
+    const v_bs: SfvVec16 = @splat('\\' as u8);
+    while (pos + 16 <= s.len) {
+        const chunk: SfvVec16 = s[pos .. pos + 16][0..16].*;
+        const m_lo: u16 = @bitCast(chunk < v_lo);
+        const m_hi: u16 = @bitCast(chunk > v_hi);
+        const m_qt: u16 = @bitCast(chunk == v_qt);
+        const m_bs: u16 = @bitCast(chunk == v_bs);
+        const stop_mask: u16 = m_lo | m_hi | m_qt | m_bs;
+        if (stop_mask != 0) {
+            return pos + usize(@ctz(stop_mask));
+        }
+        pos += 16;
+    }
+    return pos;
+}
+
 fn isDigit(c: u8): bool {
     return c >= '0' && c <= '9';
 }
@@ -33,18 +109,15 @@ fn isAlpha(c: u8): bool {
 }
 
 fn isTchar(c: u8): bool {
-    if (isAlpha(c) || isDigit(c)) return true;
-    return c == '!' || c == '#' || c == '$' || c == '%' || c == '&'
-        || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
-        || c == '^' || c == '_' || c == '`' || c == '|' || c == '~';
+    return (SFV_CLASS_LUT[usize(c)] & SFV_TCHAR) != 0;
 }
 
 fn isTokenChar(c: u8): bool {
-    return isTchar(c) || c == ':' || c == '/';
+    return (SFV_CLASS_LUT[usize(c)] & SFV_TOKEN) != 0;
 }
 
 fn isBase64Char(c: u8): bool {
-    return isAlpha(c) || isDigit(c) || c == '+' || c == '/' || c == '=';
+    return (SFV_CLASS_LUT[usize(c)] & SFV_B64) != 0;
 }
 
 fn isKeyStart(c: u8): bool {
@@ -52,16 +125,13 @@ fn isKeyStart(c: u8): bool {
 }
 
 fn isKeyChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || isDigit(c) || c == '_' || c == '-' || c == '.' || c == '*';
+    return (SFV_CLASS_LUT[usize(c)] & SFV_KEY) != 0;
 }
 
 /// 解析单个 RFC 8941 标量项（Boolean / Integer / Decimal / String / Token / Byte Sequence）
 /// 成功时将消耗字节数写入 consumed 并返回 SfItem；语法非法返回 null
 export fn parseSfItem(src: []const u8, consumed: *usize): SfItem? {
-    let pos: usize = 0;
-    while (pos < src.len && src[pos] == ' ') {
-        pos += 1;
-    }
+    let pos: usize = sfvSimdSkipSpaces(src, 0);
     if (pos >= src.len) {
         return null;
     }
@@ -91,6 +161,10 @@ export fn parseSfItem(src: []const u8, consumed: *usize): SfItem? {
         pos += 1;
         const start = pos;
         while (pos < src.len) {
+            pos = sfvSimdScanStringPlain(src, pos);
+            if (pos >= src.len) {
+                return null;
+            }
             const c = src[pos];
             if (c == '\\') {
                 if (pos + 1 >= src.len) {
@@ -316,7 +390,18 @@ export fn formatSfString(s: []const u8, out: []u8): ([]const u8)? {
     out[pos] = '"';
     pos += 1;
 
-    for (c of s) {
+    let i: usize = 0;
+    while (i < s.len) {
+        const plain_end = sfvSimdScanStringPlain(s, i);
+        if (plain_end > i) {
+            const run = plain_end - i;
+            if (pos + run > out.len) return null;
+            @memcpy(out[pos .. pos + run], s[i..plain_end]);
+            pos += run;
+            i = plain_end;
+            if (i >= s.len) break;
+        }
+        const c = s[i];
         if (c < 0x20 || c > 0x7E) {
             return null;
         }
@@ -330,6 +415,7 @@ export fn formatSfString(s: []const u8, out: []u8): ([]const u8)? {
             out[pos] = c;
             pos += 1;
         }
+        i += 1;
     }
 
     if (pos >= out.len) return null;
@@ -343,14 +429,15 @@ export fn formatSfByteSeq(b64: []const u8, out: []u8): ([]const u8)? {
     if (b64.len + 2 > out.len) {
         return null;
     }
-    out[0] = ':';
     let i: usize = 0;
-    while (i < b64.len) {
+    while (i < b64.len) : (i += 1) {
         if (!isBase64Char(b64[i])) {
             return null;
         }
-        out[i + 1] = b64[i];
-        i += 1;
+    }
+    out[0] = ':';
+    if (b64.len > 0) {
+        @memcpy(out[1 .. 1 + b64.len], b64);
     }
     out[b64.len + 1] = ':';
     return out[0..b64.len + 2];

@@ -16,11 +16,43 @@ export enum MimeCategory {
     other,
 }
 
-fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+type MimeLkVec16 = @Vector(16, u8);
+
+fn makeMimeLkLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
     }
-    return c;
+    return lut;
+}
+
+fn makeMimeLkTcharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+            || c == '!' || c == '#' || c == '$' || c == '%' || c == '&'
+            || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
+            || c == '^' || c == '_' || c == '`' || c == '|' || c == '~') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const MIME_LK_LOWER_LUT: [u8; 256] = makeMimeLkLowerLut();
+const MIME_LK_TCHAR_LUT: [u8; 256] = makeMimeLkTcharLut();
+
+fn toLowerAscii(c: u8): u8 {
+    return MIME_LK_LOWER_LUT[usize(c)];
 }
 
 fn isSpace(c: u8): bool {
@@ -44,11 +76,22 @@ fn asciiEqlIgnoreCase(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+    const lo_A: MimeLkVec16 = @splat(65 as u8);
+    const hi_Z: MimeLkVec16 = @splat(90 as u8);
+    const case_bit: MimeLkVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: MimeLkVec16 = a[i .. i + 16][0..16].*;
+        const vb: MimeLkVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
+    while (i < a.len) : (i += 1) {
+        if (MIME_LK_LOWER_LUT[usize(a[i])] != MIME_LK_LOWER_LUT[usize(b[i])]) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
@@ -61,20 +104,16 @@ fn endsWithIgnoreCase(s: []const u8, suffix: []const u8): bool {
 }
 
 fn isTokenChar(c: u8): bool {
-    if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-        return true;
-    }
-    return c == '!' || c == '#' || c == '$' || c == '%' || c == '&'
-        || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
-        || c == '^' || c == '_' || c == '`' || c == '|' || c == '~';
+    return MIME_LK_TCHAR_LUT[usize(c)] != 0;
 }
 
 fn isValidToken(s: []const u8): bool {
     if (s.len == 0) {
         return false;
     }
-    for (c of s) {
-        if (!isTokenChar(c)) {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        if (MIME_LK_TCHAR_LUT[usize(s[i])] == 0) {
             return false;
         }
     }
@@ -83,13 +122,39 @@ fn isValidToken(s: []const u8): bool {
 
 fn findByte(s: []const u8, needle: u8): usize? {
     let i: usize = 0;
-    while (i < s.len) {
+    const v_n: MimeLkVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: MimeLkVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_n);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
         if (s[i] == needle) {
             return i;
         }
-        i += 1;
     }
     return null;
+}
+
+fn mimeLkSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i = start;
+    const va: MimeLkVec16 = @splat(a);
+    const vb: MimeLkVec16 = @splat(b);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: MimeLkVec16 = s[i .. i + 16][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == a || s[i] == b) return i;
+    }
+    return s.len;
 }
 
 /// 解析后的 HTTP Content-Type 头部（零拷贝切片）
@@ -133,23 +198,30 @@ export struct ContentType {
             let in_quote = false;
             let escaped = false;
             while (i < trimmed.len) {
-                const c = trimmed[i];
                 if (in_quote) {
                     if (escaped) {
                         escaped = false;
-                    } else if (c == '\\') {
-                        escaped = true;
-                    } else if (c == '"') {
-                        in_quote = false;
+                        i += 1;
+                    } else {
+                        i = mimeLkSimdFindAny2(trimmed, i, '\\', '"');
+                        if (i >= trimmed.len) break;
+                        if (trimmed[i] == '\\') {
+                            escaped = true;
+                        } else {
+                            in_quote = false;
+                        }
+                        i += 1;
                     }
                 } else {
-                    if (c == '"') {
+                    i = mimeLkSimdFindAny2(trimmed, i, '"', ';');
+                    if (i >= trimmed.len) break;
+                    if (trimmed[i] == '"') {
                         in_quote = true;
-                    } else if (c == ';') {
+                        i += 1;
+                    } else {
                         break;
                     }
                 }
-                i += 1;
             }
             const param = trimAscii(trimmed[seg_start..i]);
             if (i < trimmed.len && trimmed[i] == ';') {
@@ -248,12 +320,23 @@ fn extractExtension(ext_or_path: []const u8): []const u8 {
     let base_start: usize = 0;
     let has_sep = false;
     let i: usize = 0;
-    while (i < s.len) {
+    const v_sl: MimeLkVec16 = @splat('/' as u8);
+    const v_bs: MimeLkVec16 = @splat('\\' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: MimeLkVec16 = s[i .. i + 16][0..16].*;
+        const m1: u16 = @bitCast(chunk == v_sl);
+        const m2: u16 = @bitCast(chunk == v_bs);
+        const mask: u16 = m1 | m2;
+        if (mask != 0) {
+            base_start = i + 16 - usize(@clz(mask));
+            has_sep = true;
+        }
+    }
+    while (i < s.len) : (i += 1) {
         if (s[i] == '/' || s[i] == '\\') {
             base_start = i + 1;
             has_sep = true;
         }
-        i += 1;
     }
     const base = s[base_start..];
     if (base.len == 0) {
@@ -263,11 +346,18 @@ fn extractExtension(ext_or_path: []const u8): []const u8 {
     // 在末段文件名中查找最后一个 '.'
     let dot_pos: usize? = null;
     let j: usize = 0;
-    while (j < base.len) {
+    const v_dot: MimeLkVec16 = @splat('.' as u8);
+    while (j + 16 <= base.len) : (j += 16) {
+        const chunk: MimeLkVec16 = base[j .. j + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_dot);
+        if (mask != 0) {
+            dot_pos = j + 15 - usize(@clz(mask));
+        }
+    }
+    while (j < base.len) : (j += 1) {
         if (base[j] == '.') {
             dot_pos = j;
         }
-        j += 1;
     }
 
     if (dp := dot_pos) {

@@ -1,15 +1,65 @@
 // Source: Absorbed from /data/dev/bun/src/shell/shell.cp | Synced: 2026-11-24T04:51:05Z (POSIX Shell Quoting & Tokenizer)
 
+type ShQuoteVec16 = @Vector(16, u8);
+
+fn makeShSafeLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+            || c == '_' || c == '@' || c == '%' || c == '+' || c == '='
+            || c == ':' || c == ',' || c == '.' || c == '/' || c == '-') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const SH_SAFE_LUT: [u8; 256] = makeShSafeLut();
+
+fn shSimdFindByte(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_n: ShQuoteVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: ShQuoteVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_n);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
+fn shSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i = start;
+    const va: ShQuoteVec16 = @splat(a);
+    const vb: ShQuoteVec16 = @splat(b);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: ShQuoteVec16 = s[i .. i + 16][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == a || s[i] == b) return i;
+    }
+    return s.len;
+}
+
 fn isSpace(c: u8): bool {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 fn isSafeChar(c: u8): bool {
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
-        return true;
-    }
-    return c == '_' || c == '@' || c == '%' || c == '+' || c == '='
-        || c == ':' || c == ',' || c == '.' || c == '/' || c == '-';
+    return SH_SAFE_LUT[usize(c)] != 0;
 }
 
 /// 判断字符串在 POSIX Shell 命令行中是否需要引号包裹
@@ -18,8 +68,9 @@ export fn needsQuoting(s: []const u8): bool {
     if (s.len == 0) {
         return true;
     }
-    for (c of s) {
-        if (!isSafeChar(c)) {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        if (SH_SAFE_LUT[usize(s[i])] == 0) {
             return true;
         }
     }
@@ -42,11 +93,7 @@ export fn quotePosix(s: []const u8, out: []u8): ([]const u8)? {
         if (out.len < s.len) {
             return null;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            out[i] = s[i];
-            i += 1;
-        }
+        @memcpy(out[0..s.len], s);
         return out[0..s.len];
     }
 
@@ -55,18 +102,24 @@ export fn quotePosix(s: []const u8, out: []u8): ([]const u8)? {
     out[pos] = '\'';
     pos += 1;
 
-    for (c of s) {
-        if (c == '\'') {
+    let i: usize = 0;
+    while (i < s.len) {
+        const next_sq = shSimdFindByte(s, i, '\'');
+        const run = next_sq - i;
+        if (run > 0) {
+            if (pos + run > out.len) return null;
+            @memcpy(out[pos .. pos + run], s[i..next_sq]);
+            pos += run;
+            i = next_sq;
+        }
+        if (i < s.len) {
             if (pos + 4 > out.len) return null;
             out[pos] = '\'';
             out[pos + 1] = '\\';
             out[pos + 2] = '\'';
             out[pos + 3] = '\'';
             pos += 4;
-        } else {
-            if (pos >= out.len) return null;
-            out[pos] = c;
-            pos += 1;
+            i += 1;
         }
     }
 
@@ -135,25 +188,21 @@ export struct ShellArgIter {
             // 1. 单引号字面量：内部全部原样保留直至闭合单引号
             if (c == '\'') {
                 _.pos += 1;
-                let closed = false;
-                while (_.pos < _.src.len) {
-                    if (_.src[_.pos] == '\'') {
-                        _.pos += 1;
-                        closed = true;
-                        break;
-                    }
-                    if (out_pos >= out.len) {
-                        _.had_error = true;
-                        return null;
-                    }
-                    out[out_pos] = _.src[_.pos];
-                    out_pos += 1;
-                    _.pos += 1;
-                }
-                if (!closed) {
+                const sq_end = shSimdFindByte(_.src, _.pos, '\'');
+                if (sq_end >= _.src.len) {
                     _.had_error = true;
                     return null;
                 }
+                const run = sq_end - _.pos;
+                if (out_pos + run > out.len) {
+                    _.had_error = true;
+                    return null;
+                }
+                if (run > 0) {
+                    @memcpy(out[out_pos .. out_pos + run], _.src[_.pos..sq_end]);
+                    out_pos += run;
+                }
+                _.pos = sq_end + 1;
                 continue;
             }
 
@@ -162,6 +211,20 @@ export struct ShellArgIter {
                 _.pos += 1;
                 let closed = false;
                 while (_.pos < _.src.len) {
+                    const next_sp = shSimdFindAny2(_.src, _.pos, '"', '\\');
+                    const run = next_sp - _.pos;
+                    if (run > 0) {
+                        if (out_pos + run > out.len) {
+                            _.had_error = true;
+                            return null;
+                        }
+                        @memcpy(out[out_pos .. out_pos + run], _.src[_.pos..next_sp]);
+                        out_pos += run;
+                        _.pos = next_sp;
+                    }
+                    if (_.pos >= _.src.len) {
+                        break;
+                    }
                     const ch = _.src[_.pos];
                     if (ch == '"') {
                         _.pos += 1;

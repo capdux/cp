@@ -1,11 +1,78 @@
 // Origin: Pure-CP Stdlib (JSONL / NDJSON Streaming Line Framer) | Created: 2026-11-22
 
+type JsonlVec16 = @Vector(16, u8);
+
+fn makeJsonlWsLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    lut[usize(' ')] = 1;
+    lut[usize('\t')] = 1;
+    lut[usize('\r')] = 1;
+    lut[usize('\n')] = 2;
+    return lut;
+}
+
+const JSONL_WS_LUT: [u8; 256] = makeJsonlWsLut();
+
+fn jsonlSimdFindByte(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_n: JsonlVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: JsonlVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_n);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
+fn jsonlSimdFindAny2(s: []const u8, start: usize, a: u8, b: u8): usize {
+    let i = start;
+    const va: JsonlVec16 = @splat(a);
+    const vb: JsonlVec16 = @splat(b);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: JsonlVec16 = s[i .. i + 16][0..16].*;
+        const ma: u16 = @bitCast(chunk == va);
+        const mb: u16 = @bitCast(chunk == vb);
+        const mask: u16 = ma | mb;
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == a || s[i] == b) return i;
+    }
+    return s.len;
+}
+
+fn jsonlSimdScanStringPlain(s: []const u8, start: usize): usize {
+    let i = start;
+    const v_ctrl: JsonlVec16 = @splat(0x20 as u8);
+    const v_qt: JsonlVec16 = @splat('"' as u8);
+    const v_bs: JsonlVec16 = @splat('\\' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: JsonlVec16 = s[i .. i + 16][0..16].*;
+        const m_ctrl: u16 = @bitCast(chunk < v_ctrl);
+        const m_qt: u16 = @bitCast(chunk == v_qt);
+        const m_bs: u16 = @bitCast(chunk == v_bs);
+        const stop_mask: u16 = m_ctrl | m_qt | m_bs;
+        if (stop_mask != 0) {
+            return i + usize(@ctz(stop_mask));
+        }
+    }
+    return i;
+}
+
 fn isWsNoNewline(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r';
+    return JSONL_WS_LUT[usize(c)] == 1;
 }
 
 fn isWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return JSONL_WS_LUT[usize(c)] != 0;
 }
 
 fn trimWs(s: []const u8): []const u8 {
@@ -64,9 +131,7 @@ export struct JsonlIter {
     fn next(*_): ([]const u8)? {
         while (_.pos < _.src.len) {
             const line_start = _.pos;
-            while (_.pos < _.src.len && _.src[_.pos] != '\n') {
-                _.pos += 1;
-            }
+            _.pos = jsonlSimdFindByte(_.src, _.pos, '\n');
             let line_end = _.pos;
             if (_.pos < _.src.len && _.src[_.pos] == '\n') {
                 _.pos += 1;
@@ -93,23 +158,25 @@ export fn scanCompleteJsonlChunk(chunk: []const u8): JsonlChunkResult {
 
     let i: usize = 0;
     while (i < chunk.len) {
-        if (chunk[i] == '\n') {
-            let line_end = i;
-            if (line_end > line_start && chunk[line_end - 1] == '\r') {
-                line_end -= 1;
-            }
-            let line = chunk[line_start..line_end];
-            if (is_first) {
-                line = stripUtf8Bom(line);
-                is_first = false;
-            }
-            if (!isBlankLine(line)) {
-                line_count += 1;
-            }
-            consumed = i + 1;
-            line_start = i + 1;
+        const nl = jsonlSimdFindByte(chunk, i, '\n');
+        if (nl >= chunk.len) {
+            break;
         }
-        i += 1;
+        let line_end = nl;
+        if (line_end > line_start && chunk[line_end - 1] == '\r') {
+            line_end -= 1;
+        }
+        let line = chunk[line_start..line_end];
+        if (is_first) {
+            line = stripUtf8Bom(line);
+            is_first = false;
+        }
+        if (!isBlankLine(line)) {
+            line_count += 1;
+        }
+        consumed = nl + 1;
+        line_start = nl + 1;
+        i = nl + 1;
     }
 
     return JsonlChunkResult{
@@ -169,6 +236,8 @@ export fn isBalancedJsonRecord(line: []const u8): bool {
                 }
             } else if (c < 0x20) {
                 return false;
+            } else {
+                i = jsonlSimdScanStringPlain(trimmed, i);
             }
             continue;
         }
@@ -226,19 +295,11 @@ export fn appendJsonlRecord(record: []const u8, out: []u8, pos: *usize): bool {
         return false;
     }
 
-    let i: usize = 0;
-    while (i < record.len) {
-        if (record[i] == '\r' || record[i] == '\n') {
-            return false;
-        }
-        i += 1;
+    if (jsonlSimdFindAny2(record, 0, '\r', '\n') < record.len) {
+        return false;
     }
 
-    i = 0;
-    while (i < record.len) {
-        out[pos.* + i] = record[i];
-        i += 1;
-    }
+    @memcpy(out[pos.* .. pos.* + record.len], record);
     out[pos.* + record.len] = '\n';
     pos.* += record.len + 1;
     return true;

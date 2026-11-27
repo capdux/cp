@@ -1,5 +1,56 @@
 // Source: Absorbed from /data/dev/bun/src/http/ | Synced: 2026-11-22T12:49:17Z (RFC 9110 Accept-Encoding Negotiator)
 
+type AeVec16 = @Vector(16, u8);
+
+fn makeAeLowerLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        if (i >= 'A' && i <= 'Z') {
+            lut[i] = @as(u8, @intCast(i + 32));
+        } else {
+            lut[i] = @as(u8, @intCast(i));
+        }
+    }
+    return lut;
+}
+
+fn makeAeTcharLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0; 256];
+    let i: usize = 0;
+    while (i < 256) : (i += 1) {
+        const c = @as(u8, @intCast(i));
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+            || c == '!' || c == '#' || c == '$' || c == '%' || c == '&'
+            || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
+            || c == '^' || c == '_' || c == '`' || c == '|' || c == '~') {
+            lut[i] = 1;
+        }
+    }
+    return lut;
+}
+
+const AE_LOWER_LUT: [u8; 256] = makeAeLowerLut();
+const AE_TCHAR_LUT: [u8; 256] = makeAeTcharLut();
+
+fn aeSimdFindByte(s: []const u8, start: usize, needle: u8): usize {
+    let i = start;
+    const v_n: AeVec16 = @splat(needle);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: AeVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_n);
+        if (mask != 0) {
+            return i + usize(@ctz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == needle) return i;
+    }
+    return s.len;
+}
+
 fn isOws(c: u8): bool {
     return c == ' ' || c == '\t';
 }
@@ -17,10 +68,7 @@ fn trimOws(s: []const u8): []const u8 {
 }
 
 fn toLowerAscii(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
+    return AE_LOWER_LUT[usize(c)];
 }
 
 fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
@@ -28,23 +76,29 @@ fn eqlIgnoreCaseAscii(a: []const u8, b: []const u8): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
+    const lo_A: AeVec16 = @splat(65 as u8);
+    const hi_Z: AeVec16 = @splat(90 as u8);
+    const case_bit: AeVec16 = @splat(0x20 as u8);
+    while (i + 16 <= a.len) : (i += 16) {
+        const va: AeVec16 = a[i .. i + 16][0..16].*;
+        const vb: AeVec16 = b[i .. i + 16][0..16].*;
+        const ma = (va >= lo_A) & (va <= hi_Z);
+        const mb = (vb >= lo_A) & (vb <= hi_Z);
+        const la = @select(u8, ma, va | case_bit, va);
+        const lb = @select(u8, mb, vb | case_bit, vb);
+        if (@reduce(.Or, la ^ lb) != 0) return false;
+    }
+    while (i < a.len) : (i += 1) {
+        if (AE_LOWER_LUT[usize(a[i])] != AE_LOWER_LUT[usize(b[i])]) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
 
 /// RFC 9110 §5.6.2 `tchar` 字符判定
 fn isTchar(c: u8): bool {
-    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-        return true;
-    }
-    return c == '!' || c == '#' || c == '$' || c == '%' || c == '&'
-        || c == '\'' || c == '*' || c == '+' || c == '-' || c == '.'
-        || c == '^' || c == '_' || c == '`' || c == '|' || c == '~';
+    return AE_TCHAR_LUT[usize(c)] != 0;
 }
 
 fn isValidHttpToken(s: []const u8): bool {
@@ -52,11 +106,10 @@ fn isValidHttpToken(s: []const u8): bool {
         return false;
     }
     let i: usize = 0;
-    while (i < s.len) {
-        if (!isTchar(s[i])) {
+    while (i < s.len) : (i += 1) {
+        if (AE_TCHAR_LUT[usize(s[i])] == 0) {
             return false;
         }
-        i += 1;
     }
     return true;
 }
@@ -161,10 +214,7 @@ fn parseEncodingItem(raw: []const u8): EncodingItem? {
         return null;
     }
 
-    let pos: usize = 0;
-    while (pos < item.len && item[pos] != ';') {
-        pos += 1;
-    }
+    let pos: usize = aeSimdFindByte(item, 0, ';');
     const coding = trimOws(item[0..pos]);
     if (!isValidHttpToken(coding)) {
         return null;
@@ -176,24 +226,14 @@ fn parseEncodingItem(raw: []const u8): EncodingItem? {
     while (pos < item.len) {
         pos += 1; // skip ';'
         const param_start = pos;
-        while (pos < item.len && item[pos] != ';') {
-            pos += 1;
-        }
+        pos = aeSimdFindByte(item, pos, ';');
         const param = trimOws(item[param_start..pos]);
         if (param.len == 0) {
             return null;
         }
 
-        let eq_pos: usize = 0;
-        let found_eq = false;
-        while (eq_pos < param.len) {
-            if (param[eq_pos] == '=') {
-                found_eq = true;
-                break;
-            }
-            eq_pos += 1;
-        }
-        if (!found_eq) {
+        const eq_pos = aeSimdFindByte(param, 0, '=');
+        if (eq_pos >= param.len) {
             return null;
         }
 
@@ -232,9 +272,7 @@ export struct AcceptEncodingIter {
     fn next(*_): EncodingItem? {
         while (_.pos < _.src.len) {
             const seg_start = _.pos;
-            while (_.pos < _.src.len && _.src[_.pos] != ',') {
-                _.pos += 1;
-            }
+            _.pos = aeSimdFindByte(_.src, _.pos, ',');
             const seg = _.src[seg_start.._.pos];
             if (_.pos < _.src.len && _.src[_.pos] == ',') {
                 _.pos += 1;

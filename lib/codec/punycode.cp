@@ -10,14 +10,60 @@ const INITIAL_N: u32 = 128;
 const U32_MAX: u32 = 0xFFFF_FFFF;
 const MAX_CODEPOINTS: usize = 256;
 
+type PunyVec16 = @Vector(16, u8);
+
+fn makePunyDecodeLut(): [u8; 256] {
+    @setEvalBranchQuota(20000);
+    let lut: [u8; 256] = [0xFF; 256];
+    let i: usize = 0;
+    while (i < 26) : (i += 1) {
+        lut[usize('a') + i] = @as(u8, @intCast(i));
+        lut[usize('A') + i] = @as(u8, @intCast(i));
+    }
+    let d: usize = 0;
+    while (d < 10) : (d += 1) {
+        lut[usize('0') + d] = @as(u8, @intCast(26 + d));
+    }
+    return lut;
+}
+
+const PUNY_DECODE_LUT: [u8; 256] = makePunyDecodeLut();
+
 /// 判断字节切片是否全部由 ASCII 字符（0x00..0x7F）组成
 export fn isAsciiOnly(s: []const u8): bool {
-    for (c of s) {
-        if (c >= 0x80) {
+    let i: usize = 0;
+    const v_hi: PunyVec16 = @splat(0x80 as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: PunyVec16 = s[i .. i + 16][0..16].*;
+        if (@reduce(.Or, chunk & v_hi) != 0) {
+            return false;
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] >= 0x80) {
             return false;
         }
     }
     return true;
+}
+
+fn punySimdFindLastDash(s: []const u8): usize? {
+    let delim_pos: usize? = null;
+    let i: usize = 0;
+    const v_dash: PunyVec16 = @splat('-' as u8);
+    while (i + 16 <= s.len) : (i += 16) {
+        const chunk: PunyVec16 = s[i .. i + 16][0..16].*;
+        const mask: u16 = @bitCast(chunk == v_dash);
+        if (mask != 0) {
+            delim_pos = i + 15 - usize(@clz(mask));
+        }
+    }
+    while (i < s.len) : (i += 1) {
+        if (s[i] == '-') {
+            delim_pos = i;
+        }
+    }
+    return delim_pos;
 }
 
 fn adaptBias(delta_in: u32, num_points: u32, first_time: bool): u32 {
@@ -40,10 +86,9 @@ fn encodeDigit(d: u32): u8 {
 }
 
 fn decodeDigit(c: u8): u32? {
-    if (c >= 'a' && c <= 'z') return u32(c - 'a');
-    if (c >= 'A' && c <= 'Z') return u32(c - 'A');
-    if (c >= '0' && c <= '9') return u32(c - '0') + 26;
-    return null;
+    const v = PUNY_DECODE_LUT[usize(c)];
+    if (v == 0xFF) return null;
+    return u32(v);
 }
 
 fn isValidScalar(cp: u32): bool {
@@ -236,14 +281,7 @@ export fn decodePunycode(ascii_input: []const u8, out: []u8): ([]const u8)? {
     let cp_len: usize = 0;
 
     // 查找最后一个 '-' 分隔符
-    let delim_pos: usize? = null;
-    let scan: usize = 0;
-    while (scan < ascii_input.len) {
-        if (ascii_input[scan] == '-') {
-            delim_pos = scan;
-        }
-        scan += 1;
-    }
+    const delim_pos: usize? = punySimdFindLastDash(ascii_input);
 
     let in_idx: usize = 0;
     if (dp := delim_pos) {
@@ -339,10 +377,8 @@ fn hasXnPrefix(s: []const u8): bool {
 export fn encodeIdnLabel(label: []const u8, out: []u8): ([]const u8)? {
     if (isAsciiOnly(label)) {
         if (out.len < label.len) return null;
-        let i: usize = 0;
-        while (i < label.len) {
-            out[i] = label[i];
-            i += 1;
+        if (label.len > 0) {
+            @memcpy(out[0..label.len], label);
         }
         return out[0..label.len];
     }
@@ -362,10 +398,8 @@ export fn decodeIdnLabel(label: []const u8, out: []u8): ([]const u8)? {
         return decodePunycode(label[4..], out);
     }
     if (out.len < label.len) return null;
-    let i: usize = 0;
-    while (i < label.len) {
-        out[i] = label[i];
-        i += 1;
+    if (label.len > 0) {
+        @memcpy(out[0..label.len], label);
     }
     return out[0..label.len];
 }
