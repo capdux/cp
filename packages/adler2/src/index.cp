@@ -3,6 +3,8 @@
 
 pub const ADLER32_MOD: u32 = 65521;
 const NMAX: usize = 5552;
+type AdlVec16U8 = @Vector(16, u8);
+type AdlVec16U32 = @Vector(16, u32);
 
 pub struct Adler32 {
     s1: u32,
@@ -20,6 +22,7 @@ pub struct Adler32 {
     }
 
     pub fn update(*_, data: []const u8) {
+        const weights: AdlVec16U32 = [16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
         let s1: u32 = _.s1;
         let s2: u32 = _.s2;
         let pos: usize = 0;
@@ -30,6 +33,13 @@ pub struct Adler32 {
                 chunk = NMAX;
             }
             let end: usize = pos + chunk;
+            while (pos + 16 <= end) {
+                const v8: AdlVec16U8 = data[pos .. pos + 16][0..16].*;
+                const v32: AdlVec16U32 = v8;
+                s2 += s1 * 16 + @reduce(.Add, v32 * weights);
+                s1 += @reduce(.Add, v32);
+                pos += 16;
+            }
             while (pos < end) {
                 s1 = s1 + (data[pos] as u32);
                 s2 = s2 + s1;
@@ -43,8 +53,14 @@ pub struct Adler32 {
     }
 
     pub fn updateByte(*_, b: u8) {
-        let s1: u32 = (_.s1 + (b as u32)) % ADLER32_MOD;
-        let s2: u32 = (_.s2 + s1) % ADLER32_MOD;
+        let s1: u32 = _.s1 + (b as u32);
+        if (s1 >= ADLER32_MOD) {
+            s1 -= ADLER32_MOD;
+        }
+        let s2: u32 = _.s2 + s1;
+        if (s2 >= ADLER32_MOD) {
+            s2 -= ADLER32_MOD;
+        }
         _.s1 = s1;
         _.s2 = s2;
     }

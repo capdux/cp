@@ -102,11 +102,19 @@ pub struct Crc8Hasher {
 
     /// Feeds a byte slice into the running CRC-8 state.
     pub fn update(*_, data: []const u8) {
+        let crc: u8 = _.state;
         let i: usize = 0;
-        while (i < data.len) {
-            _.state = _.table[(_.state ^ data[i]) as usize];
-            i += 1;
+        while (i + 4 <= data.len) {
+            crc = _.table[(crc ^ data[i]) as usize];
+            crc = _.table[(crc ^ data[i + 1]) as usize];
+            crc = _.table[(crc ^ data[i + 2]) as usize];
+            crc = _.table[(crc ^ data[i + 3]) as usize];
+            i += 4;
         }
+        while (i < data.len) : (i += 1) {
+            crc = _.table[(crc ^ data[i]) as usize];
+        }
+        _.state = crc;
     }
 
     /// Returns the finalized 8-bit CRC value without mutating internal state.

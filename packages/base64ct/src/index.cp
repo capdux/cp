@@ -250,20 +250,16 @@ pub fn decodeStd(src: string, out: []u8): DecodeResult {
         let v1 = b64ctDecode6Std(src[si + 1]);
         let v2 = b64ctDecode6Std(src[si + 2]);
         err = err | v0 | v1 | v2;
-        // Canonical RFC 4648 check: lowest 2 bits of v2 must be zero
-        if ((v2 & 0x03) != 0) {
-            err = err | 0x80;
-        }
+        // Constant-time canonical RFC 4648 check: lowest 2 bits of v2 must be zero
+        err = err | (((((v2 & 0x03) + 511) >> 9) & 1) << 7);
         out[oi] = (((v0 & 0x3F) << 2) | ((v1 & 0x3F) >> 4)) as u8;
         out[oi + 1] = (((v1 & 0x0F) << 4) | ((v2 & 0x3F) >> 2)) as u8;
     } else {
         let v0 = b64ctDecode6Std(src[si]);
         let v1 = b64ctDecode6Std(src[si + 1]);
         err = err | v0 | v1;
-        // Canonical RFC 4648 check: lowest 4 bits of v1 must be zero
-        if ((v1 & 0x0F) != 0) {
-            err = err | 0x80;
-        }
+        // Constant-time canonical RFC 4648 check: lowest 4 bits of v1 must be zero
+        err = err | (((((v1 & 0x0F) + 511) >> 9) & 1) << 7);
         out[oi] = (((v0 & 0x3F) << 2) | ((v1 & 0x3F) >> 4)) as u8;
     }
 
@@ -317,18 +313,14 @@ pub fn decodeUrlUnpadded(src: string, out: []u8): DecodeResult {
         let v0 = b64ctDecode6Url(src[si]);
         let v1 = b64ctDecode6Url(src[si + 1]);
         err = err | v0 | v1;
-        if ((v1 & 0x0F) != 0) {
-            err = err | 0x80;
-        }
+        err = err | (((((v1 & 0x0F) + 511) >> 9) & 1) << 7);
         out[oi] = (((v0 & 0x3F) << 2) | ((v1 & 0x3F) >> 4)) as u8;
     } else if (rem == 3) {
         let v0 = b64ctDecode6Url(src[si]);
         let v1 = b64ctDecode6Url(src[si + 1]);
         let v2 = b64ctDecode6Url(src[si + 2]);
         err = err | v0 | v1 | v2;
-        if ((v2 & 0x03) != 0) {
-            err = err | 0x80;
-        }
+        err = err | (((((v2 & 0x03) + 511) >> 9) & 1) << 7);
         out[oi] = (((v0 & 0x3F) << 2) | ((v1 & 0x3F) >> 4)) as u8;
         out[oi + 1] = (((v1 & 0x0F) << 4) | ((v2 & 0x3F) >> 2)) as u8;
     }

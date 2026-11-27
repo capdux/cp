@@ -1,15 +1,8 @@
 // @cap/hex — Zero-allocation hexadecimal encoder/decoder & canonical HexDump for CP
 // Clean-room MIT implementation inspired by Rust `hex`.
 
-const HEX_LOWER: string = "0123456789abcdef";
-const HEX_UPPER: string = "0123456789ABCDEF";
-
-fn parseNibble(c: u8) -> u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
-    if (c >= 'A' && c <= 'F') return (c - 'A') + 10;
-    return null;
-}
+import { hexVal, hexCharLower, hexCharUpper, isHexDigit, isPrintable } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     if (pos < out.len) {
@@ -17,17 +10,6 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
         return pos + 1;
     }
     return pos;
-}
-
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,8 +22,8 @@ pub fn encodeHex(input: string, out: []u8) -> string {
     let i: usize = 0;
     while (i < input.len && pos + 2 <= out.len) {
         const b = input[i];
-        out[pos] = HEX_LOWER[((b >> 4) & 0x0F) as usize];
-        out[pos + 1] = HEX_LOWER[(b & 0x0F) as usize];
+        out[pos] = hexCharLower(b >> 4);
+        out[pos + 1] = hexCharLower(b & 0x0F);
         pos += 2;
         i += 1;
     }
@@ -54,8 +36,8 @@ pub fn encodeHexUpper(input: string, out: []u8) -> string {
     let i: usize = 0;
     while (i < input.len && pos + 2 <= out.len) {
         const b = input[i];
-        out[pos] = HEX_UPPER[((b >> 4) & 0x0F) as usize];
-        out[pos + 1] = HEX_UPPER[(b & 0x0F) as usize];
+        out[pos] = hexCharUpper(b >> 4);
+        out[pos + 1] = hexCharUpper(b & 0x0F);
         pos += 2;
         i += 1;
     }
@@ -69,7 +51,7 @@ pub fn isValidHex(s: string) -> bool {
     }
     let i: usize = 0;
     while (i < s.len) {
-        if (parseNibble(s[i]) == null) {
+        if (!isHexDigit(s[i])) {
             return false;
         }
         i += 1;
@@ -89,8 +71,8 @@ pub fn decodeHex(hex_str: string, out: []u8) -> string? {
     }
     let i: usize = 0;
     while (i < out_len) {
-        const hi = parseNibble(hex_str[i * 2]);
-        const lo = parseNibble(hex_str[i * 2 + 1]);
+        const hi = hexVal(hex_str[i * 2]);
+        const lo = hexVal(hex_str[i * 2 + 1]);
         if (hi == null || lo == null) {
             return null;
         }
@@ -121,8 +103,7 @@ pub fn encodeU32Hex(v: u32, out: []u8) -> string {
     let i: usize = 0;
     while (i < 8) {
         const shift: u32 = ((7 - i) * 4) as u32;
-        const nib = ((v >> shift) & 0x0F) as usize;
-        out[i] = HEX_LOWER[nib];
+        out[i] = hexCharLower(((v >> shift) & 0x0F) as u8);
         i += 1;
     }
     return out[0..8];
@@ -136,8 +117,7 @@ pub fn encodeU64Hex(v: u64, out: []u8) -> string {
     let i: usize = 0;
     while (i < 16) {
         const shift: u64 = ((15 - i) * 4) as u64;
-        const nib = ((v >> shift) & 0x0F) as usize;
-        out[i] = HEX_LOWER[nib];
+        out[i] = hexCharLower(((v >> shift) & 0x0F) as u8);
         i += 1;
     }
     return out[0..16];
@@ -159,8 +139,8 @@ pub fn hexDump(data: string, out: []u8) -> string {
         // 8-digit offset
         let off_buf: [8]u8 = undefined;
         const off_str = encodeU32Hex(offset as u32, off_buf[0..8]);
-        pos = appendStr(out, pos, off_str);
-        pos = appendStr(out, pos, "  ");
+        pos = writeStr(off_str, out, pos);
+        pos = writeStr("  ", out, pos);
 
         // 16 hex bytes with middle gap after byte 8
         let col: usize = 0;
@@ -170,28 +150,28 @@ pub fn hexDump(data: string, out: []u8) -> string {
             }
             if (offset + col < data.len) {
                 const b = data[offset + col];
-                pos = appendByte(out, pos, HEX_LOWER[((b >> 4) & 0x0F) as usize]);
-                pos = appendByte(out, pos, HEX_LOWER[(b & 0x0F) as usize]);
+                pos = appendByte(out, pos, hexCharLower(b >> 4));
+                pos = appendByte(out, pos, hexCharLower(b & 0x0F));
                 pos = appendByte(out, pos, ' ');
             } else {
-                pos = appendStr(out, pos, "   ");
+                pos = writeStr("   ", out, pos);
             }
             col += 1;
         }
 
         // ASCII sidebar
-        pos = appendStr(out, pos, " |");
+        pos = writeStr(" |", out, pos);
         col = 0;
         while (col < 16 && offset + col < data.len) {
             const b = data[offset + col];
-            if (b >= 0x20 && b <= 0x7E) {
+            if (isPrintable(b)) {
                 pos = appendByte(out, pos, b);
             } else {
                 pos = appendByte(out, pos, '.');
             }
             col += 1;
         }
-        pos = appendStr(out, pos, "|\n");
+        pos = writeStr("|\n", out, pos);
 
         offset += 16;
     }

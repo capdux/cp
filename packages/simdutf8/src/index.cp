@@ -11,16 +11,19 @@ pub struct Utf8CompatResult {
     pub error_len: usize,
 }
 
+type SutfVec16 = @Vector(16, u8);
+
 fn sutfIsCont(b: u8): bool {
     return (b & 192) == 128; // 0b10xxxxxx
 }
 
 pub fn isAscii(buf: []u8): bool {
+    const hi_mask: SutfVec16 = @splat(0x80 as u8);
     let i: usize = 0;
-    while (i + 4 <= buf.len) {
-        let m = buf[i] | buf[i + 1] | buf[i + 2] | buf[i + 3];
-        if ((m & 128) != 0) { return false; }
-        i = i + 4;
+    while (i + 16 <= buf.len) {
+        const v: SutfVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v & hi_mask) != 0) { return false; }
+        i = i + 16;
     }
     while (i < buf.len) {
         if ((buf[i] & 128) != 0) { return false; }
@@ -30,14 +33,15 @@ pub fn isAscii(buf: []u8): bool {
 }
 
 pub fn validateUtf8Compat(buf: []u8): Utf8CompatResult {
+    const hi_mask: SutfVec16 = @splat(0x80 as u8);
     let i: usize = 0;
     let n = buf.len;
     while (i < n) {
-        // 4-byte ASCII fast-path
-        while (i + 4 <= n) {
-            let m = buf[i] | buf[i + 1] | buf[i + 2] | buf[i + 3];
-            if ((m & 128) != 0) { break; }
-            i = i + 4;
+        // 16-lane hardware SIMD ASCII fast-path
+        while (i + 16 <= n) {
+            const v: SutfVec16 = buf[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v & hi_mask) != 0) { break; }
+            i = i + 16;
         }
         if (i >= n) { break; }
 
@@ -130,8 +134,24 @@ pub fn basicIsValidUtf8(buf: []u8): bool {
 
 pub fn countCodepoints(buf: []u8): usize? {
     if (!basicIsValidUtf8(buf)) { return null; }
+    const hi_mask: SutfVec16 = @splat(0x80 as u8);
     let count: usize = 0;
     let i: usize = 0;
+    while (i + 16 <= buf.len) {
+        const v: SutfVec16 = buf[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v & hi_mask) == 0) {
+            count = count + 16;
+            i = i + 16;
+            continue;
+        }
+        let k: usize = 0;
+        while (k < 16) : (k += 1) {
+            if ((buf[i + k] & 192) != 128) {
+                count = count + 1;
+            }
+        }
+        i = i + 16;
+    }
     while (i < buf.len) {
         if ((buf[i] & 192) != 128) {
             count = count + 1;

@@ -4,6 +4,9 @@
 const IEEE_POLY: u32 = 0xEDB88320;
 const CASTAGNOLI_POLY: u32 = 0x82F63B78;
 const ADLER_MOD: u32 = 65521;
+const ADLER_NMAX: usize = 5552;
+type SimdAdlVec16U8 = @Vector(16, u8);
+type SimdAdlVec16U32 = @Vector(16, u32);
 
 fn buildCrcTable(poly: u32) -> [256]u32 {
     let table: [256]u32 = undefined;
@@ -13,9 +16,9 @@ fn buildCrcTable(poly: u32) -> [256]u32 {
         let bit: u8 = 0;
         while (bit < 8) {
             if ((crc & (1 as u32)) != (0 as u32)) {
-                crc = (crc / (2 as u32)) ^ poly;
+                crc = (crc >> 1) ^ poly;
             } else {
-                crc = crc / (2 as u32);
+                crc = crc >> 1;
             }
             bit += 1;
         }
@@ -41,7 +44,7 @@ pub struct Crc32Hasher {
         let i: usize = 0;
         while (i < data.len) {
             const idx = ((crc ^ (data[i] as u32)) & (0xFF as u32)) as usize;
-            crc = (crc / (256 as u32)) ^ _.table[idx];
+            crc = (crc >> 8) ^ _.table[idx];
             i += 1;
         }
         _.state = crc;
@@ -72,7 +75,7 @@ pub struct Crc32cHasher {
         let i: usize = 0;
         while (i < data.len) {
             const idx = ((crc ^ (data[i] as u32)) & (0xFF as u32)) as usize;
-            crc = (crc / (256 as u32)) ^ _.table[idx];
+            crc = (crc >> 8) ^ _.table[idx];
             i += 1;
         }
         _.state = crc;
@@ -100,15 +103,32 @@ pub fn crc32c(data: string) -> u32 {
 }
 
 pub fn adler32(data: string) -> u32 {
+    const weights: SimdAdlVec16U32 = [16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
     let a: u32 = 1;
     let b: u32 = 0;
-    let i: usize = 0;
-    while (i < data.len) {
-        a = (a + (data[i] as u32)) % ADLER_MOD;
-        b = (b + a) % ADLER_MOD;
-        i += 1;
+    let pos: usize = 0;
+    const n: usize = data.len;
+    while (pos < n) {
+        let chunk: usize = n - pos;
+        if (chunk > ADLER_NMAX) {
+            chunk = ADLER_NMAX;
+        }
+        const end: usize = pos + chunk;
+        while (pos + 16 <= end) {
+            const v8: SimdAdlVec16U8 = data[pos .. pos + 16][0..16].*;
+            const v32: SimdAdlVec16U32 = v8;
+            b += a * 16 + @reduce(.Add, v32 * weights);
+            a += @reduce(.Add, v32);
+            pos += 16;
+        }
+        while (pos < end) : (pos += 1) {
+            a += data[pos] as u32;
+            b += a;
+        }
+        a = a % ADLER_MOD;
+        b = b % ADLER_MOD;
     }
-    return (b * (65536 as u32)) | a;
+    return (b << 16) | a;
 }
 
 fn gf2MatrixTimes(mat: *[32]u32, vec_in: u32) -> u32 {

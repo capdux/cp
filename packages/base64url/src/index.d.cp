@@ -1,6 +1,7 @@
 // Type definitions for CP
 
 import { base64Encode, base64Decode, base64EncodeLen, DecodeResult } from "../../data-encoding/src/index.cp";
+import { isAlnum } from "cap:ascii";
 export fn encodeBase64Url(src: &[]u8, out: []u8): usize;
 export fn decodeBase64Url(src: &[]u8, out: []u8): DecodeResult;
 export fn encodedBase64UrlLen(input_len: usize): usize;

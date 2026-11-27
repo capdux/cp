@@ -1,31 +1,51 @@
-// @cap/crc16 — Zero-heap Industrial CRC-16 Checksum Engine
+// @cap/crc16 — Zero-heap 256-entry LUT Industrial CRC-16 Checksum Engine
 // Clean-room MIT implementation in pure CP (CCITT-FALSE, XMODEM, MODBUS, KERMIT, ARC, USB).
-
-fn reflectU8(v: u8): u8 {
-    let x: u8 = v;
-    let out: u8 = 0;
-    let i: u8 = 0;
-    while (i < 8) {
-        out = (out << 1) | (x & 1);
-        x = x >> 1;
-        i += 1;
-    }
-    return out;
-}
 
 fn reflectU16(v: u16): u16 {
     let x: u16 = v;
-    let out: u16 = 0;
-    let i: u8 = 0;
-    while (i < 16) {
-        out = (out << 1) | (x & 1);
-        x = x >> 1;
-        i += 1;
+    x = ((x & 0xFF00) >> 8) | ((x & 0x00FF) << 8);
+    x = ((x & 0xF0F0) >> 4) | ((x & 0x0F0F) << 4);
+    x = ((x & 0xCCCC) >> 2) | ((x & 0x3333) << 2);
+    x = ((x & 0xAAAA) >> 1) | ((x & 0x5555) << 1);
+    return x;
+}
+
+fn crc16BuildTable(poly: u16, ref_in: bool): [256]u16 {
+    let tbl: [256]u16 = undefined;
+    let i: usize = 0;
+    if (ref_in) {
+        const rpoly: u16 = reflectU16(poly);
+        while (i < 256) : (i += 1) {
+            let crc: u16 = i as u16;
+            let bit: u8 = 0;
+            while (bit < 8) : (bit += 1) {
+                if ((crc & 1) != 0) {
+                    crc = (crc >> 1) ^ rpoly;
+                } else {
+                    crc = crc >> 1;
+                }
+            }
+            tbl[i] = crc;
+        }
+    } else {
+        while (i < 256) : (i += 1) {
+            let crc: u16 = (i as u16) << 8;
+            let bit: u8 = 0;
+            while (bit < 8) : (bit += 1) {
+                if ((crc & 0x8000) != 0) {
+                    crc = (crc << 1) ^ poly;
+                } else {
+                    crc = crc << 1;
+                }
+            }
+            tbl[i] = crc;
+        }
     }
-    return out;
+    return tbl;
 }
 
 pub struct Crc16Hasher {
+    table: [256]u16,
     poly: u16,
     init_val: u16,
     xor_out: u16,
@@ -34,13 +54,15 @@ pub struct Crc16Hasher {
     state: u16,
 
     pub static fn initCustom(poly: u16, init_val: u16, ref_in: bool, ref_out: bool, xor_out: u16): Crc16Hasher {
+        const start_state: u16 = if (ref_in) reflectU16(init_val) else init_val;
         return Crc16Hasher {
+            table: crc16BuildTable(poly, ref_in),
             poly: poly,
             init_val: init_val,
             xor_out: xor_out,
             ref_in: ref_in,
             ref_out: ref_out,
-            state: init_val,
+            state: start_state,
         };
     }
 
@@ -77,36 +99,30 @@ pub struct Crc16Hasher {
     pub fn update(*_, data: []const u8) {
         let crc: u16 = _.state;
         let i: usize = 0;
-        while (i < data.len) {
-            let b: u8 = data[i];
-            if (_.ref_in) {
-                b = reflectU8(b);
+        if (_.ref_in) {
+            while (i < data.len) : (i += 1) {
+                const idx: usize = ((crc ^ (data[i] as u16)) & 0xFF) as usize;
+                crc = (crc >> 8) ^ _.table[idx];
             }
-            crc = crc ^ ((b as u16) << 8);
-            let bit: u8 = 0;
-            while (bit < 8) {
-                if ((crc & 0x8000) != 0) {
-                    crc = (crc << 1) ^ _.poly;
-                } else {
-                    crc = crc << 1;
-                }
-                bit += 1;
+        } else {
+            while (i < data.len) : (i += 1) {
+                const idx: usize = (((crc >> 8) ^ (data[i] as u16)) & 0xFF) as usize;
+                crc = (crc << 8) ^ _.table[idx];
             }
-            i += 1;
         }
         _.state = crc;
     }
 
     pub fn finalize(): u16 {
         let out: u16 = _.state;
-        if (_.ref_out) {
+        if (_.ref_in != _.ref_out) {
             out = reflectU16(out);
         }
         return out ^ _.xor_out;
     }
 
     pub fn reset(*_) {
-        _.state = _.init_val;
+        _.state = if (_.ref_in) reflectU16(_.init_val) else _.init_val;
     }
 }
 

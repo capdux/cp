@@ -1,11 +1,5 @@
 // Type definitions for CP
 
-export fn mcLoMask(): u64;
-export fn mcHiMask(): u64;
-export fn mcSplatByte(b: u8): u64;
-export fn mcLoadU64Le(buf: &[]u8, offset: usize): u64;
-export fn mcHasZeroByte(x: u64): u64;
-export fn mcFirstHitLane(mask: u64): usize;
 export fn mcBytesEq(a: &[]u8, b: &[]u8): bool;
 export fn memchr(needle: u8, haystack: &[]u8): i64;
 export fn memchr2(n1: u8, n2: u8, haystack: &[]u8): i64;

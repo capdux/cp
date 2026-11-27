@@ -4,6 +4,7 @@
 import {
     base64Encode, base64Decode, base64EncodeLen, DecodeResult
 } from "../../data-encoding/src/index.cp";
+import { isAlnum } from "cap:ascii";
 
 /// Encodes `src` bytes into unpadded Base64URL (`A-Za-z0-9-_`) into `out`.
 pub fn encodeBase64Url(src: []const u8, out: []u8): usize {
@@ -71,9 +72,7 @@ pub fn isValidBase64Url(s: string): bool {
     let i: usize = 0;
     while (i < s.len) {
         let c = s[i];
-        let ok = (c >= 65 && c <= 90) || (c >= 97 && c <= 122) ||
-            (c >= 48 && c <= 57) || c == 45 || c == 95;
-        if (!ok) { return false; }
+        if (!isAlnum(c) && c != 45 && c != 95) { return false; }
         i = i + 1;
     }
     return true;
