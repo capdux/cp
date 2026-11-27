@@ -1,42 +1,106 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# @cap/crc64
+# crc64fast
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:crc64fast` ([https://github.com/srijs/rust-crc64fast](https://github.com/srijs/rust-crc64fast))（原库名 `crc64fast` → CP 包名 `@cap/crc64`）
+Zero-allocation 64-bit CRC checksum engine for CP supporting **ECMA-182**, **CRC-64/XZ**, and **CRC-64/GO-ISO** with comptime **Slice-by-4** (`[4][256]u64`) lookup tables and streaming `Crc64Hasher` (Rust `crc64fast` / `crc` parity).
 
-零堆分配的 CP 64 位循环冗余校验引擎 — 洁净室 MIT 实现，完整支持 **ECMA-182**、**CRC-64/XZ** 与 **CRC-64/GO-ISO** 三大工业标准，采用 256 项查找表加速，广泛用于对象存储（S3/OSS）、Redis RDB、XZ 压缩与 NVMe 数据完整性校验。
+Precomputes 4×256 Slice-by-4 lookup tables at compile time for all three standard presets, processing 4 bytes per loop iteration with zero heap allocation and zero startup table-generation overhead.
 
-Zero-allocation 64-bit CRC checksum engine (ECMA-182, XZ, GO-ISO) for CP — clean-room MIT parity with Rust `crc` and `crc64fast`.
+## Provenance & Zero-Cost Migration
 
-## 安装 / Install
+| Attribute | Value |
+| --- | --- |
+| Source Platform | **crates.io** |
+| Original Crate | `crc64fast` (CP `v1.0.0`) |
+| Upstream Repo | `https://github.com/srijs/rust-crc64fast` |
+| License | MIT |
 
-```bash
-cap add @cap/crc64
+Keep the exact crate name when migrating from Rust to CP:
+
+```rust
+// Rust (crates.io: crc64fast)
+use crc64fast::Digest;
+let mut d = Digest::new();
+d.write(b"123456789");
+let sum = d.sum64();
 ```
-
-## API 参考 / API Reference
-
-| 符号 / Symbol | 说明 / Description | `"123456789"` 标准校验值 |
-| --- | --- | --- |
-| `crc64Ecma(data)` / `Crc64Hasher.initEcma()` | ECMA-182 标准 | `0x6C40DF5F0B497347` |
-| `crc64Xz(data)` / `Crc64Hasher.initXz()` | CRC-64/XZ 标准 | `0x995DC9BBDF1939FA` |
-| `crc64Iso(data)` / `Crc64Hasher.initIso()` | CRC-64/GO-ISO 标准 | `0xB90956C775A41001` |
-| `Crc64Hasher` | 流式校验器：`update(*_, data)`, `finalize()`, `reset(*_)` | — |
-
-## 使用示例 / Usage
 
 ```cp
-import { crc64Ecma, crc64Xz, crc64Iso, Crc64Hasher } from "@cap/crc64";
-
-const sum = crc64Xz("123456789"); // 0x995DC9BBDF1939FA
-
-let h = Crc64Hasher.initEcma();
-h.update("1234");
-h.update("56789");
-const streamed = h.finalize();    // 0x6C40DF5F0B497347
+// CP (cap: crc64fast) — comptime Slice-by-4 LUT, zero heap
+import { Crc64Hasher, crc64Ecma, crc64Xz, crc64Iso } from "crc64fast";
+const sum = crc64Ecma(&"123456789"); // 0x6C40DF5F0B497347
 ```
+
+## Installation
+
+```bash
+cap add crc64fast
+```
+
+## Usage
+
+### Basic Usage: One-Shot Standard Checksums (Official `"123456789"` Vectors)
+
+```cp
+import { crc64Ecma, crc64Xz, crc64Iso } from "crc64fast";
+
+const data: []const u8 = "123456789";
+
+// ECMA-182 (normal, poly 0x42F0E1EBA9EA3693) -> 0x6C40DF5F0B497347
+const ecma = crc64Ecma(&data);
+
+// CRC-64/XZ (reflected, poly 0xC96C5795D7870F42, init/xorout ~0) -> 0x995DC9BBDF1939FA
+const xz = crc64Xz(&data);
+
+// CRC-64/GO-ISO (reflected, poly 0xD800000000000000, init/xorout ~0) -> 0xB90956C775A41001
+const iso = crc64Iso(&data);
+```
+
+### Advanced Usage: Streaming Slice-by-4 Hasher & Custom Polynomials
+
+```cp
+import { Crc64Hasher, makeU64 } from "crc64fast";
+
+// 1. Streaming CRC-64/XZ across network/file chunks (uses comptime Slice-by-4 LUT)
+let h = Crc64Hasher.initXz();
+const c1: []const u8 = "1234";
+const c2: []const u8 = "56789";
+h.update(&c1);
+h.update(&c2);
+const digest = h.finalize(); // 0x995DC9BBDF1939FA
+
+h.reset(); // Reset to initial state for next stream
+
+// 2. Custom 64-bit CRC polynomial (e.g. CRC-64/WE or Redis/NVMe custom variant)
+const poly = makeU64(0x42F0E1EB, 0xA9EA3693);
+const allOnes = makeU64(0xFFFFFFFF, 0xFFFFFFFF);
+let custom = Crc64Hasher.initCustom(poly, allOnes, allOnes, false);
+custom.update(&c1);
+custom.update(&c2);
+const customSum = custom.finalize();
+```
+
+## API Reference
+
+| Symbol | Signature | Description |
+| --- | --- | --- |
+| `crc64Ecma` | `fn(data: &[]u8): u64` | One-shot CRC-64/ECMA-182 (Slice-by-4 LUT). |
+| `crc64Xz` | `fn(data: &[]u8): u64` | One-shot CRC-64/XZ (Slice-by-4 LUT). |
+| `crc64Iso` | `fn(data: &[]u8): u64` | One-shot CRC-64/GO-ISO (Slice-by-4 LUT). |
+| `Crc64Hasher.initEcma` | `static fn(): Crc64Hasher` | Streaming ECMA-182 hasher (comptime Slice-by-4). |
+| `Crc64Hasher.initXz` | `static fn(): Crc64Hasher` | Streaming CRC-64/XZ hasher (comptime Slice-by-4). |
+| `Crc64Hasher.initIso` | `static fn(): Crc64Hasher` | Streaming CRC-64/GO-ISO hasher (comptime Slice-by-4). |
+| `Crc64Hasher.initCustom` | `static fn(poly: u64, init_val: u64, xorout: u64, reflected: bool): Crc64Hasher` | Custom 64-bit CRC hasher with runtime 256-entry LUT. |
+| `Crc64Hasher.update` | `fn(*_, data: &[]u8)` | Feeds a byte slice into the streaming CRC state. |
+| `Crc64Hasher.finalize` | `fn(): u64` | Returns `crc ^ xorout` (non-destructive; call `reset` to reuse). |
+| `Crc64Hasher.reset` | `fn(*_)` | Resets `crc` back to `init_val`. |
+| `makeU64` | `fn(hi: u32, lo: u32): u64` | Helper combining high/low 32-bit words into a `u64`. |
+
+## Performance
+
+- **Comptime Slice-by-4 LUT**: `CRC64_ECMA_LUT`, `CRC64_XZ_LUT`, and `CRC64_ISO_LUT` (`[4][256]u64`) are generated at compile time, processing 4 bytes per iteration (~4× faster than byte-at-a-time CRC).
+- **Zero heap allocation**: All state lives on the stack or in read-only comptime data.
 
 ## License
 
-MIT
+MIT — Clean-room CP implementation inspired by Rust `crc64fast` and `crc`.

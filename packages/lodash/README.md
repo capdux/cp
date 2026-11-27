@@ -1,46 +1,113 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-# @cap/dot-prop
+# lodash
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:lodash` ([https://github.com/lodash/lodash](https://github.com/lodash/lodash)) / `npm:dot-prop` ([https://github.com/sindresorhus/dot-prop](https://github.com/sindresorhus/dot-prop))（原库名 `lodash` → CP 包名 `@cap/dot-prop`）
+Zero-allocation dot-path parser and deep JSON path reader for CP (`lodash.get` / `dot-prop` / `dlv` parity).
 
-Zero-allocation dot-path parser and deep JSON path reader for CP — clean-room MIT parity with npm `dot-prop` + `lodash.get` / `dlv` (~280M/wk).
+Extracts deeply nested object fields and array elements directly from raw JSON strings without building a DOM tree or allocating heap memory. Supports bracket array indexing (`a.b[0].c`), backslash-escaped dots/brackets (`a\.b.c`), and path segment escaping.
 
-纯 CP 零堆分配 JSON 点路径解析与深度读取引擎，支持 `a.b[0].c`、`a.0.b`、转义键 `config.a\.b.value` 直接零拷贝查询原始 JSON 文本，无需构建堆 AST。
+## Provenance & Zero-Cost Migration
 
-## Install / 安装
+| Attribute | Value |
+| --- | --- |
+| Source Platform | **npm** |
+| Original Package | `lodash` (`lodash.get`) / `dot-prop` (CP `v1.0.0`) |
+| Upstream Repo | `https://github.com/lodash/lodash` · `https://github.com/sindresorhus/dot-prop` |
+| License | MIT |
 
-```bash
-cap add @cap/dot-prop
+Keep the exact package name when migrating from TypeScript/JavaScript to CP:
+
+```ts
+// TypeScript / Node.js (npm: lodash / dot-prop)
+import get from "lodash/get";
+const host = get(JSON.parse(raw), "servers[0].host");
 ```
 
-## Features / 核心特性
+```cp
+// CP (cap: lodash) — zero-allocation, no JSON DOM parse needed
+import { getJsonString, getJsonPath, hasJsonPath } from "lodash";
+const host = getJsonString(raw, "servers[0].host");
+```
 
-- **Zero-Allocation Path Parser**: Supports dotted keys (`user.profile.name`), bracket indices (`items[0].tags[2]`), numeric dot indices (`a.0.b`), and backslash-escaped dots/brackets (`config.a\.b.value`).
-- **Direct Raw JSON Querying**: Traverses raw JSON strings in-place without building an AST, correctly skipping nested objects/arrays and escaped quotes inside strings.
-- **Safe Boundary Handling**: Gracefully returns `null` on missing keys, out-of-bounds array indices, type mismatches, or malformed paths/JSON.
+## Installation
 
-## API
+```bash
+cap add lodash
+```
+
+## Usage
+
+### Basic Usage: Deep JSON Reading & Existence Checks
+
+```cp
+import { getJsonPath, getJsonString, hasJsonPath } from "lodash";
+
+const payload = "{\"user\":{\"name\":\"Alice\",\"roles\":[\"admin\",\"dev\"],\"age\":30}}";
+
+// Unquoted string value
+if (name := getJsonString(payload, "user.name")) {
+    // name == "Alice"
+}
+
+// Raw JSON value slice (works for numbers, booleans, objects, arrays, strings)
+if (age := getJsonPath(payload, "user.age")) {
+    // age == "30"
+}
+
+// Bracket array indexing & dot-notation indexing
+if (role := getJsonString(payload, "user.roles[1]")) {
+    // role == "dev"
+}
+
+const exists = hasJsonPath(payload, "user.roles[0]"); // true
+const missing = hasJsonPath(payload, "user.email");   // false
+```
+
+### Advanced & Edge Cases: Escaped Keys & Pre-Parsed Dot Paths
+
+```cp
+import { parseDotPath, escapePathSegment, getJsonString } from "lodash";
+
+// 1. Escape literal dots or brackets in dynamic keys into a stack buffer
+let escBuf: [128]u8 = undefined;
+const escaped = escapePathSegment("api.v1[beta]", escBuf[0..128]);
+// escaped == "api\\.v1\\[beta\\]"
+
+// 2. Read keys containing literal dots via backslash escaping
+const cfg = "{\"api.v1\":{\"timeout\":5000}}";
+const rawTimeout = getJsonPath(cfg, "api\\.v1.timeout"); // "5000"
+
+// 3. Parse a path once into a stack-allocated ParsedDotPath (max 32 segments)
+let keyBuf: [512]u8 = undefined;
+const parsed = parseDotPath("items[2].meta\\.id", keyBuf[0..512]);
+if (parsed.valid) {
+    let i: usize = 0;
+    while (i < parsed.count) : (i += 1) {
+        if (seg := parsed.get(i)) {
+            // seg.is_index, seg.key, seg.index
+        }
+    }
+}
+```
+
+## API Reference
 
 | Symbol | Signature | Description |
 | --- | --- | --- |
-| `PathSegment` | `struct { is_index: bool, key: string, index: usize }` | Parsed path segment |
-| `ParsedDotPath` | `struct { segs: [32]PathSegment, count: usize, valid: bool }` | Fixed-capacity parsed path |
-| `parseDotPath` | `(path: string, key_buf: []u8) -> ParsedDotPath` | Parse dot/bracket path with escape unescaping into `key_buf` |
-| `getJsonPath` | `(json: string, path: string) -> string?` | Query raw JSON value slice at `path` |
-| `getJsonString` | `(json: string, path: string) -> string?` | Query JSON string value and strip outer quotes |
-| `hasJsonPath` | `(json: string, path: string) -> bool` | Check if `path` exists in `json` |
-| `escapePathSegment` | `(seg: string, out: []u8) -> string` | Escape `.`, `[`, `]`, `\` in a property segment |
+| `PathSegment` | `class { is_index: bool, key: string, index: usize }` | Single parsed path segment (object key or array index). |
+| `ParsedDotPath` | `class { segs: [32]PathSegment, count: usize, valid: bool, fn get(idx: usize): PathSegment? }` | Stack-allocated parsed path (up to 32 segments). |
+| `parseDotPath` | `fn(path: string, key_buf: []u8): ParsedDotPath` | Parses dot/bracket path into segments using caller's `key_buf` for unescaped keys. |
+| `getJsonPath` | `fn(json: string, path: string): string?` | Returns raw JSON value slice at `path`, or `null` if missing/invalid. |
+| `getJsonString` | `fn(json: string, path: string): string?` | Returns unquoted string value at `path`, or `null` if missing or not a JSON string. |
+| `hasJsonPath` | `fn(json: string, path: string): bool` | Returns `true` if `path` resolves to a valid JSON value. |
+| `escapePathSegment` | `fn(seg: string, out: []u8): string` | Escapes `.`, `[`, `]`, `\` in `seg` into `out` and returns the written slice. |
 
-## Usage / 使用示例
+## Performance & Limits
 
-```cp
-import { getJsonPath, getJsonString, hasJsonPath } from "@cap/dot-prop";
+- **Zero heap allocation**: Operates directly on input slices and stack buffers.
+- **Fixed bounds**: Up to `32` path segments and `512` bytes of internal key buffer in `getJsonPath`.
+- **Single-pass scanner**: Skips sibling JSON values without allocating intermediate AST nodes.
 
-const doc = "{\"user\":{\"name\":\"Alice\"},\"items\":[{\"tags\":[\"cp\",\"zig\"]}],\"a.b\":{\"ok\":true}}";
-const name = getJsonString(doc, "user.name");       // "Alice"
-const tag = getJsonString(doc, "items[0].tags[1]"); // "zig"
-const ok = getJsonPath(doc, "a\\.b.ok");            // "true"
-const exists = hasJsonPath(doc, "items.0.tags.0");  // true
-```
+## License
+
+MIT — Clean-room CP implementation inspired by `lodash` and `dot-prop`.
