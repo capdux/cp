@@ -102,7 +102,7 @@ export struct ResolvOptions {
     }
 
     /// Parse all `options ...` lines in `/etc/resolv.conf` (clamping `ndots<=15`, `timeout<=30`, `attempts<=5` per glibc).
-    pub fn parse(content: []const u8): ResolvOptions {
+    pub static fn parse(content: []const u8): ResolvOptions {
         let opts = ResolvOptions.defaults();
         let pos: usize = 0;
         while (pos < content.len) {
