@@ -1,9 +1,8 @@
 // Type definitions for CP
 
+import { strEq, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { escapeHtml } from "../../escape-html/src/index.cp";
-export fn mstIsSpace(c: u8): bool;
-export fn mstStrEq(a: &[]u8, b: string): bool;
-export fn mstTrimSlice(s: string, out_start: &mut usize, out_end: &mut usize);
 export fn mstCopyBytes(src: string, dst: []u8): usize;
 export fn mstAppendSlice(out: []u8, pos: &mut usize, src: &[]u8);
 export fn mstAppendByte(out: []u8, pos: &mut usize, b: u8);

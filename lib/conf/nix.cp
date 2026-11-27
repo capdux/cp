@@ -565,7 +565,7 @@ pub struct NixAttrIter {
     iter: NixIter,
     done: bool,
 
-    fn init(attrset_body: []const u8): NixAttrIter {
+    static fn init(attrset_body: []const u8): NixAttrIter {
         let it = NixIter.init(attrset_body);
         const saved = it.pos;
         if (first := it.nextSpan()) {

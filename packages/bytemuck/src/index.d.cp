@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { readU16LE, readU32LE, readU32BE, readU64LE, writeU16LE, writeU32LE, writeU32BE, writeU64LE } from "cap:bin";
 export fn checkCastLayout(byte_len: usize, elem_size: usize, addr: usize, align_req: usize): u8;
 export fn writeU16Le(v: u16, out: []u8): bool;
 export fn readU16Le(buf: []u8): u16?;

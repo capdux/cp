@@ -1,6 +1,10 @@
 // @cap/git-url — Zero-allocation Git repository URL parser & normalizer for CP
 // Clean-room MIT implementation inspired by npm `hosted-git-info` and `git-url-parse`.
 
+import { isSpace, trim, eqIgnoreCase, findByte, rfindByte } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+import { writeStr, writeU64, parseU16 } from "cap:fmt";
+
 pub enum GitProtocol: u8 {
     Https = 0,
     Http = 1,
@@ -51,43 +55,6 @@ pub struct ParsedGitUrl {
 // Internal Helpers
 // ---------------------------------------------------------------------------
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn trimWs(s: string) -> string {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && isWs(s[a])) {
-        a += 1;
-    }
-    while (b > a && isWs(s[b - 1])) {
-        b -= 1;
-    }
-    return s[a..b];
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn startsWithIgnoreCase(s: string, prefix: string) -> bool {
     if (s.len < prefix.len) {
         return false;
@@ -96,54 +63,24 @@ fn startsWithIgnoreCase(s: string, prefix: string) -> bool {
 }
 
 fn indexOfChar(s: string, ch: u8) -> usize? {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == ch) {
-            return i;
-        }
-        i += 1;
-    }
-    return null;
+    return findByte(s, ch, 0);
 }
 
 fn lastIndexOfChar(s: string, ch: u8) -> usize? {
-    let i = s.len;
-    while (i > 0) {
-        i -= 1;
-        if (s[i] == ch) {
-            return i;
-        }
-    }
-    return null;
+    return rfindByte(s, ch);
 }
 
 fn indexOfSubstr(s: string, sub: string) -> usize? {
     if (sub.len == 0 || sub.len > s.len) {
         return null;
     }
-    let i: usize = 0;
-    while (i + sub.len <= s.len) {
-        let j: usize = 0;
-        let ok = true;
-        while (j < sub.len) {
-            if (s[i + j] != sub[j]) {
-                ok = false;
-                break;
-            }
-            j += 1;
-        }
-        if (ok) {
-            return i;
-        }
-        i += 1;
-    }
-    return null;
+    return indexOfBytes(s, sub, 0);
 }
 
 fn hasWhitespace(s: string) -> bool {
     let i: usize = 0;
     while (i < s.len) {
-        if (isWs(s[i])) {
+        if (isSpace(s[i])) {
             return true;
         }
         i += 1;
@@ -152,26 +89,16 @@ fn hasWhitespace(s: string) -> bool {
 }
 
 fn parsePort(s: string) -> u16? {
-    if (s.len == 0 || s.len > 5) {
+    if (s.len == 0 || s[0] == '+') {
         return null;
     }
-    let val: u32 = 0;
-    let i: usize = 0;
-    while (i < s.len) {
-        const c = s[i];
-        if (c < '0' || c > '9') {
+    if (val := parseU16(s)) {
+        if (val == 0) {
             return null;
         }
-        val = val * 10 + ((c - '0') as u32);
-        if (val > 65535) {
-            return null;
-        }
-        i += 1;
+        return val;
     }
-    if (val == 0) {
-        return null;
-    }
-    return val as u16;
+    return null;
 }
 
 fn detectHostKind(host: string) -> GitHostKind {
@@ -203,7 +130,7 @@ fn isValidSegment(s: string) -> bool {
 /// Parses a Git repository URL (SCP SSH, HTTPS, HTTP, SSH+port, `git+https`, hosted shorthands,
 /// or bare `owner/repo`) with zero heap allocation.
 pub fn parseGitUrl(raw: string) -> ParsedGitUrl {
-    let s = trimWs(raw);
+    let s = trim(raw);
     if (s.len == 0 || hasWhitespace(s)) {
         return ParsedGitUrl.invalid();
     }
@@ -426,35 +353,11 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
 }
 
 fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
+    return writeStr(s, out, pos);
 }
 
 fn appendU16(out: []u8, pos: usize, val: u16) -> usize {
-    if (val == 0) {
-        return appendByte(out, pos, '0');
-    }
-    let digits: [8]u8 = undefined;
-    let len: usize = 0;
-    let v = val;
-    while (v > 0) {
-        digits[len] = ('0' as u16 + (v % 10)) as u8;
-        v /= 10;
-        len += 1;
-    }
-    let p = pos;
-    let k = len;
-    while (k > 0) {
-        k -= 1;
-        p = appendByte(out, p, digits[k]);
-    }
-    return p;
+    return writeU64(val as u64, out, pos);
 }
 
 /// Formats a normalized HTTPS clone URL: `https://<host>/<owner>/<repo>.git`.

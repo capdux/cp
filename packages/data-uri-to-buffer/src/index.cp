@@ -2,6 +2,9 @@
 // Clean-room MIT implementation inspired by npm `data-uri-to-buffer`, `datauri`,
 // and Rust `data-url`.
 
+import { isSpace, trim, eqIgnoreCase, hexCharUpper, hexVal, isAlnum, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub struct DataUri {
     pub ok: bool,
     pub media_type: string,
@@ -24,43 +27,6 @@ pub struct DataUri {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn isWs(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn trimWs(s: string) -> string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && isWs(s[start])) {
-        start += 1;
-    }
-    while (end > start && isWs(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     if (pos < out.len) {
         out[pos] = c;
@@ -70,35 +36,11 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
 }
 
 fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn hexDigitUpper(v: u8) -> u8 {
-    if (v < 10) {
-        return '0' + v;
-    }
-    return 'A' + (v - 10);
-}
-
-fn parseHexNibble(c: u8) -> u8? {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
-    if (c >= 'A' && c <= 'F') return (c - 'A') + 10;
-    return null;
+    return writeStr(s, out, pos);
 }
 
 fn isUnreservedUriByte(c: u8) -> bool {
-    if (c >= 'A' && c <= 'Z') return true;
-    if (c >= 'a' && c <= 'z') return true;
-    if (c >= '0' && c <= '9') return true;
-    return c == '-' || c == '_' || c == '.' || c == '~';
+    return isAlnum(c) || c == '-' || c == '_' || c == '.' || c == '~';
 }
 
 // ---------------------------------------------------------------------------
@@ -116,18 +58,11 @@ pub fn parseDataUri(uri: string) -> DataUri {
     }
 
     // Locate the first ',' separating metadata from payload
-    let comma: usize = uri.len;
-    let i: usize = 5;
-    while (i < uri.len) {
-        if (uri[i] == ',') {
-            comma = i;
-            break;
-        }
-        i += 1;
-    }
-    if (comma >= uri.len) {
+    const comma_opt = findByte(uri, ',', 5);
+    if (comma_opt == null) {
         return DataUri.invalid();
     }
+    const comma = comma_opt.?;
 
     const meta = uri[5..comma];
     const raw_payload = uri[(comma + 1)..uri.len];
@@ -143,26 +78,18 @@ pub fn parseDataUri(uri: string) -> DataUri {
         while (p <= meta.len) {
             if (p == meta.len || meta[p] == ';') {
                 const is_last = (p == meta.len);
-                const seg = trimWs(meta[seg_start..p]);
+                const seg = trim(meta[seg_start..p]);
 
                 if (seg.len > 0) {
                     if (is_last && eqIgnoreCase(seg, "base64")) {
                         is_base64 = true;
                     } else {
                         // Check if this segment is a `key=value` parameter
-                        let eq_pos: usize = seg.len;
-                        let k: usize = 0;
-                        while (k < seg.len) {
-                            if (seg[k] == '=') {
-                                eq_pos = k;
-                                break;
-                            }
-                            k += 1;
-                        }
-
-                        if (eq_pos < seg.len) {
-                            const param_k = trimWs(seg[0..eq_pos]);
-                            let param_v = trimWs(seg[(eq_pos + 1)..seg.len]);
+                        const eq_opt = findByte(seg, '=', 0);
+                        if (eq_opt != null) {
+                            const eq_pos = eq_opt.?;
+                            const param_k = trim(seg[0..eq_pos]);
+                            let param_v = trim(seg[(eq_pos + 1)..seg.len]);
                             if (param_v.len >= 2 && param_v[0] == '"' && param_v[param_v.len - 1] == '"') {
                                 param_v = param_v[1..(param_v.len - 1)];
                             }
@@ -171,16 +98,8 @@ pub fn parseDataUri(uri: string) -> DataUri {
                             }
                         } else if (seg_idx == 0) {
                             // First segment is `<type>/<subtype>`
-                            let slash_pos: usize = seg.len;
-                            let s_i: usize = 0;
-                            while (s_i < seg.len) {
-                                if (seg[s_i] == '/') {
-                                    slash_pos = s_i;
-                                    break;
-                                }
-                                s_i += 1;
-                            }
-                            if (slash_pos == 0 || slash_pos + 1 >= seg.len) {
+                            const slash_opt = findByte(seg, '/', 0);
+                            if (slash_opt == null || slash_opt.? == 0 || slash_opt.? + 1 >= seg.len) {
                                 return DataUri.invalid();
                             }
                             media_type = seg;
@@ -224,7 +143,7 @@ fn b64Val(c: u8) -> u8? {
 
 fn decodeBase64Payload(payload: string, out: []u8) -> ([]u8)? {
     let pos: usize = 0;
-    let quad: [4]u8 = [0, 0, 0, 0];
+    let quad: [4]u8 = undefined;
     let qlen: usize = 0;
     let pad_count: usize = 0;
     let saw_pad = false;
@@ -232,7 +151,7 @@ fn decodeBase64Payload(payload: string, out: []u8) -> ([]u8)? {
     let i: usize = 0;
     while (i < payload.len) {
         const c = payload[i];
-        if (isWs(c)) {
+        if (isSpace(c)) {
             i += 1;
             continue;
         }
@@ -312,8 +231,8 @@ fn decodePercentPayload(payload: string, out: []u8) -> ([]u8)? {
             if (i + 2 >= payload.len) {
                 return null;
             }
-            const hi = parseHexNibble(payload[i + 1]);
-            const lo = parseHexNibble(payload[i + 2]);
+            const hi = hexVal(payload[i + 1]);
+            const lo = hexVal(payload[i + 2]);
             if (hi == null || lo == null) {
                 return null;
             }
@@ -411,8 +330,8 @@ pub fn encodeDataUriText(media_type: string, text: string, out: []u8) -> string 
             pos = appendByte(out, pos, c);
         } else {
             pos = appendByte(out, pos, '%');
-            pos = appendByte(out, pos, hexDigitUpper((c >> 4) & 0x0F));
-            pos = appendByte(out, pos, hexDigitUpper(c & 0x0F));
+            pos = appendByte(out, pos, hexCharUpper((c >> 4) & 0x0F));
+            pos = appendByte(out, pos, hexCharUpper(c & 0x0F));
         }
         i += 1;
     }

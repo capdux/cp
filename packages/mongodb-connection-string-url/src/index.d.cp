@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase, findByte, rfindByte } from "cap:ascii";
+import { writeStr, writeU64, parseU16 } from "cap:fmt";
 export class MongoHost {
     host: string,
     port: u16,
@@ -18,10 +20,7 @@ export class MongoUri {
     valid: bool,
 }
 
-export fn muToLower(c: u8): u8;
-export fn muEqIgnoreCase(a: &[]u8, b: &[]u8): bool;
 export fn muStartsWithIgnoreCase(s: &[]u8, prefix: &[]u8): bool;
-export fn muContainsByte(s: &[]u8, target: u8): bool;
 export fn muParsePort(s: &[]u8, out: &mut u16): bool;
 export fn muWrite(out: []u8, pos: &mut usize, src: &[]u8): bool;
 export fn muWriteU16(out: []u8, pos: &mut usize, val: u16): bool;

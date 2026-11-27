@@ -195,7 +195,7 @@ pub struct Woff2TableIter {
     pos: usize,
     remaining: u16,
 
-    fn init(data: []const u8): Woff2TableIter {
+    static fn init(data: []const u8): Woff2TableIter {
         if (hdr := parseWoff2Header(data)) {
             return Woff2TableIter{
                 .data = data[0..(hdr.length as usize)],

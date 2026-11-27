@@ -1,17 +1,15 @@
 // Type definitions for CP
 
+import { isSpace, isDigit, isHexDigit, isAlpha, strEq, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class Token {
     kind: u8,
     start: usize,
     len: usize,
 }
 
-export fn isSpace(c: u8): bool;
-export fn isDigit(c: u8): bool;
-export fn isHexDigit(c: u8): bool;
 export fn isIdentStart(c: u8): bool;
 export fn isIdentCont(c: u8): bool;
-export fn toUpperAscii(c: u8): u8;
 export fn sliceEq(src: &[]u8, start: usize, length: usize, lit: string): bool;
 export fn sliceEqIgnoreCase(src: &[]u8, start: usize, length: usize, upperLit: string): bool;
 export fn isCodeKeyword(src: &[]u8, s: usize, n: usize): bool;

@@ -1,6 +1,9 @@
 // @cap/fast-uri — Zero-allocation RFC 3986 URI parser, serializer, resolver & comparator
 // Clean-room implementation modeled on npm `fast-uri` (Fastify / AJV).
 
+import { isAlpha, isDigit, isHexDigit, toLowerByte, toUpperByte, eqIgnoreCase, startsWith, findByte, strEq } from "cap:ascii";
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct UriComponents {
     valid: bool,
     scheme: string,
@@ -44,30 +47,8 @@ pub struct UriComponents {
     }
 }
 
-fn furiIsAlpha(b: u8): bool {
-    return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z');
-}
-
-fn furiIsDigit(b: u8): bool {
-    return b >= '0' && b <= '9';
-}
-
-fn furiIsHex(b: u8): bool {
-    return furiIsDigit(b) || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F');
-}
-
 fn furiIsSchemeChar(b: u8): bool {
-    return furiIsAlpha(b) || furiIsDigit(b) || b == '+' || b == '-' || b == '.';
-}
-
-fn furiToLower(b: u8): u8 {
-    if (b >= 'A' && b <= 'Z') return b + 32;
-    return b;
-}
-
-fn furiToUpper(b: u8): u8 {
-    if (b >= 'a' && b <= 'z') return b - 32;
-    return b;
+    return isAlpha(b) || isDigit(b) || b == '+' || b == '-' || b == '.';
 }
 
 fn furiPush(out: []u8, pos: usize, b: u8): usize {
@@ -79,19 +60,14 @@ fn furiPush(out: []u8, pos: usize, b: u8): usize {
 }
 
 fn furiPushSlice(out: []u8, pos: usize, s: string): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        p = furiPush(out, p, s[i]);
-    }
-    return p;
+    return writeStr(s, out, pos);
 }
 
 fn furiPushLower(out: []u8, pos: usize, s: string): usize {
     let p = pos;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        p = furiPush(out, p, furiToLower(s[i]));
+        p = furiPush(out, p, toLowerByte(s[i]));
     }
     return p;
 }
@@ -100,10 +76,10 @@ fn furiPushPercentUpper(out: []u8, pos: usize, s: string): usize {
     let p = pos;
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
-        if (s[i] == '%' && i + 2 < s.len && furiIsHex(s[i + 1]) && furiIsHex(s[i + 2])) {
+        if (s[i] == '%' && i + 2 < s.len && isHexDigit(s[i + 1]) && isHexDigit(s[i + 2])) {
             p = furiPush(out, p, '%');
-            p = furiPush(out, p, furiToUpper(s[i + 1]));
-            p = furiPush(out, p, furiToUpper(s[i + 2]));
+            p = furiPush(out, p, toUpperByte(s[i + 1]));
+            p = furiPush(out, p, toUpperByte(s[i + 2]));
             i += 2;
         } else {
             p = furiPush(out, p, s[i]);
@@ -114,50 +90,18 @@ fn furiPushPercentUpper(out: []u8, pos: usize, s: string): usize {
 
 fn furiPushPort(out: []u8, pos: usize, port: i32): usize {
     if (port < 0) return pos;
-    let digits: [10]u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let count: usize = 0;
-    let v = u32(port);
-    if (v == 0) {
-        digits[0] = '0';
-        count = 1;
-    } else {
-        while (v > 0 && count < 10) {
-            digits[count] = u8('0') + u8(v % 10);
-            count += 1;
-            v = v / 10;
-        }
-    }
-    let p = pos;
-    let k = count;
-    while (k > 0) {
-        k -= 1;
-        p = furiPush(out, p, digits[k]);
-    }
-    return p;
-}
-
-fn furiStrEqLower(a: string, b_lower: string): bool {
-    if (a.len != b_lower.len) return false;
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (furiToLower(a[i]) != b_lower[i]) return false;
-    }
-    return true;
+    return writeU64(port as u64, out, pos);
 }
 
 fn furiDefaultPort(scheme: string): i32 {
-    if (furiStrEqLower(scheme, "http") || furiStrEqLower(scheme, "ws")) return 80;
-    if (furiStrEqLower(scheme, "https") || furiStrEqLower(scheme, "wss")) return 443;
-    if (furiStrEqLower(scheme, "ftp")) return 21;
+    if (eqIgnoreCase(scheme, "http") || eqIgnoreCase(scheme, "ws")) return 80;
+    if (eqIgnoreCase(scheme, "https") || eqIgnoreCase(scheme, "wss")) return 443;
+    if (eqIgnoreCase(scheme, "ftp")) return 21;
     return -1;
 }
 
 fn furiHasColon(s: string): bool {
-    let i: usize = 0;
-    while (i < s.len) : (i += 1) {
-        if (s[i] == ':') return true;
-    }
-    return false;
+    return findByte(s, ':', 0) != null;
 }
 
 fn furiValidateIpv6Inner(s: string): bool {
@@ -165,7 +109,7 @@ fn furiValidateIpv6Inner(s: string): bool {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         const b = s[i];
-        const ok = furiIsHex(b) || b == ':' || b == '.' || b == 'v' || b == 'V' || b == '_' || b == '-' || b == '~';
+        const ok = isHexDigit(b) || b == ':' || b == '.' || b == 'v' || b == 'V' || b == '_' || b == '-' || b == '~';
         if (!ok) return false;
     }
     return true;
@@ -178,7 +122,7 @@ fn furiParsePortStr(s: string): i32 {
     let i: usize = 0;
     while (i < s.len) : (i += 1) {
         const b = s[i];
-        if (!furiIsDigit(b)) return -2;
+        if (!isDigit(b)) return -2;
         val = val * 10 + i32(b - '0');
     }
     if (val > 65535) return -2;
@@ -200,30 +144,14 @@ pub fn parseUri(input: string): UriComponents {
     let end = input.len;
 
     // 1. Extract fragment (#...)
-    let hash_pos: usize = end;
-    let i: usize = 0;
-    while (i < end) : (i += 1) {
-        if (input[i] == '#') {
-            hash_pos = i;
-            break;
-        }
-    }
-    if (hash_pos < end) {
+    if (hash_pos := findByte(input[0..end], '#', 0)) {
         res.has_fragment = true;
         res.fragment = input[hash_pos + 1..end];
         end = hash_pos;
     }
 
     // 2. Extract query (?...)
-    let q_pos: usize = end;
-    let qi: usize = 0;
-    while (qi < end) : (qi += 1) {
-        if (input[qi] == '?') {
-            q_pos = qi;
-            break;
-        }
-    }
-    if (q_pos < end) {
+    if (q_pos := findByte(input[0..end], '?', 0)) {
         res.has_query = true;
         res.query = input[q_pos + 1..end];
         end = q_pos;
@@ -231,7 +159,7 @@ pub fn parseUri(input: string): UriComponents {
 
     // 3. Extract scheme (ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":")
     let pos: usize = 0;
-    if (pos < end && furiIsAlpha(input[pos])) {
+    if (pos < end && isAlpha(input[pos])) {
         let s_end: usize = pos + 1;
         while (s_end < end && furiIsSchemeChar(input[s_end])) : (s_end += 1) {}
         if (s_end < end && input[s_end] == ':') {
@@ -372,15 +300,6 @@ pub fn serializeUri(c: UriComponents, out: []u8): usize {
     return pos;
 }
 
-fn furiHasPrefix(s: string, p: string): bool {
-    if (s.len < p.len) return false;
-    let i: usize = 0;
-    while (i < p.len) : (i += 1) {
-        if (s[i] != p[i]) return false;
-    }
-    return true;
-}
-
 fn furiPopSegment(out: []u8, out_len: usize): usize {
     if (out_len == 0) return 0;
     let n = out_len;
@@ -408,16 +327,16 @@ fn furiRemoveDotSegments(input: string, out: []u8): usize {
     while (w_start < w_end) {
         const cur: string = work[w_start..w_end];
         // Rule A: prefix "../" or "./" -> remove prefix
-        if (furiHasPrefix(cur, "../")) {
+        if (startsWith(cur, "../")) {
             w_start += 3;
             continue;
         }
-        if (furiHasPrefix(cur, "./")) {
+        if (startsWith(cur, "./")) {
             w_start += 2;
             continue;
         }
         // Rule B: prefix "/./" or equal "/." -> replace with "/"
-        if (furiHasPrefix(cur, "/./")) {
+        if (startsWith(cur, "/./")) {
             w_start += 2;
             work[w_start] = '/';
             continue;
@@ -428,7 +347,7 @@ fn furiRemoveDotSegments(input: string, out: []u8): usize {
             continue;
         }
         // Rule C: prefix "/../" or equal "/.." -> replace with "/" and pop last segment
-        if (furiHasPrefix(cur, "/../")) {
+        if (startsWith(cur, "/../")) {
             w_start += 3;
             work[w_start] = '/';
             out_len = furiPopSegment(out, out_len);
@@ -607,11 +526,5 @@ pub fn equalUri(a: string, b: string): bool {
     let buf_b: [4096]u8 = undefined;
     const len_a = furiNormalizeForCompare(a, buf_a[0..]);
     const len_b = furiNormalizeForCompare(b, buf_b[0..]);
-    if (len_a != len_b) return false;
-
-    let i: usize = 0;
-    while (i < len_a) : (i += 1) {
-        if (buf_a[i] != buf_b[i]) return false;
-    }
-    return true;
+    return strEq(buf_a[0..len_a], buf_b[0..len_b]);
 }

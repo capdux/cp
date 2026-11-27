@@ -2,6 +2,9 @@
 // Zero-allocation CSS hex color parser, formatter, alpha blender & luminance helper.
 // MIT clean-room pure CP implementation.
 
+import { trim, hexVal } from "cap:ascii";
+import { writeHexByte } from "cap:fmt";
+
 /// 8-bit per-channel RGBA color with validity flag.
 pub struct Rgba {
     pub r: u8,
@@ -9,45 +12,6 @@ pub struct Rgba {
     pub b: u8,
     pub a: u8,
     pub valid: bool,
-}
-
-fn hcIsSpace(c: u8): bool {
-    return c == (' ' as u8) || c == ('\t' as u8) || c == ('\r' as u8) || c == ('\n' as u8);
-}
-
-fn hcTrim(s: []const u8): []const u8 {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && hcIsSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && hcIsSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn hcHexVal(c: u8): u8 {
-    if (c >= ('0' as u8) && c <= ('9' as u8)) { return c - ('0' as u8); }
-    if (c >= ('a' as u8) && c <= ('f' as u8)) { return (10 as u8) + (c - ('a' as u8)); }
-    if (c >= ('A' as u8) && c <= ('F' as u8)) { return (10 as u8) + (c - ('A' as u8)); }
-    return 0xFF as u8;
-}
-
-fn hcHexChar(nibble: u8, uppercase: bool): u8 {
-    const n = nibble & (0x0F as u8);
-    if (n < (10 as u8)) {
-        return ('0' as u8) + n;
-    }
-    if (uppercase) {
-        return ('A' as u8) + (n - (10 as u8));
-    }
-    return ('a' as u8) + (n - (10 as u8));
-}
-
-fn hcWriteByteHex(out: []u8, pos: usize, val: u8, uppercase: bool) {
-    out[pos] = hcHexChar((val >> (4 as u3)) & (0x0F as u8), uppercase);
-    out[pos + 1] = hcHexChar(val & (0x0F as u8), uppercase);
 }
 
 /// Parse a CSS hex color string (`#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA`, optional leading `#`).
@@ -61,7 +25,7 @@ pub fn parseHexColor(input: string): Rgba {
         valid: false,
     };
 
-    let s = hcTrim(input);
+    let s = trim(input);
     if (s.len == 0) {
         return invalid;
     }
@@ -76,11 +40,11 @@ pub fn parseHexColor(input: string): Rgba {
     let d: [8]u8 = undefined;
     let i: usize = 0;
     while (i < s.len) {
-        const hv = hcHexVal(s[i]);
-        if (hv == (0xFF as u8)) {
+        if (hv := hexVal(s[i])) {
+            d[i] = hv;
+        } else {
             return invalid;
         }
-        d[i] = hv;
         i += 1;
     }
 
@@ -126,10 +90,9 @@ pub fn formatHex6(c: Rgba, uppercase: bool, out: []u8): usize {
         return 0;
     }
     out[0] = '#' as u8;
-    hcWriteByteHex(out, 1, c.r, uppercase);
-    hcWriteByteHex(out, 3, c.g, uppercase);
-    hcWriteByteHex(out, 5, c.b, uppercase);
-    return 7;
+    let pos = writeHexByte(c.r, uppercase, out, 1);
+    pos = writeHexByte(c.g, uppercase, out, pos);
+    return writeHexByte(c.b, uppercase, out, pos);
 }
 
 /// Format `c` as 9-byte `#rrggbbaa` (or `#RRGGBBAA`) in `out`. Returns `9`, or `0` if `out.len < 9`.
@@ -138,11 +101,10 @@ pub fn formatHex8(c: Rgba, uppercase: bool, out: []u8): usize {
         return 0;
     }
     out[0] = '#' as u8;
-    hcWriteByteHex(out, 1, c.r, uppercase);
-    hcWriteByteHex(out, 3, c.g, uppercase);
-    hcWriteByteHex(out, 5, c.b, uppercase);
-    hcWriteByteHex(out, 7, c.a, uppercase);
-    return 9;
+    let pos = writeHexByte(c.r, uppercase, out, 1);
+    pos = writeHexByte(c.g, uppercase, out, pos);
+    pos = writeHexByte(c.b, uppercase, out, pos);
+    return writeHexByte(c.a, uppercase, out, pos);
 }
 
 /// Pack `c` into a big-endian `0xRRGGBBAA` 32-bit integer.

@@ -2,6 +2,9 @@
 // Clean-room MIT implementation inspired by npm `conventional-commits-parser`
 // and Rust `git-conventional`.
 
+import { eqIgnoreCase, isAlpha, isAlnum } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const MAX_FOOTERS: usize = 16;
 
 pub enum SemverBump: u8 {
@@ -23,27 +26,6 @@ pub struct CommitFooter {
             is_breaking: false,
         };
     }
-}
-
-fn toLowerAscii(c: u8) -> u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn eqIgnoreCase(a: string, b: string) -> bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toLowerAscii(a[i]) != toLowerAscii(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
 }
 
 pub struct ParsedCommit {
@@ -100,23 +82,15 @@ pub struct ParsedCommit {
 // Internal Parsing Helpers
 // ---------------------------------------------------------------------------
 
-fn isAlpha(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn isAlphaNum(c: u8) -> bool {
-    return isAlpha(c) || (c >= '0' && c <= '9');
-}
-
 fn isTypeChar(c: u8) -> bool {
-    return isAlphaNum(c) || c == '-' || c == '_';
+    return isAlnum(c) || c == '-' || c == '_';
 }
 
 fn isFooterTokenChar(c: u8) -> bool {
-    return isAlphaNum(c) || c == '-';
+    return isAlnum(c) || c == '-';
 }
 
-fn isSpace(c: u8) -> bool {
+fn ccIsHspace(c: u8) -> bool {
     return c == ' ' || c == '\t';
 }
 
@@ -175,9 +149,9 @@ fn matchFooterLine(msg: string, line_start: usize, line_end: usize) -> FooterLin
     const bc = "BREAKING CHANGE";
     if (e - line_start > bc.len && eqIgnoreCase(msg[line_start..(line_start + bc.len)], bc)) {
         const sep_pos = line_start + bc.len;
-        if (sep_pos + 1 < e && msg[sep_pos] == ':' && isSpace(msg[sep_pos + 1])) {
+        if (sep_pos + 1 < e && msg[sep_pos] == ':' && ccIsHspace(msg[sep_pos + 1])) {
             let v = sep_pos + 2;
-            while (v < e && isSpace(msg[v])) {
+            while (v < e && ccIsHspace(msg[v])) {
                 v += 1;
             }
             return FooterLineMatch{
@@ -212,9 +186,9 @@ fn matchFooterLine(msg: string, line_start: usize, line_end: usize) -> FooterLin
 
     const breaking = eqIgnoreCase(token, "BREAKING-CHANGE");
 
-    if (msg[i] == ':' && i + 1 < e && isSpace(msg[i + 1])) {
+    if (msg[i] == ':' && i + 1 < e && ccIsHspace(msg[i + 1])) {
         let v = i + 2;
-        while (v < e && isSpace(msg[v])) {
+        while (v < e && ccIsHspace(msg[v])) {
             v += 1;
         }
         return FooterLineMatch{
@@ -292,11 +266,11 @@ pub fn parseCommit(msg: string) -> ParsedCommit {
     }
 
     // Must be followed by ": <description>"
-    if (p + 1 >= hdr_end || msg[p] != ':' || !isSpace(msg[p + 1])) {
+    if (p + 1 >= hdr_end || msg[p] != ':' || !ccIsHspace(msg[p + 1])) {
         return res;
     }
     p += 2;
-    while (p < hdr_end && isSpace(msg[p])) {
+    while (p < hdr_end && ccIsHspace(msg[p])) {
         p += 1;
     }
     if (p >= hdr_end) {
@@ -334,7 +308,7 @@ pub fn parseCommit(msg: string) -> ParsedCommit {
 
     // Trim trailing blank lines from msg
     let rest_end = msg.len;
-    while (rest_end > rest_start && (msg[rest_end - 1] == '\n' || msg[rest_end - 1] == '\r' || isSpace(msg[rest_end - 1]))) {
+    while (rest_end > rest_start && (msg[rest_end - 1] == '\n' || msg[rest_end - 1] == '\r' || ccIsHspace(msg[rest_end - 1]))) {
         rest_end -= 1;
     }
 
@@ -511,33 +485,22 @@ fn appendByte(out: []u8, pos: usize, c: u8) -> usize {
     return pos;
 }
 
-fn appendStr(out: []u8, pos: usize, s: string) -> usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 /// Formats a `ParsedCommit` back into a canonical `<type>[(<scope>)][!]: <description>` header in `out`.
 pub fn formatCommitHeader(commit: ParsedCommit, out: []u8) -> string {
     if (!commit.valid) {
         return out[0..0];
     }
     let pos: usize = 0;
-    pos = appendStr(out, pos, commit.commit_type);
+    pos = writeStr(commit.commit_type, out, pos);
     if (commit.scope.len > 0) {
         pos = appendByte(out, pos, '(');
-        pos = appendStr(out, pos, commit.scope);
+        pos = writeStr(commit.scope, out, pos);
         pos = appendByte(out, pos, ')');
     }
     if (commit.is_breaking) {
         pos = appendByte(out, pos, '!');
     }
-    pos = appendStr(out, pos, ": ");
-    pos = appendStr(out, pos, commit.description);
+    pos = writeStr(": ", out, pos);
+    pos = writeStr(commit.description, out, pos);
     return out[0..pos];
 }

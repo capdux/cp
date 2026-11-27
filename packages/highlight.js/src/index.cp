@@ -1,6 +1,9 @@
 // @cap/syntax-highlight — Zero-allocation multi-language lexer & ANSI/HTML syntax highlighter for CP
 // Clean-room MIT implementation inspired by npm `highlight.js` (58M/wk) and `prismjs` (50M/wk).
 
+import { isSpace, isDigit, isHexDigit, isAlpha, strEq, eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const TOK_PLAIN: u8 = 0;
 pub const TOK_KEYWORD: u8 = 1;
 pub const TOK_STRING: u8 = 2;
@@ -20,59 +23,20 @@ pub struct Token {
     pub len: usize,
 }
 
-fn isSpace(c: u8) -> bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn isDigit(c: u8) -> bool {
-    return c >= '0' && c <= '9';
-}
-
-fn isHexDigit(c: u8) -> bool {
-    return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
-
 fn isIdentStart(c: u8) -> bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    return isAlpha(c) || c == '_';
 }
 
 fn isIdentCont(c: u8) -> bool {
     return isIdentStart(c) || isDigit(c);
 }
 
-fn toUpperAscii(c: u8) -> u8 {
-    if (c >= 'a' && c <= 'z') {
-        return c - (32 as u8);
-    }
-    return c;
-}
-
 fn sliceEq(src: []const u8, start: usize, length: usize, lit: string) -> bool {
-    if (length != lit.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < length) {
-        if (src[start + i] != lit[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return strEq(src[start..(start + length)], lit);
 }
 
 fn sliceEqIgnoreCase(src: []const u8, start: usize, length: usize, upperLit: string) -> bool {
-    if (length != upperLit.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < length) {
-        if (toUpperAscii(src[start + i]) != upperLit[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return eqIgnoreCase(src[start..(start + length)], upperLit);
 }
 
 fn isCodeKeyword(src: []const u8, s: usize, n: usize) -> bool {
@@ -352,24 +316,11 @@ fn writeStrChecked(dst: []u8, pos: usize, s: string) -> i64 {
     if (pos + s.len > dst.len) {
         return -1 as i64;
     }
-    let i: usize = 0;
-    while (i < s.len) {
-        dst[pos + i] = s[i];
-        i += 1;
-    }
-    return (pos + s.len) as i64;
+    return writeStr(s, dst, pos) as i64;
 }
 
 fn writeSliceChecked(dst: []u8, pos: usize, src: []const u8, start: usize, length: usize) -> i64 {
-    if (pos + length > dst.len) {
-        return -1 as i64;
-    }
-    let i: usize = 0;
-    while (i < length) {
-        dst[pos + i] = src[start + i];
-        i += 1;
-    }
-    return (pos + length) as i64;
+    return writeStrChecked(dst, pos, src[start..(start + length)]);
 }
 
 fn writeHtmlEscaped(dst: []u8, pos_in: usize, src: []const u8, start: usize, length: usize) -> i64 {

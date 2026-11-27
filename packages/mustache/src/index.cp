@@ -3,6 +3,8 @@
 // Reuses:
 //   - `escapeHtml` from `@cap/escape-html` for XSS-safe `{{var}}` interpolation.
 
+import { strEq, trim } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { escapeHtml } from "../../escape-html/src/index.cp";
 
 pub const MST_VAL_STR: u8 = 1;
@@ -10,54 +12,12 @@ pub const MST_VAL_BOOL: u8 = 2;
 pub const MST_VAL_LIST: u8 = 3;
 pub const MST_MAX_ENTRIES: usize = 32;
 
-fn mstIsSpace(c: u8): bool {
-    return c == 32 || c == 9 || c == 10 || c == 13;
-}
-
-fn mstStrEq(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn mstTrimSlice(s: string, out_start: *usize, out_end: *usize) {
-    let a: usize = 0;
-    let b: usize = s.len;
-    while (a < b && mstIsSpace(s[a])) {
-        a = a + 1;
-    }
-    while (b > a && mstIsSpace(s[b - 1])) {
-        b = b - 1;
-    }
-    out_start.* = a;
-    out_end.* = b;
-}
-
 fn mstCopyBytes(src: string, dst: []u8): usize {
-    const n = if (src.len < dst.len) { src.len } else { dst.len };
-    let i: usize = 0;
-    while (i < n) {
-        dst[i] = src[i];
-        i = i + 1;
-    }
-    return n;
+    return writeStr(src, dst, 0);
 }
 
 fn mstAppendSlice(out: []u8, pos: *usize, src: []const u8) {
-    let i: usize = 0;
-    while (i < src.len && pos.* < out.len) {
-        out[pos.*] = src[i];
-        pos.* = pos.* + 1;
-        i = i + 1;
-    }
+    pos.* = writeStr(src, out, pos.*);
 }
 
 fn mstAppendByte(out: []u8, pos: *usize, b: u8) {
@@ -100,10 +60,10 @@ pub struct MustacheEntry {
 
     pub static fn empty(): MustacheEntry {
         return MustacheEntry {
-            key: [0; 48],
+            key: undefined,
             key_len: 0,
             val_kind: 0,
-            str_val: [0; 128],
+            str_val: undefined,
             str_len: 0,
             bool_val: false,
             list_count: 0,
@@ -135,7 +95,7 @@ pub struct MustacheContext {
     pub fn setStr(*_, key: string, val: string): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (mstStrEq(_.entries[i].key[0.._.entries[i].key_len], key)) {
+            if (strEq(_.entries[i].key[0.._.entries[i].key_len], key)) {
                 _.entries[i].val_kind = MST_VAL_STR;
                 _.entries[i].str_len = mstCopyBytes(val, _.entries[i].str_val[0..128]);
                 _.entries[i].bool_val = false;
@@ -159,7 +119,7 @@ pub struct MustacheContext {
     pub fn setBool(*_, key: string, val: bool): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (mstStrEq(_.entries[i].key[0.._.entries[i].key_len], key)) {
+            if (strEq(_.entries[i].key[0.._.entries[i].key_len], key)) {
                 _.entries[i].val_kind = MST_VAL_BOOL;
                 _.entries[i].bool_val = val;
                 _.entries[i].str_len = 0;
@@ -183,7 +143,7 @@ pub struct MustacheContext {
     pub fn setListCount(*_, key: string, list_count: usize): bool {
         let i: usize = 0;
         while (i < _.count) {
-            if (mstStrEq(_.entries[i].key[0.._.entries[i].key_len], key)) {
+            if (strEq(_.entries[i].key[0.._.entries[i].key_len], key)) {
                 _.entries[i].val_kind = MST_VAL_LIST;
                 _.entries[i].list_count = list_count;
                 _.entries[i].str_len = 0;
@@ -208,7 +168,7 @@ pub struct MustacheContext {
 fn mstLookup(ctx: MustacheContext, key: string): i32 {
     let i: usize = 0;
     while (i < ctx.count) {
-        if (mstStrEq(ctx.entries[i].key[0..ctx.entries[i].key_len], key)) {
+        if (strEq(ctx.entries[i].key[0..ctx.entries[i].key_len], key)) {
             return i as i32;
         }
         i = i + 1;
@@ -272,18 +232,12 @@ fn mstFindSectionClose(
             return false;
         }
         const cp = close_pos as usize;
-        let t0: usize = 0;
-        let t1: usize = 0;
-        mstTrimSlice(tpl[op + 2..cp], &t0, &t1);
-        const inner = tpl[op + 2 + t0..op + 2 + t1];
+        const inner = trim(tpl[op + 2..cp]);
         if (inner.len > 1) {
             const sigil = inner[0];
             if (sigil == 35 || sigil == 94 || sigil == 47) { // '#' | '^' | '/'
-                let k0: usize = 0;
-                let k1: usize = 0;
-                mstTrimSlice(inner[1..inner.len], &k0, &k1);
-                const tag_key = inner[1 + k0..1 + k1];
-                if (mstStrEq(tag_key, section_key)) {
+                const tag_key = trim(inner[1..inner.len]);
+                if (strEq(tag_key, section_key)) {
                     if (sigil == 35 || sigil == 94) {
                         nesting = nesting + 1;
                     } else {
@@ -317,10 +271,7 @@ fn mstRenderSlice(tpl: string, ctx: MustacheContext, out: []u8, pos: *usize, dep
                     return;
                 }
                 const c3 = close3 as usize;
-                let k0: usize = 0;
-                let k1: usize = 0;
-                mstTrimSlice(tpl[i + 3..c3], &k0, &k1);
-                mstEmitValue(ctx, tpl[i + 3 + k0..i + 3 + k1], false, out, pos);
+                mstEmitValue(ctx, trim(tpl[i + 3..c3]), false, out, pos);
                 i = c3 + 3;
                 continue;
             }
@@ -333,10 +284,7 @@ fn mstRenderSlice(tpl: string, ctx: MustacheContext, out: []u8, pos: *usize, dep
                 return;
             }
             const c2 = close2 as usize;
-            let t0: usize = 0;
-            let t1: usize = 0;
-            mstTrimSlice(tpl[i + 2..c2], &t0, &t1);
-            const inner = tpl[i + 2 + t0..i + 2 + t1];
+            const inner = trim(tpl[i + 2..c2]);
             i = c2 + 2;
 
             if (inner.len == 0) {
@@ -347,20 +295,14 @@ fn mstRenderSlice(tpl: string, ctx: MustacheContext, out: []u8, pos: *usize, dep
                 continue;
             }
             if (sigil == 38) { // '&' unescaped variable
-                let k0: usize = 0;
-                let k1: usize = 0;
-                mstTrimSlice(inner[1..inner.len], &k0, &k1);
-                mstEmitValue(ctx, inner[1 + k0..1 + k1], false, out, pos);
+                mstEmitValue(ctx, trim(inner[1..inner.len]), false, out, pos);
                 continue;
             }
             if (sigil == 47) { // stray closing tag '/'
                 continue;
             }
             if (sigil == 35 || sigil == 94) { // '#' truthy section or '^' inverted section
-                let k0: usize = 0;
-                let k1: usize = 0;
-                mstTrimSlice(inner[1..inner.len], &k0, &k1);
-                const key = inner[1 + k0..1 + k1];
+                const key = trim(inner[1..inner.len]);
 
                 let body_end: usize = 0;
                 let after_close: usize = 0;

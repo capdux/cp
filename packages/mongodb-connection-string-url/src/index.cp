@@ -2,6 +2,9 @@
 // Zero-allocation MongoDB connection string (mongodb:// & mongodb+srv://) parser & formatter.
 // MIT clean-room pure CP implementation.
 
+import { eqIgnoreCase, findByte, rfindByte } from "cap:ascii";
+import { writeStr, writeU64, parseU16 } from "cap:fmt";
+
 /// A single MongoDB seedlist host and port (`port = 27017` by default for standard URIs, `0` for SRV).
 pub struct MongoHost {
     pub host: string,
@@ -22,104 +25,39 @@ pub struct MongoUri {
     pub valid: bool,
 }
 
-fn muToLower(c: u8): u8 {
-    if (c >= ('A' as u8) && c <= ('Z' as u8)) {
-        return c + (32 as u8);
-    }
-    return c;
-}
-
-fn muEqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (muToLower(a[i]) != muToLower(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
 fn muStartsWithIgnoreCase(s: []const u8, prefix: []const u8): bool {
     if (s.len < prefix.len) {
         return false;
     }
-    return muEqIgnoreCase(s[0..prefix.len], prefix);
-}
-
-fn muContainsByte(s: []const u8, target: u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == target) {
-            return true;
-        }
-        i += 1;
-    }
-    return false;
+    return eqIgnoreCase(s[0..prefix.len], prefix);
 }
 
 fn muParsePort(s: []const u8, out: *u16): bool {
-    if (s.len == 0 || s.len > 5) {
+    if (s.len == 0 || s[0] == ('+' as u8)) {
         return false;
     }
-    let acc: u32 = 0 as u32;
-    let i: usize = 0;
-    while (i < s.len) {
-        const c = s[i];
-        if (c < ('0' as u8) || c > ('9' as u8)) {
+    if (val := parseU16(s)) {
+        if (val == (0 as u16)) {
             return false;
         }
-        acc = acc * (10 as u32) + ((c - ('0' as u8)) as u32);
-        if (acc > (65535 as u32)) {
-            return false;
-        }
-        i += 1;
+        out.* = val;
+        return true;
     }
-    if (acc == (0 as u32)) {
-        return false;
-    }
-    out.* = acc as u16;
-    return true;
+    return false;
 }
 
 fn muWrite(out: []u8, pos: *usize, src: []const u8): bool {
     if (pos.* + src.len > out.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < src.len) {
-        out[pos.*] = src[i];
-        pos.* += 1;
-        i += 1;
-    }
+    pos.* = writeStr(src, out, pos.*);
     return true;
 }
 
 fn muWriteU16(out: []u8, pos: *usize, val: u16): bool {
-    if (val == (0 as u16)) {
-        return muWrite(out, pos, "0");
-    }
-    let rev: [8]u8 = undefined;
-    let n: usize = 0;
-    let cur: u32 = val as u32;
-    while (cur > (0 as u32)) {
-        rev[n] = ('0' as u8) + ((cur % (10 as u32)) as u8);
-        n += 1;
-        cur = cur / (10 as u32);
-    }
-    if (pos.* + n > out.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        out[pos.*] = rev[n - 1 - i];
-        pos.* += 1;
-        i += 1;
-    }
-    return true;
+    let tmp: [8]u8 = undefined;
+    const n = writeU64(val as u64, tmp[0..8], 0);
+    return muWrite(out, pos, tmp[0..n]);
 }
 
 fn muEmptyResult(): MongoUri {
@@ -168,15 +106,7 @@ pub fn parseMongoUri(uri: string): MongoUri {
     }
 
     // Split optional '?query'.
-    let qmark = body.len;
-    let qi: usize = 0;
-    while (qi < body.len) {
-        if (body[qi] == ('?' as u8)) {
-            qmark = qi;
-            break;
-        }
-        qi += 1;
-    }
+    const qmark = findByte(body, '?' as u8, 0) ?? body.len;
     const mainPart = body[0..qmark];
     let queryPart: []const u8 = "";
     if (qmark < body.len) {
@@ -184,16 +114,7 @@ pub fn parseMongoUri(uri: string): MongoUri {
     }
 
     // Split authority and optional '/database'.
-    let slash = mainPart.len;
-    let si: usize = 0;
-    while (si < mainPart.len) {
-        if (mainPart[si] == ('/' as u8)) {
-            slash = si;
-            break;
-        }
-        si += 1;
-    }
-
+    const slash = findByte(mainPart, '/' as u8, 0) ?? mainPart.len;
     const authority = mainPart[0..slash];
     if (authority.len == 0) {
         return res;
@@ -203,30 +124,11 @@ pub fn parseMongoUri(uri: string): MongoUri {
     }
 
     // Split optional userinfo'@'hostlist using the last '@'.
-    let hasAt = false;
-    let lastAt: usize = 0;
-    let ai: usize = 0;
-    while (ai < authority.len) {
-        if (authority[ai] == ('@' as u8)) {
-            hasAt = true;
-            lastAt = ai;
-        }
-        ai += 1;
-    }
-
     let hostList = authority;
-    if (hasAt) {
+    if (lastAt := rfindByte(authority, '@' as u8)) {
         const uinfo = authority[0..lastAt];
         hostList = authority[(lastAt + 1)..authority.len];
-        let colon = uinfo.len;
-        let ci: usize = 0;
-        while (ci < uinfo.len) {
-            if (uinfo[ci] == (':' as u8)) {
-                colon = ci;
-                break;
-            }
-            ci += 1;
-        }
+        const colon = findByte(uinfo, ':' as u8, 0) ?? uinfo.len;
         if (colon < uinfo.len) {
             res.username = uinfo[0..colon];
             res.password = uinfo[(colon + 1)..uinfo.len];
@@ -349,14 +251,14 @@ pub fn parseMongoUri(uri: string): MongoUri {
             if (eq < pair.len) {
                 const k = pair[0..eq];
                 const v = pair[(eq + 1)..pair.len];
-                if (muEqIgnoreCase(k, "replicaset")) {
+                if (eqIgnoreCase(k, "replicaset")) {
                     res.replica_set = v;
-                } else if (muEqIgnoreCase(k, "authsource")) {
+                } else if (eqIgnoreCase(k, "authsource")) {
                     res.auth_source = v;
-                } else if (muEqIgnoreCase(k, "tls") || muEqIgnoreCase(k, "ssl")) {
-                    if (muEqIgnoreCase(v, "true") || muEqIgnoreCase(v, "1")) {
+                } else if (eqIgnoreCase(k, "tls") || eqIgnoreCase(k, "ssl")) {
+                    if (eqIgnoreCase(v, "true") || eqIgnoreCase(v, "1")) {
                         res.tls = true;
-                    } else if (muEqIgnoreCase(v, "false") || muEqIgnoreCase(v, "0")) {
+                    } else if (eqIgnoreCase(v, "false") || eqIgnoreCase(v, "0")) {
                         res.tls = false;
                     }
                 }
@@ -400,7 +302,7 @@ pub fn getQueryOption(uri: string, key: string): string {
         while (eq < pair.len && pair[eq] != ('=' as u8)) {
             eq += 1;
         }
-        if (eq < pair.len && muEqIgnoreCase(pair[0..eq], key)) {
+        if (eq < pair.len && eqIgnoreCase(pair[0..eq], key)) {
             return pair[(eq + 1)..pair.len];
         }
     }
@@ -460,7 +362,7 @@ pub fn formatMongoUri(cfg: MongoUri, redact_password: bool, out: []u8): usize {
         if (h.host.len == 0) {
             return 0;
         }
-        if (muContainsByte(h.host, ':' as u8)) {
+        if (findByte(h.host, ':' as u8, 0) != null) {
             if (!muWrite(out, &pos, "[") || !muWrite(out, &pos, h.host) || !muWrite(out, &pos, "]")) {
                 return 0;
             }

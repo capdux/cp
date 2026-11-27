@@ -1,6 +1,9 @@
 // @cap/s3-uri — Zero-heap AWS S3 / R2 / MinIO URI parser & bucket validator
 // Clean-room MIT implementation for CP (compatible with npm amazon-s3-uri).
 
+import { strEq, startsWith, endsWith, findByte } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub const STYLE_S3: u8 = 1;
 pub const STYLE_VIRTUAL_HOSTED: u8 = 2;
 pub const STYLE_PATH: u8 = 3;
@@ -13,31 +16,9 @@ pub struct S3Uri {
     pub valid: bool,
 }
 
-fn eqBytes(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i += 1;
-    }
-    return true;
-}
-
-fn startsWith(s: string, prefix: string): bool {
-    if (s.len < prefix.len) { return false; }
-    return eqBytes(s[0..prefix.len], prefix);
-}
-
-fn endsWith(s: string, suffix: string): bool {
-    if (s.len < suffix.len) { return false; }
-    return eqBytes(s[(s.len - suffix.len)..s.len], suffix);
-}
-
 fn indexOfByte(s: string, ch: u8): i64 {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] == ch) { return i as i64; }
-        i += 1;
+    if (idx := findByte(s, ch, 0)) {
+        return idx as i64;
     }
     return -1;
 }
@@ -151,7 +132,7 @@ pub fn parseS3Uri(input: string): S3Uri {
     let prefix_host: string = host[0..(host.len - 14)]; // strip ".amazonaws.com"
 
     // Path-style: host is `s3` or `s3.<region>` or `s3-<region>`
-    if (eqBytes(prefix_host, "s3") || startsWith(prefix_host, "s3.") || startsWith(prefix_host, "s3-")) {
+    if (strEq(prefix_host, "s3") || startsWith(prefix_host, "s3.") || startsWith(prefix_host, "s3-")) {
         let region: string = "";
         if (prefix_host.len > 3) {
             region = prefix_host[3..prefix_host.len];
@@ -213,15 +194,11 @@ pub fn formatS3Uri(bucket: string, key: string, out: []u8): usize {
         need += (1 as usize) + key.len;
     }
     if (need > out.len) { return 0; }
-    out[0] = 's'; out[1] = '3'; out[2] = ':'; out[3] = '/'; out[4] = '/';
-    let pos: usize = 5;
-    let i: usize = 0;
-    while (i < bucket.len) { out[pos] = bucket[i]; pos += 1; i += 1; }
+    let pos: usize = writeStr("s3://", out, 0);
+    pos = writeStr(bucket, out, pos);
     if (key.len > 0) {
         out[pos] = '/';
-        pos += 1;
-        i = 0;
-        while (i < key.len) { out[pos] = key[i]; pos += 1; i += 1; }
+        pos = writeStr(key, out, pos + 1);
     }
     return pos;
 }
