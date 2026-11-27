@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 Generate a compact, high-density, AI-Agent-optimized standard & ecosystem library
-reference (`cp_agent_lib_ref.md`) from `cp_lib_ref.md`, `packages/@cap/*`,
-`packages/@web/*`, and `packages/@cap/registry.json`.
+reference (`cp_agent_lib_ref.md`) from `cp_lib_ref.md`, `packages/*`,
+`packages/@web/*`, `packages/@cap/*`, and `packages/registry.json`.
 
 Design goal: ~85-92% smaller than `cp_lib_ref.md` while preserving 100%
 discoverability of every `cap:*` stdlib channel, every `@web/*` plugin, and
-every `@cap/*` official package (with domain grouping & quick lookup rules).
+every bare / native `@cap/*` official package (with domain grouping & quick lookup rules).
 """
 
 import json
@@ -275,9 +275,9 @@ def main():
     web_names = [f"`{pkg}`" for pkg, _ in web_rows]
     lines.append(f"共 **{len(web_rows)} 个**（位于 `packages/@web/*`，`cap add @web/<name>`）：" + " · ".join(web_names))
     lines.append("")
-    lines.append("## 四、 官方 `@cap/*` 生态包分类索引（共 " + str(len(pkg_sources)) + " 包）")
+    lines.append("## 四、 生态包分类索引（裸包名 + 原生 C/C++ `@cap/*`，共 " + str(len(pkg_sources)) + " 包）")
     lines.append("")
-    lines.append("> 导入方式：`import { ... } from \"@cap/<name>\";`（精确导出查 `packages/@cap/<name>/src/index.d.cp`；括号 `←原名` 为已改名映射）。")
+    lines.append("> 导入方式：纯 CP 生态包使用原裸包名 `import { ... } from \"<name>\";`（精确导出查 `cap brief <name>` 或 `packages/<name>/src/index.d.cp`；原生 C/C++ 包使用 `@cap/<name>`；映射注册表见 `packages/registry.json`）。")
     lines.append("")
 
     ordered_cats = [c for c, _ in CATEGORIES] + ["其他通用工具包"]
