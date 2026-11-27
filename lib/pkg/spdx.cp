@@ -114,7 +114,7 @@ export struct SpdxLexer {
     src: []const u8;
     pos: usize;
 
-    fn init(expr: []const u8): SpdxLexer {
+    static fn init(expr: []const u8): SpdxLexer {
         return SpdxLexer{
             src: expr,
             pos: 0,
@@ -241,7 +241,7 @@ export struct SpdxIdIter {
     lexer: SpdxLexer;
     skip_exception: bool;
 
-    fn init(expr: []const u8): SpdxIdIter {
+    static fn init(expr: []const u8): SpdxIdIter {
         return SpdxIdIter{
             lexer: SpdxLexer.init(expr),
             skip_exception: false,

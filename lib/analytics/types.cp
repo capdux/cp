@@ -39,28 +39,28 @@ pub struct PropValue {
     float_val: f64 = 0.0,
     bool_val: bool = false,
 
-    pub fn fromString(s: []const u8): PropValue {
+    pub static fn fromString(s: []const u8): PropValue {
         return PropValue{
             kind: .String,
             str_val: s,
         };
     }
 
-    pub fn fromInt(v: i64): PropValue {
+    pub static fn fromInt(v: i64): PropValue {
         return PropValue{
             kind: .Int,
             int_val: v,
         };
     }
 
-    pub fn fromFloat(v: f64): PropValue {
+    pub static fn fromFloat(v: f64): PropValue {
         return PropValue{
             kind: .Float,
             float_val: v,
         };
     }
 
-    pub fn fromBool(v: bool): PropValue {
+    pub static fn fromBool(v: bool): PropValue {
         return PropValue{
             kind: .Bool,
             bool_val: v,

@@ -47,7 +47,7 @@ pub enum RouterMethod {
         };
     }
 
-    pub fn fromString(s: []const u8): RouterMethod? {
+    pub static fn fromString(s: []const u8): RouterMethod? {
         if (std.mem.eql(u8, s, "GET")) return .GET;
         if (std.mem.eql(u8, s, "POST")) return .POST;
         if (std.mem.eql(u8, s, "PUT")) return .PUT;
@@ -96,7 +96,7 @@ pub struct AllowInfo {
     buf: [64]u8,
     len: usize,
 
-    pub fn fromMask(mask: u8): AllowInfo {
+    pub static fn fromMask(mask: u8): AllowInfo {
         let info: AllowInfo = undefined;
         info.len = 0;
         const methods = [
@@ -284,7 +284,7 @@ pub struct HttpRouter {
     root: *TrieNode,
     owned_strings: std.ArrayList(StrSlice),
 
-    pub fn init(alloc: std.mem.Allocator): RouterError!HttpRouter {
+    pub static fn init(alloc: std.mem.Allocator): RouterError!HttpRouter {
         const root = try TrieNode.create(alloc, "", .kind_static);
         return HttpRouter{
             .alloc = alloc,

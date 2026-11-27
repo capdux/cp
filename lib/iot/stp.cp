@@ -68,7 +68,7 @@ pub struct StpBridgeId {
     system_id_ext: u16,
     mac: [6]u8,
 
-    fn zero(): StpBridgeId {
+    static fn zero(): StpBridgeId {
         return StpBridgeId{
             .priority = 0,
             .system_id_ext = 0,

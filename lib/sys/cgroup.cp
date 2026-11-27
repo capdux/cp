@@ -65,7 +65,7 @@ pub struct CgroupLimit {
     is_unlimited: bool;
     value: u64;
 
-    fn unlimited(): CgroupLimit {
+    static fn unlimited(): CgroupLimit {
         return CgroupLimit {
             is_unlimited: true,
             value: 0,

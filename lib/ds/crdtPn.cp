@@ -13,7 +13,7 @@ pub struct GCounter {
     alloc: std.mem.Allocator,
     entries: std.ArrayList(CounterEntry),
 
-    pub fn init(alloc: std.mem.Allocator): GCounter {
+    pub static fn init(alloc: std.mem.Allocator): GCounter {
         return GCounter{
             .alloc = alloc,
             .entries = std.ArrayList(CounterEntry).empty,
@@ -76,7 +76,7 @@ pub struct PNCounter {
     pos: GCounter,
     neg: GCounter,
 
-    pub fn init(alloc: std.mem.Allocator): PNCounter {
+    pub static fn init(alloc: std.mem.Allocator): PNCounter {
         return PNCounter{
             .pos = GCounter.init(alloc),
             .neg = GCounter.init(alloc),
@@ -118,7 +118,7 @@ pub fn LWWRegister(comptime T: type): type {
 
         const Self = @This();
 
-        pub fn init(val: T, ts: i64, node_id: u64): Self {
+        pub static fn init(val: T, ts: i64, node_id: u64): Self {
             return Self{
                 .val = val,
                 .ts = ts,
@@ -157,7 +157,7 @@ pub fn GSet(comptime T: type): type {
 
         const Self = @This();
 
-        pub fn init(alloc: std.mem.Allocator): Self {
+        pub static fn init(alloc: std.mem.Allocator): Self {
             return Self{
                 .alloc = alloc,
                 .items = std.ArrayList(T).empty,
