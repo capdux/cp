@@ -174,7 +174,7 @@ pub struct PubSubBroker {
         return alloc.dupe(u8, src) catch return PubSubError.OutOfMemory;
     }
 
-    fn freeOwned(alloc: std.mem.Allocator, s: string) {
+    static fn freeOwned(alloc: std.mem.Allocator, s: string) {
         if (s.len > 0) {
             alloc.free(s);
         }

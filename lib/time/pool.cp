@@ -97,7 +97,7 @@ pub struct ResourcePool {
     failed_validations: u64 = 0;
 
     /// Initialize a bounded resource pool with configuration and lifecycle callbacks.
-    pub fn init(
+    pub static fn init(
         alloc: std.mem.Allocator,
         cfg: PoolConfig,
         user_ctx: *anyopaque,
