@@ -1,140 +1,111 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # zerocopy
 
-Zero-heap, zero-copy prefix/suffix byte slice parsers, stateful byte cursors, explicit-endian integer wrappers (`U16LE`/`U16BE`/`U32LE`/`U32BE`/`U64LE`/`U64BE`), and layout-validated slice views for CP.
+Zero-heap zero-copy prefix/suffix byte slice readers, writers, endian-aware byte wrappers, and alignment-checked slice casts for CP, modeled on Google's Rust [`zerocopy`](https://github.com/google/zerocopy) crate (MIT, CP v1.0.0, built on `bytemuck`).
 
-## Source & Zero-Cost Migration
-
-| Field | Value |
-| --- | --- |
-| **Upstream Registry** | [crates.io/crates/zerocopy](https://crates.io/crates/zerocopy) |
-| **Upstream Package** | `zerocopy` (v1.0.0 in CP) |
-| **Upstream Repository** | https://github.com/google/zerocopy |
-| **License** | MIT (upstream: BSD-2-Clause OR Apache-2.0 OR MIT) |
-
-Keep the exact package name when migrating from Rust to CP:
-
-```rust
-// Rust
-use zerocopy::{FromBytes, IntoBytes, byteorder::network_endian::U32};
-```
-
-```cp
-// CP — same package name, zero-heap native performance
-import {
-    U32BE, ByteCursor, ByteWriterCursor,
-    readU32BeFromPrefix, sliceAsBytesU32, refFromBytesSliceU32,
-} from "zerocopy";
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add zerocopy
 ```
 
-## Quick Start & Practical Examples
-
-### 1. Prefix & Suffix Zero-Copy Splitting (`readFromPrefix` / `readFromSuffix` / `writeToPrefix`)
-
 ```cp
 import {
-    readFromPrefix, readFromSuffix,
-    readU16BeFromPrefix, readU32BeFromPrefix, readU64LeFromSuffix,
-    writeToPrefix, writeToSuffix,
+    ByteCursor,
+    ByteWriterCursor,
+    U16LE,
+    U32BE,
+    readU32BeFromPrefix,
+    readFromPrefix,
+    sliceAsBytesU32,
 } from "zerocopy";
-
-fn parsePacket(pkt: &[]u8) {
-    // Parse a 2-byte big-endian header followed by a 4-byte length
-    if (readU16BeFromPrefix(pkt)) |hdr| {
-        let msg_type = hdr.value;
-        if (readU32BeFromPrefix(hdr.rest)) |len_part| {
-            let payload_len = len_part.value as usize;
-            if (readFromPrefix(len_part.rest, payload_len)) |split| {
-                let payload: &[]u8 = split.head;
-                let trailer: &[]u8 = split.tail;
-                if (readU64LeFromSuffix(trailer)) |crc| {
-                    // crc.value is trailing checksum; crc.rest is preceding bytes
-                }
-            }
-        }
-    }
-
-    // Write directly into a mutable destination slice and get the remaining slice
-    mut out: [16]u8 = [0; 16];
-    let magic: [4]u8 = [0x43, 0x50, 0x00, 0x01];
-    if (writeToPrefix(&mut out, &magic)) |rest| {
-        let _ = writeToSuffix(rest, &magic);
-    }
-}
 ```
 
-### 2. Stateful `ByteCursor` & `ByteWriterCursor`
+## Core API Reference
+
+### Cursor Readers & Writers
+
+| Type | Methods | Description |
+| :--- | :--- | :--- |
+| `ByteCursor` | `new(total_len)`, `remaining()`, `reset()`, `seek(offset): bool`, `skip(n): bool` | Stateful offset tracker for sequential binary decoding over caller-owned buffers. |
+| `ByteCursor` (read) | `peekU8(&[]u8): u8?`, `nextU8([]u8): u8?`, `nextU16Le/Be([]u8): u16?`, `nextU32Le/Be([]u8): u32?`, `nextU64Le/Be([]u8): u64?`, `nextI32Le([]u8): i32?`, `nextF32Le(&[]u8): f32?`, `nextF64Le(&[]u8): f64?`, `nextBytes(&[]u8, n): (&[]u8)?` | Bounds-checked sequential reads; returns `null` if remaining bytes are insufficient. |
+| `ByteWriterCursor` | `new(cap_len)`, `written()`, `remaining()`, `reset()`, `putU8`, `putU16Le/Be`, `putU32Le/Be`, `putU64Le/Be`, `putI32Le`, `putF32Le`, `putF64Le`, `putBytes(out: []u8, src: &[]u8): bool` | Bounds-checked sequential binary writer returning `false` on overflow. |
+
+### Unaligned Endian Wrapper Types
+
+All 6 types (`U16LE`, `U16BE`, `U32LE`, `U32BE`, `U64LE`, `U64BE`) store an internal fixed byte array `[N]u8` (alignment 1) and expose:
+
+| Method | Signature | Description |
+| :--- | :--- | :--- |
+| `new(v)` | `(T): Self` | Encodes integer `v` in the specified byte order. |
+| `fromBytes(buf)` | `(&[]u8): Self?` | Reads the first `N` bytes (unaligned-safe); returns `null` if `buf.len < N`. |
+| `get()` / `set(v)` | `(): T` / `(T)` | Decodes / updates the stored integer value. |
+| `toBytes()` | `(): [N]u8` | Returns the raw byte array. |
+
+### Prefix / Suffix Splitting & Layout-Checked Casts
+
+| Function | Signature | Description |
+| :--- | :--- | :--- |
+| `readFromPrefix` / `readFromSuffix` | `(buf: &[]u8, n: usize): SplitBytes?` | Splits `buf` into `{ head: &[]u8, tail: &[]u8 }` without copying. |
+| `readU16LeFromPrefix` / `readU16BeFromPrefix` | `(buf: &[]u8): PrefixU16?` | Reads prefix `u16` and returns `{ value, rest: &[]u8 }`. |
+| `readU32LeFromPrefix` / `readU32BeFromPrefix` | `(buf: &[]u8): PrefixU32?` | Reads prefix `u32` and returns `{ value, rest: &[]u8 }`. |
+| `readU64LeFromPrefix` / `readU64BeFromPrefix` | `(buf: &[]u8): PrefixU64?` | Reads prefix `u64` and returns `{ value, rest: &[]u8 }`. |
+| `readU16LeFromSuffix` / `readU32LeFromSuffix` / `readU64LeFromSuffix` | `(buf: &[]u8): PrefixU*?` | Reads little-endian integer from the tail and returns the remaining prefix in `rest`. |
+| `writeToPrefix` / `writeToSuffix` | `(dst: []u8, src: &[]u8): ([]u8)?` | Copies `src` to the start/end of `dst`, returning the remaining writable slice. |
+| `isAlignedSlice` | `(byte_len, elem_size, addr, align_req): bool` | Validates size divisibility and address alignment via `bytemuck.checkCastLayout`. |
+| `refFromBytesU16` / `U32` / `U64` | `(buf: &[]u8): u16? \| u32? \| u64?` | Alignment- and size-checked direct pointer load; returns `null` if misaligned or wrong size. |
+| `refFromBytesSliceU32` | `(buf: &[]u8): (&[]u32)?` | Zero-copy cast from `&[]u8` to `&[]u32` when aligned to 4 bytes and length is a multiple of 4. |
+| `sliceAsBytesU16` / `U32` / `U64` | `(src: &[]u*): &[]u8` | Zero-copy reinterpretation of integer slices as read-only byte slices. |
+
+## Usage Examples
+
+### 1. Zero-Copy Packet Header Decoding (Prefix Chaining)
 
 ```cp
-import { ByteCursor, ByteWriterCursor } from "zerocopy";
+import { readU16BeFromPrefix, readU32BeFromPrefix, readFromPrefix } from "zerocopy";
 
-fn demoCursors() {
-    mut buf: [32]u8 = [0; 32];
-    mut w = ByteWriterCursor.new(buf.len);
-    let _ = w.putU8(&mut buf, 1);
-    let _ = w.putU16Be(&mut buf, 8080);
-    let _ = w.putU32Le(&mut buf, 0x12345678);
-    let _ = w.putF64Le(&mut buf, 2.71828);
-    let payload: [3]u8 = [65, 66, 67];
-    let _ = w.putBytes(&mut buf, &payload);
-
-    let total_written = w.written();
-    mut r = ByteCursor.new(total_written);
-    if (r.peekU8(&buf)) |first| {
-        // Non-advancing peek == 1
-    }
-    let ver = r.nextU8(&mut buf);
-    let port = r.nextU16Be(&mut buf);
-    let id = r.nextU32Le(&mut buf);
-    let ratio = r.nextF64Le(&buf);
-    if (r.nextBytes(&buf, 3)) |tag| {
-        // Zero-copy &[]u8 slice pointing into buf
-    }
+fn parsePacket(pkt: &[]u8): bool {
+    let ver = readU16BeFromPrefix(pkt) ?? return false;
+    let payload_len = readU32BeFromPrefix(ver.rest) ?? return false;
+    let split = readFromPrefix(payload_len.rest, payload_len.value as usize) ?? return false;
+    // split.head is a zero-copy &[]u8 view of the payload; split.tail is remaining bytes
+    return ver.value == 1 && split.head.len == (payload_len.value as usize);
 }
 ```
 
-### 3. Explicit-Endian Value Types (`U16LE`..`U64BE`) & Slice Views
+### 2. Encode & Decode with `ByteWriterCursor` and `ByteCursor`
 
 ```cp
-import {
-    U16LE, U16BE, U32LE, U32BE, U64LE, U64BE,
-    refFromBytesU32, refFromBytesSliceU32,
-    sliceAsBytesU16, sliceAsBytesU32, sliceAsBytesU64,
-    isAlignedSlice,
-} from "zerocopy";
+import { ByteWriterCursor, ByteCursor } from "zerocopy";
 
-fn demoEndianTypes() {
-    mut net_port = U16BE.new(443);
-    let wire_bytes: [2]u8 = net_port.toBytes();
-    if (U16BE.fromBytes(&wire_bytes)) |parsed| {
-        let port = parsed.get(); // 443
-    }
-    net_port.set(8443);
+fn cursorRoundTrip() {
+    let buf: [32]u8 = undefined;
+    let mut w = ByteWriterCursor.new(32);
+    w.putU32Le(buf[0..32], 0xDEADBEEF);
+    w.putF64Le(buf[0..32], 3.14159);
 
-    // Zero-copy slice conversions
-    let nums: [2]u32 = [10, 20];
-    let raw: &[]u8 = sliceAsBytesU32(&nums);
-    if (refFromBytesSliceU32(raw)) |view| {
-        // view.len == 2 (returns null on misalignment or bad length)
-    }
-    let ok = isAlignedSlice(raw.len, 4, 0x1000, 4);
+    let mut r = ByteCursor.new(w.written());
+    let magic = r.nextU32Le(buf[0..32]);
+    let pi = r.nextF64Le(&buf[0..32]);
 }
 ```
 
-## Performance & Safety Highlights
+### 3. Unaligned Endian Wrappers (`U32BE`)
 
-- **Zero Heap & Zero Copy**: `readFromPrefix`, `readFromSuffix`, `ByteCursor.nextBytes`, and `sliceAsBytesU*` return borrowed sub-slices directly without copying or allocating.
-- **Bounds-Safe Cursors**: Every `ByteCursor` / `ByteWriterCursor` operation checks `remaining()` before advancing and returns `null` or `false` on overflow/truncation.
-- **Explicit Byte Order**: `U16LE`/`U16BE`/`U32LE`/`U32BE`/`U64LE`/`U64BE` store fixed `[N]u8` arrays so network/wire layouts never depend on host alignment or endianness.
-- **Layout Validation**: `isAlignedSlice` and `refFromBytesSliceU32` delegate to `bytemuck` layout checks to guarantee alignment and size safety.
+```cp
+import { U32BE } from "zerocopy";
 
-## API Reference
+fn endianExample() {
+    let net_val = U32BE.new(8080);
+    let raw = net_val.toBytes(); // [0x00, 0x00, 0x1F, 0x90]
+    let parsed = U32BE.fromBytes(&raw);
+    // parsed.?.get() == 8080
+}
+```
 
-See [`src/index.d.cp`](src/index.d.cp) for complete type signatures, or [`README_AGENT.md`](README_AGENT.md) for the compact AI-agent reference.
+## Differences from Upstream & Zero-Copy Highlights
+
+- **Explicit Typed Functions Over Derive Macros**: Replaces Rust's `#[derive(FromBytes, IntoBytes)]` traits with explicit, compile-time-safe functions and endian wrappers (`U16LE`..`U64BE`) tailored to CP's type system.
+- **No Undefined Behavior**: Alignment-sensitive operations (`refFromBytesU32`, `refFromBytesSliceU32`) verify pointer alignment and byte-length divisibility at runtime and return `null` instead of causing misaligned pointer UB.
+- **Zero-Allocation Slicing**: `readFromPrefix`, `readFromSuffix`, `nextBytes`, and `sliceAsBytes*` return borrowed `&[]u8` views with zero copying.

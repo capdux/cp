@@ -1,110 +1,114 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # miniz_oxide
 
-Native lossless DEFLATE / zlib compression & decompression, bounded-output decompression (decompression-limit protection), CRC32/Adler32 checksums, and single-file ZIP archive creation/extraction backed by `miniz 3.0.2` (`-O3`) with automatic RAII cleanup (`MinizBuf`).
+High-performance lossless DEFLATE / zlib compression, checksums (CRC-32 & Adler-32), and single-entry ZIP archive engine for CP, modeled on Rust's [`miniz_oxide`](https://github.com/Frommi/miniz_oxide) crate and backed by native `miniz` 3.0.2 (MIT, CP v3.0.2).
 
-## Source & Zero-Cost Migration
+Offers both RAII-managed dynamic buffers (`MinizBuf`, automatically freed on scope exit via `__cp_deinit`) and zero-heap slice-to-slice compression/decompression (`compressToSlice` / `decompressToSlice`), plus size-capped decompression (`decompressToVecWithLimit`) to guard against excessive expansion.
 
-| Field | Value |
-| --- | --- |
-| **Upstream Registry** | [crates.io/crates/miniz_oxide](https://crates.io/crates/miniz_oxide) |
-| **Upstream Package** | `miniz_oxide` (CP v3.0.2, backed by miniz 3.0.2) |
-| **Upstream Repository** | https://github.com/Frommi/miniz_oxide |
-| **License** | MIT |
-
-Keep the exact package name when migrating from Rust to CP (both camelCase and snake_case aliases are exported):
-
-```rust
-// Rust
-use miniz_oxide::deflate::compress_to_vec_zlib;
-use miniz_oxide::inflate::decompress_to_vec_zlib;
-```
-
-```cp
-// CP — same package name, native C (-O3) speed + RAII MinizBuf
-import {
-    compressToVecZlib, decompressToVecZlib,
-    compress_to_vec_zlib, decompress_to_vec_zlib,
-} from "miniz_oxide";
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add miniz_oxide
 ```
 
-## Quick Start & Practical Examples
-
-### 1. DEFLATE & Zlib Compression / Decompression (`*ToVec` & `*WithLimit`)
-
 ```cp
 import {
-    compressToVec, decompressToVec,
-    compressToVecZlib, decompressToVecZlib,
-    decompressToVecWithLimit, decompressToVecZlibWithLimit,
+    MinizError,
     MinizBuf,
+    compressToVec,
+    compressToVecZlib,
+    decompressToVec,
+    decompressToVecZlib,
+    decompressToVecWithLimit,
+    compressToSlice,
+    decompressToSlice,
+    crc32,
+    adler32,
 } from "miniz_oxide";
+```
 
-fn demoZlib(payload: &[]u8): !void {
-    // Compress with level 6 (valid range: 0..10); MinizBuf auto-frees via __cp_deinit
-    let compressed: MinizBuf = compressToVecZlib(payload, 6)?;
+## Core API Reference
 
-    // Decompress with an explicit max output size guard against resource exhaustion
-    let restored: MinizBuf = decompressToVecZlibWithLimit(compressed.slice(), 1024 * 1024)?;
-    let raw_bytes: &[]u8 = restored.slice();
+### Errors & RAII Buffer
 
-    // Raw DEFLATE (without zlib header/trailer)
-    let raw_comp = compressToVec(payload, 6)?;
-    let raw_back = decompressToVecWithLimit(raw_comp.slice(), 1024 * 1024)?;
+| Symbol | Signature / Variants | Description |
+| :--- | :--- | :--- |
+| `MinizError` | `ZipCreateFailed`, `ZipExtractFailed`, `OutOfMemory`, `CompressFailed`, `DecompressFailed`, `BufferTooSmall`, `InvalidLevel`, `OutputLimitExceeded` | Error set returned by all fallible (`!T`) functions. |
+| `MinizBuf` | `raw: [*]u8!?`, `len: usize` | Owning C-heap buffer with automatic RAII release (`__cp_deinit`). |
+| `MinizBuf.slice()` | `(): &[]u8` | Returns a read-only zero-copy slice view over the buffer bytes. |
+| `MinizBuf.zipSingleFile` | `(entry_name: string, payload: &[]u8): !MinizBuf` | Creates an in-memory ZIP archive containing a single file entry. |
+| `MinizBuf.extractFile` | `(zip_bytes: &[]u8, entry_name: string): !MinizBuf` | Extracts a named entry from an in-memory ZIP archive. |
+
+### Compression & Decompression Functions
+
+| Function | Signature | Description |
+| :--- | :--- | :--- |
+| `compressToVec` / `compress_to_vec` | `(input: &[]u8, level: u8): !MinizBuf` | Raw DEFLATE compression (`level` in `0..=10`) into an RAII `MinizBuf`. |
+| `compressToVecZlib` / `compress_to_vec_zlib` | `(input: &[]u8, level: u8): !MinizBuf` | Zlib-wrapped DEFLATE compression (`level` in `0..=10`). |
+| `decompressToVec` / `decompress_to_vec` | `(input: &[]u8): !MinizBuf` | Raw DEFLATE decompression into an RAII `MinizBuf`. |
+| `decompressToVecZlib` / `decompress_to_vec_zlib` | `(input: &[]u8): !MinizBuf` | Zlib-wrapped DEFLATE decompression. |
+| `decompressToVecWithLimit` | `(input: &[]u8, max_size: usize): !MinizBuf` | Raw DEFLATE decompression capped at `max_size` bytes (`OutputLimitExceeded` if exceeded). |
+| `decompressToVecZlibWithLimit` | `(input: &[]u8, max_size: usize): !MinizBuf` | Zlib decompression capped at `max_size` bytes. |
+| `compressToSlice` / `compressToSliceZlib` | `(input: &[]u8, out: []u8, level: u8): !usize` | Zero-heap compression directly into caller-provided `out`, returning bytes written. |
+| `decompressToSlice` / `decompressToSliceZlib` | `(input: &[]u8, out: []u8): !usize` | Zero-heap decompression directly into caller-provided `out`, returning bytes written. |
+
+### Checksums & Utilities
+
+| Function | Signature | Description |
+| :--- | :--- | :--- |
+| `versionString` | `(): string` | Returns underlying `miniz` library version string. |
+| `compressBound` | `(source_len: usize): usize` | Computes worst-case compressed output size for `source_len` bytes. |
+| `crc32` / `crc32Update` | `(&[]u8): u32` / `(u32, &[]u8): u32` | One-shot and incremental IEEE CRC-32 checksum. |
+| `adler32` / `adler32Update` | `(&[]u8): u32` / `(u32, &[]u8): u32` | One-shot and incremental Adler-32 checksum. |
+| `makeDeflateFlags` | `(level: u8, write_zlib_header: bool): !i32` | Validates `level` (`0..=10`) and builds `tdefl` compressor flags. |
+
+Low-level C FFI symbols (`cp_miniz_*`, `tdefl_*`, `tinfl_*`, `mz_*`) are also exported for advanced custom streaming pipelines.
+
+## Usage Examples
+
+### 1. Zlib Compress & Size-Capped Decompress (RAII `MinizBuf`)
+
+```cp
+import { compressToVecZlib, decompressToVecZlibWithLimit } from "miniz_oxide";
+
+fn zlibRoundTrip(data: &[]u8): !usize {
+    let compressed = compressToVecZlib(data, 6)?;
+    let restored = decompressToVecZlibWithLimit(compressed.slice(), 1024 * 1024)?;
+    // Both compressed and restored are freed automatically at scope exit
+    return restored.slice().len;
 }
 ```
 
-### 2. Zero-Heap Slice-to-Slice Compression (`compressToSlice*` / `decompressToSlice*`)
+### 2. Zero-Heap Slice-to-Slice Compression
 
 ```cp
-import {
-    compressBound, compressToSliceZlib, decompressToSliceZlib,
-    crc32, crc32Update, adler32, adler32Update, versionString,
-} from "miniz_oxide";
+import { compressToSlice, decompressToSlice } from "miniz_oxide";
 
-fn demoZeroHeapSlice(input: &[]u8): !void {
-    let bound = compressBound(input.len);
-    mut comp_buf: [1024]u8 = [0; 1024];
-    mut out_buf: [1024]u8 = [0; 1024];
+fn stackDeflate(input: &[]u8): !usize {
+    let comp_buf: [512]u8 = undefined;
+    let clen = compressToSlice(input, comp_buf[0..512], 6)?;
 
-    let comp_len = compressToSliceZlib(input, &mut comp_buf, 6)?;
-    let orig_len = decompressToSliceZlib(&comp_buf[0..comp_len], &mut out_buf)?;
-
-    // Incremental checksums
-    let c1 = crc32(input);
-    let c2 = crc32Update(c1, input);
-    let a1 = adler32(input);
-    let a2 = adler32Update(a1, input);
-    let ver = versionString();
+    let out_buf: [512]u8 = undefined;
+    let dlen = decompressToSlice(&comp_buf[0..clen], out_buf[0..512])?;
+    return dlen;
 }
 ```
 
-### 3. Single-File ZIP Archive Creation & Extraction (`MinizBuf.zipSingleFile` / `extractFile`)
+### 3. In-Memory Single-File ZIP Archive
 
 ```cp
-import { MinizBuf } from "miniz_oxide";
+import { MinizBuf, crc32 } from "miniz_oxide";
 
-fn demoZip(content: &[]u8): !void {
-    let archive = MinizBuf.zipSingleFile("hello.txt", content)?;
+fn zipExample(payload: &[]u8): !u32 {
+    let archive = MinizBuf.zipSingleFile("hello.txt", payload)?;
     let extracted = MinizBuf.extractFile(archive.slice(), "hello.txt")?;
-    let data: &[]u8 = extracted.slice();
+    return crc32(extracted.slice());
 }
 ```
 
-## Performance & Safety Highlights
+## Differences from Upstream & Safety Highlights
 
-- **Native C (`miniz 3.0.2`, `-O3`)**: Prebuilt native C engine delivering high-throughput DEFLATE/zlib/ZIP performance.
-- **Deterministic RAII Cleanup**: `MinizBuf.__cp_deinit` automatically releases C-allocated buffers via `cp_miniz_free` on scope exit or error propagation.
-- **Zero-Heap Slice Mode**: `compressToSlice*` and `decompressToSlice*` operate entirely inside caller-supplied stack buffers (`MinizError.BufferTooSmall` if insufficient).
-- **Resource Exhaustion Guard**: `decompressToVecWithLimit` and `decompressToVecZlibWithLimit` return `MinizError.OutputLimitExceeded` if decompressed output exceeds `max_size`.
-
-## API Reference
-
-See [`src/index.d.cp`](src/index.d.cp) for complete type signatures, or [`README_AGENT.md`](README_AGENT.md) for the compact AI-agent reference.
+- **Deterministic RAII Cleanup**: `MinizBuf` implements `__cp_deinit` to release native C memory automatically on scope exit or error propagation (`?`), preventing memory leaks without a GC.
+- **Resource Exhaustion Guard**: `decompressToVecWithLimit` and `decompressToVecZlibWithLimit` enforce hard upper bounds on decompressed output size (`MinizError.OutputLimitExceeded`).
+- **Dual Naming Ergonomics**: Provides idiomatic CP camelCase (`compressToVec`) alongside Rust `miniz_oxide` snake_case aliases (`compress_to_vec`).

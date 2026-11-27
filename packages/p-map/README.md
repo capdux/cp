@@ -1,128 +1,124 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
 # p-map
 
-Zero-heap bounded-concurrency mapper (`pMap` / `pMapCollectErrors`), skip/error outcome protocol (`mapOk`/`mapSkip`/`mapErr`), batch/worker range partitioner, and `ConcurrencyPool` state machine in pure CP.
+Zero-heap bounded-concurrency mapper, batch/worker partitioner, and error collector for CP, modeled on Sindre Sorhus's npm [`p-map`](https://github.com/sindresorhus/p-map) (MIT, CP v1.0.0).
 
-## Source & Zero-Cost Migration
+Provides `pMap` and `pMapCollectErrors` with `stop_on_error` control and skip sentinels (`mapSkip` / `pMapSkip`), a deterministic `ConcurrencyPool` state machine for driving bounded in-flight Actor/async work, and zero-allocation range partitioning helpers (`batchCount`, `batchRange`, `workerPartition`).
 
-| Field | Value |
-| --- | --- |
-| **Upstream Registry** | [npmjs.com/package/p-map](https://www.npmjs.com/package/p-map) |
-| **Upstream Package** | `p-map` (v1.0.0 in CP) |
-| **Upstream Repository** | https://github.com/sindresorhus/p-map |
-| **License** | MIT |
-
-Keep the exact package name when migrating from TypeScript/npm to CP:
-
-```ts
-// TypeScript (npm)
-import pMap, { pMapSkip } from "p-map";
-const result = await pMap(items, mapper, { concurrency: 4, stopOnError: false });
-```
-
-```cp
-// CP — same package name, zero-heap deterministic concurrency planner & mapper
-import {
-    pMap, pMapCollectErrors, defaultPMapOptions,
-    mapOk, mapSkip, mapErr, ConcurrencyPool,
-} from "p-map";
-```
-
-## Installation
+## Installation & Import
 
 ```bash
 cap add p-map
 ```
 
-## Quick Start & Practical Examples
-
-### 1. Bounded Mapping with Skip & Error Handling (`pMap` & `pMapCollectErrors`)
-
 ```cp
 import {
-    pMap, pMapCollectErrors, defaultPMapOptions,
-    mapOk, mapSkip, mapErr,
-    PMapOptions, PMapErrorEntry, MapOutcome,
+    PMapOptions,
+    MapOutcome,
+    PMapErrorEntry,
+    PMapSummary,
+    ConcurrencyPool,
+    defaultPMapOptions,
+    mapOk,
+    mapSkip,
+    mapErr,
+    pMap,
+    pMapCollectErrors,
+    batchCount,
+    batchRange,
+    workerPartition,
 } from "p-map";
-
-fn transform(val: i64, _idx: usize): MapOutcome {
-    if (val < 0) {
-        return mapErr(-1);       // Record error code
-    }
-    if (val == 0) {
-        return mapSkip();        // Equivalent to pMapSkip
-    }
-    return mapOk(val * 10);
-}
-
-fn demoPMap() {
-    let input: [5]i64 = [2, 0, -3, 4, -5];
-    mut out: [5]i64 = [0; 5];
-    mut errs: [5]PMapErrorEntry = [PMapErrorEntry { index: 0, err_code: 0 }; 5];
-
-    // Collect all errors without halting early (stop_on_error = false)
-    let opts = PMapOptions { concurrency: 2, stop_on_error: false };
-    let summary = pMapCollectErrors(&input, &mut out, &mut errs, opts, transform);
-    // summary.produced == 2 (out[0..2] = [20, 40])
-    // summary.skipped == 1
-    // summary.failed == 2 (errs[0].index == 2, errs[1].index == 4)
-    // summary.halted == false
-
-    // Fast-fail mode (defaultPMapOptions has stop_on_error = true)
-    let strict_opts = defaultPMapOptions();
-    let strict_summary = pMap(&input, &mut out, strict_opts, transform);
-    // strict_summary.halted == true, strict_summary.first_error_index == 2
-}
 ```
 
-### 2. Batch & Worker Partitioning (`batchCount` / `batchRange` / `workerPartition`)
+## Core API Reference
+
+### Constants & Data Structures
+
+| Symbol | Fields / Values | Description |
+| :--- | :--- | :--- |
+| `PMAP_STATUS_OK` / `SKIP` / `ERR` | `0` / `1` / `2` | Discriminant codes stored in `MapOutcome.status`. |
+| `BatchSlice` | `start: usize`, `end: usize` | Half-open `[start, end)` index range for a batch or worker slice. |
+| `PMapOptions` | `concurrency: usize`, `stop_on_error: bool` | Concurrency limit and fail-fast policy (`defaultPMapOptions()` -> `8`, `true`). |
+| `PMapSkip` | `marker: u8` | Sentinel struct mirroring npm `pMapSkip` (constructed via `pMapSkip()`). |
+| `MapOutcome` | `status: u8`, `value: i64`, `err_code: i32` | Callback result built with `mapOk(v)`, `mapSkip()`, or `mapErr(code)`. |
+| `PMapErrorEntry` | `index: usize`, `err_code: i32` | Per-item failure record populated by `pMapCollectErrors`. |
+| `PMapSummary` | `total`, `produced`, `skipped`, `failed`, `batches_run`, `halted`, `first_error_index: usize?`, `first_error_code: i32` | Complete execution summary returned by `pMap` and `pMapCollectErrors`. |
+
+### Functions & `ConcurrencyPool`
+
+| Symbol | Signature | Description |
+| :--- | :--- | :--- |
+| `pMap` | `(items: &[]i64, out: []i64, opts: PMapOptions, mapper: (i64, usize) => MapOutcome): PMapSummary` | Maps `items` in bounded-concurrency batches into `out`, skipping `mapSkip()` entries. |
+| `pMapCollectErrors` | `(items: &[]i64, out: []i64, errors_out: []PMapErrorEntry, opts: PMapOptions, mapper: (i64, usize) => MapOutcome): PMapSummary` | Like `pMap`, additionally recording failed item indices and error codes into `errors_out`. |
+| `batchCount` | `(total_items: usize, concurrency: usize): usize` | Computes number of batches needed for `total_items` at `concurrency`. |
+| `batchRange` | `(total_items: usize, batch_size: usize, batch_idx: usize): BatchSlice?` | Returns `[start, end)` for batch `batch_idx`, or `null` if out of range. |
+| `workerPartition` | `(total_items: usize, worker_count: usize, worker_idx: usize): BatchSlice?` | Balances `total_items` evenly across `worker_count` workers. |
+| `ConcurrencyPool.new` | `(total_items: usize, max_concurrency: usize, stop_on_error: bool): ConcurrencyPool` | Creates a stack-allocated bounded-concurrency scheduler state machine. |
+| `ConcurrencyPool` methods | `acquireNext(): usize?`, `reportOk(): bool`, `reportSkip(): bool`, `reportErr(): bool`, `isDone(): bool`, `inFlight()`, `completedCount()`, `skippedCount()`, `failedCount()`, `remainingCount()`, `reset()` | Drives in-flight slot acquisition, completion accounting, and halt-on-error semantics. |
+
+## Usage Examples
+
+### 1. Mapping with Skip & Fail-Fast (`pMap`)
 
 ```cp
-import { batchCount, batchRange, workerPartition } from "p-map";
+import { defaultPMapOptions, mapOk, mapSkip, pMap, MapOutcome } from "p-map";
 
-fn demoPartition() {
-    let batches = batchCount(10, 3); // 4 batches: [0..3), [3..6), [6..9), [9..10)
-    if (batchRange(10, 3, 3)) |last_batch| {
-        // last_batch.start == 9, last_batch.end == 10
+fn doublePositive(v: i64, idx: usize): MapOutcome {
+    if (v <= 0) {
+        return mapSkip();
     }
+    return mapOk(v * 2);
+}
 
-    // Evenly distribute 10 items across 4 workers
-    if (workerPartition(10, 4, 0)) |slice0| {
-        // Worker 0 handles [slice0.start .. slice0.end)
-    }
+fn runMap(): usize {
+    let items: [4]i64 = [10, -1, 20, 30];
+    let out: [4]i64 = undefined;
+    let summary = pMap(&items, out[0..4], defaultPMapOptions(), doublePositive);
+    // summary.produced == 3, summary.skipped == 1 -> out[0..3] == [20, 40, 60]
+    return summary.produced;
 }
 ```
 
-### 3. Stateful `ConcurrencyPool`
+### 2. Collect All Errors Without Halting (`pMapCollectErrors`)
+
+```cp
+import { PMapOptions, PMapErrorEntry, MapOutcome, mapOk, mapErr, pMapCollectErrors } from "p-map";
+
+fn validateItem(v: i64, idx: usize): MapOutcome {
+    if (v < 0) { return mapErr(-100); }
+    return mapOk(v);
+}
+
+fn collectAll() {
+    let items: [4]i64 = [1, -2, 3, -4];
+    let out: [4]i64 = undefined;
+    let errs: [4]PMapErrorEntry = undefined;
+    let opts = PMapOptions { concurrency: 2, stop_on_error: false };
+    let sum = pMapCollectErrors(&items, out[0..4], errs[0..4], opts, validateItem);
+    // sum.produced == 2, sum.failed == 2, errs[0].index == 1, errs[1].index == 3
+}
+```
+
+### 3. Driving Custom Concurrency with `ConcurrencyPool`
 
 ```cp
 import { ConcurrencyPool } from "p-map";
 
-fn demoPool() {
-    mut pool = ConcurrencyPool.new(10, 3, true);
+fn scheduleLoop() {
+    let mut pool = ConcurrencyPool.new(10, 3, true);
     while (!pool.isDone()) {
-        if (pool.acquireNext()) |idx| {
-            if (idx % 2 == 0) {
-                let _ = pool.reportOk();
-            } else {
-                let _ = pool.reportSkip();
-            }
+        let next = pool.acquireNext();
+        if (next != null) {
+            // Dispatch work item `next.?`, then report completion:
+            pool.reportOk();
         }
     }
-    let done = pool.completedCount();
-    let skipped = pool.skippedCount();
-    pool.reset();
 }
 ```
 
-## Performance & Safety Highlights
+## Differences from Upstream & Zero-Copy Highlights
 
-- **Zero Heap Allocations**: All outputs and error entries are written into caller-provided stack/slice buffers (`out: []i64`, `errors_out: []PMapErrorEntry`).
-- **Two Error Policies**: Supports both fail-fast (`stop_on_error: true`) and full error aggregation (`stop_on_error: false` with `pMapCollectErrors`).
-- **Explicit Outcome Protocol**: `mapOk`, `mapSkip`, and `mapErr` avoid sentinel ambiguity while preserving `pMapSkip` ergonomics.
-- **Bounds-Safe Partitioning**: `batchRange` and `workerPartition` return `null` on out-of-range indices or zero batch/worker counts.
-
-## API Reference
-
-See [`src/index.d.cp`](src/index.d.cp) for complete type signatures, or [`README_AGENT.md`](README_AGENT.md) for the compact AI-agent reference.
+- **Zero Heap Allocation**: Writes mapped values and error entries directly into caller-owned slices (`out: []i64`, `errors_out: []PMapErrorEntry`) instead of allocating arrays or `AggregateError` objects.
+- **Explicit State Machine**: `ConcurrencyPool` separates concurrency bookkeeping from the underlying execution runtime so it integrates cleanly with CP Actors, event loops, or worker threads.
+- **Deterministic Summaries**: `PMapSummary` reports exact counts (`produced`, `skipped`, `failed`, `batches_run`, `halted`) and `first_error_index: usize?`.
