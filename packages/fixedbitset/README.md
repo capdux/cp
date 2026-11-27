@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`fixedbitset`](https://github.com/petgraph/fixedbitset)（`MIT OR Apache-2.0`）（原库名 `fixedbitset`，CP 包名 `@cap/bitset`）。
+> **参考 / 吸收来源**：吸收自 **crates.io** [`fixedbitset`](https://github.com/petgraph/fixedbitset)（`MIT OR Apache-2.0`）（原库名 `fixedbitset`，CP 包名 `fixedbitset`）。
 
-# @cap/bitset
+# fixedbitset
 
 Zero-allocation fixed-size bitsets (`BitSet256` / `BitSet1024`) with SWAR popcount, zero-word-skipping scanning, and full set algebra for CP — clean-room MIT parity with Rust `fixedbitset` (634M), `bit-vec` (618M), and `bit-set` (557M).
 
@@ -12,7 +12,7 @@ Zero-allocation fixed-size bitsets (`BitSet256` / `BitSet1024`) with SWAR popcou
 ## Install / 安装
 
 ```bash
-cap add @cap/bitset
+cap add fixedbitset
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/bitset
 ## Usage / 使用示例
 
 ```cp
-import { BitSet256 } from "@cap/bitset";
+import { BitSet256 } from "fixedbitset";
 
 let a = BitSet256.init();
 a.setRange(10, 20);

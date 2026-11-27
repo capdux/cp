@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/jest-docblock
+# jest-docblock
 
 Zero-heap top-of-file docblock (`/** @pragma val */`) extractor, parser, and formatter in pure CP.
 

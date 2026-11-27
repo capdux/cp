@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/has-flag
+# has-flag
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:has-flag` ([https://github.com/sindresorhus/has-flag](https://github.com/sindresorhus/has-flag))
@@ -17,7 +17,7 @@
 ## 使用示例
 
 ```cp
-import { hasFlag, getFlagValue, isFlagEnabled } from "@cap/has-flag";
+import { hasFlag, getFlagValue, isFlagEnabled } from "has-flag";
 
 let args = ["--color", "--level=3", "--", "--ignored"];
 let c = hasFlag("color", args);           // true

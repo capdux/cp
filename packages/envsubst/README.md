@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/envsubst
+# envsubst
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:dotenv-expand` ([https://github.com/motdotla/dotenv-expand](https://github.com/motdotla/dotenv-expand))（原库名 `dotenv-expand` → CP 包名 `@cap/envsubst`）
+> **参考 / 吸收来源**：`npm:dotenv-expand` ([https://github.com/motdotla/dotenv-expand](https://github.com/motdotla/dotenv-expand))（原库名 `dotenv-expand` → CP 包名 `envsubst`）
 
 零堆分配的 POSIX / Docker / Kubernetes 风格环境变量模板展开引擎 — 洁净室 MIT 实现，对标 npm `dotenv-expand` / `envsub` 与 Rust `shellexpand`。
 
@@ -12,7 +12,7 @@ Zero-allocation POSIX / Docker / K8s environment variable template expansion eng
 ## 安装 / Install
 
 ```bash
-cap add @cap/envsubst
+cap add envsubst
 ```
 
 ## 支持语法 / Supported POSIX Syntax
@@ -41,7 +41,7 @@ cap add @cap/envsubst
 ## 使用示例 / Usage
 
 ```cp
-import { EnvMap, expandEnv, expandEnvStr, hasEnvVars } from "@cap/envsubst";
+import { EnvMap, expandEnv, expandEnvStr, hasEnvVars } from "envsubst";
 
 let env = EnvMap.init();
 env.set("HOST", "db.internal");

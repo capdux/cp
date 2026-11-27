@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/parseurl`
+# `parseurl`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:parseurl` ([https://github.com/pillarjs/parseurl](https://github.com/pillarjs/parseurl))
@@ -48,7 +48,7 @@ import {
     decodePathname,
     isSafeRequestPath,
     getRequestQueryParam
-} from "@cap/parseurl";
+} from "parseurl";
 
 let u = parseRequestUrl("/api/v1/users?page=2&sort=asc#top");
 // u.pathname == "/api/v1/users"

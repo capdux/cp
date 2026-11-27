@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/half-f16`
+# `half`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:half` ([https://github.com/VoidStarKat/half-rs](https://github.com/VoidStarKat/half-rs)) / `npm:@petamoriken/float16` ([https://github.com/petamoriken/float16](https://github.com/petamoriken/float16))（原库名 `half` → CP 包名 `@cap/half-f16`）
+> **参考 / 吸收来源**：`crates.io:half` ([https://github.com/VoidStarKat/half-rs](https://github.com/VoidStarKat/half-rs)) / `npm:@petamoriken/float16` ([https://github.com/petamoriken/float16](https://github.com/petamoriken/float16))（原库名 `half` → CP 包名 `half`）
 
 Zero-heap IEEE 754 `f16` (binary16) and Google `bf16` (Brain Float 16) codec and arithmetic in pure CP (clean-room counterpart to Rust `half`). Designed for AI/LLM tensor weights, Safetensors, ONNX, and GPU interop.
 
@@ -17,7 +17,7 @@ Zero-heap IEEE 754 `f16` (binary16) and Google `bf16` (Brain Float 16) codec and
 ## Quick Start
 
 ```cp
-import { F16, Bf16, f32SliceToF16, f16SliceToF32 } from "@cap/half-f16";
+import { F16, Bf16, f32SliceToF16, f16SliceToF32 } from "half";
 
 const h = F16.fromF32(1.0); // bits == 0x3C00
 const b = Bf16.fromF32(1.0); // bits == 0x3F80

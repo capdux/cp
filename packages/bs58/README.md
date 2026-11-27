@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bs58
+# bs58
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bs58` ([https://github.com/Nullus157/bs58-rs](https://github.com/Nullus157/bs58-rs))
@@ -12,7 +12,7 @@ Zero-allocation Base58 multi-alphabet encoder/decoder (`Bitcoin`, `Ripple`, `Fli
 ## 安装 / Install
 
 ```bash
-cap add @cap/bs58
+cap add bs58
 ```
 
 ## API 参考 / API Reference
@@ -29,7 +29,7 @@ cap add @cap/bs58
 ## 使用示例 / Usage
 
 ```cp
-import { encodeBase58, decodeBase58, Base58Alphabet, encodeBase58With } from "@cap/bs58";
+import { encodeBase58, decodeBase58, Base58Alphabet, encodeBase58With } from "bs58";
 
 let buf: [128]u8 = undefined;
 const enc = encodeBase58("Hello World!", buf[0..128]).?; // "2NEpo7TZRRrLZSi2U"

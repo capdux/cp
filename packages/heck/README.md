@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/heck-case`
+# `heck`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:heck` ([https://github.com/withoutboats/heck](https://github.com/withoutboats/heck))（原库名 `heck` → CP 包名 `@cap/heck-case`）
+> **参考 / 吸收来源**：`crates.io:heck` ([https://github.com/withoutboats/heck](https://github.com/withoutboats/heck))（原库名 `heck` → CP 包名 `heck`）
 
 Zero-allocation Rust `heck` v0.5 compatible case conversion engine for CP (clean-room MIT).
 
@@ -37,7 +37,7 @@ import {
     toShoutyKebabCase,
     toTitleCase,
     toTrainCase,
-} from "@cap/heck-case";
+} from "heck";
 
 let buf: [64]u8 = undefined;
 const n: usize = toSnakeCase("XMLHttpRequest", buf[0..64]);

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/locate-path
+# locate-path
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:locate-path` ([https://github.com/sindresorhus/locate-path](https://github.com/sindresorhus/locate-path))

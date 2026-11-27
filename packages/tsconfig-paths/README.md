@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/tsconfig-paths
+# tsconfig-paths
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:tsconfig-paths` ([https://github.com/dividab/tsconfig-paths](https://github.com/dividab/tsconfig-paths))
@@ -12,7 +12,7 @@ Zero-allocation TypeScript `tsconfig.json` `baseUrl` + `paths` alias wildcard ma
 ## Install / 安装
 
 ```bash
-cap add @cap/tsconfig-paths
+cap add tsconfig-paths
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/tsconfig-paths
 ## Usage / 使用示例
 
 ```cp
-import { PathsMatcher, resolvePath, resolveAllCandidates } from "@cap/tsconfig-paths";
+import { PathsMatcher, resolvePath, resolveAllCandidates } from "tsconfig-paths";
 
 let m = PathsMatcher.init("./src");
 m.addRule("@app/config", "config/prod.ts");

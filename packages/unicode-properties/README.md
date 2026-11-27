@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/unicode-properties`
+# `unicode-properties`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-properties` ([https://github.com/unicode-rs/unicode-properties](https://github.com/unicode-rs/unicode-properties))
@@ -28,7 +28,7 @@ import {
     isEmojiPresentation,
     isDefaultIgnorable,
     isValidIdentifier,
-} from "@cap/unicode-properties";
+} from "unicode-properties";
 
 const ok = isValidIdentifier("变量_αβ1"); // true
 const ws = isUnicodeWhitespace(0x3000 as u32); // true (ideographic space)

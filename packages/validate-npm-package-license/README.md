@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/validate-npm-package-license
+# validate-npm-package-license
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:validate-npm-package-license` ([https://github.com/kemitchell/validate-npm-package-license.js](https://github.com/kemitchell/validate-npm-package-license.js))

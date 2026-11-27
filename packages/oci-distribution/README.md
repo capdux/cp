@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/docker-ref
+# oci-distribution
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:oci-distribution` ([https://github.com/krustlet/oci-distribution](https://github.com/krustlet/oci-distribution)) / `npm:docker-image-parse` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `oci-distribution` → CP 包名 `@cap/docker-ref`）
+> **参考 / 吸收来源**：`crates.io:oci-distribution` ([https://github.com/krustlet/oci-distribution](https://github.com/krustlet/oci-distribution)) / `npm:docker-image-parse` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `oci-distribution` → CP 包名 `oci-distribution`）
 
 Zero-allocation OCI / Docker image reference parser, validator, and canonical normalizer for CP.
 
@@ -17,7 +17,7 @@ Zero-allocation OCI / Docker image reference parser, validator, and canonical no
 ## Usage
 
 ```cp
-import { parseImageRef, formatNormalized } from "@cap/docker-ref";
+import { parseImageRef, formatNormalized } from "oci-distribution";
 
 const img = parseImageRef("alpine:3.19");
 let buf: [128]u8 = undefined;

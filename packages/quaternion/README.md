@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/quat`
+# `quaternion`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:quaternion` ([https://github.com/rawify/Quaternion.js](https://github.com/rawify/Quaternion.js))（原库名 `quaternion` → CP 包名 `@cap/quat`）
+> **参考 / 吸收来源**：`npm:quaternion` ([https://github.com/rawify/Quaternion.js](https://github.com/rawify/Quaternion.js))（原库名 `quaternion` → CP 包名 `quaternion`）
 
 Zero-heap 3D unit quaternion rotation, SLERP / NLERP interpolation, and Euler angle conversion in pure CP with zero external math dependencies.
 
@@ -16,7 +16,7 @@ Zero-heap 3D unit quaternion rotation, SLERP / NLERP interpolation, and Euler an
 ## Quick Start
 
 ```cp
-import { HALF_PI, Point3, fromAxisAngle, rotatePoint, slerp, identity } from "@cap/quat";
+import { HALF_PI, Point3, fromAxisAngle, rotatePoint, slerp, identity } from "quaternion";
 
 const q90 = fromAxisAngle(0.0, 0.0, 1.0, HALF_PI);
 const p = rotatePoint(q90, Point3 { x: 1.0, y: 0.0, z: 0.0 }); // (0, 1, 0)

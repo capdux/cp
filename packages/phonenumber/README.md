@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/tel-uri
+# phonenumber
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:phonenumber` ([https://github.com/whisperfish/rust-phonenumber](https://github.com/whisperfish/rust-phonenumber))（原库名 `phonenumber` → CP 包名 `@cap/tel-uri`）
+> **参考 / 吸收来源**：`crates.io:phonenumber` ([https://github.com/whisperfish/rust-phonenumber](https://github.com/whisperfish/rust-phonenumber))（原库名 `phonenumber` → CP 包名 `phonenumber`）
 
 Zero-heap RFC 3966 `tel:` URI parser, E.164 international phone number normalizer/validator, and URI formatter in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap RFC 3966 `tel:` URI parser, E.164 international phone number normalize
 ## Usage
 
 ```cp
-import { parseTelUri, normalizeE164 } from "@cap/tel-uri";
+import { parseTelUri, normalizeE164 } from "phonenumber";
 
 const t = parseTelUri("tel:+1-201-555-0123;ext=42");
 let e164: [32]u8 = undefined;

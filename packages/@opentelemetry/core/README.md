@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/otel-baggage`
+# `@opentelemetry/core`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:@opentelemetry/core` ([https://github.com/open-telemetry/opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js))（原库名 `@opentelemetry/core` → CP 包名 `@cap/otel-baggage`）
+> **参考 / 吸收来源**：`npm:@opentelemetry/core` ([https://github.com/open-telemetry/opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js))（原库名 `@opentelemetry/core` → CP 包名 `@opentelemetry/core`）
 
 Zero-heap-allocation W3C Baggage (OpenTelemetry) HTTP header parser, percent-codec, and serializer in pure CP.
 
@@ -25,7 +25,7 @@ import {
     countMembers,
     formatBaggage,
     isValidKey,
-} from "@cap/otel-baggage";
+} from "@opentelemetry/core";
 ```
 
 ## License

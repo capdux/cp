@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/morse-code
+# morse-decoder
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:morse-decoder` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:morse` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `morse-decoder` → CP 包名 `@cap/morse-code`）
+> **参考 / 吸收来源**：`npm:morse-decoder` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:morse` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `morse-decoder` → CP 包名 `morse-decoder`）
 
 Zero-heap ITU-R M.1677 International Morse Code encoder and decoder in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap ITU-R M.1677 International Morse Code encoder and decoder in pure CP.
 ## Usage
 
 ```cp
-import { encodeText, decodeText } from "@cap/morse-code";
+import { encodeText, decodeText } from "morse-decoder";
 
 let buf: [64]u8 = undefined;
 const n = encodeText("SOS", buf[0..64]); // "... --- ..."

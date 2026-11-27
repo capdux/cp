@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/debug
+# debug
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:debug` ([https://github.com/debug-js/debug](https://github.com/debug-js/debug))
@@ -12,7 +12,7 @@ Zero-allocation namespace debug log filter, glob exclusion engine, deterministic
 ## Install / 安装
 
 ```bash
-cap add @cap/debug
+cap add debug
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/debug
 ## Usage / 使用示例
 
 ```cp
-import { DebugFilter, DebugLogger, isNamespaceEnabled, formatDebugLine } from "@cap/debug";
+import { DebugFilter, DebugLogger, isNamespaceEnabled, formatDebugLine } from "debug";
 
 const filter = DebugFilter.from("http:*,db:*,-http:verbose");
 const ok = filter.isEnabled("http:req");       // true

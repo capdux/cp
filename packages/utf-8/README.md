@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/utf-8
+# utf-8
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:utf-8` ([https://github.com/SimonSapin/rust-utf8](https://github.com/SimonSapin/rust-utf8)) — `MIT OR Apache-2.0`

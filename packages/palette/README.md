@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/color-hsl
+# palette
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:palette` ([https://github.com/Ogeon/palette](https://github.com/Ogeon/palette)) / `npm:tinycolor2` ([https://github.com/bgrins/TinyColor](https://github.com/bgrins/TinyColor))（原库名 `palette` → CP 包名 `@cap/color-hsl`）
+> **参考 / 吸收来源**：`crates.io:palette` ([https://github.com/Ogeon/palette](https://github.com/Ogeon/palette)) / `npm:tinycolor2` ([https://github.com/bgrins/TinyColor](https://github.com/bgrins/TinyColor))（原库名 `palette` → CP 包名 `palette`）
 
 Zero-allocation RGB / HSL / HSV / CMYK color space conversion, hue rotation, lighten/darken, and linear RGB mixing library for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation RGB / HSL / HSV / CMYK color space conversion, hue rotation, lig
 ## Usage
 
 ```cp
-import { rgbFromU8, rgbToHsl, rotateHue, hslToRgb } from "@cap/color-hsl";
+import { rgbFromU8, rgbToHsl, rotateHue, hslToRgb } from "palette";
 
 const hsl = rgbToHsl(rgbFromU8(255 as u8, 0 as u8, 0 as u8));
 const green = hslToRgb(rotateHue(hsl, 120.0 as f64));

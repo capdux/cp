@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/combine
+# combine
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:combine` ([https://github.com/Marwes/combine](https://github.com/Marwes/combine))
@@ -12,7 +12,7 @@ Zero-copy streaming parser combinators with line/column cursor tracking and back
 ## Install / 安装
 
 ```bash
-cap add @cap/combine
+cap add combine
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/combine
 ## Usage / 使用示例
 
 ```cp
-import { ParseCursor, tag, skipSpaces, parseU64 } from "@cap/combine";
+import { ParseCursor, tag, skipSpaces, parseU64 } from "combine";
 
 let c = ParseCursor.new("port = 8080");
 const ok = tag(*c, "port");

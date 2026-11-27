@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/validate-npm-package-name`
+# `validate-npm-package-name`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:validate-npm-package-name` ([https://github.com/npm/validate-npm-package-name](https://github.com/npm/validate-npm-package-name))

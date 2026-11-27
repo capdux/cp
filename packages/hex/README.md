@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/hex
+# hex
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:hex` ([https://github.com/KokaKiwi/rust-hex](https://github.com/KokaKiwi/rust-hex))
@@ -12,7 +12,7 @@ Zero-allocation hexadecimal encoder/decoder, fixed-width `u32`/`u64` hex formatt
 ## Install / 安装
 
 ```bash
-cap add @cap/hex
+cap add hex
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/hex
 ## Usage / 使用示例
 
 ```cp
-import { encodeHex, decodeHexPrefixed, encodeU32Hex, hexDump } from "@cap/hex";
+import { encodeHex, decodeHexPrefixed, encodeU32Hex, hexDump } from "hex";
 
 let buf: [128]u8 = undefined;
 const enc = encodeHex("Hello", buf[0..128]);                // "48656c6c6f"

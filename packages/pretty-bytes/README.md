@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/pretty-bytes
+# pretty-bytes
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pretty-bytes` ([https://github.com/sindresorhus/pretty-bytes](https://github.com/sindresorhus/pretty-bytes))
@@ -17,7 +17,7 @@ Pure CP, zero-allocation human-readable byte and bit size formatter (parity with
 ## Usage
 
 ```cp
-import { prettyBytes, prettyBytesWith, PrettyBytesOpts } from "@cap/pretty-bytes";
+import { prettyBytes, prettyBytesWith, PrettyBytesOpts } from "pretty-bytes";
 
 let buf: [32]u8 = undefined;
 let n1 = prettyBytes(1337.0, buf[0..32]); // "1.34 kB"

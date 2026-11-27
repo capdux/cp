@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/d3-format
+# d3-format
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:d3-format` ([https://github.com/d3/d3-format](https://github.com/d3/d3-format))（原库名 `d3-format` → CP 包名 `@cap/d3-format`）
+> **参考 / 吸收来源**：`npm:d3-format` ([https://github.com/d3/d3-format](https://github.com/d3/d3-format))（原库名 `d3-format` → CP 包名 `d3-format`）
 
 零堆分配的 CP 原生数值格式化规范解析与渲染引擎，Clean-Room ISC 实现对标 D3.js 顶流格式化库 `d3-format`（1.10 亿+/周下载）。
 

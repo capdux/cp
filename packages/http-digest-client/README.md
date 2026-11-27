@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/digest-auth`
+# `http-digest-client`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:http-digest-client` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:digest_auth` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `http-digest-client` → CP 包名 `@cap/digest-auth`）
+> **参考 / 吸收来源**：`npm:http-digest-client` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:digest_auth` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `http-digest-client` → CP 包名 `http-digest-client`）
 
 Zero-heap-allocation RFC 7616 / RFC 2617 HTTP Digest Authentication challenge & authorization parser and formatter in pure CP.
 
@@ -25,7 +25,7 @@ import {
     supportsQop,
     formatAuthorization,
     formatChallenge,
-} from "@cap/digest-auth";
+} from "http-digest-client";
 ```
 
 ## License

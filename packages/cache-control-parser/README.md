@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cache-control
+# cache-control-parser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:cache-control-parser` ([https://github.com/etienne-martin/cache-control-parser](https://github.com/etienne-martin/cache-control-parser))（原库名 `cache-control-parser` → CP 包名 `@cap/cache-control`）
+> **参考 / 吸收来源**：`npm:cache-control-parser` ([https://github.com/etienne-martin/cache-control-parser](https://github.com/etienne-martin/cache-control-parser))（原库名 `cache-control-parser` → CP 包名 `cache-control-parser`）
 
 Zero-allocation RFC 9111 HTTP `Cache-Control` directive parser, serializer, and shared/private TTL calculator for CP — clean-room MIT parity with npm `cache-control-parser` and Rust `http-cache-semantics`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 9111 HTTP `Cache-Control` directive parser, serializer, and 
 ## Install / 安装
 
 ```bash
-cap add @cap/cache-control
+cap add cache-control-parser
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/cache-control
 ## Usage / 使用示例
 
 ```cp
-import { CacheControl } from "@cap/cache-control";
+import { CacheControl } from "cache-control-parser";
 
 const cc = CacheControl.parse("public, max-age=60, s-maxage=3600, immutable");
 const cdnTtl = cc.effectiveTtl(true);  // 3600

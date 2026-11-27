@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`npm-package-arg`](https://github.com/npm/npm-package-arg)（`ISC`）（原库名 `npm-package-arg`，CP 包名 `@cap/npm-spec`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`npm-package-arg`](https://github.com/npm/npm-package-arg)（`ISC`）（原库名 `npm-package-arg`，CP 包名 `npm-package-arg`）。
 
-# @cap/npm-spec
+# npm-package-arg
 
 Zero-heap npm package name validator and package specifier (`@scope/name@^1.2.3`) parser and formatter in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap npm package name validator and package specifier (`@scope/name@^1.2.3`
 ## Usage
 
 ```cp
-import { parsePackageSpec } from "@cap/npm-spec";
+import { parsePackageSpec } from "npm-package-arg";
 
 const s = parsePackageSpec("@cap/http@^1.0.0");
 // s.scope => "cap", s.name => "http", s.version_spec => "^1.0.0"

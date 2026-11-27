@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/decimal-fixed`
+# `rust_decimal`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rust_decimal` ([https://github.com/paupino/rust-decimal](https://github.com/paupino/rust-decimal))（原库名 `rust_decimal` → CP 包名 `@cap/decimal-fixed`）
+> **参考 / 吸收来源**：`crates.io:rust_decimal` ([https://github.com/paupino/rust-decimal](https://github.com/paupino/rust-decimal))（原库名 `rust_decimal` → CP 包名 `rust_decimal`）
 
 Zero-heap fixed-point financial decimal arithmetic (`mantissa * 10^(-scale)`, `scale` in `0..12`) in pure CP. Eliminates IEEE-754 floating-point drift (`0.1 + 0.2 == 0.3`).
 
@@ -17,7 +17,7 @@ Zero-heap fixed-point financial decimal arithmetic (`mantissa * 10^(-scale)`, `s
 ## Quick Start
 
 ```cp
-import { Decimal } from "@cap/decimal-fixed";
+import { Decimal } from "rust_decimal";
 
 const a = Decimal.parse("0.1").value;
 const b = Decimal.parse("0.2").value;

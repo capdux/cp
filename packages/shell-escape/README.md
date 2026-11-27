@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/shell-escape`
+# `shell-escape`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:shell-escape` ([https://github.com/xxorax/node-shell-escape](https://github.com/xxorax/node-shell-escape)) / `crates.io:shell-escape` ([https://github.com/sfackler/shell-escape](https://github.com/sfackler/shell-escape))
@@ -24,7 +24,7 @@ import {
     escapeWindows,
     joinPosixCommand,
     isValidEnvName,
-} from "@cap/shell-escape";
+} from "shell-escape";
 ```
 
 ## License

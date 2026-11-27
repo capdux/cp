@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/redent
+# redent
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:redent` ([https://github.com/sindresorhus/redent](https://github.com/sindresorhus/redent))
@@ -12,7 +12,7 @@ Zero-allocation strip-and-reindent multiline string utility for CP — clean-roo
 ## Install / 安装
 
 ```bash
-cap add @cap/redent
+cap add redent
 ```
 
 ## Dependencies / 跨包复用
@@ -30,7 +30,7 @@ cap add @cap/redent
 ## Usage / 使用示例
 
 ```cp
-import { redent, redentWithIndent } from "@cap/redent";
+import { redent, redentWithIndent } from "redent";
 
 let buf: [128]u8 = undefined;
 const n1 = redent("\n    foo\n      bar\n", 2, buf[0..128]); // "\n  foo\n    bar\n"

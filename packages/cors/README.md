@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cors-headers
+# cors
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:cors` ([https://github.com/expressjs/cors](https://github.com/expressjs/cors))（原库名 `cors` → CP 包名 `@cap/cors-headers`）
+> **参考 / 吸收来源**：`npm:cors` ([https://github.com/expressjs/cors](https://github.com/expressjs/cors))（原库名 `cors` → CP 包名 `cors`）
 
 Clean-room MIT, zero-heap Fetch/W3C CORS policy evaluator and response header builder for CP — modeled on npm's `cors`.
 

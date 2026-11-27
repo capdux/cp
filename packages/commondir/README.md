@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/commondir
+# commondir
 
 Zero-heap deepest common parent directory calculator in pure CP.
 

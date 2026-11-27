@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/anstyle-parse`
+# `anstyle-parse`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:anstyle-parse` ([https://github.com/rust-cli/anstyle](https://github.com/rust-cli/anstyle)) / `crates.io:anstream` ([https://github.com/rust-cli/anstyle](https://github.com/rust-cli/anstyle))
@@ -17,7 +17,7 @@ Zero-heap VT100/ANSI escape sequence state-machine parser in pure CP (clean-room
 ## Quick Start
 
 ```cp
-import { AnsiToken, tokenizeAnsi, parseCsiParams, stripAnsiToBuf, visibleByteLen } from "@cap/anstyle-parse";
+import { AnsiToken, tokenizeAnsi, parseCsiParams, stripAnsiToBuf, visibleByteLen } from "anstyle-parse";
 
 let tokens: [16]AnsiToken = undefined;
 const count = tokenizeAnsi(styled_str, &tokens);

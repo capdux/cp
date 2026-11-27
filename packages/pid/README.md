@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/pid`
+# `pid`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:pid` ([https://github.com/braincore/pid-rs](https://github.com/braincore/pid-rs))
@@ -18,7 +18,7 @@ Zero-heap-allocation industrial PID closed-loop feedback controller in pure CP.
 ## API
 
 ```cp
-import { PidController, PidOutput } from "@cap/pid";
+import { PidController, PidOutput } from "pid";
 ```
 
 ## License

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/pino-log
+# pino
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:pino` ([https://github.com/pinojs/pino](https://github.com/pinojs/pino))（原库名 `pino` → CP 包名 `@cap/pino-log`）
+> **参考 / 吸收来源**：`npm:pino` ([https://github.com/pinojs/pino](https://github.com/pinojs/pino))（原库名 `pino` → CP 包名 `pino`）
 
 Clean-room MIT, zero-heap structured NDJSON logger for CP — modeled on npm's `pino` v9.
 

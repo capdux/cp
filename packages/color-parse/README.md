@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/css-color
+# color-parse
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:color-parse` ([https://github.com/colorjs/color-parse](https://github.com/colorjs/color-parse)) / `crates.io:csscolorparser` ([https://github.com/mazznoer/csscolorparser-rs](https://github.com/mazznoer/csscolorparser-rs))（原库名 `color-parse` → CP 包名 `@cap/css-color`）
+> **参考 / 吸收来源**：`npm:color-parse` ([https://github.com/colorjs/color-parse](https://github.com/colorjs/color-parse)) / `crates.io:csscolorparser` ([https://github.com/mazznoer/csscolorparser-rs](https://github.com/mazznoer/csscolorparser-rs))（原库名 `color-parse` → CP 包名 `color-parse`）
 
 Zero-allocation CSS Color Level 4 functional color parser, formatter, and RGB <-> HSL converter for CP.
 
@@ -17,7 +17,7 @@ Zero-allocation CSS Color Level 4 functional color parser, formatter, and RGB <-
 ## Usage
 
 ```cp
-import { parseCssColor, formatRgb, rgbToHsl } from "@cap/css-color";
+import { parseCssColor, formatRgb, rgbToHsl } from "color-parse";
 
 const c = parseCssColor("rgb(255 0 128 / 50%)");
 let buf: [32]u8 = undefined;

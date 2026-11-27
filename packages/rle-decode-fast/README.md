@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/rle
+# rle-decode-fast
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rle-decode-fast` ([https://github.com/okaneco/rle-decode-fast](https://github.com/okaneco/rle-decode-fast))（原库名 `rle-decode-fast` → CP 包名 `@cap/rle`）
+> **参考 / 吸收来源**：`crates.io:rle-decode-fast` ([https://github.com/okaneco/rle-decode-fast](https://github.com/okaneco/rle-decode-fast))（原库名 `rle-decode-fast` → CP 包名 `rle-decode-fast`）
 
 零堆分配的 CP 轻量级字节游程压缩（Apple/TIFF PackBits RLE）与时序整数差值编码（Prometheus/Gorilla Delta & Delta-of-Delta）引擎 — 洁净室 MIT 实现。
 
@@ -12,7 +12,7 @@ Zero-allocation Apple/TIFF PackBits byte run-length compression and Prometheus/G
 ## 安装 / Install
 
 ```bash
-cap add @cap/rle
+cap add rle-decode-fast
 ```
 
 ## API 参考 / API Reference
@@ -27,7 +27,7 @@ cap add @cap/rle
 ## 使用示例 / Usage
 
 ```cp
-import { encodePackBits, decodePackBits, encodeDeltaOfDeltaI64, decodeDeltaOfDeltaI64 } from "@cap/rle";
+import { encodePackBits, decodePackBits, encodeDeltaOfDeltaI64, decodeDeltaOfDeltaI64 } from "rle-decode-fast";
 
 let enc_buf: [128]u8 = undefined;
 const compressed = encodePackBits("AAAAAAAAAABBBBB", enc_buf[0..128]).?; // 4 bytes!

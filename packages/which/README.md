@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/which-bin
+# which
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:which` ([https://github.com/npm/node-which](https://github.com/npm/node-which))（原库名 `which` → CP 包名 `@cap/which-bin`）
+> **参考 / 吸收来源**：`npm:which` ([https://github.com/npm/node-which](https://github.com/npm/node-which))（原库名 `which` → CP 包名 `which`）
 
 零堆分配的 CP 原生跨平台 `PATH` 可执行文件候选路径解析器，Clean-Room MIT 实现对标 npm Top 20 包 `which`（2 亿+/周下载），跨包复用 `@cap/normalize-path`。
 

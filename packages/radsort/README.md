@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/radix-sort
+# radsort
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:radsort` ([https://github.com/JakubValtar/radsort](https://github.com/JakubValtar/radsort))（原库名 `radsort` → CP 包名 `@cap/radix-sort`）
+> **参考 / 吸收来源**：`crates.io:radsort` ([https://github.com/JakubValtar/radsort](https://github.com/JakubValtar/radsort))（原库名 `radsort` → CP 包名 `radsort`）
 
 Zero-allocation O(N) 8-bit LSD radix sort for `u32`, `i32`, `u64`, `i64`, and IEEE-754 `f64` with automatic uniform-byte pass skipping for CP — clean-room MIT parity with Rust `radsort` and `voracious_radix_sort`.
 
@@ -12,7 +12,7 @@ Zero-allocation O(N) 8-bit LSD radix sort for `u32`, `i32`, `u64`, `i64`, and IE
 ## Install / 安装
 
 ```bash
-cap add @cap/radix-sort
+cap add radsort
 ```
 
 ## API Reference / 接口一览

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/user-agent-hints
+# sfv
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:sfv` ([https://github.com/undef1nd/sfv](https://github.com/undef1nd/sfv)) / `npm:ua-client-hints` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `sfv` → CP 包名 `@cap/user-agent-hints`）
+> **参考 / 吸收来源**：`crates.io:sfv` ([https://github.com/undef1nd/sfv](https://github.com/undef1nd/sfv)) / `npm:ua-client-hints` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `sfv` → CP 包名 `sfv`）
 
 Zero-allocation W3C User-Agent Client Hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`, `Sec-CH-UA-Full-Version-List`) RFC 8941 structured header parser and builder for CP.
 
@@ -17,7 +17,7 @@ Zero-allocation W3C User-Agent Client Hints (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `S
 ## Usage
 
 ```cp
-import { BrandVersion, parseBrands, isGreaseBrand, findBrandVersion, parseMobile, parsePlatform } from "@cap/user-agent-hints";
+import { BrandVersion, parseBrands, isGreaseBrand, findBrandVersion, parseMobile, parsePlatform } from "sfv";
 
 const ua = "\"Chromium\";v=\"124\", \"Google Chrome\";v=\"124\", \"Not-A.Brand\";v=\"99\"";
 const ver = findBrandVersion(ua, "google chrome"); // "124"

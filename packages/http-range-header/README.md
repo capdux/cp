@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/http-range-header`
+# `http-range-header`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:http-range-header` ([https://github.com/MarcusGrass/http-range-header](https://github.com/MarcusGrass/http-range-header))
@@ -23,7 +23,7 @@ import {
     parseRangeHeader,
     validateRanges,
     formatContentRange,
-} from "@cap/http-range-header";
+} from "http-range-header";
 
 let syn: [8]SyntacticByteRange = undefined;
 const parsed = parseRangeHeader("bytes=0-499, -200", syn[0..]); // 2

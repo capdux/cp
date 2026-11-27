@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/mime-types`
+# `mime-types`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:mime-types` ([https://github.com/jshttp/mime-types](https://github.com/jshttp/mime-types))
@@ -16,7 +16,7 @@ Zero-heap MIME type, file extension, charset, `Content-Type` header, and HTTP co
 ## Quick Start
 
 ```cp
-import { lookup, extension, charset, contentType, isCompressible, parseMimeType } from "@cap/mime-types";
+import { lookup, extension, charset, contentType, isCompressible, parseMimeType } from "mime-types";
 
 const m = lookup("/assets/app.JSON");      // "application/json"
 const ext = extension("text/html; charset=utf-8"); // "html"

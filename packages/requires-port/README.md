@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/requires-port
+# requires-port
 
 Zero-heap protocol default port resolver and checker in pure CP.
 

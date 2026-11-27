@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/pretty-ms
+# pretty-ms
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pretty-ms` ([https://github.com/sindresorhus/pretty-ms](https://github.com/sindresorhus/pretty-ms))
@@ -12,7 +12,7 @@ Zero-allocation millisecond decomposer and human-readable duration formatter for
 ## 安装 / Install
 
 ```bash
-cap add @cap/pretty-ms
+cap add pretty-ms
 ```
 
 ## API 参考 / API Reference
@@ -28,7 +28,7 @@ cap add @cap/pretty-ms
 ## 使用示例 / Usage
 
 ```cp
-import { parseMs, prettyMs, prettyMsWith, PrettyMsOptions } from "@cap/pretty-ms";
+import { parseMs, prettyMs, prettyMsWith, PrettyMsOptions } from "pretty-ms";
 
 let buf: [128]u8 = undefined;
 const s1 = prettyMs(1337000000, buf[0..128]); // "15d 11h 23m 20s"

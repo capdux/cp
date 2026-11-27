@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cast` ([https://github.com/japaric/cast.rs](https://github.com/japaric/cast.rs)) | 许可：`MIT OR Apache-2.0`
 
-# `@cap/cast`
+# `cast`
 
 零堆分配纯 CP 受检基础数值类型转换库，彻底杜绝静默溢出、负数下溢与浮点 `NaN`/`Inf` 截断，对标 crates.io **#443** `cast`（真实总下载 **3.35 亿+**）。
 

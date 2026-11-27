@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/ring-queue`
+# `crossbeam-queue`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:crossbeam-queue` ([https://github.com/crossbeam-rs/crossbeam](https://github.com/crossbeam-rs/crossbeam)) / `npm:denque` ([https://github.com/invertase/denque](https://github.com/invertase/denque))（原库名 `crossbeam-queue` → CP 包名 `@cap/ring-queue`）
+> **参考 / 吸收来源**：`crates.io:crossbeam-queue` ([https://github.com/crossbeam-rs/crossbeam](https://github.com/crossbeam-rs/crossbeam)) / `npm:denque` ([https://github.com/invertase/denque](https://github.com/invertase/denque))（原库名 `crossbeam-queue` → CP 包名 `crossbeam-queue`）
 
 Zero-heap bounded ring queue (`RingQueueU64`) and wrap-around byte ring buffer (`ByteRing`) in pure CP (clean-room counterpart to Rust `crossbeam-queue` `ArrayQueue`).
 
@@ -16,7 +16,7 @@ Zero-heap bounded ring queue (`RingQueueU64`) and wrap-around byte ring buffer (
 ## Quick Start
 
 ```cp
-import { RingQueueU64, ByteRing } from "@cap/ring-queue";
+import { RingQueueU64, ByteRing } from "crossbeam-queue";
 
 let storage: [8]u64 = undefined;
 let q = RingQueueU64.new(8);

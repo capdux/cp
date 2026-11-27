@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/toidentifier
+# toidentifier
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:toidentifier` ([https://github.com/dougwilson/toidentifier](https://github.com/dougwilson/toidentifier))
@@ -17,7 +17,7 @@
 ## 使用示例
 
 ```cp
-import { toIdentifier, isValidIdentifier } from "@cap/toidentifier";
+import { toIdentifier, isValidIdentifier } from "toidentifier";
 
 let buf: [64]u8 = undefined;
 let n = toIdentifier("I'm a teapot", buf[0..64]); // "ImATeapot" (len 9)

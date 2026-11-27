@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cron-parser
+# cron-parser
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cron-parser` ([https://github.com/harrisiirak/cron-parser](https://github.com/harrisiirak/cron-parser))

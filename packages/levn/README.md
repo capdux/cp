@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/levn
+# levn
 
 Zero-heap Light Value Notation (levn) scalar, list, and object parser in pure CP.
 

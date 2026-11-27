@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/perlin-noise`
+# `perlin-noise`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:perlin-noise` ([https://github.com/andrewrk/node-perlin-noise](https://github.com/andrewrk/node-perlin-noise))
@@ -16,7 +16,7 @@ Zero-heap Ken Perlin improved 1D / 2D / 3D gradient noise, Fractal Brownian Moti
 ## Quick Start
 
 ```cp
-import { noise2D, fbm2D, ridge2D } from "@cap/perlin-noise";
+import { noise2D, fbm2D, ridge2D } from "perlin-noise";
 
 const n = noise2D(1.25, 3.75, 42);
 const terrain = fbm2D(0.5, 0.5, 42, 5, 2.0, 0.5);

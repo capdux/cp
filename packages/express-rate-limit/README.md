@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/express-rate-limit
+# express-rate-limit
 
 Zero-heap fixed-window HTTP rate limiter in pure CP with fixed-capacity bucket table (64 slots), expired-slot eviction, and IETF draft-7 `RateLimit` header formatting.
 

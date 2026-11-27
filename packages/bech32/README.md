@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bech32
+# bech32
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bech32` ([https://github.com/rust-bitcoin/rust-bech32](https://github.com/rust-bitcoin/rust-bech32))
@@ -12,7 +12,7 @@ Zero-allocation BIP-173 Bech32 and BIP-350 Bech32m encoder, decoder, 8-to-5 bit 
 ## Install / 安装
 
 ```bash
-cap add @cap/bech32
+cap add bech32
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/bech32
 ## Usage / 使用示例
 
 ```cp
-import { Bech32Variant, encodeBech32, decodeBech32 } from "@cap/bech32";
+import { Bech32Variant, encodeBech32, decodeBech32 } from "bech32";
 
 let enc_buf: [128]u8 = undefined;
 let hrp_buf: [32]u8 = undefined;

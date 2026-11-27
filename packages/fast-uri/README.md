@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:fast-uri` ([https://github.com/fastify/fast-uri](https://github.com/fastify/fast-uri)) | 许可：`BSD-3-Clause`
 
-# `@cap/fast-uri`
+# `fast-uri`
 
 零堆分配纯 CP RFC 3986 URI 解析、规范化序列化、相对引用解析与等价比较库，完整对标 npm **#171** `fast-uri`（真实周下载 **2.29 亿/周**，Fastify / AJV 底层核心依赖）。
 

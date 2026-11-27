@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cssparser
+# cssparser
 
 Zero-heap CSS Syntax Level 3 lexer and tokenizer (`CssTokKind`, `CssToken`, `CssLexer`) in pure CP.
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/snakecase-keys
+# snakecase-keys
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:snakecase-keys` ([https://github.com/bendrucker/snakecase-keys](https://github.com/bendrucker/snakecase-keys))

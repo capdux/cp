@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/widest-line
+# widest-line
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:widest-line` ([https://github.com/sindresorhus/widest-line](https://github.com/sindresorhus/widest-line))
@@ -12,7 +12,7 @@ Zero-allocation widest visual terminal line width calculator for CP — clean-ro
 ## Install / 安装
 
 ```bash
-cap add @cap/widest-line
+cap add widest-line
 ```
 
 ## Dependencies / 跨包复用
@@ -33,7 +33,7 @@ cap add @cap/widest-line
 ## Usage / 使用示例
 
 ```cp
-import { widestLine, lineWidths, widestLineWithTab } from "@cap/widest-line";
+import { widestLine, lineWidths, widestLineWithTab } from "widest-line";
 
 const w1 = widestLine("hi\n你好世界\r\n\x1b[32mgreen\x1b[0m"); // 8
 const w2 = widestLineWithTab("a\tb\n1234\tx", 4);            // 9

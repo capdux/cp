@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/disjoint-set`
+# `disjoint-sets`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:disjoint-sets` ([https://github.com/tov/disjoint-sets-rs](https://github.com/tov/disjoint-sets-rs))（原库名 `disjoint-sets` → CP 包名 `@cap/disjoint-set`）
+> **参考 / 吸收来源**：`crates.io:disjoint-sets` ([https://github.com/tov/disjoint-sets-rs](https://github.com/tov/disjoint-sets-rs))（原库名 `disjoint-sets` → CP 包名 `disjoint-sets`）
 
 Zero-heap Disjoint Set Union (Union-Find) data structure in pure CP, featuring path halving and union by size. Ideal for connected components, Kruskal MST, equivalence classes, and cycle detection in undirected graphs.
 
@@ -12,7 +12,7 @@ Zero-heap Disjoint Set Union (Union-Find) data structure in pure CP, featuring p
 ## Installation
 
 ```bash
-cap add @cap/disjoint-set
+cap add disjoint-sets
 ```
 
 ## API

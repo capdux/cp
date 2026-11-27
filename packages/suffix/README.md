@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/suffix-array
+# suffix
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:suffix` ([https://github.com/BurntSushi/suffix](https://github.com/BurntSushi/suffix))（原库名 `suffix` → CP 包名 `@cap/suffix-array`）
+> **参考 / 吸收来源**：`crates.io:suffix` ([https://github.com/BurntSushi/suffix](https://github.com/BurntSushi/suffix))（原库名 `suffix` → CP 包名 `suffix`）
 
 Zero-heap static Suffix Array + Kasai O(N) LCP array in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap static Suffix Array + Kasai O(N) LCP array in pure CP.
 ## Usage
 
 ```cp
-import { SuffixArray } from "@cap/suffix-array";
+import { SuffixArray } from "suffix";
 
 const sa = SuffixArray.build("banana");
 // sa.suffixAt(0..6) => [5, 3, 1, 0, 4, 2]

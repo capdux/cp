@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/natural-cmp
+# natord
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:natord` ([https://github.com/lifthrasiir/rust-natord](https://github.com/lifthrasiir/rust-natord))（原库名 `natord` → CP 包名 `@cap/natural-cmp`）
+> **参考 / 吸收来源**：`crates.io:natord` ([https://github.com/lifthrasiir/rust-natord](https://github.com/lifthrasiir/rust-natord))（原库名 `natord` → CP 包名 `natord`）
 
 Zero-heap arbitrary-precision human natural sort comparator and in-place sorter in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap arbitrary-precision human natural sort comparator and in-place sorter 
 ## Usage
 
 ```cp
-import { compareNatural, sortNatural } from "@cap/natural-cmp";
+import { compareNatural, sortNatural } from "natord";
 
 const cmp = compareNatural("file2.txt", "file10.txt"); // -1
 ```

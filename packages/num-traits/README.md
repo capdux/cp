@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/num-traits
+# num-traits
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-traits` ([https://github.com/rust-num/num-traits](https://github.com/rust-num/num-traits))
@@ -62,7 +62,7 @@ import {
     checkedPowU64,
     nextPowerOfTwoU64,
     rotateLeftU64,
-} from "@cap/num-traits";
+} from "num-traits";
 
 let sum = checkedAddI64(9223372036854775807, 1); // null (overflow)
 let clamped = saturatingSubU64(5, 10);           // 0

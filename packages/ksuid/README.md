@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ksuid
+# ksuid
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ksuid` ([https://github.com/segmentio/ksuid](https://github.com/segmentio/ksuid)) / `crates.io:svix-ksuid` ([https://github.com/svix/rust-ksuid](https://github.com/svix/rust-ksuid))
@@ -18,7 +18,7 @@ Zero-heap Segment KSUID (20-byte K-Sortable Unique IDentifier) 27-character Base
 ## Usage
 
 ```cp
-import { fromParts, encode, decode, Ksuid } from "@cap/ksuid";
+import { fromParts, encode, decode, Ksuid } from "ksuid";
 
 const payload: [16]u8 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 const k = fromParts(1732620000, payload);

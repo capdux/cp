@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/lcs-diff
+# diff-sequences
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:diff-sequences` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest)) / `crates.io:lcs-diff` ([https://github.com/bokuweb/lcs-diff](https://github.com/bokuweb/lcs-diff))（原库名 `diff-sequences` → CP 包名 `@cap/lcs-diff`）
+> **参考 / 吸收来源**：`npm:diff-sequences` ([https://github.com/jestjs/jest](https://github.com/jestjs/jest)) / `crates.io:lcs-diff` ([https://github.com/bokuweb/lcs-diff](https://github.com/bokuweb/lcs-diff))（原库名 `diff-sequences` → CP 包名 `diff-sequences`）
 
 Zero-heap Longest Common Subsequence (LCS) length, diff insert/delete stats, LCS similarity, and Longest Common Substring locator in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap Longest Common Subsequence (LCS) length, diff insert/delete stats, LCS
 ## Usage
 
 ```cp
-import { lcsLength, diffStats, longestCommonSubstring } from "@cap/lcs-diff";
+import { lcsLength, diffStats, longestCommonSubstring } from "diff-sequences";
 
 const n = lcsLength("AGGTAB", "GXTXAYB"); // 4 ("GTAB")
 const sub = longestCommonSubstring("ABABC", "BABCA"); // len=4 ("BABC")

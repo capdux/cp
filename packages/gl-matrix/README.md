@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/vec3
+# gl-matrix
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:gl-matrix` ([https://github.com/toji/gl-matrix](https://github.com/toji/gl-matrix))（原库名 `gl-matrix` → CP 包名 `@cap/vec3`）
+> **参考 / 吸收来源**：`npm:gl-matrix` ([https://github.com/toji/gl-matrix](https://github.com/toji/gl-matrix))（原库名 `gl-matrix` → CP 包名 `gl-matrix`）
 
 High-performance, zero-heap-allocation 3D vector (`Vec3`) and spatial geometry library in pure CP with zero external dependencies (uses built-in Newton-Raphson `sqrtF64`).
 
@@ -18,7 +18,7 @@ High-performance, zero-heap-allocation 3D vector (`Vec3`) and spatial geometry l
 ## Usage
 
 ```cp
-import { Vec3 } from "@cap/vec3";
+import { Vec3 } from "gl-matrix";
 
 let x = Vec3.unitX();
 let y = Vec3.unitY();

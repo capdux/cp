@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/minisearch`
+# `lunr`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:lunr` ([https://github.com/olivernn/lunr.js](https://github.com/olivernn/lunr.js))（原库名 `lunr` → CP 包名 `@cap/minisearch`）
+> **参考 / 吸收来源**：`npm:lunr` ([https://github.com/olivernn/lunr.js](https://github.com/olivernn/lunr.js))（原库名 `lunr` → CP 包名 `lunr`）
 
 Zero-heap-allocation in-memory inverted index and BM25 full-text search engine in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation in-memory inverted index and BM25 full-text search engine i
 ## API
 
 ```cp
-import { MAX_DOCS, MAX_TERMS, MAX_POSTINGS, SearchHit, MiniSearch } from "@cap/minisearch";
+import { MAX_DOCS, MAX_TERMS, MAX_POSTINGS, SearchHit, MiniSearch } from "lunr";
 ```
 
 ## License

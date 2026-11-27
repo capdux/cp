@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/range-parser
+# range-parser
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:range-parser` ([https://github.com/jshttp/range-parser](https://github.com/jshttp/range-parser))

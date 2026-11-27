@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/mqtt-packet
+# mqttbytes
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:mqttbytes` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `mqttbytes` → CP 包名 `@cap/mqtt-packet`）
+> **参考 / 吸收来源**：`crates.io:mqttbytes` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `mqttbytes` → CP 包名 `mqttbytes`）
 
 Zero-heap OASIS MQTT v3.1.1 binary control packet encoder and streaming decoder in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap OASIS MQTT v3.1.1 binary control packet encoder and streaming decoder 
 ## Usage
 
 ```cp
-import { encodePublish, decodePublish } from "@cap/mqtt-packet";
+import { encodePublish, decodePublish } from "mqttbytes";
 
 let buf: [128]u8 = undefined;
 const n = encodePublish("sensors/temp", "23.5", 1, true, 42, buf[0..128]);

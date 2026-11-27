@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/y18n`
+# `y18n`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:y18n` ([https://github.com/yargs/y18n](https://github.com/yargs/y18n))
@@ -17,7 +17,7 @@ Zero-heap-allocation internationalization (i18n) catalog and printf-style format
 ## Usage
 
 ```cp
-import { Y18nCatalog, formatPrintf } from "@cap/y18n";
+import { Y18nCatalog, formatPrintf } from "y18n";
 ```
 
 ## License

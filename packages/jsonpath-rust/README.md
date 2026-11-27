@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/jsonpath-rust
+# jsonpath-rust
 
 Zero-heap RFC 9535 JSONPath expression parser and canonical serializer in pure CP.
 

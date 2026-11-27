@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/figures
+# figures
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:figures` ([https://github.com/sindresorhus/figures](https://github.com/sindresorhus/figures), `MIT`)

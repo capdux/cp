@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/error-ex
+# error-ex
 
 Zero-heap structured error and context formatter with `{key}` template interpolation in pure CP.
 

@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:is-fullwidth-code-point` ([https://github.com/sindresorhus/is-fullwidth-code-point](https://github.com/sindresorhus/is-fullwidth-code-point)) | 许可：`MIT`
 
-# `@cap/is-fullwidth-code-point`
+# `is-fullwidth-code-point`
 
 零堆分配纯 CP Unicode UAX #11 全角码点判定库，对标 npm Top-20 包 `is-fullwidth-code-point` v5（周下载 1.8 亿+）。
 

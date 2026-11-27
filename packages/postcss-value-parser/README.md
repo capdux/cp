@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/css-units
+# postcss-value-parser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:postcss-value-parser` ([https://github.com/TrySound/postcss-value-parser](https://github.com/TrySound/postcss-value-parser))（原库名 `postcss-value-parser` → CP 包名 `@cap/css-units`）
+> **参考 / 吸收来源**：`npm:postcss-value-parser` ([https://github.com/TrySound/postcss-value-parser](https://github.com/TrySound/postcss-value-parser))（原库名 `postcss-value-parser` → CP 包名 `postcss-value-parser`）
 
 Zero-allocation CSS dimension, length, angle, time, and resolution parser and unit converter for CP — clean-room MIT parity with `postcss-value-parser` (120M/wk) dimension subset, `parse-css-dimension`, and `css-unit-converter`.
 
@@ -12,7 +12,7 @@ Zero-allocation CSS dimension, length, angle, time, and resolution parser and un
 ## Install / 安装
 
 ```bash
-cap add @cap/css-units
+cap add postcss-value-parser
 ```
 
 ## Supported Units / 支持单位
@@ -46,7 +46,7 @@ import {
     toPixels,
     toDegrees,
     toMilliseconds,
-} from "@cap/css-units";
+} from "postcss-value-parser";
 
 const ctx = CssContext.defaultCtx();
 const px = toPixels(parseCssDimension("1.5rem"), ctx);   // 24.0

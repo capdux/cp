@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/potential-utf
+# potential_utf
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:potential_utf` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))
@@ -12,7 +12,7 @@ Zero-allocation potentially-ill-formed UTF-8, UTF-16, and Unicode scalar value w
 ## Install / 安装
 
 ```bash
-cap add @cap/potential-utf
+cap add potential_utf
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/potential-utf
 ## Usage / 使用示例
 
 ```cp
-import { PotentialUtf8, PotentialUtf16, PotentialCodePoint } from "@cap/potential-utf";
+import { PotentialUtf8, PotentialUtf16, PotentialCodePoint } from "potential_utf";
 
 const s = PotentialUtf8.fromStr("hello");
 const ok = s.isValidUtf8();

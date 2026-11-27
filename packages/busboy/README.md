@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/multipart-boundary
+# busboy
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:busboy` ([https://github.com/mscdex/busboy](https://github.com/mscdex/busboy)) / `crates.io:multer` ([https://github.com/rousan/multer-rs](https://github.com/rousan/multer-rs))（原库名 `busboy` → CP 包名 `@cap/multipart-boundary`）
+> **参考 / 吸收来源**：`npm:busboy` ([https://github.com/mscdex/busboy](https://github.com/mscdex/busboy)) / `crates.io:multer` ([https://github.com/rousan/multer-rs](https://github.com/rousan/multer-rs))（原库名 `busboy` → CP 包名 `busboy`）
 
 Zero-heap RFC 7578 `multipart/form-data` boundary extractor, part iterator, and field/filename parser in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap RFC 7578 `multipart/form-data` boundary extractor, part iterator, and 
 ## Usage
 
 ```cp
-import { extractBoundary, nextPart } from "@cap/multipart-boundary";
+import { extractBoundary, nextPart } from "busboy";
 
 const b = extractBoundary("multipart/form-data; boundary=----CapForm123");
 const part = nextPart(body, b, 0);

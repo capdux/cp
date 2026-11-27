@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/cssesc`
+# `cssesc`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cssesc` ([https://github.com/mathiasbynens/cssesc](https://github.com/mathiasbynens/cssesc))
@@ -22,7 +22,7 @@ import {
     defaultCssEscOptions,
     cssescBuf,
     cssesc,
-} from "@cap/cssesc";
+} from "cssesc";
 ```
 
 ## License

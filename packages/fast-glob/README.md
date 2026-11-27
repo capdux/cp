@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/fast-glob
+# fast-glob
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:fast-glob` ([https://github.com/mrmlnc/fast-glob](https://github.com/mrmlnc/fast-glob))
@@ -18,7 +18,7 @@ Zero-heap, pure CP glob pattern set, dynamic pattern detector, and path escaper 
 ```cp
 import {
     FastGlobOptions, GlobPatternSet, isDynamicPattern, escapePath, convertPathToPattern
-} from "@cap/fast-glob";
+} from "fast-glob";
 
 let set = GlobPatternSet.new(FastGlobOptions.defaults());
 * = set.addPattern("src/**/*.{cp,ts}");

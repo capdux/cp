@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bencode
+# bendy
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:bendy` ([https://github.com/P3KI/bendy](https://github.com/P3KI/bendy))（原库名 `bendy` → CP 包名 `@cap/bencode`）
+> **参考 / 吸收来源**：`crates.io:bendy` ([https://github.com/P3KI/bendy](https://github.com/P3KI/bendy))（原库名 `bendy` → CP 包名 `bendy`）
 
 Zero-heap BitTorrent BEP-3 deterministic Bencode streaming encoder, zero-copy decoder, validator, and top-level dictionary lookup in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap BitTorrent BEP-3 deterministic Bencode streaming encoder, zero-copy de
 ## Usage
 
 ```cp
-import { BencodeWriter, validate, dictLookup, decodeInt } from "@cap/bencode";
+import { BencodeWriter, validate, dictLookup, decodeInt } from "bendy";
 
 let buf: [128]u8 = undefined;
 let w = BencodeWriter.init(buf[0..128]);

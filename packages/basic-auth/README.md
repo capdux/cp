@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/basic-auth
+# basic-auth
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:basic-auth` ([https://github.com/jshttp/basic-auth](https://github.com/jshttp/basic-auth)) / `crates.io:http-auth-basic` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -17,7 +17,7 @@ Zero-heap RFC 7617 HTTP Basic Authentication parser, encoder, constant-time veri
 ## Usage
 
 ```cp
-import { verifyHeader, formatChallenge } from "@cap/basic-auth";
+import { verifyHeader, formatChallenge } from "basic-auth";
 
 const ok = verifyHeader("Basic dXNlcjpwYXNz", "user", "pass"); // true
 ```

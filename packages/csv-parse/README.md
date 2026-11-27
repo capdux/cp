@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/csv-line
+# csv-parse
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:csv-parse` ([https://github.com/adaltas/node-csv](https://github.com/adaltas/node-csv))（原库名 `csv-parse` → CP 包名 `@cap/csv-line`）
+> **参考 / 吸收来源**：`npm:csv-parse` ([https://github.com/adaltas/node-csv](https://github.com/adaltas/node-csv))（原库名 `csv-parse` → CP 包名 `csv-parse`）
 
 Zero-heap RFC 4180 CSV/TSV record parser and serializer in pure CP (npm `csv-parse` / `papaparse` parity).
 
@@ -16,7 +16,7 @@ Zero-heap RFC 4180 CSV/TSV record parser and serializer in pure CP (npm `csv-par
 ## Usage
 
 ```cp
-import { parseRecord, formatRecord, CsvFieldSpan } from "@cap/csv-line";
+import { parseRecord, formatRecord, CsvFieldSpan } from "csv-parse";
 
 let out_buf: [256]u8 = undefined;
 let spans: [16]CsvFieldSpan = undefined;

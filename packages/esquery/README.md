@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/esquery
+# esquery
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:esquery` ([https://github.com/estools/esquery](https://github.com/estools/esquery))（原库名 `esquery` → CP 包名 `@cap/esquery`）
+> **参考 / 吸收来源**：`npm:esquery` ([https://github.com/estools/esquery](https://github.com/estools/esquery))（原库名 `esquery` → CP 包名 `esquery`）
 
 Zero-allocation ESTree AST CSS-like selector parser and matcher for CP — clean-room BSD-3-Clause implementation inspired by `esquery` (used by ESLint).
 
@@ -12,7 +12,7 @@ Zero-allocation ESTree AST CSS-like selector parser and matcher for CP — clean
 ## Install / 安装
 
 ```bash
-cap add @cap/esquery
+cap add esquery
 ```
 
 ## API
@@ -38,7 +38,7 @@ cap add @cap/esquery
 ## Usage / 使用示例
 
 ```cp
-import { AstNodeInfo, parseSelector, matchesSelector, queryAll } from "@cap/esquery";
+import { AstNodeInfo, parseSelector, matchesSelector, queryAll } from "esquery";
 
 const nodes = [
     AstNodeInfo{ node_type: "FunctionDeclaration", name: "greet", operator: "", parent_idx: -1, prev_sibling_idx: -1 },

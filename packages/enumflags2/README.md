@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/enumflags2`
+# `enumflags2`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:enumflags2` ([https://github.com/meithecatte/enumflags2](https://github.com/meithecatte/enumflags2))
@@ -53,7 +53,7 @@ pub struct BitFlags64 {
 ## Usage
 
 ```cp
-import { BitFlags64 } from "@cap/enumflags2";
+import { BitFlags64 } from "enumflags2";
 
 const READ: u64 = 1 << 0;
 const WRITE: u64 = 1 << 1;

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cosmiconfig
+# cosmiconfig
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cosmiconfig` ([https://github.com/cosmiconfig/cosmiconfig](https://github.com/cosmiconfig/cosmiconfig))
@@ -19,7 +19,7 @@ Zero-heap, pure CP configuration file discovery planner, candidate path builder,
 import {
     ExplorerOptions, SearchPlanner, DEFAULT_SEARCH_PLACE_COUNT,
     formatSearchPlace, buildCandidatePath, detectLoader
-} from "@cap/cosmiconfig";
+} from "cosmiconfig";
 
 let opts = ExplorerOptions.defaults("myapp");
 let planner = SearchPlanner.new("/workspace/pkg/sub", "/workspace");

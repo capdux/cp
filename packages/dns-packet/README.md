@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/dns-packet
+# dns-packet
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:dns-packet` ([https://github.com/mafintosh/dns-packet](https://github.com/mafintosh/dns-packet))
@@ -18,7 +18,7 @@ Zero-heap RFC 1035 DNS binary packet encoder and decoder in pure CP (npm `dns-pa
 ## Usage
 
 ```cp
-import { encodeQuery, TYPE_A } from "@cap/dns-packet";
+import { encodeQuery, TYPE_A } from "dns-packet";
 
 let pkt: [128]u8 = undefined;
 const len = encodeQuery(0x1234, "api.capdux.org", TYPE_A, true, pkt[0..128]);

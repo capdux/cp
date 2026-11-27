@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/bytesize`
+# `bytesize`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bytesize` ([https://github.com/hyunsik/bytesize](https://github.com/hyunsik/bytesize))
@@ -17,7 +17,7 @@ Zero-heap pure-integer byte size utility in pure CP (clean-room counterpart to R
 ## Quick Start
 
 ```cp
-import { ByteSize, GIB, parseByteSize, formatSi, formatIec } from "@cap/bytesize";
+import { ByteSize, GIB, parseByteSize, formatSi, formatIec } from "bytesize";
 
 const sz = ByteSize.mib(512);
 const total = sz.asU64(); // 536870912

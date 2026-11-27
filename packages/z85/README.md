@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/base85
+# z85
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:z85` ([https://github.com/murar8/z85](https://github.com/murar8/z85))（原库名 `z85` → CP 包名 `@cap/base85`）
+> **参考 / 吸收来源**：`crates.io:z85` ([https://github.com/murar8/z85](https://github.com/murar8/z85))（原库名 `z85` → CP 包名 `z85`）
 
 零堆分配的 CP Base85 多标准编解码引擎 — 洁净室 MIT 实现，同时支持 **ZeroMQ Z85（RFC 32）** 与 **Adobe Ascii85（PDF / PostScript）**，相比 Base64 节省约 25% 传输体积。
 
@@ -12,7 +12,7 @@ Zero-allocation Base85 multi-standard encoder/decoder (`Z85` RFC 32 & Adobe `Asc
 ## 安装 / Install
 
 ```bash
-cap add @cap/base85
+cap add z85
 ```
 
 ## API 参考 / API Reference
@@ -27,7 +27,7 @@ cap add @cap/base85
 ## 使用示例 / Usage
 
 ```cp
-import { encodeZ85, decodeZ85, encodeAscii85, decodeAscii85 } from "@cap/base85";
+import { encodeZ85, decodeZ85, encodeAscii85, decodeAscii85 } from "z85";
 
 let raw: [8]u8 = [0x86, 0x4F, 0xD2, 0x6F, 0xB5, 0x59, 0xF7, 0x5B];
 let buf: [64]u8 = undefined;

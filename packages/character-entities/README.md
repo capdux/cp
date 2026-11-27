@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/character-entities
+# character-entities
 
 Zero-allocation HTML5 named and numeric character reference decoder & encoder in pure CP (covers `character-entities`, `character-entities-legacy`, `character-entities-html4`, `character-reference-invalid`, `decode-named-character-reference`, `parse-entities`, `stringify-entities`, and `micromark-util-decode-numeric-character-reference`).
 

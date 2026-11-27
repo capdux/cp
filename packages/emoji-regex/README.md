@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`emoji-regex`](https://github.com/mathiasbynens/emoji-regex)（`MIT`）（包名 `@cap/emoji-regex`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`emoji-regex`](https://github.com/mathiasbynens/emoji-regex)（`MIT`）（包名 `emoji-regex`）。
 
-# `@cap/emoji-regex`
+# `emoji-regex`
 
 Zero-heap-allocation Unicode RGI Emoji UTF-8 scanner and extractor in pure CP (clean-room MIT implementation inspired by npm `emoji-regex`).
 
@@ -16,7 +16,7 @@ Zero-heap-allocation Unicode RGI Emoji UTF-8 scanner and extractor in pure CP (c
 ## Usage
 
 ```cp
-import { EmojiSpan, isEmojiCodePoint, findNextEmoji, countEmojis, containsEmoji, stripEmojis } from "@cap/emoji-regex";
+import { EmojiSpan, isEmojiCodePoint, findNextEmoji, countEmojis, containsEmoji, stripEmojis } from "emoji-regex";
 ```
 
 ## License

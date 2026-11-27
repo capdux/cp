@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/textwrap
+# textwrap
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:wrap-ansi` ([https://github.com/chalk/wrap-ansi](https://github.com/chalk/wrap-ansi))（原库名 `wrap-ansi` → CP 包名 `@cap/textwrap`）
+> **参考 / 吸收来源**：`npm:wrap-ansi` ([https://github.com/chalk/wrap-ansi](https://github.com/chalk/wrap-ansi))（原库名 `wrap-ansi` → CP 包名 `textwrap`）
 
 Zero-allocation ANSI-aware text wrapping, display width calculation, CJK wide-character breaking, `indent`/`dedent`, and display-width truncation for CP — clean-room MIT parity with npm `wrap-ansi` / `word-wrap` / `strip-indent` and Rust `textwrap`.
 
@@ -12,7 +12,7 @@ Zero-allocation ANSI-aware text wrapping, display width calculation, CJK wide-ch
 ## Install / 安装
 
 ```bash
-cap add @cap/textwrap
+cap add textwrap
 ```
 
 ## API Reference / 接口一览
@@ -40,7 +40,7 @@ import {
     indent,
     dedent,
     truncate,
-} from "@cap/textwrap";
+} from "textwrap";
 
 let buf: [512]u8 = undefined;
 

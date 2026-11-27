@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/kafka-topic`
+# `kafkajs`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:kafkajs` ([https://github.com/tulios/kafkajs](https://github.com/tulios/kafkajs)) / `crates.io:rdkafka` ([https://github.com/fede1024/rust-rdkafka](https://github.com/fede1024/rust-rdkafka))（原库名 `kafkajs` → CP 包名 `@cap/kafka-topic`）
+> **参考 / 吸收来源**：`npm:kafkajs` ([https://github.com/tulios/kafkajs](https://github.com/tulios/kafkajs)) / `crates.io:rdkafka` ([https://github.com/fede1024/rust-rdkafka](https://github.com/fede1024/rust-rdkafka))（原库名 `kafkajs` → CP 包名 `kafkajs`）
 
 Zero-heap-allocation Apache Kafka / Redpanda topic validator, official Murmur2 `DefaultPartitioner` hash, and Topic-Partition parser in pure CP.
 
@@ -25,7 +25,7 @@ import {
     toPositive,
     partitionForKey,
     parseTopicPartition,
-} from "@cap/kafka-topic";
+} from "kafkajs";
 ```
 
 ## License

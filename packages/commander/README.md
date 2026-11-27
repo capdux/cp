@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/commander
+# commander
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:commander` ([https://github.com/tj/commander.js](https://github.com/tj/commander.js))
@@ -12,7 +12,7 @@ Zero-allocation CLI command framework for CP — clean-room MIT parity with npm 
 ## Install / 安装
 
 ```bash
-cap add @cap/commander
+cap add commander
 ```
 
 ## Dependencies / 跨包复用
@@ -33,7 +33,7 @@ cap add @cap/commander
 ## Usage / 使用示例
 
 ```cp
-import { Command } from "@cap/commander";
+import { Command } from "commander";
 
 let cmd = Command.new("deploy");
 cmd.version("1.2.0");

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/natsort
+# natural-compare
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:natural-compare` ([https://github.com/litejs/natural-compare-lite](https://github.com/litejs/natural-compare-lite))（原库名 `natural-compare` → CP 包名 `@cap/natsort`）
+> **参考 / 吸收来源**：`npm:natural-compare` ([https://github.com/litejs/natural-compare-lite](https://github.com/litejs/natural-compare-lite))（原库名 `natural-compare` → CP 包名 `natural-compare`）
 
 零堆分配的 CP 自然序（Alphanumeric / Natural Sort）字符串比较与原地排序库 — 洁净室 MIT 实现，对标 npm `natural-compare` / `natsort` 与 Rust `natord` / `alphanumeric-sort`。
 
@@ -18,7 +18,7 @@ Zero-allocation natural / alphanumeric string comparison and in-place sorting fo
 ## 安装 / Install
 
 ```bash
-cap add @cap/natsort
+cap add natural-compare
 ```
 
 ## API 参考 / API Reference
@@ -45,7 +45,7 @@ import {
     sortNaturalDesc,
     sortNaturalIgnoreCase,
     isSortedNatural,
-} from "@cap/natsort";
+} from "natural-compare";
 
 // 比较文件名与版本号 / Compare filenames & versions
 const c1 = naturalCompare("file2.txt", "file10.txt"); // -1

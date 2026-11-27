@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/wcag
+# wcag-contrast
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:wcag-contrast` ([https://github.com/tmcw/wcag-contrast](https://github.com/tmcw/wcag-contrast))（原库名 `wcag-contrast` → CP 包名 `@cap/wcag`）
+> **参考 / 吸收来源**：`npm:wcag-contrast` ([https://github.com/tmcw/wcag-contrast](https://github.com/tmcw/wcag-contrast))（原库名 `wcag-contrast` → CP 包名 `wcag-contrast`）
 
 零堆分配的 W3C WCAG 2.1/2.2 色彩无障碍对比度计算、AA/AAA 评级与自动高对比前景色推荐引擎 — 洁净室 MIT 实现，对标 npm `wcag-contrast` / `color-contrast-checker` 与 Rust `contrast`。
 
@@ -18,7 +18,7 @@ Zero-allocation W3C WCAG 2.1/2.2 color contrast calculator, AA/AAA compliance gr
 ## 安装 / Install
 
 ```bash
-cap add @cap/wcag
+cap add wcag-contrast
 ```
 
 ## API 参考 / API Reference
@@ -50,7 +50,7 @@ import {
     meetsAA,
     gradeContrast,
     suggestAccessibleHex,
-} from "@cap/wcag";
+} from "wcag-contrast";
 
 const ratio = contrastRatioHex("#111827", "#ffffff").?; // ~17.74
 const ok_aa = meetsAA(ratio, false);                    // true

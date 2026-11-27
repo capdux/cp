@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/webhook-sig`
+# `standardwebhooks`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:standardwebhooks` ([https://github.com/standard-webhooks/standard-webhooks](https://github.com/standard-webhooks/standard-webhooks)) / `crates.io:standardwebhooks` ([https://github.com/standard-webhooks/standard-webhooks](https://github.com/standard-webhooks/standard-webhooks))（原库名 `standardwebhooks` → CP 包名 `@cap/webhook-sig`）
+> **参考 / 吸收来源**：`npm:standardwebhooks` ([https://github.com/standard-webhooks/standard-webhooks](https://github.com/standard-webhooks/standard-webhooks)) / `crates.io:standardwebhooks` ([https://github.com/standard-webhooks/standard-webhooks](https://github.com/standard-webhooks/standard-webhooks))（原库名 `standardwebhooks` → CP 包名 `standardwebhooks`）
 
 Zero-heap-allocation Webhook signature parser, replay-window guard, and constant-time verifier in pure CP.
 
@@ -27,7 +27,7 @@ import {
     constantTimeEq,
     verifyStripeExpected,
     formatStripeSignedPayload,
-} from "@cap/webhook-sig";
+} from "standardwebhooks";
 ```
 
 ## License

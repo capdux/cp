@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cobs
+# cobs
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cobs` ([https://github.com/jamesmunns/cobs.rs](https://github.com/jamesmunns/cobs.rs))
@@ -12,7 +12,7 @@ Zero-allocation Consistent Overhead Byte Stuffing (COBS), custom-sentinel COBS/X
 ## Install / 安装
 
 ```bash
-cap add @cap/cobs
+cap add cobs
 ```
 
 ## API Reference / 接口一览

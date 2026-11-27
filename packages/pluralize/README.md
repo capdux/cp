@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/pluralize` — Zero-Allocation English Pluralization & Ordinal Engine
+# `pluralize` — Zero-Allocation English Pluralization & Ordinal Engine
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pluralize` ([https://github.com/plurals/pluralize](https://github.com/plurals/pluralize))
@@ -9,14 +9,14 @@
 
 ## Overview / 概述
 
-`@cap/pluralize` is a zero-dependency, zero-heap-allocation English inflection library for CP. It includes a 56-pair irregular noun dictionary, a 36-word uncountable noun table, regular English plural/singular transformation rules, automatic case-style preservation (`child`/`Child`/`CHILD`), count formatting (`"1 item"`, `"3 items"`), and English ordinals (`"1st"`, `"11th"`, `"21st"`).
+`pluralize` is a zero-dependency, zero-heap-allocation English inflection library for CP. It includes a 56-pair irregular noun dictionary, a 36-word uncountable noun table, regular English plural/singular transformation rules, automatic case-style preservation (`child`/`Child`/`CHILD`), count formatting (`"1 item"`, `"3 items"`), and English ordinals (`"1st"`, `"11th"`, `"21st"`).
 
-`@cap/pluralize` 是纯 CP 零依赖、零堆分配的英语单复数与序数词变形引擎，内置 56 组高频不规则名词词典、36 个不可数名词表、规则英语单复数互转、智能大小写还原、数量词格式化及序数词生成。
+`pluralize` 是纯 CP 零依赖、零堆分配的英语单复数与序数词变形引擎，内置 56 组高频不规则名词词典、36 个不可数名词表、规则英语单复数互转、智能大小写还原、数量词格式化及序数词生成。
 
 ## Installation / 安装
 
 ```bash
-cap add @cap/pluralize
+cap add pluralize
 ```
 
 ## API Reference / 导出 API
@@ -42,7 +42,7 @@ import {
     isUncountable,
     pluralizeCount,
     ordinal,
-} from "@cap/pluralize";
+} from "pluralize";
 
 fn demoPluralize() {
     let buf: [64]u8 = undefined;

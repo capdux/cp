@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/shlex
+# shlex
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:shell-quote` ([https://github.com/ljharb/shell-quote](https://github.com/ljharb/shell-quote)) / `npm:shell-quote` ([https://github.com/inspect-js/node-shell-quote](https://github.com/inspect-js/node-shell-quote)) / `crates.io:shlex` ([https://github.com/comex/rust-shlex](https://github.com/comex/rust-shlex))（原库名 `shell-quote` → CP 包名 `@cap/shlex`）
+> **参考 / 吸收来源**：`npm:shell-quote` ([https://github.com/ljharb/shell-quote](https://github.com/ljharb/shell-quote)) / `npm:shell-quote` ([https://github.com/inspect-js/node-shell-quote](https://github.com/inspect-js/node-shell-quote)) / `crates.io:shlex` ([https://github.com/comex/rust-shlex](https://github.com/comex/rust-shlex))（原库名 `shell-quote` → CP 包名 `shlex`）
 
 Zero-allocation POSIX shell quoting, command-line lexical splitting & injection guard for CP — clean-room MIT parity with npm `shell-quote` and Rust `shlex`.
 
 ## Install
 
 ```bash
-cap add @cap/shlex
+cap add shlex
 ```
 
 ## Features
@@ -22,7 +22,7 @@ cap add @cap/shlex
 ## Usage
 
 ```cp
-import { quoteArg, joinArgs, splitShell } from "@cap/shlex";
+import { quoteArg, joinArgs, splitShell } from "shlex";
 
 let out: [256]u8 = undefined;
 const safe = quoteArg("it's $(rm -rf /)", out[0..256]);

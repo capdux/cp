@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/convex-hull`
+# `monotone-chain-convex-hull`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:monotone-chain-convex-hull` ([https://github.com/mikolalysenko/monotone-chain-convex-hull](https://github.com/mikolalysenko/monotone-chain-convex-hull))（原库名 `monotone-chain-convex-hull` → CP 包名 `@cap/convex-hull`）
+> **参考 / 吸收来源**：`npm:monotone-chain-convex-hull` ([https://github.com/mikolalysenko/monotone-chain-convex-hull](https://github.com/mikolalysenko/monotone-chain-convex-hull))（原库名 `monotone-chain-convex-hull` → CP 包名 `monotone-chain-convex-hull`）
 
 Zero-heap 2D Andrew's monotone chain convex hull algorithm with area and perimeter calculation in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap 2D Andrew's monotone chain convex hull algorithm with area and perimet
 ## Quick Start
 
 ```cp
-import { Pt2, convexHull, hullArea, hullPerimeter } from "@cap/convex-hull";
+import { Pt2, convexHull, hullArea, hullPerimeter } from "monotone-chain-convex-hull";
 
 let pts: [5]Pt2 = [
     Pt2 { x: 0.0, y: 0.0 },

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/number-prefix
+# number_prefix
 
 Zero-heap SI decimal (`k`/`M`/`G`/`T`/`P`/`E`) and IEC binary (`Ki`/`Mi`/`Gi`/`Ti`/`Pi`/`Ei`) numeric prefix calculator and formatter in pure CP.
 

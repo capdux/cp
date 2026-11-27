@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/convert-case
+# convert_case
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:convert_case` ([https://github.com/rutrum/convert-case](https://github.com/rutrum/convert-case))（原库名 `convert_case` → CP 包名 `@cap/convert-case`）
+> **参考 / 吸收来源**：`crates.io:convert_case` ([https://github.com/rutrum/convert-case](https://github.com/rutrum/convert-case))（原库名 `convert_case` → CP 包名 `convert_case`）
 
 Zero-allocation 14-style string case conversion engine for CP — clean-room MIT parity with crates.io `convert_case` v0.6.
 
@@ -14,7 +14,7 @@ Composes [`@cap/heck-case`](../heck-case) for Unicode-aware word boundary detect
 ```json
 {
   "dependencies": {
-    "@cap/convert-case": "1.0.0"
+    "convert_case": "1.0.0"
   }
 }
 ```
@@ -28,7 +28,7 @@ import {
     CASE_ALTERNATING,
     convertCase,
     toFlatCase,
-} from "@cap/convert-case";
+} from "convert_case";
 
 let buf: [128]u8 = undefined;
 const n1 = convertCase("XMLHttpRequest", CASE_SNAKE, buf[0..]);       // "xml_http_request"

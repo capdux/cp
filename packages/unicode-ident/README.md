@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/unicode-ident`
+# `unicode-ident`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-ident` ([https://github.com/dtolnay/unicode-ident](https://github.com/dtolnay/unicode-ident))
@@ -16,7 +16,7 @@ Zero-heap UAX #31 Unicode identifier classification and UTF-8 identifier scannin
 ## Quick Start
 
 ```cp
-import { isXidStart, isXidContinue, isIdentStart, isValidIdent, scanIdentLen } from "@cap/unicode-ident";
+import { isXidStart, isXidContinue, isIdentStart, isValidIdent, scanIdentLen } from "unicode-ident";
 
 const ok1 = isValidIdent("_hello_世界_123"); // true
 const ok2 = isValidIdent("9invalid");        // false

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/merge-descriptors`
+# `merge-descriptors`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:merge-descriptors` ([https://github.com/component/merge-descriptors](https://github.com/component/merge-descriptors))
@@ -53,7 +53,7 @@ import {
     DescriptorTable,
     mergeDescriptors,
     countEnumerable
-} from "@cap/merge-descriptors";
+} from "merge-descriptors";
 
 let dst = DescriptorTable.new();
 dst.define(PropDescriptor.data("name", "app"));

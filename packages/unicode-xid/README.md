@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/unicode-xid`
+# `unicode-xid`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-xid` ([https://github.com/unicode-rs/unicode-xid](https://github.com/unicode-rs/unicode-xid))
@@ -24,7 +24,7 @@ import {
     isValidIdent,
     scanIdentLen,
     isAsciiIdent,
-} from "@cap/unicode-xid";
+} from "unicode-xid";
 
 const a: bool = isXidStart(0x03B1);           // 'α' -> true
 const b: bool = isXidContinue(0x0301);        // combining acute -> true

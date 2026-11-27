@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/terser-minify
+# terser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:terser` ([https://github.com/terser/terser](https://github.com/terser/terser))（原库名 `terser` → CP 包名 `@cap/terser-minify`）
+> **参考 / 吸收来源**：`npm:terser` ([https://github.com/terser/terser](https://github.com/terser/terser))（原库名 `terser` → CP 包名 `terser`）
 
 Zero-allocation lexer-safe JS/TS/CSS code minifier for CP — clean-room MIT implementation inspired by npm `terser`.
 
@@ -12,7 +12,7 @@ Zero-allocation lexer-safe JS/TS/CSS code minifier for CP — clean-room MIT imp
 ## Install / 安装
 
 ```bash
-cap add @cap/terser-minify
+cap add terser
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/terser-minify
 ## Usage / 使用示例
 
 ```cp
-import { MinifyOptions, minifyJs, minifyCss } from "@cap/terser-minify";
+import { MinifyOptions, minifyJs, minifyCss } from "terser";
 
 let out: [256]u8 = undefined;
 const stats = minifyJs("const x = 1; // comment\nreturn x + 2;", MinifyOptions.defaults(), out[0..256]);

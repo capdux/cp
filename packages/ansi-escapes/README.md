@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ansi-escapes
+# ansi-escapes
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ansi-escapes` ([https://github.com/sindresorhus/ansi-escapes](https://github.com/sindresorhus/ansi-escapes))
@@ -12,7 +12,7 @@ Zero-allocation ANSI/VT100 terminal cursor control, erasing, OSC-8 hyperlinks, a
 ## 安装 / Install
 
 ```bash
-cap add @cap/ansi-escapes
+cap add ansi-escapes
 ```
 
 ## API 参考 / API Reference
@@ -38,7 +38,7 @@ cap add @cap/ansi-escapes
 ## 使用示例 / Usage
 
 ```cp
-import { cursorToXY, eraseLines, hyperlink, cursorHide, cursorShow } from "@cap/ansi-escapes";
+import { cursorToXY, eraseLines, hyperlink, cursorHide, cursorShow } from "ansi-escapes";
 
 let buf: [256]u8 = undefined;
 const pos = cursorToXY(4 as usize, 2 as usize, buf[0..256]);     // "\x1b[3;5H"

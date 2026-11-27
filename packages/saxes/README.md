@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/saxes
+# saxes
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:saxes` ([https://github.com/lddubeau/saxes](https://github.com/lddubeau/saxes))（原库名 `saxes` → CP 包名 `@cap/saxes`）
+> **参考 / 吸收来源**：`npm:saxes` ([https://github.com/lddubeau/saxes](https://github.com/lddubeau/saxes))（原库名 `saxes` → CP 包名 `saxes`）
 
 Zero-allocation streaming SAX XML 1.0 event parser with tag balance validation and entity decoding for CP — clean-room ISC implementation inspired by npm `saxes`.
 
@@ -12,7 +12,7 @@ Zero-allocation streaming SAX XML 1.0 event parser with tag balance validation a
 ## Install / 安装
 
 ```bash
-cap add @cap/saxes
+cap add saxes
 ```
 
 ## API
@@ -38,7 +38,7 @@ cap add @cap/saxes
 ## Usage / 使用示例
 
 ```cp
-import { SaxesParser, XmlEvent, XmlEventKind } from "@cap/saxes";
+import { SaxesParser, XmlEvent, XmlEventKind } from "saxes";
 
 let parser = SaxesParser.new();
 let events: [16]XmlEvent = undefined;

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/timeago
+# timeago.js
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:timeago.js` ([https://github.com/hustcc/timeago.js](https://github.com/hustcc/timeago.js))（原库名 `timeago.js` → CP 包名 `@cap/timeago`）
+> **参考 / 吸收来源**：`npm:timeago.js` ([https://github.com/hustcc/timeago.js](https://github.com/hustcc/timeago.js))（原库名 `timeago.js` → CP 包名 `timeago.js`）
 
 Zero-allocation deterministic relative time formatter for CP — clean-room MIT parity with npm `timeago.js` / `date-fns/formatDistance` and Rust `chrono-humanize` / `timeago`.
 
@@ -12,7 +12,7 @@ Zero-allocation deterministic relative time formatter for CP — clean-room MIT 
 ## Install / 安装
 
 ```bash
-cap add @cap/timeago
+cap add timeago.js
 ```
 
 ## API Reference / 接口一览
@@ -38,7 +38,7 @@ import {
     formatTimeagoEn,
     formatTimeagoZh,
     formatCompact,
-} from "@cap/timeago";
+} from "timeago.js";
 
 let buf: [64]u8 = undefined;
 const en = formatTimeagoEn(-300, buf[0..64]);        // "5 minutes ago"

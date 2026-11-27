@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/quadtree-2d
+# quadtree_rs
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:quadtree_rs` ([https://github.com/ambuc/quadtree_rs](https://github.com/ambuc/quadtree_rs)) / `npm:d3-quadtree` ([https://github.com/d3/d3-quadtree](https://github.com/d3/d3-quadtree))（原库名 `quadtree_rs` → CP 包名 `@cap/quadtree-2d`）
+> **参考 / 吸收来源**：`crates.io:quadtree_rs` ([https://github.com/ambuc/quadtree_rs](https://github.com/ambuc/quadtree_rs)) / `npm:d3-quadtree` ([https://github.com/d3/d3-quadtree](https://github.com/d3/d3-quadtree))（原库名 `quadtree_rs` → CP 包名 `quadtree_rs`）
 
 Zero-allocation pooled 2D QuadTree spatial index for CP with automatic 4-quadrant subdivision, rectangular range queries, and Euclidean radius queries.
 
@@ -16,7 +16,7 @@ Zero-allocation pooled 2D QuadTree spatial index for CP with automatic 4-quadran
 ## Usage
 
 ```cp
-import { Rect2, QuadNode, QuadItem, QuadTree } from "@cap/quadtree-2d";
+import { Rect2, QuadNode, QuadItem, QuadTree } from "quadtree_rs";
 
 let nodes: [64]QuadNode = undefined;
 let items: [64]QuadItem = undefined;

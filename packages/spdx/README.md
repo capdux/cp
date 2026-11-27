@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`spdx`](https://github.com/EmbarkStudios/spdx)（`MIT OR Apache-2.0`）（包名 `@cap/spdx`）。
+> **参考 / 吸收来源**：吸收自 **crates.io** [`spdx`](https://github.com/EmbarkStudios/spdx)（`MIT OR Apache-2.0`）（包名 `spdx`）。
 
-# @cap/spdx
+# spdx
 
 Zero-allocation SPDX 2.3 open-source license expression parser, validator, and compatibility evaluator for CP — clean-room MIT parity with npm `spdx-expression-parse` (55M/wk), `spdx-satisfies` (30M/wk), and Rust `spdx` (40M).
 
@@ -12,7 +12,7 @@ Zero-allocation SPDX 2.3 open-source license expression parser, validator, and c
 ## Install / 安装
 
 ```bash
-cap add @cap/spdx
+cap add spdx
 ```
 
 ## Features / 核心特性
@@ -42,7 +42,7 @@ import {
     validateExpression,
     isPermissiveOnly,
     satisfies,
-} from "@cap/spdx";
+} from "spdx";
 
 // 1. Metadata lookup
 const mit = lookupLicense("MIT");

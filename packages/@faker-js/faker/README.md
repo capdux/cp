@@ -1,22 +1,22 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/faker` — Zero-Allocation Deterministic Fake Data Generator
+# `@faker-js/faker` — Zero-Allocation Deterministic Fake Data Generator
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:@faker-js/faker` ([https://github.com/faker-js/faker](https://github.com/faker-js/faker))（原库名 `@faker-js/faker` → CP 包名 `@cap/faker`）
+> **参考 / 吸收来源**：`npm:@faker-js/faker` ([https://github.com/faker-js/faker](https://github.com/faker-js/faker))（原库名 `@faker-js/faker` → CP 包名 `@faker-js/faker`）
 
 > Clean-room pure-CP implementation modeled after npm `@faker-js/faker` & Rust `fake` | License: MIT
 
 ## Overview / 概述
 
-`@cap/faker` is a zero-dependency, zero-heap-allocation deterministic fake data generator for CP, powered by **xoshiro256\*\*** seeded with **SplitMix64**. It produces reproducible test fixtures across person/identity, networking, RFC 4122 UUID v4, text/commerce, Luhn-valid test credit card numbers, and unbiased collection sampling.
+`@faker-js/faker` is a zero-dependency, zero-heap-allocation deterministic fake data generator for CP, powered by **xoshiro256\*\*** seeded with **SplitMix64**. It produces reproducible test fixtures across person/identity, networking, RFC 4122 UUID v4, text/commerce, Luhn-valid test credit card numbers, and unbiased collection sampling.
 
-`@cap/faker` 是纯 CP 零依赖、零堆分配的确定性仿真测试数据生成库，底层采用 **SplitMix64 + xoshiro256\*\*** 伪随机数引擎，支持同种子 100% 可复现的人物、网络、UUID v4、文本商业、Luhn 校验测试卡号及集合洗牌/无放回抽样。
+`@faker-js/faker` 是纯 CP 零依赖、零堆分配的确定性仿真测试数据生成库，底层采用 **SplitMix64 + xoshiro256\*\*** 伪随机数引擎，支持同种子 100% 可复现的人物、网络、UUID v4、文本商业、Luhn 校验测试卡号及集合洗牌/无放回抽样。
 
 ## Installation / 安装
 
 ```bash
-cap add @cap/faker
+cap add @faker-js/faker
 ```
 
 ## API Reference / 导出 API
@@ -41,7 +41,7 @@ cap add @cap/faker
 ## Quick Start / 使用示例
 
 ```cp
-import { Faker, isValidLuhn } from "@cap/faker";
+import { Faker, isValidLuhn } from "@faker-js/faker";
 
 fn generateFixture() {
     let faker = Faker.init(2026);

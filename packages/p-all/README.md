@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`p-all`](https://github.com/sindresorhus/p-all)（`MIT`）（包名 `@cap/p-all`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`p-all`](https://github.com/sindresorhus/p-all)（`MIT`）（包名 `p-all`）。
 
-# `@cap/p-all`
+# `p-all`
 
 Zero-heap-allocation bounded-concurrency batch task planner in pure CP (clean-room MIT implementation inspired by npm `p-all` v5).
 
@@ -19,7 +19,7 @@ Reuses [`@cap/p-limit`](../p-limit) (`PLimit`) for bounded concurrency and FIFO 
 ## Usage
 
 ```cp
-import { P_ALL_CAP, PAllPlanner } from "@cap/p-all";
+import { P_ALL_CAP, PAllPlanner } from "p-all";
 ```
 
 ## License

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/polyline
+# polyline
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:polyline` ([https://github.com/georust/polyline](https://github.com/georust/polyline))

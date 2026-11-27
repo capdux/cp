@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/word-count
+# words-count
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:words-count` ([https://github.com/magiclen/words-count](https://github.com/magiclen/words-count)) / `npm:word-count` ([https://github.com/yuehu/word-count](https://github.com/yuehu/word-count))（原库名 `words-count` → CP 包名 `@cap/word-count`）
+> **参考 / 吸收来源**：`crates.io:words-count` ([https://github.com/magiclen/words-count](https://github.com/magiclen/words-count)) / `npm:word-count` ([https://github.com/yuehu/word-count](https://github.com/yuehu/word-count))（原库名 `words-count` → CP 包名 `words-count`）
 
 Zero-allocation multilingual (Latin + CJK) word/character/line counter and reading-time estimator for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation multilingual (Latin + CJK) word/character/line counter and readi
 ## Usage
 
 ```cp
-import { analyze, estimateReadingSeconds } from "@cap/word-count";
+import { analyze, estimateReadingSeconds } from "words-count";
 
 const stats = analyze("你好世界，欢迎使用CP语言");
 // stats.cjk_chars == 10, stats.latin_words == 1, stats.words == 11

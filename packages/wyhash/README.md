@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/wyhash`
+# `wyhash`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:wyhash` ([https://github.com/eldruin/wyhash-rs](https://github.com/eldruin/wyhash-rs))
@@ -17,7 +17,7 @@ Zero-heap-allocation Wang Yi `wyhash` v4 64-bit fast non-cryptographic hash and 
 ## API
 
 ```cp
-import { wymum, wyhash, wyhashBytes, WyRng } from "@cap/wyhash";
+import { wymum, wyhash, wyhashBytes, WyRng } from "wyhash";
 ```
 
 ## License

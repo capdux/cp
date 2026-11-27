@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/url-join
+# url-join
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:url-join` ([https://github.com/jfromaniello/url-join](https://github.com/jfromaniello/url-join))
@@ -19,7 +19,7 @@ Zero-allocation smart URL joiner, slash/dot-segment path normalizer, query merge
 ## 安装 / Install
 
 ```bash
-cap add @cap/url-join
+cap add url-join
 ```
 
 ## API 参考 / API Reference
@@ -41,7 +41,7 @@ import {
     withQuery,
     withTrailingSlash,
     withoutTrailingSlash,
-} from "@cap/url-join";
+} from "url-join";
 
 let buf: [512]u8 = undefined;
 let parts: [4]string = ["https://capdux.org/", "/packages/", "@cap/lru", "?v=1"];

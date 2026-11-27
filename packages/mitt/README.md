@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/mitt`
+# `mitt`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:mitt` ([https://github.com/developit/mitt](https://github.com/developit/mitt))
@@ -18,7 +18,7 @@ Zero-heap-allocation tiny functional event emitter with wildcard `"*"` support i
 ## Usage
 
 ```cp
-import { Emitter, mitt } from "@cap/mitt";
+import { Emitter, mitt } from "mitt";
 
 let bus: Emitter = mitt();
 * = bus.on("user:login", 101);

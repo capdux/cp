@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`p-settle`](https://github.com/sindresorhus/p-settle)（`MIT`）（包名 `@cap/p-settle`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`p-settle`](https://github.com/sindresorhus/p-settle)（`MIT`）（包名 `p-settle`）。
 
-# `@cap/p-settle`
+# `p-settle`
 
 Zero-heap-allocation bounded-concurrency `Promise.allSettled` task planner in pure CP (clean-room MIT implementation inspired by npm `p-settle` v5).
 
@@ -20,7 +20,7 @@ Reuses [`@cap/p-limit`](../p-limit) (`PLimit`) for bounded concurrency and FIFO 
 ## Usage
 
 ```cp
-import { P_SETTLE_CAP, SettleStatus, SettledEntry, PSettlePlanner } from "@cap/p-settle";
+import { P_SETTLE_CAP, SettleStatus, SettledEntry, PSettlePlanner } from "p-settle";
 ```
 
 ## License

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/acorn-parse
+# acorn
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:acorn` ([https://github.com/acornjs/acorn](https://github.com/acornjs/acorn))（原库名 `acorn` → CP 包名 `@cap/acorn-parse`）
+> **参考 / 吸收来源**：`npm:acorn` ([https://github.com/acornjs/acorn](https://github.com/acornjs/acorn))（原库名 `acorn` → CP 包名 `acorn`）
 
 Zero-allocation ES2024 JavaScript lexer and ES Module import/export scanner for CP — clean-room MIT implementation inspired by npm `acorn` v8.
 
@@ -12,7 +12,7 @@ Zero-allocation ES2024 JavaScript lexer and ES Module import/export scanner for 
 ## Install / 安装
 
 ```bash
-cap add @cap/acorn-parse
+cap add acorn
 ```
 
 ## API
@@ -48,7 +48,7 @@ import {
     TOK_EOF,
     analyzeJsModule,
     extractImportSpecifiers,
-} from "@cap/acorn-parse";
+} from "acorn";
 
 const src = "import { a } from './mod.js';\nexport function run() { return a ?? 1; }";
 const summary = analyzeJsModule(src); // ok == true, import_count == 1, export_count == 1, function_count == 1

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/fresh`
+# `fresh`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:fresh` ([https://github.com/jshttp/fresh](https://github.com/jshttp/fresh))
@@ -26,7 +26,7 @@ import {
     etagStrongMatch,
     parseHttpDate,
     isFresh,
-} from "@cap/fresh";
+} from "fresh";
 ```
 
 ## License

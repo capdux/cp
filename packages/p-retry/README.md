@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/retry-backoff
+# p-retry
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:p-retry` ([https://github.com/sindresorhus/p-retry](https://github.com/sindresorhus/p-retry))（原库名 `p-retry` → CP 包名 `@cap/retry-backoff`）
+> **参考 / 吸收来源**：`npm:p-retry` ([https://github.com/sindresorhus/p-retry](https://github.com/sindresorhus/p-retry))（原库名 `p-retry` → CP 包名 `p-retry`）
 
 Clean-room MIT, zero-heap exponential backoff & retry policy state machine for CP — modeled on npm's `retry`/`p-retry` and Rust's `backoff`.
 

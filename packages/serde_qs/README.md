@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/serde-qs
+# serde_qs
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:serde_qs` ([https://github.com/samscott89/serde_qs](https://github.com/samscott89/serde_qs))（原库名 `serde_qs` → CP 包名 `@cap/serde-qs`）
+> **参考 / 吸收来源**：`crates.io:serde_qs` ([https://github.com/samscott89/serde_qs](https://github.com/samscott89/serde_qs))（原库名 `serde_qs` → CP 包名 `serde_qs`）
 
 Zero-allocation nested bracket query string parser & serializer for CP — clean-room MIT parity with crates.io `serde_qs` v0.13.
 
@@ -14,7 +14,7 @@ Composes [`@cap/percent-encoding`](../percent-encoding) for WHATWG/RFC percent-e
 ```json
 {
   "dependencies": {
-    "@cap/serde-qs": "1.0.0"
+    "serde_qs": "1.0.0"
   }
 }
 ```
@@ -28,7 +28,7 @@ import {
     parseQs,
     getQsValueDecoded,
     serializeQs,
-} from "@cap/serde-qs";
+} from "serde_qs";
 
 const path = parseKeyPath("user[address][city]");
 // path.depth == 3, path.segments[0..3] == ["user", "address", "city"]

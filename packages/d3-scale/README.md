@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/d3-scale`
+# `d3-scale`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:d3-scale` ([https://github.com/d3/d3-scale](https://github.com/d3/d3-scale))
@@ -23,7 +23,7 @@ import {
     SqrtScale, sqrtScale,
     LogScale, logScale,
     QuantizeScale, quantizeScale,
-} from "@cap/d3-scale";
+} from "d3-scale";
 ```
 
 ## License

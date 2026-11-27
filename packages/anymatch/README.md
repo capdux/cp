@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/anymatch`
+# `anymatch`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:anymatch` ([https://github.com/micromatch/anymatch](https://github.com/micromatch/anymatch))
@@ -16,7 +16,7 @@ Zero-heap file path & glob matcher with `!pattern` negation support in pure CP (
 ## Quick Start
 
 ```cp
-import { anymatch, anymatchIndex, countGlobPatterns } from "@cap/anymatch";
+import { anymatch, anymatchIndex, countGlobPatterns } from "anymatch";
 
 const rules: [3]string = ["src/**/*.cp", "README.md", "!src/generated/**"];
 const matched = anymatch(&rules, "src\\net\\http.cp"); // true

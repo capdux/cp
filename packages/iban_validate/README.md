@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/iban
+# iban_validate
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:iban_validate` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `iban_validate` → CP 包名 `@cap/iban`）
+> **参考 / 吸收来源**：`crates.io:iban_validate` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `iban_validate` → CP 包名 `iban_validate`）
 
 Zero-heap ISO 13616 IBAN validator, ISO 7064 Mod-97-10 checksum engine, check-digit generator, and electronic/friendly formatter in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap ISO 13616 IBAN validator, ISO 7064 Mod-97-10 checksum engine, check-di
 ## Usage
 
 ```cp
-import { isValid, computeCheckDigits } from "@cap/iban";
+import { isValid, computeCheckDigits } from "iban_validate";
 
 const ok = isValid("DE89 3704 0044 0532 0130 00"); // true
 ```

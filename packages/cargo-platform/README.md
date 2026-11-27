@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cargo-platform
+# cargo-platform
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cargo-platform` ([https://github.com/rust-lang/cargo](https://github.com/rust-lang/cargo))

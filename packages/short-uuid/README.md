@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/short-uuid
+# short-uuid
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:short-uuid` ([https://github.com/oculus42/short-uuid](https://github.com/oculus42/short-uuid))
@@ -12,7 +12,7 @@ Zero-allocation 128-bit UUID to 22-character Flickr Base58 / URL Base62 / Cookie
 ## Install / 安装
 
 ```bash
-cap add @cap/short-uuid
+cap add short-uuid
 ```
 
 ## API Reference / 接口一览
@@ -38,7 +38,7 @@ import {
     expandUuid,
     shortenUuidWith,
     expandUuidWith,
-} from "@cap/short-uuid";
+} from "short-uuid";
 
 let short_buf: [32]u8 = undefined;
 let uuid_buf: [36]u8 = undefined;

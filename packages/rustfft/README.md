@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/fft
+# rustfft
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rustfft` ([https://github.com/ejmahler/RustFFT](https://github.com/ejmahler/RustFFT))（原库名 `rustfft` → CP 包名 `@cap/fft`）
+> **参考 / 吸收来源**：`crates.io:rustfft` ([https://github.com/ejmahler/RustFFT](https://github.com/ejmahler/RustFFT))（原库名 `rustfft` → CP 包名 `rustfft`）
 
 Zero-allocation in-place radix-2 Cooley-Tukey FFT, IFFT, magnitude spectrum, and Hann/Hamming windowing for CP — clean-room MIT parity with Rust `rustfft` and `microfft`.
 
@@ -12,7 +12,7 @@ Zero-allocation in-place radix-2 Cooley-Tukey FFT, IFFT, magnitude spectrum, and
 ## Install / 安装
 
 ```bash
-cap add @cap/fft
+cap add rustfft
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/fft
 ## Usage / 使用示例
 
 ```cp
-import { Complex, fftInPlace, ifftInPlace, magnitude } from "@cap/fft";
+import { Complex, fftInPlace, ifftInPlace, magnitude } from "rustfft";
 
 let buf: [4]Complex = [
     Complex{ re: 1.0, im: 0.0 },

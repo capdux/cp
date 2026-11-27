@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/braces
+# braces
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:braces` ([https://github.com/micromatch/braces](https://github.com/micromatch/braces))
@@ -12,7 +12,7 @@ Zero-allocation Bash/Glob brace expansion and sequence range generator for CP �
 ## Install / 安装
 
 ```bash
-cap add @cap/braces
+cap add braces
 ```
 
 ## Features / 核心特性
@@ -33,7 +33,7 @@ cap add @cap/braces
 ## Usage / 使用示例
 
 ```cp
-import { expandBraces, fillRange } from "@cap/braces";
+import { expandBraces, fillRange } from "braces";
 
 let buf: [1024]u8 = undefined;
 const res = expandBraces("src/{a,b/{c,d}}.cp", buf[0..1024]);

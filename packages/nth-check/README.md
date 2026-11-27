@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/nth-check
+# nth-check
 
 Zero-allocation CSS `:nth-child(An+B)` microsyntax parser and 0-based index matcher in pure CP.
 

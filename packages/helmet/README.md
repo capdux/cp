@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/helmet-headers`
+# `helmet`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:helmet` ([https://github.com/helmetjs/helmet](https://github.com/helmetjs/helmet))（原库名 `helmet` → CP 包名 `@cap/helmet-headers`）
+> **参考 / 吸收来源**：`npm:helmet` ([https://github.com/helmetjs/helmet](https://github.com/helmetjs/helmet))（原库名 `helmet` → CP 包名 `helmet`）
 
 Zero-heap HTTP security response headers policy generator in pure CP (clean-room MIT counterpart to npm `helmet` v8).
 
@@ -27,7 +27,7 @@ Zero-heap HTTP security response headers policy generator in pure CP (clean-room
 ## Quick Start
 
 ```cp
-import { HelmetOptions, formatHelmetHeaders, formatHstsHeader, formatCspHeader } from "@cap/helmet-headers";
+import { HelmetOptions, formatHelmetHeaders, formatHstsHeader, formatCspHeader } from "helmet";
 
 let out: [1024]u8 = undefined;
 const opts = HelmetOptions.defaultStrict();

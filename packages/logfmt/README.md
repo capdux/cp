@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/logfmt`
+# `logfmt`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:logfmt` ([https://github.com/csquared/node-logfmt](https://github.com/csquared/node-logfmt))
@@ -16,7 +16,7 @@ Zero-heap-allocation `logfmt` structured key=value log parser and writer in pure
 ## API
 
 ```cp
-import { MAX_FIELDS, LogfmtField, LogfmtRecord, LogfmtWriter } from "@cap/logfmt";
+import { MAX_FIELDS, LogfmtField, LogfmtRecord, LogfmtWriter } from "logfmt";
 ```
 
 ## License

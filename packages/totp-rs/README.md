@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/totp-uri
+# totp-rs
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:totp-rs` ([https://github.com/constantoine/totp-rs](https://github.com/constantoine/totp-rs)) / `npm:otpauth` ([https://github.com/hectorm/otpauth](https://github.com/hectorm/otpauth))（原库名 `totp-rs` → CP 包名 `@cap/totp-uri`）
+> **参考 / 吸收来源**：`crates.io:totp-rs` ([https://github.com/constantoine/totp-rs](https://github.com/constantoine/totp-rs)) / `npm:otpauth` ([https://github.com/hectorm/otpauth](https://github.com/hectorm/otpauth))（原库名 `totp-rs` → CP 包名 `totp-rs`）
 
 Zero-allocation Google Authenticator Key URI Format (`otpauth://totp/...` and `otpauth://hotp/...`) parser, Base32 secret validator, and URI builder for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation Google Authenticator Key URI Format (`otpauth://totp/...` and `o
 ## Usage
 
 ```cp
-import { parseOtpAuthUri, formatOtpAuthUri, splitLabel } from "@cap/totp-uri";
+import { parseOtpAuthUri, formatOtpAuthUri, splitLabel } from "totp-rs";
 
 const parsed = parseOtpAuthUri("otpauth://totp/Acme:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Acme");
 const parts = splitLabel(parsed.label); // parts.issuer == "Acme", parts.account == "alice@example.com"

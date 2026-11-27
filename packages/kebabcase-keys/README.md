@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/kebabcase-keys
+# kebabcase-keys
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:kebabcase-keys` ([https://github.com/sindresorhus/kebabcase-keys](https://github.com/sindresorhus/kebabcase-keys))

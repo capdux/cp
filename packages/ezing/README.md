@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/easing
+# ezing
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:ezing` ([https://github.com/NyxCode/ezing](https://github.com/NyxCode/ezing))（原库名 `ezing` → CP 包名 `@cap/easing`）
+> **参考 / 吸收来源**：`crates.io:ezing` ([https://github.com/NyxCode/ezing](https://github.com/NyxCode/ezing))（原库名 `ezing` → CP 包名 `ezing`）
 
 Zero-allocation Robert Penner animation easing function family and CSS `cubic-bezier(x1, y1, x2, y2)` solver for CP — clean-room MIT parity with Rust `ezing` / `keyframe` and npm `eases`.
 
@@ -12,7 +12,7 @@ Zero-allocation Robert Penner animation easing function family and CSS `cubic-be
 ## Install / 安装
 
 ```bash
-cap add @cap/easing
+cap add ezing
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/easing
 ## Usage / 使用示例
 
 ```cp
-import { cubicInOut, bounceOut, cubicBezier } from "@cap/easing";
+import { cubicInOut, bounceOut, cubicBezier } from "ezing";
 
 const a = cubicInOut(0.5);                        // 0.5
 const b = bounceOut(0.75);

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ed25519
+# ed25519
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ed25519` ([https://github.com/RustCrypto/signatures](https://github.com/RustCrypto/signatures)) — `Apache-2.0 OR MIT`

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/xml-name-validator
+# xml-name-validator
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:xml-name-validator` ([https://github.com/jsdom/xml-name-validator](https://github.com/jsdom/xml-name-validator), `Apache-2.0`)，同步覆盖 `npm:xmlchars` 字符类判定规则。

@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/barcode
+# jsbarcode
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:jsbarcode` ([https://github.com/lindell/JsBarcode](https://github.com/lindell/JsBarcode))（原库名 `jsbarcode` → CP 包名 `@cap/barcode`）
+> **参考 / 吸收来源**：`npm:jsbarcode` ([https://github.com/lindell/JsBarcode](https://github.com/lindell/JsBarcode))（原库名 `jsbarcode` → CP 包名 `jsbarcode`）
 
 Zero-allocation 1D barcode encoder & SVG renderer for CP — clean-room MIT parity with npm `jsbarcode` and Rust `barcoders`.
 
 ## Install
 
 ```bash
-cap add @cap/barcode
+cap add jsbarcode
 ```
 
 ## Supported Symbologies
@@ -24,7 +24,7 @@ cap add @cap/barcode
 ## Usage
 
 ```cp
-import { encodeEan13, encodeCode128B } from "@cap/barcode";
+import { encodeEan13, encodeCode128B } from "jsbarcode";
 
 const bc = encodeEan13("4006381333931");
 let svg_buf: [8192]u8 = undefined;

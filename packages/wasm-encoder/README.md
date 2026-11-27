@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/wasm-encoder
+# wasm-encoder
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:wasm-encoder` ([https://github.com/bytecodealliance/wasm-tools](https://github.com/bytecodealliance/wasm-tools))
@@ -12,7 +12,7 @@ Zero-allocation WebAssembly 1.0 binary module encoder with unsigned/signed LEB12
 ## Install / 安装
 
 ```bash
-cap add @cap/wasm-encoder
+cap add wasm-encoder
 ```
 
 ## API
@@ -35,7 +35,7 @@ cap add @cap/wasm-encoder
 import {
     ValType, ExportKind, FuncType, ExportEntry, FuncBody, WasmModuleBuilder,
     OP_LOCAL_GET, OP_I32_ADD, OP_END,
-} from "@cap/wasm-encoder";
+} from "wasm-encoder";
 
 let m = WasmModuleBuilder.init();
 const params: [2]ValType = [ValType.I32, ValType.I32];

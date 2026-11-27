@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/plotters-svg
+# plotters-svg
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:plotters-svg` ([https://github.com/plotters-rs/plotters](https://github.com/plotters-rs/plotters)) — `MIT`

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/strip-indent
+# strip-indent
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:strip-indent` ([https://github.com/sindresorhus/strip-indent](https://github.com/sindresorhus/strip-indent))
@@ -12,7 +12,7 @@ Zero-allocation leading whitespace stripper for CP — clean-room MIT parity wit
 ## Install / 安装
 
 ```bash
-cap add @cap/strip-indent
+cap add strip-indent
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/strip-indent
 ## Usage / 使用示例
 
 ```cp
-import { minIndent, stripIndent } from "@cap/strip-indent";
+import { minIndent, stripIndent } from "strip-indent";
 
 const src = "\n    foo\n      bar\n";
 const m = minIndent(src); // 4

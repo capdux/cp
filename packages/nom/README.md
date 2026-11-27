@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/nom-parse`
+# `nom`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:nom` ([https://github.com/rust-bakery/nom](https://github.com/rust-bakery/nom))（原库名 `nom` → CP 包名 `@cap/nom-parse`）
+> **参考 / 吸收来源**：`crates.io:nom` ([https://github.com/rust-bakery/nom](https://github.com/rust-bakery/nom))（原库名 `nom` → CP 包名 `nom`）
 
 Zero-allocation streaming parser combinator primitives for CP (clean-room MIT implementation inspired by Rust's `nom` v7).
 
@@ -27,7 +27,7 @@ import {
     parseU64,
     parseI64,
     parseHexU64,
-} from "@cap/nom-parse";
+} from "nom";
 
 const r1 = tagNoCase("GET /index.html HTTP/1.1", "get");
 const r2 = delimitedTag("(hello world) rest", "(", ")");

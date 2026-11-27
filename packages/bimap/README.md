@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/bimap`
+# `bimap`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bimap` ([https://github.com/billyrieger/bimap-rs](https://github.com/billyrieger/bimap-rs))
@@ -12,7 +12,7 @@ Zero-heap bidirectional 1-to-1 map (`left <-> right`) in pure CP, modeled after 
 ## Installation
 
 ```bash
-cap add @cap/bimap
+cap add bimap
 ```
 
 ## API

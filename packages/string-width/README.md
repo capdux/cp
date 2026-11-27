@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/string-width
+# string-width
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:string-width` ([https://github.com/sindresorhus/string-width](https://github.com/sindresorhus/string-width))
@@ -12,7 +12,7 @@ Zero-allocation visual terminal column width calculator for CP — clean-room MI
 ## Install / 安装
 
 ```bash
-cap add @cap/string-width
+cap add string-width
 ```
 
 ## Dependencies / 跨包复用
@@ -35,7 +35,7 @@ cap add @cap/string-width
 ## Usage / 使用示例
 
 ```cp
-import { stringWidth, maxLineWidth, padEndVisible } from "@cap/string-width";
+import { stringWidth, maxLineWidth, padEndVisible } from "string-width";
 
 const w1 = stringWidth("你好世界"); // 8
 const w2 = stringWidth("\x1b[31mhello\x1b[0m"); // 5

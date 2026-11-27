@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/hosted-git-info`
+# `hosted-git-info`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:hosted-git-info` ([https://github.com/npm/hosted-git-info](https://github.com/npm/hosted-git-info))

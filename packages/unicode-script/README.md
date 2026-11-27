@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/unicode-script`
+# `unicode-script`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:unicode-script` ([https://github.com/unicode-rs/unicode-script](https://github.com/unicode-rs/unicode-script))（原库名 `unicode-script` → CP 包名 `@cap/unicode-script`）
+> **参考 / 吸收来源**：`crates.io:unicode-script` ([https://github.com/unicode-rs/unicode-script](https://github.com/unicode-rs/unicode-script))（原库名 `unicode-script` → CP 包名 `unicode-script`）
 
 Zero-heap UAX #24 Unicode Script classifier in pure CP, modeled after Rust's `unicode-script` crate. Classifies Unicode scalar values across major world writing systems (`Latin`, `Greek`, `Cyrillic`, `Han`, `Hiragana`, `Katakana`, `Hangul`, `Arabic`, `Hebrew`, `Devanagari`, `Thai`, `Common`, `Inherited`, `Unknown`) and provides UTF-8 dominant script detection.
 
@@ -12,7 +12,7 @@ Zero-heap UAX #24 Unicode Script classifier in pure CP, modeled after Rust's `un
 ## Installation
 
 ```bash
-cap add @cap/unicode-script
+cap add unicode-script
 ```
 
 ## API

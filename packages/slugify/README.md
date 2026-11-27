@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`slugify`](https://github.com/simov/slugify)（`MIT`）（包名 `@cap/slugify`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`slugify`](https://github.com/simov/slugify)（`MIT`）（包名 `slugify`）。
 
-# @cap/slugify
+# slugify
 
 Zero-allocation URL slug generator with UTF-8 Latin-1 / Latin Extended-A diacritic folding for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation URL slug generator with UTF-8 Latin-1 / Latin Extended-A diacrit
 ## Usage
 
 ```cp
-import { slugify, slugifyTruncate, isValidSlug } from "@cap/slugify";
+import { slugify, slugifyTruncate, isValidSlug } from "slugify";
 
 let buf: [64]u8 = undefined;
 const n = slugify("Café Résumé naïve über Straße", buf[0..64]);

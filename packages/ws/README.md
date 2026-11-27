@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ws-frame
+# ws
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:ws` ([https://github.com/websockets/ws](https://github.com/websockets/ws))（原库名 `ws` → CP 包名 `@cap/ws-frame`）
+> **参考 / 吸收来源**：`npm:ws` ([https://github.com/websockets/ws](https://github.com/websockets/ws))（原库名 `ws` → CP 包名 `ws`）
 
 Zero-heap RFC 6455 WebSocket binary frame header encoder/decoder, 4-byte XOR masking, and close status codec for CP.
 Compatible with npm `ws` and Rust `tungstenite`.

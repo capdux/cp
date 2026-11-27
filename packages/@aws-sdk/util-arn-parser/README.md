@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/arn-parse
+# @aws-sdk/util-arn-parser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:@aws-sdk/util-arn-parser` ([https://github.com/aws/aws-sdk-js-v3](https://github.com/aws/aws-sdk-js-v3)) / `crates.io:aws-arn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `@aws-sdk/util-arn-parser` → CP 包名 `@cap/arn-parse`）
+> **参考 / 吸收来源**：`npm:@aws-sdk/util-arn-parser` ([https://github.com/aws/aws-sdk-js-v3](https://github.com/aws/aws-sdk-js-v3)) / `crates.io:aws-arn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `@aws-sdk/util-arn-parser` → CP 包名 `@aws-sdk/util-arn-parser`）
 
 Zero-heap AWS ARN (Amazon Resource Name) parser, formatter, partition validator, resource type extractor, and IAM wildcard matcher in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap AWS ARN (Amazon Resource Name) parser, formatter, partition validator,
 ## Usage
 
 ```cp
-import { parseArn, resourceType, matchResourcePattern } from "@cap/arn-parse";
+import { parseArn, resourceType, matchResourcePattern } from "@aws-sdk/util-arn-parser";
 
 const a = parseArn("arn:aws:s3:::my-bucket/logs/2026.txt");
 const ok = matchResourcePattern(a.resource, "my-bucket/logs/*.txt"); // true

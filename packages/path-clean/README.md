@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/path-clean`
+# `path-clean`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:path-clean` ([https://github.com/danreeves/path-clean](https://github.com/danreeves/path-clean))（原库名 `path-clean` → CP 包名 `@cap/path-clean`）
+> **参考 / 吸收来源**：`crates.io:path-clean` ([https://github.com/danreeves/path-clean](https://github.com/danreeves/path-clean))（原库名 `path-clean` → CP 包名 `path-clean`）
 
 Zero-heap lexical POSIX path cleaner in pure CP, faithfully following Go `filepath.Clean` and Rust `path-clean` semantics: collapses redundant slashes, removes `.` segments, resolves `a/..`, clamps excess `..` at `/` for absolute paths, preserves leading `..` for relative paths, strips trailing `/` (except root `/`), and normalizes empty paths to `"."`.
 
@@ -12,7 +12,7 @@ Zero-heap lexical POSIX path cleaner in pure CP, faithfully following Go `filepa
 ## Installation
 
 ```bash
-cap add @cap/path-clean
+cap add path-clean
 ```
 
 ## API

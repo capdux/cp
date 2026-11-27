@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/micromatch
+# micromatch
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:micromatch` ([https://github.com/micromatch/micromatch](https://github.com/micromatch/micromatch))
@@ -12,7 +12,7 @@ Zero-allocation glob matching suite for CP — clean-room MIT parity with npm `m
 ## Install / 安装
 
 ```bash
-cap add @cap/micromatch
+cap add micromatch
 ```
 
 ## Dependencies / 跨包复用
@@ -36,7 +36,7 @@ cap add @cap/micromatch
 ## Usage / 使用示例
 
 ```cp
-import { PicoOptions, mmIsMatch, mmFilter, mmNot } from "@cap/micromatch";
+import { PicoOptions, mmIsMatch, mmFilter, mmNot } from "micromatch";
 
 const opts = PicoOptions.defaults();
 const hit = mmIsMatch("file-2.cp", "file-{1..3}.cp", opts); // true

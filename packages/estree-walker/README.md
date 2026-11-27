@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/estree-walker
+# estree-walker
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:estree-walker` ([https://github.com/Rich-Harris/estree-walker](https://github.com/Rich-Harris/estree-walker))
@@ -12,7 +12,7 @@ Zero-allocation index-pooled ESTree AST arena and non-recursive DFS walker for C
 ## Install / 安装
 
 ```bash
-cap add @cap/estree-walker
+cap add estree-walker
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/estree-walker
 ## Usage / 使用示例
 
 ```cp
-import { EstreeArena, EstreeWalker } from "@cap/estree-walker";
+import { EstreeArena, EstreeWalker } from "estree-walker";
 
 let arena = EstreeArena.init();
 const root = arena.addNode(.Program, "root");

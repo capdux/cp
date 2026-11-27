@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/pep440-rs`
+# `pep440_rs`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:pep440_rs` ([https://github.com/astral-sh/uv](https://github.com/astral-sh/uv))（原库名 `pep440_rs` → CP 包名 `@cap/pep440-rs`）
+> **参考 / 吸收来源**：`crates.io:pep440_rs` ([https://github.com/astral-sh/uv](https://github.com/astral-sh/uv))（原库名 `pep440_rs` → CP 包名 `pep440_rs`）
 
 Zero-heap PEP 440 Python version parser, total-order comparator, and version specifier matcher in pure CP, modeled after Astral's `pep440_rs` crate. Supports epochs (`1!2.0`), multi-segment releases, pre-releases (`a`/`b`/`rc`), post-releases (`.postN`/`-N`), dev-releases (`.devN`), local versions (`+local`), exact PEP 440 ordering (`dev < a < b < rc < final < post`), and compound specifiers (`==`, `!=`, `>=`, `<=`, `>`, `<`, `~=`).
 
@@ -12,7 +12,7 @@ Zero-heap PEP 440 Python version parser, total-order comparator, and version spe
 ## Installation
 
 ```bash
-cap add @cap/pep440-rs
+cap add pep440_rs
 ```
 
 ## API

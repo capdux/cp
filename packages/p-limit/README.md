@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`p-limit`](https://github.com/sindresorhus/p-limit)（`MIT`）（包名 `@cap/p-limit`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`p-limit`](https://github.com/sindresorhus/p-limit)（`MIT`）（包名 `p-limit`）。
 
-# `@cap/p-limit`
+# `p-limit`
 
 Zero-heap-allocation concurrency limiter and FIFO task slot scheduler in pure CP (clean-room MIT implementation inspired by npm `p-limit`).
 
@@ -20,7 +20,7 @@ Reuses [`@cap/yocto-queue`](../yocto-queue) (`YoctoQueueU64`) for O(1) fixed-cap
 ## Usage
 
 ```cp
-import { PLimit, SubmitResult, CompleteResult } from "@cap/p-limit";
+import { PLimit, SubmitResult, CompleteResult } from "p-limit";
 ```
 
 ## License

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/sqids` — 零分配 YouTube 风格可逆无脏词短 ID 编码器 / Zero-Allocation Sqids Encoder & Decoder
+# `sqids` — 零分配 YouTube 风格可逆无脏词短 ID 编码器 / Zero-Allocation Sqids Encoder & Decoder
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:sqids` ([https://github.com/sqids/sqids-javascript](https://github.com/sqids/sqids-javascript))
@@ -10,12 +10,12 @@
 ## 安装 / Installation
 
 ```bash
-cap add @cap/sqids
+cap add sqids
 ```
 
 ## 概述 / Overview
 
-`@cap/sqids` 将一个或多个无符号 64 位整数（`u64`）无损编码为紧凑、URL 友好、确定性且不含常见英文不雅词的短字符串 ID，并支持 100% 可逆解码：
+`sqids` 将一个或多个无符号 64 位整数（`u64`）无损编码为紧凑、URL 友好、确定性且不含常见英文不雅词的短字符串 ID，并支持 100% 可逆解码：
 
 - **零堆分配**：所有字母表洗牌、进制编码与解码均在栈上完成，编码结果直接写入调用方缓冲区 `out: []u8`；
 - **完整 Sqids 算法规范**：支持默认 62 字符字母表、字母表合法性校验（长度 `>= 3`、纯 ASCII、无重复字符）、确定性 Fisher-Yates 洗牌与旋转反转；
@@ -41,7 +41,7 @@ cap add @cap/sqids
 ## 使用示例 / Examples
 
 ```cp
-import { Sqids, SqidsOptions } from "@cap/sqids";
+import { Sqids, SqidsOptions } from "sqids";
 
 fn demo() {
     const sqids = Sqids.initDefault();

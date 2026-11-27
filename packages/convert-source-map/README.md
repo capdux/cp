@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:convert-source-map` ([https://github.com/thlorenz/convert-source-map](https://github.com/thlorenz/convert-source-map)) | 许可：`MIT`
 
-# `@cap/convert-source-map`
+# `convert-source-map`
 
 零堆分配纯 CP 内联 SourceMap 注释解析、Base64 编解码与注释剥离引擎，对标 npm **#96** `convert-source-map`（真实周下载 **3.07 亿/周**）。
 

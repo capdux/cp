@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bcp47
+# bcp-47
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:bcp-47` ([https://github.com/words/bcp-47](https://github.com/words/bcp-47))（原库名 `bcp-47` → CP 包名 `@cap/bcp47`）
+> **参考 / 吸收来源**：`npm:bcp-47` ([https://github.com/words/bcp-47](https://github.com/words/bcp-47))（原库名 `bcp-47` → CP 包名 `bcp-47`）
 
 Zero-allocation RFC 5646 / BCP-47 language tag parser, canonicalizer, and fallback locale matcher for CP — clean-room MIT parity with npm `bcp-47` / `bcp-47-match` and Rust `unic-langid`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 5646 / BCP-47 language tag parser, canonicalizer, and fallba
 ## Install / 安装
 
 ```bash
-cap add @cap/bcp47
+cap add bcp-47
 ```
 
 ## API Reference / 接口一览
@@ -27,7 +27,7 @@ cap add @cap/bcp47
 ## Usage / 使用示例
 
 ```cp
-import { parseBcp47, canonicalizeBcp47, matchLocale } from "@cap/bcp47";
+import { parseBcp47, canonicalizeBcp47, matchLocale } from "bcp-47";
 
 let buf: [64]u8 = undefined;
 const tag = parseBcp47("ZH_hans_cn");

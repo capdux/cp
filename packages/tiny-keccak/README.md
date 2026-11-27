@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/tiny-keccak
+# tiny-keccak
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:tiny-keccak` ([https://github.com/debris/tiny-keccak](https://github.com/debris/tiny-keccak))
@@ -12,7 +12,7 @@ Zero-allocation Keccak-f[1600] 24-round sponge implementation providing NIST FIP
 ## Install / 安装
 
 ```bash
-cap add @cap/tiny-keccak
+cap add tiny-keccak
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/tiny-keccak
 ## Usage / 使用示例
 
 ```cp
-import { Sha3_256, Keccak256, sha3_256Hex, keccak256Hex } from "@cap/tiny-keccak";
+import { Sha3_256, Keccak256, sha3_256Hex, keccak256Hex } from "tiny-keccak";
 
 let hex: [64]u8 = undefined;
 * = sha3_256Hex("abc", hex[0..64]);

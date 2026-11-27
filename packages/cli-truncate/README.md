@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/cli-truncate`
+# `cli-truncate`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cli-truncate` ([https://github.com/sindresorhus/cli-truncate](https://github.com/sindresorhus/cli-truncate))
@@ -31,7 +31,7 @@ import {
     cliTruncateEndInto,
     cliTruncateStartInto,
     cliTruncateMiddleInto,
-} from "@cap/cli-truncate";
+} from "cli-truncate";
 
 let out: [128]u8 = undefined;
 const n: usize = cliTruncateEndInto("unicorn rainbow", 10, &out);

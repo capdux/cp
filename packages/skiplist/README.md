@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/skiplist
+# skiplist
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:skiplist` ([https://github.com/JP-Ellis/rust-skiplist](https://github.com/JP-Ellis/rust-skiplist))
@@ -12,7 +12,7 @@ Zero-allocation static-pool deterministic skip list (`MAX_NODES = 128`, `MAX_LEV
 ## Install / 安装
 
 ```bash
-cap add @cap/skiplist
+cap add skiplist
 ```
 
 ## API Reference / 接口一览

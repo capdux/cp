@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/stats-basic
+# simple-statistics
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:simple-statistics` ([https://github.com/simple-statistics/simple-statistics](https://github.com/simple-statistics/simple-statistics))（原库名 `simple-statistics` → CP 包名 `@cap/stats-basic`）
+> **参考 / 吸收来源**：`npm:simple-statistics` ([https://github.com/simple-statistics/simple-statistics](https://github.com/simple-statistics/simple-statistics))（原库名 `simple-statistics` → CP 包名 `simple-statistics`）
 
 Zero-heap Welford online statistics, Chan parallel merge, and descriptive statistics in pure CP (zero external dependencies).
 
@@ -15,7 +15,7 @@ Zero-heap Welford online statistics, Chan parallel merge, and descriptive statis
 ## Usage
 
 ```cp
-import { OnlineStats, pearsonR, medianSorted } from "@cap/stats-basic";
+import { OnlineStats, pearsonR, medianSorted } from "simple-statistics";
 
 let st = OnlineStats.new();
 st.push(2.0);

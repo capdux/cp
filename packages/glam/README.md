@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/glam
+# glam
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:glam` ([https://github.com/bitshifter/glam-rs](https://github.com/bitshifter/glam-rs))
@@ -16,7 +16,7 @@ Zero-heap 3D math library (`Vec3`, unit `Quat`, column-major `Mat4`) in pure CP 
 ## Usage
 
 ```cp
-import { Vec3, Quat, Mat4 } from "@cap/glam";
+import { Vec3, Quat, Mat4 } from "glam";
 
 const q = Quat.fromAxisAngle(Vec3.init(0.0, 0.0, 1.0), 1.5707963267948966);
 const rotated = q.rotateVec3(Vec3.init(1.0, 0.0, 0.0)); // (0, 1, 0)

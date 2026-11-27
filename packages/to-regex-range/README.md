@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/to-regex-range
+# to-regex-range
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:to-regex-range` ([https://github.com/micromatch/to-regex-range](https://github.com/micromatch/to-regex-range))

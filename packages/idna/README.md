@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/idna-uts46`
+# `idna`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:idna` ([https://github.com/servo/rust-url](https://github.com/servo/rust-url))（原库名 `idna` → CP 包名 `@cap/idna-uts46`）
+> **参考 / 吸收来源**：`crates.io:idna` ([https://github.com/servo/rust-url](https://github.com/servo/rust-url))（原库名 `idna` → CP 包名 `idna`）
 
 Zero-allocation UTS #46 Internationalized Domain Names (IDNA) in pure CP (Rust `idna` crate parity). Reuses `@cap/icu-normalizer` (`normalizeNfc`) for UAX #15 NFC normalization and `@cap/punycode` (`encodeLabel`, `decodeLabel`, `isAsciiOnly`) for RFC 3492 Punycode with zero duplication.
 

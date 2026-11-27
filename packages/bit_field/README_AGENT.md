@@ -1,49 +1,31 @@
-# bit_field — AI Agent Quick Ref
+# bit_field@1.0.0 (Agent Quickref)
 
-- **Import**: `import { ... } from "bit_field";`
-- **Origin**: crates.io `bit_field` (v1.0.0, MIT, zero-alloc)
-- **Full Types**: `src/index.d.cp`
+> Zero-allocation bit and bit-range manipulation utilities for u64, u32, and byte slices in pure CP | License: MIT
+> Import: `import { ... } from "bit_field";` | Full types: `src/index.d.cp`
 
-## Bit-Length & Mask Helpers
-- `bitLengthU8(): usize` | `bitLengthU16()` | `bitLengthU32()` | `bitLengthU64()` | `bitLengthUsize()`
-- `bitLengthSlice(bytes: &[]u8): usize`
-- `bfldMaskU8(width: u3): u8` | `bfldMaskU16(width: u4): u16` | `bfldMaskU32(width: u5): u32`
-- `bfldMaskU64(width: u6): u64` | `bfldFullMaskU64(width: u8): u64`
-
-## Integer Bit Operations (Half-Open `[start, end)`)
-- `u8` (index `u3`): `getBitU8(val, bit): bool` | `setBitU8(val, bit, on): u8` | `getBitsU8(val, start, end): u8` | `setBitsU8(val, start, end, bits): u8`
-- `u16` (index `u4`): `getBitU16` | `setBitU16` | `getBitsU16` | `setBitsU16`
-- `u32` (index `u5`): `getBitU32` | `setBitU32` | `getBitsU32` | `setBitsU32`
-- `u64` (index `u6`): `getBitU64` | `setBitU64` | `getBitsU64` | `setBitsU64`
-- `u64` full-range (index `u8`, allows `end == 64`): `getBitsRangeU64(val: u64, start: u8, end: u8): u64` | `setBitsRangeU64(val: u64, start: u8, end: u8, bits: u64): u64`
-- `usize` (index `u8`): `getBitUsize` | `setBitUsize` | `getBitsUsize` | `setBitsUsize`
-
-## Slice Bit Operations
-- `getBitSlice(bytes: &[]u8, bit_index: usize): bool`
-- `setBitSlice(bytes: []u8, bit_index: usize, on: bool)`
-- `toggleBitSlice(bytes: []u8, bit_index: usize)`
-- `getBitsSlice(bytes: &[]u8, start: usize, end: usize): u64`
-- `setBitsSlice(bytes: []u8, start: usize, end: usize, value: u64)`
-- `countOnesSlice(bytes: &[]u8): usize`
-
-## `BitArray` Class
-```cp
-class BitArray {
-    data: []u8,
-    fn fromSlice(buf: []u8): BitArray;
-    fn bitLength(): usize;
-    fn getBit(bit_index: usize): bool;
-    fn setBit(bit_index: usize, on: bool);
-    fn toggleBit(bit_index: usize);
-    fn getBits(start: usize, end: usize): u64;
-    fn setBits(start: usize, end: usize, value: u64);
-    fn countOnes(): usize;
-    fn clearAll();
-    fn setAll();
-}
-```
-
-## Gotchas
-1. Integer `setBit*`/`setBits*` are **pure** and return the updated integer; slice & `BitArray` setters mutate in place.
-2. When accessing bits up to bit 63 inclusive (`end == 64`) on `u64`, use `getBitsRangeU64`/`setBitsRangeU64` (takes `u8`), because `u6` maxes out at 63.
-3. All bit ranges `[start, end)` are half-open.
+## Functions
+- `export fn bitLengthU8(): usize;`
+- `export fn bitLengthU16(): usize;`
+- `export fn bitLengthU32(): usize;`
+- `export fn bitLengthU64(): usize;`
+- `export fn bitLengthUsize(): usize;`
+- `export fn bitLengthSlice(bytes: &[]u8): usize;`
+- `export fn bfldMaskU8(width: u3): u8;`
+- `export fn bfldMaskU16(width: u4): u16;`
+- `export fn bfldMaskU32(width: u5): u32;`
+- `export fn bfldMaskU64(width: u6): u64;`
+- `export fn bfldFullMaskU64(width: u8): u64;`
+- `export fn getBitU8(val: u8, bit: u3): bool;`
+- `export fn setBitU8(val: u8, bit: u3, on: bool): u8;`
+- `export fn getBitsU8(val: u8, start: u3, end: u3): u8;`
+- `export fn setBitsU8(val: u8, start: u3, end: u3, bits: u8): u8;`
+- `export fn getBitU16(val: u16, bit: u4): bool;`
+- `export fn setBitU16(val: u16, bit: u4, on: bool): u16;`
+- `export fn getBitsU16(val: u16, start: u4, end: u4): u16;`
+- `export fn setBitsU16(val: u16, start: u4, end: u4, bits: u16): u16;`
+- `export fn getBitU64(val: u64, bit: u6): bool;`
+- `export fn setBitU64(val: u64, bit: u6, on: bool): u64;`
+- `export fn getBitsU64(val: u64, start: u6, end: u6): u64;`
+- `export fn setBitsU64(val: u64, start: u6, end: u6, bits: u64): u64;`
+- `export fn getBitsRangeU64(val: u64, start: u8, end: u8): u64;`
+- *(+15 more in `src/index.d.cp`)*

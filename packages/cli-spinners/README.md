@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cli-spinners
+# cli-spinners
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cli-spinners` ([https://github.com/sindresorhus/cli-spinners](https://github.com/sindresorhus/cli-spinners))
@@ -12,7 +12,7 @@ Zero-allocation terminal spinner frame presets and Unicode/ASCII status symbols 
 ## Install / 安装
 
 ```bash
-cap add @cap/cli-spinners
+cap add cli-spinners
 ```
 
 ## Built-in Spinner Presets / 内置动画预设
@@ -56,7 +56,7 @@ import {
     frameAtTime,
     renderSpinnerLine,
     renderStatusLine,
-} from "@cap/cli-spinners";
+} from "cli-spinners";
 
 let buf: [128]u8 = undefined;
 const line = renderSpinnerLine(SpinnerKind.Dots, 2, "Compiling modules...", buf[0..128]);

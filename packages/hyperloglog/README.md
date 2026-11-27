@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/hyperloglog
+# hyperloglog
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:hyperloglog` ([https://github.com/jedisct1/rust-hyperloglog](https://github.com/jedisct1/rust-hyperloglog))
@@ -12,7 +12,7 @@ Zero-allocation 256-byte HyperLogLog cardinality estimator with LinearCounting c
 ## 安装 / Install
 
 ```bash
-cap add @cap/hyperloglog
+cap add hyperloglog
 ```
 
 ## API 参考 / API Reference
@@ -27,7 +27,7 @@ cap add @cap/hyperloglog
 ## 使用示例 / Usage
 
 ```cp
-import { HyperLogLog256 } from "@cap/hyperloglog";
+import { HyperLogLog256 } from "hyperloglog";
 
 let hll = HyperLogLog256.init();
 hll.add("user:1001");

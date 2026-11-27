@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/mail-addr
+# addressparser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:addressparser` ([https://github.com/nodemailer/addressparser](https://github.com/nodemailer/addressparser))（原库名 `addressparser` → CP 包名 `@cap/mail-addr`）
+> **参考 / 吸收来源**：`npm:addressparser` ([https://github.com/nodemailer/addressparser](https://github.com/nodemailer/addressparser))（原库名 `addressparser` → CP 包名 `addressparser`）
 
 Zero-allocation RFC 5322 email address and recipient list parser and formatter for CP — clean-room MIT parity with npm `addressparser` / `email-addresses` (10M/wk) and `nodemailer`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 5322 email address and recipient list parser and formatter f
 ## Install / 安装
 
 ```bash
-cap add @cap/mail-addr
+cap add addressparser
 ```
 
 ## Features / 核心特性
@@ -38,7 +38,7 @@ import {
     parseMailbox,
     parseAddressList,
     formatMailbox,
-} from "@cap/mail-addr";
+} from "addressparser";
 
 const list = parseAddressList("Alice <a@x.com>, \"Doe, John\" <j@y.org>, plain@z.net");
 // list.count == 3

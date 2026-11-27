@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/parse-duration
+# parse_duration
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:parse_duration` ([https://github.com/zeta12ti/parse_duration](https://github.com/zeta12ti/parse_duration))（原库名 `parse_duration` → CP 包名 `@cap/parse-duration`）
+> **参考 / 吸收来源**：`crates.io:parse_duration` ([https://github.com/zeta12ti/parse_duration](https://github.com/zeta12ti/parse_duration))（原库名 `parse_duration` → CP 包名 `parse_duration`）
 
 Clean-room MIT, zero-heap human-readable duration parser and formatter for CP — modeled on crates.io `parse_duration` / `duration-str`.
 
@@ -40,7 +40,7 @@ Clean-room MIT, zero-heap human-readable duration parser and formatter for CP �
 ## Usage
 
 ```typescript
-import { parseDuration, formatDuration } from "@cap/parse-duration";
+import { parseDuration, formatDuration } from "parse_duration";
 
 let d = parseDuration("2h 30m 15s"); // secs = 9015, nanos = 0
 let buf: [64]u8 = ...;

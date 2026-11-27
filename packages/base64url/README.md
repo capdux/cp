@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/base64-url
+# base64url
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:base64url` ([https://github.com/brianloveswords/base64url](https://github.com/brianloveswords/base64url))（原库名 `base64url` → CP 包名 `@cap/base64-url`）
+> **参考 / 吸收来源**：`npm:base64url` ([https://github.com/brianloveswords/base64url](https://github.com/brianloveswords/base64url))（原库名 `base64url` → CP 包名 `base64url`）
 
 Clean-room MIT, zero-heap RFC 4648 Section 5 Base64URL (unpadded) encoder, decoder, and standard Base64 converter for CP — modeled on npm's `base64url` v3.
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ulid
+# ulid
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ulid` ([https://github.com/ulid/javascript](https://github.com/ulid/javascript)) / `npm:ulidx` ([https://github.com/perry-mitchell/ulidx](https://github.com/perry-mitchell/ulidx))
@@ -16,7 +16,7 @@ Zero-allocation ULID (Universally Unique Lexicographically Sortable Identifier: 
 ## Usage
 
 ```cp
-import { fromParts, encode, decode, increment, timestampMs } from "@cap/ulid";
+import { fromParts, encode, decode, increment, timestampMs } from "ulid";
 
 let rand: [10]u8 = undefined;
 // fill rand[0..10]

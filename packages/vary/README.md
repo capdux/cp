@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/vary
+# vary
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:vary` ([https://github.com/jshttp/vary](https://github.com/jshttp/vary))
@@ -17,7 +17,7 @@ Zero-heap RFC 9110 HTTP `Vary` response header manipulation in pure CP (npm `var
 ## Usage
 
 ```cp
-import { append, hasField } from "@cap/vary";
+import { append, hasField } from "vary";
 
 let dst: [128]u8 = undefined;
 const n = append("Accept-Encoding", "Origin, accept-encoding", dst[0..128]);

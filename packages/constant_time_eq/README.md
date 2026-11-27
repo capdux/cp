@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/subtle
+# constant_time_eq
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:constant_time_eq` ([https://github.com/cesarb/constant_time_eq](https://github.com/cesarb/constant_time_eq))（原库名 `constant_time_eq` → CP 包名 `@cap/subtle`）
+> **参考 / 吸收来源**：`crates.io:constant_time_eq` ([https://github.com/cesarb/constant_time_eq](https://github.com/cesarb/constant_time_eq))（原库名 `constant_time_eq` → CP 包名 `constant_time_eq`）
 
 零堆分配的 CP 恒定时间（Constant-Time）防时序侧信道比较/条件选择/交换与敏感内存安全清零引擎 — 洁净室 MIT 实现，对标 Rust crates.io #136 `zeroize`（9.35 亿总下载）+ #139 `subtle`（9.21 亿总下载）。
 
@@ -12,7 +12,7 @@ Zero-allocation constant-time cryptographic comparison, branchless selection/swa
 ## 安装 / Install
 
 ```bash
-cap add @cap/subtle
+cap add constant_time_eq
 ```
 
 ## API 参考 / API Reference
@@ -31,7 +31,7 @@ cap add @cap/subtle
 ## 使用示例 / Usage
 
 ```cp
-import { Choice, ctEqBytes, ctSelectU64, zeroizeBytes, isAllZero } from "@cap/subtle";
+import { Choice, ctEqBytes, ctSelectU64, zeroizeBytes, isAllZero } from "constant_time_eq";
 
 const valid = ctEqBytes(computed_hmac, header_hmac).toBool();
 const picked = ctSelectU64(Choice.fromBool(valid), 100 as u64, 0 as u64);

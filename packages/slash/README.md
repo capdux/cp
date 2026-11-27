@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/slash
+# slash
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:slash` ([https://github.com/sindresorhus/slash](https://github.com/sindresorhus/slash))
@@ -16,7 +16,7 @@ Zero-allocation Windows backslash <-> POSIX forward-slash path converter for CP 
 ## Usage
 
 ```cp
-import { slash } from "@cap/slash";
+import { slash } from "slash";
 
 let buf: [64]u8 = undefined;
 const n = slash("foo\\bar\\baz.cp", buf[0..64]); // "foo/bar/baz.cp"

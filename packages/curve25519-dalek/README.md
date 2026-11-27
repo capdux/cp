@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/curve25519-dalek
+# curve25519-dalek
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:curve25519-dalek` ([https://github.com/dalek-cryptography/curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek))
@@ -12,7 +12,7 @@ Zero-allocation constant-time RFC 7748 X25519 Diffie-Hellman and $\mathbb{F}_{2^
 ## Install / 安装
 
 ```bash
-cap add @cap/curve25519-dalek
+cap add curve25519-dalek
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/curve25519-dalek
 ## Usage / 使用示例
 
 ```cp
-import { x25519, x25519Basepoint } from "@cap/curve25519-dalek";
+import { x25519, x25519Basepoint } from "curve25519-dalek";
 
 const alicePub = x25519Basepoint(alicePriv);
 const shared = x25519(alicePriv, bobPub);

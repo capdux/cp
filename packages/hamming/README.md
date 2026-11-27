@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/hamming`
+# `hamming`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:hamming` ([https://github.com/huonw/hamming](https://github.com/huonw/hamming))
@@ -26,7 +26,7 @@ import {
     simhash64,
     hamming74Encode,
     hamming74Decode,
-} from "@cap/hamming";
+} from "hamming";
 ```
 
 ## License

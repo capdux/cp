@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/hkdf-sha256
+# futoin-hkdf
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:futoin-hkdf` ([https://github.com/futoin/util-js-hkdf](https://github.com/futoin/util-js-hkdf))（原库名 `futoin-hkdf` → CP 包名 `@cap/hkdf-sha256`）
+> **参考 / 吸收来源**：`npm:futoin-hkdf` ([https://github.com/futoin/util-js-hkdf](https://github.com/futoin/util-js-hkdf))（原库名 `futoin-hkdf` → CP 包名 `futoin-hkdf`）
 
 Pure CP, zero-allocation RFC 5869 HKDF-SHA256 key derivation function (parity with RustCrypto `hkdf`).
 

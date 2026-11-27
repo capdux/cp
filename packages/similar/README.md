@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/similar-diff`
+# `similar`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:similar` ([https://github.com/mitsuhiko/similar](https://github.com/mitsuhiko/similar))（原库名 `similar` → CP 包名 `@cap/similar-diff`）
+> **参考 / 吸收来源**：`crates.io:similar` ([https://github.com/mitsuhiko/similar](https://github.com/mitsuhiko/similar))（原库名 `similar` → CP 包名 `similar`）
 
 Zero-allocation line-level LCS diff, unified diff formatter, and similarity ratio engine for CP (clean-room MIT implementation inspired by Rust's `similar` v2).
 
@@ -26,7 +26,7 @@ import {
     similarityRatio,
     formatUnifiedDiff,
     hasChanges,
-} from "@cap/similar-diff";
+} from "similar";
 
 const old_s = "alpha\nbeta\ngamma\n";
 const new_s = "alpha\nBETA\ngamma\ndelta\n";

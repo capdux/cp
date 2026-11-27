@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/idempotency
+# idempotency-key
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:idempotency-key` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `idempotency-key` → CP 包名 `@cap/idempotency`）
+> **参考 / 吸收来源**：`npm:idempotency-key` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `idempotency-key` → CP 包名 `idempotency-key`）
 
 Zero-allocation IETF `Idempotency-Key` HTTP header parser, validator, RFC 8941 formatter, and request fingerprint state evaluator for CP.
 
@@ -17,7 +17,7 @@ Zero-allocation IETF `Idempotency-Key` HTTP header parser, validator, RFC 8941 f
 ## Usage
 
 ```cp
-import { parseKeyHeader, fingerprintRequest, evaluateState, IDEMP_REPLAY } from "@cap/idempotency";
+import { parseKeyHeader, fingerprintRequest, evaluateState, IDEMP_REPLAY } from "idempotency-key";
 
 let keyBuf: [255]u8 = undefined;
 const klen = parseKeyHeader("\"550e8400-e29b-41d4-a716-446655440000\"", keyBuf[0..255]);

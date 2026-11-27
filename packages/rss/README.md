@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/rss`
+# `rss`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rss` ([https://github.com/rust-syndication/rss](https://github.com/rust-syndication/rss))
@@ -17,7 +17,7 @@ Zero-heap-allocation RSS 2.0 XML feed generator and CDATA-aware tag extractor in
 ## API
 
 ```cp
-import { RssChannel, RssItem, RssWriter, extractTagValue, countItems } from "@cap/rss";
+import { RssChannel, RssItem, RssWriter, extractTagValue, countItems } from "rss";
 ```
 
 ## License

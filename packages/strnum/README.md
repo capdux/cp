@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/strnum
+# strnum
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:strnum` ([https://github.com/NaturalIntelligence/strnum](https://github.com/NaturalIntelligence/strnum))（原库名 `strnum` → CP 包名 `@cap/strnum`）
+> **参考 / 吸收来源**：`npm:strnum` ([https://github.com/NaturalIntelligence/strnum](https://github.com/NaturalIntelligence/strnum))（原库名 `strnum` → CP 包名 `strnum`）
 
 零堆分配的 CP 原生可配置字符串转数字解析器，Clean-Room MIT 实现对标 npm 顶流解析库 `strnum`（1.02 亿+/周下载）。
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/querystring
+# querystring
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:querystring` ([https://github.com/sindresorhus/query-string](https://github.com/sindresorhus/query-string))
@@ -12,7 +12,7 @@ Zero-allocation URL query string parser, stringifier, and parameter extractor fo
 ## Install / 安装
 
 ```bash
-cap add @cap/querystring
+cap add querystring
 ```
 
 ## Dependencies / 跨包复用
@@ -40,7 +40,7 @@ import {
     parseQueryString,
     stringifyQueryString,
     pickQueryParam,
-} from "@cap/querystring";
+} from "querystring";
 
 const q = extractUrlQuery("https://cp-lang.org/docs?lang=zh&page=2#top"); // "lang=zh&page=2"
 

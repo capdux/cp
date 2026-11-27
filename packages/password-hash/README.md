@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/password-hash
+# password-hash
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:password-hash` ([https://github.com/RustCrypto/password-hashes](https://github.com/RustCrypto/password-hashes))
@@ -12,7 +12,7 @@ Zero-allocation pure CP implementation of the PHC string format (`$algorithm[$v=
 ## Install / 安装
 
 ```bash
-cap add @cap/password-hash
+cap add password-hash
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/password-hash
 ## Usage / 使用示例
 
 ```cp
-import { parsePhc, formatPhc, getPhcParam, ctEqual } from "@cap/password-hash";
+import { parsePhc, formatPhc, getPhcParam, ctEqual } from "password-hash";
 
 const s = "$argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWRWJTmaaJObG";
 const parsed = parsePhc(s);

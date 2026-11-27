@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/spline
+# splines
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:splines` ([https://github.com/phaazon/splines](https://github.com/phaazon/splines))（原库名 `splines` → CP 包名 `@cap/spline`）
+> **参考 / 吸收来源**：`crates.io:splines` ([https://github.com/phaazon/splines](https://github.com/phaazon/splines))（原库名 `splines` → CP 包名 `splines`）
 
 Zero-heap Natural Cubic Spline (Thomas O(N)), Catmull-Rom spline, quadratic/cubic Bezier curves, smoothstep, and linear interpolation in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap Natural Cubic Spline (Thomas O(N)), Catmull-Rom spline, quadratic/cubi
 ## Usage
 
 ```cp
-import { CubicSpline, bezierCubic, catmullRom, Vec2 } from "@cap/spline";
+import { CubicSpline, bezierCubic, catmullRom, Vec2 } from "splines";
 
 const xs: [4]f64 = [0.0, 1.0, 2.0, 3.0];
 const ys: [4]f64 = [0.0, 2.0, 1.0, 3.0];

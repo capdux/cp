@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:jsesc` ([https://github.com/mathiasbynens/jsesc](https://github.com/mathiasbynens/jsesc)) | 许可：`MIT`
 
-# `@cap/jsesc`
+# `jsesc`
 
 零堆分配纯 CP JavaScript / JSON 字符串转义库，完整对标 npm **#148** `jsesc` v3（真实周下载 **2.50 亿/周**，Babel / Mathias Bynens 核心依赖）。
 

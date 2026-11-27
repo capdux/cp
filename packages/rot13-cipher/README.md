@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/rot13
+# rot13-cipher
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:rot13-cipher` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:rot13` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `rot13-cipher` → CP 包名 `@cap/rot13`）
+> **参考 / 吸收来源**：`npm:rot13-cipher` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:rot13` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `rot13-cipher` → CP 包名 `rot13-cipher`）
 
 Zero-heap ROT13, ROT47, arbitrary Caesar shift, and Atbash alphabet substitution utilities in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap ROT13, ROT47, arbitrary Caesar shift, and Atbash alphabet substitution
 ## Usage
 
 ```cp
-import { rot13, rot47, caesar, atbash } from "@cap/rot13";
+import { rot13, rot47, caesar, atbash } from "rot13-cipher";
 
 let buf: [32]u8 = undefined;
 const n = rot13("Hello, World!", buf[0..32]); // "Uryyb, Jbeyq!"

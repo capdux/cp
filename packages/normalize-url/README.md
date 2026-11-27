@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/normalize-url
+# normalize-url
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:normalize-url` ([https://github.com/sindresorhus/normalize-url](https://github.com/sindresorhus/normalize-url))
@@ -12,7 +12,7 @@ Zero-allocation URL normalization utility for CP — clean-room MIT parity with 
 ## Install / 安装
 
 ```bash
-cap add @cap/normalize-url
+cap add normalize-url
 ```
 
 ## Dependencies / 跨包复用
@@ -31,7 +31,7 @@ cap add @cap/normalize-url
 ## Usage / 使用示例
 
 ```cp
-import { normalizeUrl, normalizeUrlWithOptions, defaultNormalizeUrlOptions } from "@cap/normalize-url";
+import { normalizeUrl, normalizeUrlWithOptions, defaultNormalizeUrlOptions } from "normalize-url";
 
 let buf: [256]u8 = undefined;
 const n1 = normalizeUrl("HTTP://WWW.Example.COM:80/foo//bar/../baz/", buf[0..256]);

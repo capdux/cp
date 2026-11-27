@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/jaro-winkler`
+# `jaro-winkler`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:jaro-winkler` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:jaro-winkler` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -17,7 +17,7 @@ Zero-heap-allocation Jaro and Jaro-Winkler string similarity metrics and best-ma
 ## API
 
 ```cp
-import { jaro, jaroWinkler, jaroWinklerWithScale, bestMatchIndex } from "@cap/jaro-winkler";
+import { jaro, jaroWinkler, jaroWinklerWithScale, bestMatchIndex } from "jaro-winkler";
 ```
 
 ## License

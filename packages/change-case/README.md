@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/change-case
+# change-case
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:change-case` ([https://github.com/blakeembrey/change-case](https://github.com/blakeembrey/change-case))

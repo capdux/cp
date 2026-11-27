@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/x509-cert
+# x509-cert
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:x509-cert` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))

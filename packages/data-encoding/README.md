@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/data-encoding
+# data-encoding
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:data-encoding` ([https://github.com/ia0/data-encoding](https://github.com/ia0/data-encoding))
@@ -12,7 +12,7 @@ Zero-allocation strict RFC 4648 Base16/Hex, Base32, and Base64/Base64URL codec w
 ## Install / 安装
 
 ```bash
-cap add @cap/data-encoding
+cap add data-encoding
 ```
 
 ## API
@@ -37,7 +37,7 @@ cap add @cap/data-encoding
 ## Usage / 使用示例
 
 ```cp
-import { base64Encode, base64Decode } from "@cap/data-encoding";
+import { base64Encode, base64Decode } from "data-encoding";
 
 let enc: [16]u8 = undefined;
 let dec_buf: [16]u8 = undefined;

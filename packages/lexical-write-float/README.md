@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/lexical-write-float
+# lexical-write-float
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:lexical-write-float` ([https://github.com/Alexhuszagh/rust-lexical](https://github.com/Alexhuszagh/rust-lexical))
@@ -12,7 +12,7 @@ Zero-allocation pure CP integer and floating-point formatter — clean-room pari
 ## Install / 安装
 
 ```bash
-cap add @cap/lexical-write-float
+cap add lexical-write-float
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/lexical-write-float
 ## Usage / 使用示例
 
 ```cp
-import { writeIntRadix, writeFloatFixed, writeFloatSci } from "@cap/lexical-write-float";
+import { writeIntRadix, writeFloatFixed, writeFloatSci } from "lexical-write-float";
 
 let buf: [64]u8 = undefined;
 const n1 = writeIntRadix(-255, 16, true, buf[0..64]); // "-FF"

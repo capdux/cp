@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/p-timeout-core
+# p-timeout
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:p-timeout` ([https://github.com/sindresorhus/p-timeout](https://github.com/sindresorhus/p-timeout))（原库名 `p-timeout` → CP 包名 `@cap/p-timeout-core`）
+> **参考 / 吸收来源**：`npm:p-timeout` ([https://github.com/sindresorhus/p-timeout](https://github.com/sindresorhus/p-timeout))（原库名 `p-timeout` → CP 包名 `p-timeout`）
 
 Zero-allocation, Clean-room MIT implementation of `p-timeout` v6 deadline tracking and timeout state machine semantics for CP.
 

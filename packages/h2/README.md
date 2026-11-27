@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/http2-hpack
+# h2
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:h2` ([https://github.com/hyperium/h2](https://github.com/hyperium/h2))（原库名 `h2` → CP 包名 `@cap/http2-hpack`）
+> **参考 / 吸收来源**：`crates.io:h2` ([https://github.com/hyperium/h2](https://github.com/hyperium/h2))（原库名 `h2` → CP 包名 `h2`）
 
 Zero-allocation RFC 7541 HTTP/2 HPACK core primitives: full 61-entry static table, N-bit prefixed integer codec, and indexed header field encoder for CP.
 
@@ -17,7 +17,7 @@ Zero-allocation RFC 7541 HTTP/2 HPACK core primitives: full 61-entry static tabl
 ## Usage
 
 ```cp
-import { staticTableFind, encodeIndexedHeader, decodePrefixedInt } from "@cap/http2-hpack";
+import { staticTableFind, encodeIndexedHeader, decodePrefixedInt } from "h2";
 
 const idx = staticTableFind(":method", "GET"); // 2
 let buf: [8]u8 = undefined;

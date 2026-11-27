@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/chacha-rng
+# rand_chacha
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rand_chacha` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand)) / `crates.io:ppv-lite86` ([https://github.com/cryptocorrosion/cryptocorrosion](https://github.com/cryptocorrosion/cryptocorrosion))（原库名 `rand_chacha` → CP 包名 `@cap/chacha-rng`）
+> **参考 / 吸收来源**：`crates.io:rand_chacha` ([https://github.com/rust-random/rand](https://github.com/rust-random/rand)) / `crates.io:ppv-lite86` ([https://github.com/cryptocorrosion/cryptocorrosion](https://github.com/cryptocorrosion/cryptocorrosion))（原库名 `rand_chacha` → CP 包名 `rand_chacha`）
 
 Zero-allocation RFC 8439 ChaCha8 / ChaCha12 / ChaCha20 block function and seekable CSPRNG for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation RFC 8439 ChaCha8 / ChaCha12 / ChaCha20 block function and seekab
 ## Usage
 
 ```cp
-import { ChaCha20Rng } from "@cap/chacha-rng";
+import { ChaCha20Rng } from "rand_chacha";
 
 let rng = ChaCha20Rng.fromU64(42 as u64);
 const x = rng.nextU64();

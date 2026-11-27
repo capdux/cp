@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/unicode-segmentation`
+# `unicode-segmentation`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-segmentation` ([https://github.com/unicode-rs/unicode-segmentation](https://github.com/unicode-rs/unicode-segmentation))
@@ -32,7 +32,7 @@ import {
     sliceGraphemes,
     WordIter,
     countUnicodeWords,
-} from "@cap/unicode-segmentation";
+} from "unicode-segmentation";
 
 const n: usize = countGraphemes("a\r\ne\u0301👨‍👩‍👧‍👦🇺🇸"); // 5
 

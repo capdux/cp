@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/fastrand
+# fastrand
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:fastrand` ([https://github.com/smol-rs/fastrand](https://github.com/smol-rs/fastrand))
@@ -12,7 +12,7 @@ Zero-allocation WyRand 64-bit PRNG for CP — clean-room MIT parity with Rust `f
 ## Install / 安装
 
 ```bash
-cap add @cap/fastrand
+cap add fastrand
 ```
 
 ## API Reference / 接口一览
@@ -32,7 +32,7 @@ cap add @cap/fastrand
 ## Usage / 使用示例
 
 ```cp
-import { Rng } from "@cap/fastrand";
+import { Rng } from "fastrand";
 
 let rng = Rng.withSeed(42);
 const n = rng.u64Range(10, 100);

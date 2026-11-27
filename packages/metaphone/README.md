@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/metaphone`
+# `metaphone`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:metaphone` ([https://github.com/words/metaphone](https://github.com/words/metaphone))
@@ -16,7 +16,7 @@ Zero-heap-allocation Lawrence Philips Metaphone English phonetic encoder in pure
 ## API
 
 ```cp
-import { metaphone, soundsLike } from "@cap/metaphone";
+import { metaphone, soundsLike } from "metaphone";
 ```
 
 ## License

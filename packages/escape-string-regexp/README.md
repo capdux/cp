@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/escape-string-regexp
+# escape-string-regexp
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:escape-string-regexp` ([https://github.com/sindresorhus/escape-string-regexp](https://github.com/sindresorhus/escape-string-regexp))

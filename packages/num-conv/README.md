@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/num-conv
+# num-conv
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-conv` ([https://github.com/jhpratt/num-conv](https://github.com/jhpratt/num-conv))

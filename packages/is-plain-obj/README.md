@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/is-plain-obj
+# is-plain-obj
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:is-plain-obj` ([https://github.com/sindresorhus/is-plain-obj](https://github.com/sindresorhus/is-plain-obj))

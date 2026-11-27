@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/resp
+# resp
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:resp` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -16,7 +16,7 @@ Zero-heap Redis RESP2 wire protocol streaming frame parser and command encoder i
 ## Usage
 
 ```cp
-import { encodeCommand, parseFrame } from "@cap/resp";
+import { encodeCommand, parseFrame } from "resp";
 
 let buf: [128]u8 = undefined;
 const args: [3][]const u8 = ["SET", "k", "hello"];

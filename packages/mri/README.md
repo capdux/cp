@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/proc-args`
+# `mri`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:mri` ([https://github.com/lukeed/mri](https://github.com/lukeed/mri)) / `crates.io:lexopt` ([https://github.com/blyxxyz/lexopt](https://github.com/blyxxyz/lexopt))（原库名 `mri` → CP 包名 `@cap/proc-args`）
+> **参考 / 吸收来源**：`npm:mri` ([https://github.com/lukeed/mri](https://github.com/lukeed/mri)) / `crates.io:lexopt` ([https://github.com/blyxxyz/lexopt](https://github.com/blyxxyz/lexopt))（原库名 `mri` → CP 包名 `mri`）
 
 Zero-heap-allocation POSIX/GNU CLI argument parser in pure CP.
 
@@ -28,7 +28,7 @@ import {
     hasFlag,
     getOption,
     countPositionals,
-} from "@cap/proc-args";
+} from "mri";
 ```
 
 ## License

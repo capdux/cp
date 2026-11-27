@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/foldhash
+# foldhash
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:foldhash` ([https://github.com/orlp/foldhash](https://github.com/orlp/foldhash))
@@ -12,7 +12,7 @@ Zero-allocation 64×64→128-bit folded-multiply non-cryptographic hasher with F
 ## Install / 安装
 
 ```bash
-cap add @cap/foldhash
+cap add foldhash
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/foldhash
 ## Usage / 使用示例
 
 ```cp
-import { FoldHasher, hashBytesFast, hashBytesQuality, foldedMultiply } from "@cap/foldhash";
+import { FoldHasher, hashBytesFast, hashBytesQuality, foldedMultiply } from "foldhash";
 
 const h1 = hashBytesFast("hello world", 42 as u64);
 const h2 = hashBytesQuality("hello world", 42 as u64);

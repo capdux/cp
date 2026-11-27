@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/prepend-http
+# prepend-http
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:prepend-http` ([https://github.com/sindresorhus/prepend-http](https://github.com/sindresorhus/prepend-http))
@@ -12,7 +12,7 @@ Zero-allocation utility to prepend `https://` or `http://` to humanized URLs for
 ## Install / 安装
 
 ```bash
-cap add @cap/prepend-http
+cap add prepend-http
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/prepend-http
 ## Usage / 使用示例
 
 ```cp
-import { prependHttp, hasScheme, isProtocolRelative } from "@cap/prepend-http";
+import { prependHttp, hasScheme, isProtocolRelative } from "prepend-http";
 
 let buf: [128]u8 = undefined;
 const n1 = prependHttp("todomvc.com", true, buf[0..128]);       // "https://todomvc.com"

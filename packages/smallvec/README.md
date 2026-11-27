@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/smallvec
+# smallvec
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:smallvec` ([https://github.com/servo/rust-smallvec](https://github.com/servo/rust-smallvec))

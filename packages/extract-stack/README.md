@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/extract-stack
+# extract-stack
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:extract-stack` ([https://github.com/sindresorhus/extract-stack](https://github.com/sindresorhus/extract-stack))
@@ -12,7 +12,7 @@ Zero-allocation & zero-copy `Error.stack` frame extractor for CP — clean-room 
 ## Install / 安装
 
 ```bash
-cap add @cap/extract-stack
+cap add extract-stack
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/extract-stack
 ## Usage / 使用示例
 
 ```cp
-import { extractStack, extractStackLines, extractErrorHeader } from "@cap/extract-stack";
+import { extractStack, extractStackLines, extractErrorHeader } from "extract-stack";
 
 const raw = "Error: boom\n    at foo (app.js:10:5)\n    at main (app.js:20:1)";
 const header = extractErrorHeader(raw); // "Error: boom"

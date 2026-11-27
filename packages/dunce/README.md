@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/dunce`
+# `dunce`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:dunce` ([https://gitlab.com/kornelski/dunce](https://gitlab.com/kornelski/dunce))
@@ -18,7 +18,7 @@ Zero-heap safe Windows verbatim UNC (`\\?\`) path simplifier in pure CP (clean-r
 ## Quick Start
 
 ```cp
-import { simplified, canStripVerbatimPrefix, isWindowsReservedName } from "@cap/dunce";
+import { simplified, canStripVerbatimPrefix, isWindowsReservedName } from "dunce";
 
 let buf: [260]u8 = undefined;
 const n1 = simplified("\\\\?\\C:\\Users\\alice\\file.txt", &buf); // "C:\Users\alice\file.txt"

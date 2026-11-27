@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/css-select
+# css-select
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:css-select` ([https://github.com/fb55/css-select](https://github.com/fb55/css-select))

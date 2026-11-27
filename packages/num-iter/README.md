@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/num-iter
+# num-iter
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-iter` ([https://github.com/rust-num/num-iter](https://github.com/rust-num/num-iter))
@@ -30,7 +30,7 @@ Clean-room MIT, zero-heap stepped numeric range iterators for CP — modeled on 
 ## Usage
 
 ```typescript
-import { rangeStep, rangeStepInclusive, collectRangeStep } from "@cap/num-iter";
+import { rangeStep, rangeStepInclusive, collectRangeStep } from "num-iter";
 
 let r = rangeStep(0, 10, 3); // yields 0, 3, 6, 9
 let buf: [8]i64 = [0, 0, 0, 0, 0, 0, 0, 0];

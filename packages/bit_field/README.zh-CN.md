@@ -1,125 +1,64 @@
-[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent 速查手册](README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI 智能体速查](./README_AGENT.md)
 
 # bit_field
 
-面向 CP 的零堆内存位与位域操作工具库，支持 `u8`/`u16`/`u32`/`u64`/`usize`、字节切片以及 `BitArray` 位数组。
+> 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
 
-## 源包溯源与零成本迁移
+Zero-allocation bit and bit-range manipulation utilities for u64, u32, and byte slices in pure CP
 
-| 属性 | 说明 |
-| --- | --- |
-| **上游源平台** | [crates.io/crates/bit_field](https://crates.io/crates/bit_field) |
-| **上游原包名** | `bit_field`（CP 版本 `1.0.0`） |
-| **上游仓库** | https://github.com/phil-opp/rust-bit_field |
-| **许可证** | MIT |
-
-从 Rust 迁移到 CP 保持原包名不变：
-
-```rust
-// Rust
-use bit_field::{BitField, BitArray};
-```
-
-```cp
-// CP —— 原包名直接导入，零堆分配原生位运算
-import {
-    getBitU64, setBitU64, getBitsU64, setBitsU64,
-    getBitsRangeU64, setBitsRangeU64, BitArray,
-} from "bit_field";
-```
-
-## 安装
+## 安装与导入
 
 ```bash
 cap add bit_field
 ```
 
-## 实战示例
-
-### 1. 整数单比特与位域读写（`u8` / `u16` / `u32` / `u64` / `usize`）
-
 ```cp
-import {
-    getBitU8, setBitU8, getBitsU8, setBitsU8,
-    getBitU16, setBitU16, getBitsU16, setBitsU16,
-    getBitU32, setBitU32, getBitsU32, setBitsU32,
-    getBitU64, setBitU64, getBitsU64, setBitsU64,
-    getBitsRangeU64, setBitsRangeU64,
-    getBitUsize, setBitUsize, getBitsUsize, setBitsUsize,
-} from "bit_field";
-
-fn demoIntegerBits() {
-    // 窄位宽索引类型（u3/u4/u5/u6）在编译期杜绝移位越界
-    mut reg: u32 = 0;
-    reg = setBitU32(reg, 3, true);          // 置位第 3 位 -> 0b1000
-    let is_set = getBitU32(reg, 3);         // true
-
-    // 读写半开区间 [start, end) 位域
-    reg = setBitsU32(reg, 8, 16, 0xAB);     // 向 [8..16) 写入 0xAB
-    let field = getBitsU32(reg, 8, 16);     // 0xAB
-
-    // 支持完整 64 位端点（end == 64 使用 u8 索引避免 u6 溢出）
-    mut flags: u64 = 0;
-    flags = setBitsRangeU64(flags, 56, 64, 0xFF);
-    let top_byte = getBitsRangeU64(flags, 56, 64); // 0xFF
-}
+import { bitLengthU8 } from "bit_field";
 ```
 
-### 2. 字节切片位运算与 `BitArray`
+## 核心导出 API
 
-```cp
-import {
-    BitArray, bitLengthSlice,
-    getBitSlice, setBitSlice, toggleBitSlice,
-    getBitsSlice, setBitsSlice, countOnesSlice,
-} from "bit_field";
+- `export fn bitLengthU8(): usize;`
+- `export fn bitLengthU16(): usize;`
+- `export fn bitLengthU32(): usize;`
+- `export fn bitLengthU64(): usize;`
+- `export fn bitLengthUsize(): usize;`
+- `export fn bitLengthSlice(bytes: &[]u8): usize;`
+- `export fn bfldMaskU8(width: u3): u8;`
+- `export fn bfldMaskU16(width: u4): u16;`
+- `export fn bfldMaskU32(width: u5): u32;`
+- `export fn bfldMaskU64(width: u6): u64;`
+- `export fn bfldFullMaskU64(width: u8): u64;`
+- `export fn getBitU8(val: u8, bit: u3): bool;`
+- `export fn setBitU8(val: u8, bit: u3, on: bool): u8;`
+- `export fn getBitsU8(val: u8, start: u3, end: u3): u8;`
+- `export fn setBitsU8(val: u8, start: u3, end: u3, bits: u8): u8;`
+- `export fn getBitU16(val: u16, bit: u4): bool;`
+- `export fn setBitU16(val: u16, bit: u4, on: bool): u16;`
+- `export fn getBitsU16(val: u16, start: u4, end: u4): u16;`
+- `export fn setBitsU16(val: u16, start: u4, end: u4, bits: u16): u16;`
+- `export fn getBitU64(val: u64, bit: u6): bool;`
+- `export fn setBitU64(val: u64, bit: u6, on: bool): u64;`
+- `export fn getBitsU64(val: u64, start: u6, end: u6): u64;`
+- `export fn setBitsU64(val: u64, start: u6, end: u6, bits: u64): u64;`
+- `export fn getBitsRangeU64(val: u64, start: u8, end: u8): u64;`
+- `export fn setBitsRangeU64(val: u64, start: u8, end: u8, bits: u64): u64;`
+- `export fn getBitU32(val: u32, bit: u5): bool;`
+- `export fn setBitU32(val: u32, bit: u5, on: bool): u32;`
+- `export fn getBitsU32(val: u32, start: u5, end: u5): u32;`
+- `export fn setBitsU32(val: u32, start: u5, end: u5, bits: u32): u32;`
+- `export fn getBitUsize(val: usize, bit: u8): bool;`
+- `export fn setBitUsize(val: usize, bit: u8, on: bool): usize;`
+- `export fn getBitsUsize(val: usize, start: u8, end: u8): usize;`
+- `export fn setBitsUsize(val: usize, start: u8, end: u8, bits: usize): usize;`
+- `export fn getBitSlice(bytes: &[]u8, bit_index: usize): bool;`
+- `export fn setBitSlice(bytes: []u8, bit_index: usize, on: bool);`
+- `export fn toggleBitSlice(bytes: []u8, bit_index: usize);`
+- `export fn getBitsSlice(bytes: &[]u8, start: usize, end: usize): u64;`
+- `export fn setBitsSlice(bytes: []u8, start: usize, end: usize, value: u64);`
+- `export fn countOnesSlice(bytes: &[]u8): usize;`
 
-fn demoBitArray() {
-    mut storage: [4]u8 = [0; 4]; // 栈上 32 位位数组
-    mut bits = BitArray.fromSlice(&mut storage);
+<!-- cap-source-attribution -->
+## 上游来源与许可证说明
 
-    let total_bits = bits.bitLength(); // 32
-    bits.setBit(0, true);
-    bits.setBit(15, true);
-    bits.toggleBit(0);                 // 将第 0 位翻转为 false
-
-    // 跨字节边界位域 [6..18) 读写
-    bits.setBits(6, 18, 0xABC);
-    let extracted = bits.getBits(6, 18); // 0xABC
-    let popcount = bits.countOnes();
-
-    bits.setAll();
-    bits.clearAll();
-
-    // 也可直接对切片调用自由函数
-    setBitSlice(&mut storage, 10, true);
-    let b10 = getBitSlice(&storage, 10); // true
-    let ones = countOnesSlice(&storage); // 1
-}
-```
-
-### 3. 位宽查询与掩码生成
-
-```cp
-import {
-    bitLengthU8, bitLengthU16, bitLengthU32, bitLengthU64, bitLengthUsize,
-    bfldMaskU8, bfldMaskU16, bfldMaskU32, bfldMaskU64, bfldFullMaskU64,
-} from "bit_field";
-
-fn demoMasks() {
-    let w64 = bitLengthU64();      // 64
-    let m4 = bfldMaskU8(4);        // 0x0F
-    let m64 = bfldFullMaskU64(64); // 0xFFFF_FFFF_FFFF_FFFF
-}
-```
-
-## 性能与安全亮点
-
-- **零堆内存分配**：全部函数直接操作标量寄存器与调用方栈/切片缓冲区（`BitArray` 仅借用 `[]u8`）。
-- **类型级移位安全**：采用精确窄位宽索引（`u3`/`u4`/`u5`/`u6`），编译期消除越界移位风险。
-- **完整 64 位区间支持**：`getBitsRangeU64`、`setBitsRangeU64` 与 `bfldFullMaskU64` 安全支持 `end == 64` 边界，无移位溢出。
-- **跨字节位域访问**：`BitArray` 及 `*Slice` 函数支持任意跨字节 `[start, end)` 位域读写（最宽 64 位）与置位计数。
-
-## API 参考
-
-完整类型定义见 [`src/index.d.cp`](src/index.d.cp)，AI 智能体极简速查见 [`README_AGENT.md`](README_AGENT.md)。
+- **上游生态**：`crates.io` (`bit_field@1.0.0`)，许可证：MIT

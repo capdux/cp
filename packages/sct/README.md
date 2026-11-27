@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sct
+# sct
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:sct` ([https://github.com/rustls/sct.rs](https://github.com/rustls/sct.rs))
@@ -12,7 +12,7 @@ Zero-allocation RFC 6962 Certificate Transparency Signed Certificate Timestamp (
 ## Install / 安装
 
 ```bash
-cap add @cap/sct
+cap add sct
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/sct
 ## Usage / 使用示例
 
 ```cp
-import { parseSct, parseSctList, encodeSct } from "@cap/sct";
+import { parseSct, parseSctList, encodeSct } from "sct";
 
 const sct = parseSct(wireBytes);
 if (sct.valid) {

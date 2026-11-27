@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/unicode-bidi
+# unicode-bidi
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-bidi` ([https://github.com/servo/unicode-bidi](https://github.com/servo/unicode-bidi)) / `npm:bidi-js` ([https://github.com/lojjic/bidi-js](https://github.com/lojjic/bidi-js))

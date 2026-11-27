@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ascii85
+# ascii85
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ascii85` ([https://github.com/noseglid/node-ascii85](https://github.com/noseglid/node-ascii85)) / `crates.io:ascii85` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -16,7 +16,7 @@ Zero-allocation Adobe Ascii85 (PostScript / PDF base-85) encoder and decoder for
 ## Usage
 
 ```cp
-import { encode, decode } from "@cap/ascii85";
+import { encode, decode } from "ascii85";
 
 let enc: [32]u8 = undefined;
 const n = encode("Man ", true, enc[0..32]); // "<~9jqo^~>"

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/svg-badge
+# badge-maker
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:badge-maker` ([https://github.com/badges/shields](https://github.com/badges/shields))（原库名 `badge-maker` → CP 包名 `@cap/svg-badge`）
+> **参考 / 吸收来源**：`npm:badge-maker` ([https://github.com/badges/shields](https://github.com/badges/shields))（原库名 `badge-maker` → CP 包名 `badge-maker`）
 
 Zero-heap Shields.io-style SVG status badge generator in pure CP (replaces npm `badge-maker` / `gh-badges`).
 
@@ -12,13 +12,13 @@ Supports `Flat`, `FlatSquare`, and `Plastic` styles, 15+ Shields.io named colors
 ## Install
 
 ```bash
-cap add @cap/svg-badge
+cap add badge-maker
 ```
 
 ## Usage
 
 ```cp
-import { makeBadge, renderBadge, BadgeOptions, BadgeStyle } from "@cap/svg-badge";
+import { makeBadge, renderBadge, BadgeOptions, BadgeStyle } from "badge-maker";
 
 let buf: [2048]u8 = undefined;
 const svg = makeBadge("build", "passing", "brightgreen", buf[0..2048]);

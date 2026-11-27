@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/pkg-types
+# pkg-types
 
 Zero-heap `package.json` / `cap.json` manifest field parser and package name validator in pure CP.
 

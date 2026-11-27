@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/mathjs-expr
+# mathjs
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:mathjs` ([https://github.com/josdejong/mathjs](https://github.com/josdejong/mathjs))（原库名 `mathjs` → CP 包名 `@cap/mathjs-expr`）
+> **参考 / 吸收来源**：`npm:mathjs` ([https://github.com/josdejong/mathjs](https://github.com/josdejong/mathjs))（原库名 `mathjs` → CP 包名 `mathjs`）
 
 Zero-allocation mathematical expression parser & evaluator for CP — clean-room MIT parity with npm `mathjs` expression evaluation. Composes `@cap/libm` with zero duplication.
 
@@ -12,7 +12,7 @@ Zero-allocation mathematical expression parser & evaluator for CP — clean-room
 ## Install / 安装
 
 ```bash
-cap add @cap/mathjs-expr
+cap add mathjs
 ```
 
 ## Dependencies / 跨包复用
@@ -35,7 +35,7 @@ cap add @cap/mathjs-expr
 ## Usage / 使用示例
 
 ```cp
-import { MathScope, evalExpr, evalExprWithScope } from "@cap/mathjs-expr";
+import { MathScope, evalExpr, evalExprWithScope } from "mathjs";
 
 const r1 = evalExpr("2^3^2"); // 512.0
 let scope = MathScope.new();

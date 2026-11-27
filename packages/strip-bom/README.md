@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/strip-bom
+# strip-bom
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:strip-bom` ([https://github.com/sindresorhus/strip-bom](https://github.com/sindresorhus/strip-bom)) / `npm:strip-bom-buf` ([https://github.com/sindresorhus/strip-bom-buf](https://github.com/sindresorhus/strip-bom-buf))

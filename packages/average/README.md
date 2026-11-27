@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/online-stats
+# average
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:average` ([https://github.com/vks/average](https://github.com/vks/average))（原库名 `average` → CP 包名 `@cap/online-stats`）
+> **参考 / 吸收来源**：`crates.io:average` ([https://github.com/vks/average](https://github.com/vks/average))（原库名 `average` → CP 包名 `average`）
 
 Zero-allocation Welford streaming statistics, Chan parallel merge, OLS linear regression, and linear-interpolated percentiles for CP — clean-room MIT parity with Rust `average` / `criterion` statistical kernels.
 
@@ -12,7 +12,7 @@ Zero-allocation Welford streaming statistics, Chan parallel merge, OLS linear re
 ## Install / 安装
 
 ```bash
-cap add @cap/online-stats
+cap add average
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/online-stats
 ## Usage / 使用示例
 
 ```cp
-import { RunningStats, linearRegression, percentile } from "@cap/online-stats";
+import { RunningStats, linearRegression, percentile } from "average";
 
 let st = RunningStats.init();
 st.push(1000000004.0);

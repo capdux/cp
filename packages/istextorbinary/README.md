@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/mime-sniff
+# istextorbinary
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:istextorbinary` ([https://github.com/bevry/istextorbinary](https://github.com/bevry/istextorbinary)) / `crates.io:content_inspector` ([https://github.com/sharkdp/content_inspector](https://github.com/sharkdp/content_inspector))（原库名 `istextorbinary` → CP 包名 `@cap/mime-sniff`）
+> **参考 / 吸收来源**：`npm:istextorbinary` ([https://github.com/bevry/istextorbinary](https://github.com/bevry/istextorbinary)) / `crates.io:content_inspector` ([https://github.com/sharkdp/content_inspector](https://github.com/sharkdp/content_inspector))（原库名 `istextorbinary` → CP 包名 `istextorbinary`）
 
 Zero-allocation WHATWG MIME Sniffing Standard binary/text detector and HTML/XML/JSON/SVG content sniffer for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation WHATWG MIME Sniffing Standard binary/text detector and HTML/XML/
 ## Usage
 
 ```cp
-import { sniffContentType, sniffMime, CT_HTML } from "@cap/mime-sniff";
+import { sniffContentType, sniffMime, CT_HTML } from "istextorbinary";
 
 const ct = sniffContentType("<!DOCTYPE html><html><body>Hi</body></html>"); // CT_HTML
 const mime = sniffMime("{\"ok\":true}"); // "application/json"

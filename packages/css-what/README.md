@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/css-what`
+# `css-what`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:css-what` ([https://github.com/fb55/css-what](https://github.com/fb55/css-what))
@@ -22,7 +22,7 @@ import {
     CssSelectorToken,
     parseCssSelector,
     stringifyCssSelector,
-} from "@cap/css-what";
+} from "css-what";
 ```
 
 ## License

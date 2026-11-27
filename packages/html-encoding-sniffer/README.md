@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/html-encoding-sniffer
+# html-encoding-sniffer
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:html-encoding-sniffer` ([https://github.com/jsdom/html-encoding-sniffer](https://github.com/jsdom/html-encoding-sniffer))（原库名 `html-encoding-sniffer` → CP 包名 `@cap/html-encoding-sniffer`）
+> **参考 / 吸收来源**：`npm:html-encoding-sniffer` ([https://github.com/jsdom/html-encoding-sniffer](https://github.com/jsdom/html-encoding-sniffer))（原库名 `html-encoding-sniffer` → CP 包名 `html-encoding-sniffer`）
 
 Zero-allocation WHATWG HTML §13.2.3.2 encoding sniffer for CP — clean-room MIT implementation inspired by jsdom `html-encoding-sniffer`.
 
@@ -12,7 +12,7 @@ Zero-allocation WHATWG HTML §13.2.3.2 encoding sniffer for CP — clean-room MI
 ## Install / 安装
 
 ```bash
-cap add @cap/html-encoding-sniffer
+cap add html-encoding-sniffer
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/html-encoding-sniffer
 ## Usage / 使用示例
 
 ```cp
-import { SniffOptions, sniffHtmlEncoding, normalizeEncodingLabel } from "@cap/html-encoding-sniffer";
+import { SniffOptions, sniffHtmlEncoding, normalizeEncodingLabel } from "html-encoding-sniffer";
 
 const html = "<html><head><meta charset=\"utf-8\"></head></html>";
 const enc = sniffHtmlEncoding(html, SniffOptions{ transport_layer_encoding: "", default_encoding: "" });

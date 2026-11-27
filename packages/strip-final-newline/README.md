@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/strip-final-newline
+# strip-final-newline
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:strip-final-newline` ([https://github.com/sindresorhus/strip-final-newline](https://github.com/sindresorhus/strip-final-newline))

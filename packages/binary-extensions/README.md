@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/binary-extensions`
+# `binary-extensions`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:binary-extensions` ([https://github.com/sindresorhus/binary-extensions](https://github.com/sindresorhus/binary-extensions))
@@ -17,7 +17,7 @@ Zero-heap O(log n) lookup of 127 common binary file extensions and categories in
 ## Quick Start
 
 ```cp
-import { isBinaryExtension, isBinaryPath, extensionCategory, CAT_DATA_ML } from "@cap/binary-extensions";
+import { isBinaryExtension, isBinaryPath, extensionCategory, CAT_DATA_ML } from "binary-extensions";
 
 const ok1 = isBinaryExtension(".PNG"); // true
 const ok2 = isBinaryPath("C:\\models\\llama.gguf"); // true

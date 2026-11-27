@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cbc
+# cbc
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cbc` ([https://github.com/RustCrypto/block-modes](https://github.com/RustCrypto/block-modes))
@@ -12,7 +12,7 @@ Zero-allocation pure CP implementation of AES-128-CBC and AES-256-CBC block ciph
 ## Install / 安装
 
 ```bash
-cap add @cap/cbc
+cap add cbc
 ```
 
 ## API
@@ -31,7 +31,7 @@ cap add @cap/cbc
 ## Usage / 使用示例
 
 ```cp
-import { aes128CbcEncryptPkcs7, aes128CbcDecryptPkcs7 } from "@cap/cbc";
+import { aes128CbcEncryptPkcs7, aes128CbcDecryptPkcs7 } from "cbc";
 
 const key: [16]u8 = @as([16]u8, [
     0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,

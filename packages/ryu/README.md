@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ryu-float
+# ryu
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:ryu` ([https://github.com/dtolnay/ryu](https://github.com/dtolnay/ryu))（原库名 `ryu` → CP 包名 `@cap/ryu-float`）
+> **参考 / 吸收来源**：`crates.io:ryu` ([https://github.com/dtolnay/ryu](https://github.com/dtolnay/ryu))（原库名 `ryu` → CP 包名 `ryu`）
 
 Pure CP, zero-allocation fast floating-point-to-string formatter (clean-room MIT parity with Rust `ryu` v1).
 

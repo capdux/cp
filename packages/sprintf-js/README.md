@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sprintf-js
+# sprintf-js
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:sprintf-js` ([https://github.com/alexei/sprintf.js](https://github.com/alexei/sprintf.js), `BSD-3-Clause`)

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/dice-coeff
+# string-similarity
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:string-similarity` ([https://github.com/aceakash/string-similarity](https://github.com/aceakash/string-similarity))（原库名 `string-similarity` → CP 包名 `@cap/dice-coeff`）
+> **参考 / 吸收来源**：`npm:string-similarity` ([https://github.com/aceakash/string-similarity](https://github.com/aceakash/string-similarity))（原库名 `string-similarity` → CP 包名 `string-similarity`）
 
 Zero-allocation Sørensen-Dice bigram string similarity coefficient and best-match finder for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation Sørensen-Dice bigram string similarity coefficient and best-mat
 ## Usage
 
 ```cp
-import { diceCoefficient, bestMatchIndex } from "@cap/dice-coeff";
+import { diceCoefficient, bestMatchIndex } from "string-similarity";
 
 const sim = diceCoefficient("healed", "sealed"); // 0.8
 ```

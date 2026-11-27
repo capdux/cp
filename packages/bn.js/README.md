@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bigint-u256
+# bn.js
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:bn.js` ([https://github.com/indutny/bn.js](https://github.com/indutny/bn.js)) / `crates.io:primitive-types` ([https://github.com/paritytech/parity-common](https://github.com/paritytech/parity-common)) / `crates.io:ruint` ([https://github.com/recmo/uint](https://github.com/recmo/uint))（原库名 `bn.js` → CP 包名 `@cap/bigint-u256`）
+> **参考 / 吸收来源**：`npm:bn.js` ([https://github.com/indutny/bn.js](https://github.com/indutny/bn.js)) / `crates.io:primitive-types` ([https://github.com/paritytech/parity-common](https://github.com/paritytech/parity-common)) / `crates.io:ruint` ([https://github.com/recmo/uint](https://github.com/recmo/uint))（原库名 `bn.js` → CP 包名 `bn.js`）
 
 Zero-heap-allocation 256-bit unsigned integer (`U256`, 4×`u64` little-endian limbs) arithmetic library in pure CP with overflow-safe Debug-mode arithmetic.
 

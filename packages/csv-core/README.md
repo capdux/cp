@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/csv-core
+# csv-core
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:csv-core` ([https://github.com/BurntSushi/rust-csv](https://github.com/BurntSushi/rust-csv))

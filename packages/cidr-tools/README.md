@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cidr-tools
+# cidr-tools
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cidr-tools` ([https://github.com/silverwind/cidr-tools](https://github.com/silverwind/cidr-tools))
@@ -12,7 +12,7 @@ Zero-allocation IPv4 CIDR block set-algebra engine (`parse`, `format`, `contains
 ## Install / 安装
 
 ```bash
-cap add @cap/cidr-tools
+cap add cidr-tools
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/cidr-tools
 ## Usage / 使用示例
 
 ```cp
-import { Cidr4, parseCidr4, mergeCidrs, excludeCidr } from "@cap/cidr-tools";
+import { Cidr4, parseCidr4, mergeCidrs, excludeCidr } from "cidr-tools";
 
 const pair: [2]Cidr4 = [parseCidr4("192.168.1.0/25"), parseCidr4("192.168.1.128/25")];
 let merged: [4]Cidr4 = undefined;

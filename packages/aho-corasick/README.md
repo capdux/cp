@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/aho-corasick
+# aho-corasick
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:aho-corasick` ([https://github.com/BurntSushi/aho-corasick](https://github.com/BurntSushi/aho-corasick))
@@ -12,7 +12,7 @@ Zero-allocation Aho-Corasick multi-pattern O(N + Z) search automaton with LCRS s
 ## Install / 安装
 
 ```bash
-cap add @cap/aho-corasick
+cap add aho-corasick
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/aho-corasick
 ## Usage / 使用示例
 
 ```cp
-import { AhoCorasick, AcMatch } from "@cap/aho-corasick";
+import { AhoCorasick, AcMatch } from "aho-corasick";
 
 let ac = AhoCorasick.init();
 * = ac.addPattern("he");

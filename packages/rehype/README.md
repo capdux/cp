@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/rehype-ast
+# rehype
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:rehype` ([https://github.com/rehypejs/rehype](https://github.com/rehypejs/rehype))（原库名 `rehype` → CP 包名 `@cap/rehype-ast`）
+> **参考 / 吸收来源**：`npm:rehype` ([https://github.com/rehypejs/rehype](https://github.com/rehypejs/rehype))（原库名 `rehype` → CP 包名 `rehype`）
 
 Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer for CP — clean-room MIT parity with npm `rehype` / `hast`. Composes `@cap/escape-html` with zero duplication.
 
@@ -12,7 +12,7 @@ Zero-allocation HAST (Hypertext Abstract Syntax Tree) builder & HTML5 serializer
 ## Install / 安装
 
 ```bash
-cap add @cap/rehype-ast
+cap add rehype
 ```
 
 ## Dependencies / 跨包复用
@@ -30,7 +30,7 @@ cap add @cap/rehype-ast
 ## Usage / 使用示例
 
 ```cp
-import { HastTree } from "@cap/rehype-ast";
+import { HastTree } from "rehype";
 
 let tree = HastTree.new();
 tree.addDoctype(0);

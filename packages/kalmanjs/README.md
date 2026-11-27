@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/kalman1d
+# kalmanjs
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:kalmanjs` ([https://github.com/wouterbulten/kalmanjs](https://github.com/wouterbulten/kalmanjs))（原库名 `kalmanjs` → CP 包名 `@cap/kalman1d`）
+> **参考 / 吸收来源**：`npm:kalmanjs` ([https://github.com/wouterbulten/kalmanjs](https://github.com/wouterbulten/kalmanjs))（原库名 `kalmanjs` → CP 包名 `kalmanjs`）
 
 Zero-allocation 1D scalar Kalman filter for sensor denoising, smoothing, and linear state prediction in CP.
 
@@ -15,7 +15,7 @@ Zero-allocation 1D scalar Kalman filter for sensor denoising, smoothing, and lin
 ## Usage
 
 ```cp
-import { Kalman1D } from "@cap/kalman1d";
+import { Kalman1D } from "kalmanjs";
 
 let kf = Kalman1D.new(0.01 as f64, 1.0 as f64);
 const est1 = kf.filter(10.5 as f64, 0.0 as f64);

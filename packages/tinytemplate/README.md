@@ -1,15 +1,15 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/template` — 零分配、默认 XSS 安全防护模板引擎
+# `tinytemplate` — 零分配、默认 XSS 安全防护模板引擎
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:tinytemplate` ([https://github.com/bheisler/TinyTemplate](https://github.com/bheisler/TinyTemplate))（原库名 `tinytemplate` → CP 包名 `@cap/template`）
+> **参考 / 吸收来源**：`crates.io:tinytemplate` ([https://github.com/bheisler/TinyTemplate](https://github.com/bheisler/TinyTemplate))（原库名 `tinytemplate` → CP 包名 `tinytemplate`）
 
 > 独立 Clean-Room 纯 CP 实现（严格对标 npm `handlebars` / `mustache` [周下载 60M+] 与 Rust `minijinja` / `tera` crate）| 许可协议：MIT
 
 ## 架构概述
 
-`@cap/template` 是面向高并发 Web 服务、SSR 页面渲染、邮件/通知生成与 Agent Prompt 拼装设计的纯 CP、零外部依赖、零堆分配模板引擎：
+`tinytemplate` 是面向高并发 Web 服务、SSR 页面渲染、邮件/通知生成与 Agent Prompt 拼装设计的纯 CP、零外部依赖、零堆分配模板引擎：
 
 - **零堆分配与 `undefined` 栈缓冲**：`TemplateContext` 与渲染栈帧全部常驻栈内存，数组默认 `undefined` 延迟初始化，零清零、零 `malloc`/`free` 开销；所有输出直接写入调用方栈缓冲区。
 - **单遍词法扫描与状态机执行**：无需构建 AST 或中间字节码，单遍扫描模板并在遇到 `{{#each}}` 时原地回跳复用模板切片，渲染开销极低。
@@ -54,7 +54,7 @@ Copyright (c) 2026 CP-Lang Contributors. Released under the **MIT License**.
 ### 示例 1：默认 HTML XSS 自动转义与 `{{{ raw }}}` 原始输出
 
 ```cp
-import { TemplateContext, render } from "@cap/template";
+import { TemplateContext, render } from "tinytemplate";
 
 fn demoXssSafety() {
     let ctx = TemplateContext.init();
@@ -72,7 +72,7 @@ fn demoXssSafety() {
 ### 示例 2：链式管道过滤器与嵌套条件分支
 
 ```cp
-import { TemplateContext, render } from "@cap/template";
+import { TemplateContext, render } from "tinytemplate";
 
 fn demoFiltersAndConditionals() {
     let ctx = TemplateContext.init();
@@ -92,7 +92,7 @@ fn demoFiltersAndConditionals() {
 ### 示例 3：列表迭代 `#each` 与 `@index` / `@first` / `@last` / `this`
 
 ```cp
-import { TemplateContext, render } from "@cap/template";
+import { TemplateContext, render } from "tinytemplate";
 
 fn demoEachLoop() {
     let ctx = TemplateContext.init();

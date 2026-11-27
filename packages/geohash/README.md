@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/geohash
+# geohash
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:geohash` ([https://github.com/georust/geohash](https://github.com/georust/geohash))
@@ -12,7 +12,7 @@ Zero-allocation Base32 Geohash encoder, bounding-box decoder, and 8-direction ne
 ## Install / 安装
 
 ```bash
-cap add @cap/geohash
+cap add geohash
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/geohash
 ## Usage / 使用示例
 
 ```cp
-import { encode, decode, neighbor } from "@cap/geohash";
+import { encode, decode, neighbor } from "geohash";
 
 let buf: [16]u8 = undefined;
 const n = encode(57.64911, 10.40744, 11 as usize, buf[0..16]);

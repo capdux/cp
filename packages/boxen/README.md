@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/boxen
+# boxen
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:boxen` ([https://github.com/sindresorhus/boxen](https://github.com/sindresorhus/boxen))
@@ -19,7 +19,7 @@ Zero-allocation CLI terminal box renderer for CP — clean-room MIT parity with 
 ## 安装 / Install
 
 ```bash
-cap add @cap/boxen
+cap add boxen
 ```
 
 ## API 参考 / API Reference
@@ -37,7 +37,7 @@ cap add @cap/boxen
 ## 使用示例 / Usage
 
 ```cp
-import { box, titledBox, renderBox, BoxOptions, BorderStyle, TextAlign } from "@cap/boxen";
+import { box, titledBox, renderBox, BoxOptions, BorderStyle, TextAlign } from "boxen";
 
 let buf: [1024]u8 = undefined;
 const out = titledBox("Status", "CP Runtime Ready!\nAll 100+ packages active", BorderStyle.Round, buf[0..1024]);

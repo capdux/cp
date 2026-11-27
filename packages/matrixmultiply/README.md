@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/matrixmultiply
+# matrixmultiply
 
 Zero-heap general dense matrix multiplication (`sgemm` / `dgemm` / `matmulF64`) in pure CP, supporting arbitrary row/column strides with cache-blocked accumulation.
 

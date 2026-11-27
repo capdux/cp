@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/detect-newline
+# detect-newline
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:detect-newline` ([https://github.com/sindresorhus/detect-newline](https://github.com/sindresorhus/detect-newline))

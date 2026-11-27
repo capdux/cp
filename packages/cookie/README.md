@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/cookie-crate`
+# `cookie`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:cookie` ([https://github.com/SergioBenitez/cookie-rs](https://github.com/SergioBenitez/cookie-rs))（原库名 `cookie` → CP 包名 `@cap/cookie-crate`）
+> **参考 / 吸收来源**：`crates.io:cookie` ([https://github.com/SergioBenitez/cookie-rs](https://github.com/SergioBenitez/cookie-rs))（原库名 `cookie` → CP 包名 `cookie`）
 
 Zero-allocation Rust-style `CookieBuilder`, percent-encoded `Set-Cookie` parser/formatter, and removal cookie generator for CP (clean-room MIT, inspired by Rust `cookie` v0.18).
 
@@ -53,7 +53,7 @@ import {
     formatEncodedCookie,
     parseEncodedCookie,
     makeRemovalCookie,
-} from "@cap/cookie-crate";
+} from "cookie";
 
 fn example() {
     let b = CookieBuilder.new("session", "a b/c=d");

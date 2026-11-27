@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/astar
+# astar
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:astar` ([https://github.com/evenfurther/pathfinding](https://github.com/evenfurther/pathfinding))
@@ -17,7 +17,7 @@ Zero-heap 2D grid A* heuristic shortest-pathfinding engine in pure CP.
 ## Usage
 
 ```cp
-import { GridMap, GridPos } from "@cap/astar";
+import { GridMap, GridPos } from "astar";
 
 let map = GridMap.init(10, 10);
 map.setBlocked(3, 2, true);

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/chokidar-core
+# chokidar
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:chokidar` ([https://github.com/paulmillr/chokidar](https://github.com/paulmillr/chokidar))（原库名 `chokidar` → CP 包名 `@cap/chokidar-core`）
+> **参考 / 吸收来源**：`npm:chokidar` ([https://github.com/paulmillr/chokidar](https://github.com/paulmillr/chokidar))（原库名 `chokidar` → CP 包名 `chokidar`）
 
 Zero-heap, pure CP file watcher core state machine, snapshot differ, write-finish debouncer, and glob ignore filter (clean-room MIT implementation inspired by npm `chokidar` v4).
 
@@ -18,7 +18,7 @@ Zero-heap, pure CP file watcher core state machine, snapshot differ, write-finis
 ```cp
 import {
     ChokidarOptions, FileWatcherCore, EVT_ADD, EVT_CHANGE, EVT_UNLINK
-} from "@cap/chokidar-core";
+} from "chokidar";
 
 let watcher = FileWatcherCore.new(ChokidarOptions.defaults());
 * = watcher.addIgnore("node_modules/**");

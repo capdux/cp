@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/petname
+# unique-names-generator
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:unique-names-generator` ([https://github.com/andreasonny83/unique-names-generator](https://github.com/andreasonny83/unique-names-generator))（原库名 `unique-names-generator` → CP 包名 `@cap/petname`）
+> **参考 / 吸收来源**：`npm:unique-names-generator` ([https://github.com/andreasonny83/unique-names-generator](https://github.com/andreasonny83/unique-names-generator))（原库名 `unique-names-generator` → CP 包名 `unique-names-generator`）
 
 Zero-allocation deterministic human-readable name generator for CP — clean-room MIT parity with npm `unique-names-generator` / `human-id` and Rust `petname` / `names`.
 
 ## Install
 
 ```bash
-cap add @cap/petname
+cap add unique-names-generator
 ```
 
 ## Features
@@ -22,7 +22,7 @@ cap add @cap/petname
 ## Usage
 
 ```cp
-import { Petname, petnameFromSeed, subdomainFromSeed } from "@cap/petname";
+import { Petname, petnameFromSeed, subdomainFromSeed } from "unique-names-generator";
 
 let buf: [64]u8 = undefined;
 const slug = petnameFromSeed(42, 2, "-", buf[0..64]);

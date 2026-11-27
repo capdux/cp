@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/rrule-parse
+# rrule
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:rrule` ([https://github.com/jkbrzt/rrule](https://github.com/jkbrzt/rrule))（原库名 `rrule` → CP 包名 `@cap/rrule-parse`）
+> **参考 / 吸收来源**：`npm:rrule` ([https://github.com/jkbrzt/rrule](https://github.com/jkbrzt/rrule))（原库名 `rrule` → CP 包名 `rrule`）
 
 Zero-allocation RFC 5545 iCalendar RRULE parser, validator, and canonical formatter for CP — clean-room MIT parity with npm `rrule` v2. Composes `@cap/unicase` for case-insensitive key and enum matching.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 5545 iCalendar RRULE parser, validator, and canonical format
 ## Install / 安装
 
 ```bash
-cap add @cap/rrule-parse
+cap add rrule
 ```
 
 ## Dependencies / 跨包复用
@@ -43,7 +43,7 @@ import {
     parseRRule,
     formatRRule,
     matchesWeekday,
-} from "@cap/rrule-parse";
+} from "rrule";
 
 const r = parseRRule("RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR;COUNT=10");
 const isMon = matchesWeekday(r, 1); // true

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`decamelize`](https://github.com/sindresorhus/decamelize)（`MIT`）（包名 `@cap/decamelize`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`decamelize`](https://github.com/sindresorhus/decamelize)（`MIT`）（包名 `decamelize`）。
 
-# @cap/decamelize
+# decamelize
 
 零堆分配的 CP 原生驼峰转分隔符字符串库，Clean-Room MIT 实现对标 npm 顶流包 `decamelize`（1.2 亿+/周下载，`yargs` / `meow` 核心依赖）。
 

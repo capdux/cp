@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ciborium-ll
+# ciborium-ll
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ciborium-ll` ([https://github.com/enarx/ciborium](https://github.com/enarx/ciborium)) — `Apache-2.0`

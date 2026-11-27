@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/kind-of
+# kind-of
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:kind-of` ([https://github.com/jonschlinkert/kind-of](https://github.com/jonschlinkert/kind-of))

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/human-number
+# numeral
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:numeral` ([https://github.com/adamwdraper/Numeral-js](https://github.com/adamwdraper/Numeral-js)) / `npm:filesize` ([https://github.com/avoidwork/filesize.js](https://github.com/avoidwork/filesize.js))（原库名 `numeral` → CP 包名 `@cap/human-number`）
+> **参考 / 吸收来源**：`npm:numeral` ([https://github.com/adamwdraper/Numeral-js](https://github.com/adamwdraper/Numeral-js)) / `npm:filesize` ([https://github.com/avoidwork/filesize.js](https://github.com/avoidwork/filesize.js))（原库名 `numeral` → CP 包名 `numeral`）
 
 Zero-allocation human-readable number formatting engine for CP — clean-room MIT parity with npm `numeral` / `millify` / `number-to-words` and Rust `num-format`.
 
@@ -12,7 +12,7 @@ Zero-allocation human-readable number formatting engine for CP — clean-room MI
 ## Install / 安装
 
 ```bash
-cap add @cap/human-number
+cap add numeral
 ```
 
 ## API Reference / 接口一览
@@ -38,7 +38,7 @@ import {
     toRoman,
     fromRoman,
     toEnglishWords,
-} from "@cap/human-number";
+} from "numeral";
 
 let buf: [256]u8 = undefined;
 

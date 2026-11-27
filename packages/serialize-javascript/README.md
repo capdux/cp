@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/serialize-javascript
+# serialize-javascript
 
 Zero-heap XSS-safe JavaScript/JSON literal serializer in pure CP escaping `<`, `>`, `/`, U+2028, and U+2029 for safe inline `<script>` embedding.
 

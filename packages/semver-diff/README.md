@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/semver-diff
+# semver-diff
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:semver-diff` ([https://github.com/sindresorhus/semver-diff](https://github.com/sindresorhus/semver-diff))

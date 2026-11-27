@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/enquirer
+# enquirer
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:enquirer` ([https://github.com/enquirer/enquirer](https://github.com/enquirer/enquirer))
@@ -16,7 +16,7 @@ Zero-heap, pure CP interactive CLI prompt state machines for `ConfirmPrompt`, `S
 ## Usage
 
 ```cp
-import { ConfirmPrompt, SelectPrompt, MultiSelectPrompt } from "@cap/enquirer";
+import { ConfirmPrompt, SelectPrompt, MultiSelectPrompt } from "enquirer";
 
 let sel = SelectPrompt.new("Choose runtime");
 * = sel.addChoice("CP Native", true);

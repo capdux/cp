@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/markdown-table
+# markdown-table
 
 Zero-heap GFM Markdown table renderer in pure CP with automatic column width calculation, alignment delimiters (`---`, `:---`, `:---:`, `---:`), and cell padding.
 

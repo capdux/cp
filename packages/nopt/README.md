@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`nopt`](https://github.com/npm/nopt)（`ISC`）（包名 `@cap/nopt`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`nopt`](https://github.com/npm/nopt)（`ISC`）（包名 `nopt`）。
 
-# `@cap/nopt`
+# `nopt`
 
 Zero-allocation CLI option parser in pure CP (clean-room ISC implementation inspired by npm `nopt`).
 
@@ -16,7 +16,7 @@ Zero-allocation CLI option parser in pure CP (clean-room ISC implementation insp
 ## Usage
 
 ```cp
-import { NoptShorthand, NoptResult, parseNopt } from "@cap/nopt";
+import { NoptShorthand, NoptResult, parseNopt } from "nopt";
 ```
 
 ## License

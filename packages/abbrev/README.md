@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/abbrev
+# abbrev
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:abbrev` ([https://github.com/npm/abbrev-js](https://github.com/npm/abbrev-js))（原库名 `abbrev` → CP 包名 `@cap/abbrev`）
+> **参考 / 吸收来源**：`npm:abbrev` ([https://github.com/npm/abbrev-js](https://github.com/npm/abbrev-js))（原库名 `abbrev` → CP 包名 `abbrev`）
 
 零堆分配的 CP 原生唯一无歧义前缀缩写生成器，Clean-Room ISC 实现对标 npm 官方经典包 `abbrev`（1.00 亿+/周下载）。
 

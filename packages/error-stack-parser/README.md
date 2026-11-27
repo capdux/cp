@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/stacktrace
+# error-stack-parser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:error-stack-parser` ([https://github.com/stacktracejs/error-stack-parser](https://github.com/stacktracejs/error-stack-parser))（原库名 `error-stack-parser` → CP 包名 `@cap/stacktrace`）
+> **参考 / 吸收来源**：`npm:error-stack-parser` ([https://github.com/stacktracejs/error-stack-parser](https://github.com/stacktracejs/error-stack-parser))（原库名 `error-stack-parser` → CP 包名 `error-stack-parser`）
 
 零堆分配的 CP 多语言调用栈解析与清洗引擎 — 洁净室 MIT 实现，对标 npm `error-stack-parser`、`stacktrace-parser` 与 `clean-stack`。
 
@@ -21,7 +21,7 @@ Zero-allocation multi-language stack trace parser & cleaner for CP — clean-roo
 ## 安装 / Install
 
 ```bash
-cap add @cap/stacktrace
+cap add error-stack-parser
 ```
 
 ## API 参考 / API Reference
@@ -38,7 +38,7 @@ cap add @cap/stacktrace
 ## 使用示例 / Usage
 
 ```cp
-import { parseStack, cleanStack } from "@cap/stacktrace";
+import { parseStack, cleanStack } from "error-stack-parser";
 
 const raw = "Error: boom\n    at handleReq (/app/src/api.ts:42:13)\n    at Module._compile (node:internal/modules/cjs/loader:1105:14)";
 const parsed = parseStack(raw);

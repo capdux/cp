@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/content-disposition`
+# `content-disposition`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:content-disposition` ([https://github.com/jshttp/content-disposition](https://github.com/jshttp/content-disposition))
@@ -47,7 +47,7 @@ import {
     formatContentDisposition,
     decodeFilenameStar,
     sanitizeFilename
-} from "@cap/content-disposition";
+} from "content-disposition";
 
 let parsed = parseContentDisposition(
     "attachment; filename=\"report.pdf\"; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf"

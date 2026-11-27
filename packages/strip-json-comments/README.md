@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/strip-json-comments
+# strip-json-comments
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:strip-json-comments` ([https://github.com/sindresorhus/strip-json-comments](https://github.com/sindresorhus/strip-json-comments))
@@ -12,7 +12,7 @@ Zero-allocation JSONC (`//` & `/* ... */`) comment and trailing-comma stripper w
 ## Install / 安装
 
 ```bash
-cap add @cap/strip-json-comments
+cap add strip-json-comments
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/strip-json-comments
 ## Usage / 使用示例
 
 ```cp
-import { stripJsonc, stripCompact } from "@cap/strip-json-comments";
+import { stripJsonc, stripCompact } from "strip-json-comments";
 
 let out: [256]u8 = undefined;
 const n = stripCompact("{\"a\": 1, /* note */ }", out[0..256]);

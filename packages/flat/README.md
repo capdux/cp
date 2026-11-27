@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/jsonflat
+# flat
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:flat` ([https://github.com/hughsk/flat](https://github.com/hughsk/flat))（原库名 `flat` → CP 包名 `@cap/jsonflat`）
+> **参考 / 吸收来源**：`npm:flat` ([https://github.com/hughsk/flat](https://github.com/hughsk/flat))（原库名 `flat` → CP 包名 `flat`）
 
 Zero-allocation JSON flattening (`a.b.0.c`), `dot-prop` path lookup & flat JSON serialization for CP — clean-room MIT parity with npm `flat` and `dot-prop`.
 
 ## Install
 
 ```bash
-cap add @cap/jsonflat
+cap add flat
 ```
 
 ## Features
@@ -22,7 +22,7 @@ cap add @cap/jsonflat
 ## Usage
 
 ```cp
-import { flattenJson, getByPath } from "@cap/jsonflat";
+import { flattenJson, getByPath } from "flat";
 
 const src = "{\"user\":{\"name\":\"alice\",\"roles\":[\"admin\",\"ops\"]}}";
 const flat = flattenJson(src);

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/s3-uri
+# amazon-s3-uri
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:amazon-s3-uri` ([https://github.com/jvdl/amazon-s3-uri](https://github.com/jvdl/amazon-s3-uri)) / `crates.io:aws-sdk-s3` ([https://github.com/awslabs/aws-sdk-rust](https://github.com/awslabs/aws-sdk-rust))（原库名 `amazon-s3-uri` → CP 包名 `@cap/s3-uri`）
+> **参考 / 吸收来源**：`npm:amazon-s3-uri` ([https://github.com/jvdl/amazon-s3-uri](https://github.com/jvdl/amazon-s3-uri)) / `crates.io:aws-sdk-s3` ([https://github.com/awslabs/aws-sdk-rust](https://github.com/awslabs/aws-sdk-rust))（原库名 `amazon-s3-uri` → CP 包名 `amazon-s3-uri`）
 
 Zero-heap AWS S3 / R2 / MinIO URI parser (`s3://`, virtual-hosted-style, path-style) and bucket name validator for CP.
 Compatible with npm `amazon-s3-uri`.

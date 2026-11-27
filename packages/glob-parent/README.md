@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/glob-parent
+# glob-parent
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:glob-parent` ([https://github.com/gulpjs/glob-parent](https://github.com/gulpjs/glob-parent))
@@ -12,7 +12,7 @@ Zero-allocation glob static parent directory extractor, glob detector, and escap
 ## Install / 安装
 
 ```bash
-cap add @cap/glob-parent
+cap add glob-parent
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/glob-parent
 ## Usage / 使用示例
 
 ```cp
-import { isGlob, globParent, splitGlobBase, escapeGlob } from "@cap/glob-parent";
+import { isGlob, globParent, splitGlobBase, escapeGlob } from "glob-parent";
 
 const ok = isGlob("src/**/*.cp");                 // true
 const parent = globParent("/a/b/{c,d}/e");        // "/a/b"

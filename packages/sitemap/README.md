@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/sitemap`
+# `sitemap`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:sitemap` ([https://github.com/ekalinin/sitemap.js](https://github.com/ekalinin/sitemap.js))
@@ -12,7 +12,7 @@ Zero-heap Sitemaps.org 0.9 XML sitemap (`<urlset>`) and sitemap index (`<sitemap
 ## Installation
 
 ```bash
-cap add @cap/sitemap
+cap add sitemap
 ```
 
 ## API

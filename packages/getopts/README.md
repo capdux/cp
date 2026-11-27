@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/getopts
+# getopts
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:getopts` ([https://github.com/rust-lang/getopts](https://github.com/rust-lang/getopts), `MIT OR Apache-2.0`)

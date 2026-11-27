@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/num-complex
+# num-complex
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:num-complex` ([https://github.com/rust-num/num-complex](https://github.com/rust-num/num-complex))
@@ -12,7 +12,7 @@ Zero-allocation `Complex64` arithmetic, Smith overflow-safe division, polar coor
 ## 安装 / Install
 
 ```bash
-cap add @cap/num-complex
+cap add num-complex
 ```
 
 ## API 参考 / API Reference
@@ -25,7 +25,7 @@ cap add @cap/num-complex
 ## 使用示例 / Usage
 
 ```cp
-import { Complex64, formatComplex } from "@cap/num-complex";
+import { Complex64, formatComplex } from "num-complex";
 
 const z1 = Complex64.new(3.0, 4.0);
 const mag = z1.norm();       // 5.0

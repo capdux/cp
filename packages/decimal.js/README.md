@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/decimal
+# decimal.js
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:decimal.js` ([https://github.com/MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js))（原库名 `decimal.js` → CP 包名 `@cap/decimal`）
+> **参考 / 吸收来源**：`npm:decimal.js` ([https://github.com/MikeMcl/decimal.js](https://github.com/MikeMcl/decimal.js))（原库名 `decimal.js` → CP 包名 `decimal.js`）
 
 Zero-allocation 128-bit exact decimal & financial arithmetic engine for CP — clean-room MIT parity with npm `decimal.js` / `bignumber.js` and Rust `rust_decimal`.
 
 ## Install
 
 ```bash
-cap add @cap/decimal
+cap add decimal.js
 ```
 
 ## Features
@@ -23,7 +23,7 @@ cap add @cap/decimal
 ## Usage
 
 ```cp
-import { Decimal, RoundingMode } from "@cap/decimal";
+import { Decimal, RoundingMode } from "decimal.js";
 
 const a = Decimal.parse("0.1")!;
 const b = Decimal.parse("0.2")!;

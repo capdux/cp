@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cuckoo-filter
+# cuckoofilter
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:cuckoofilter` ([https://github.com/seiflotfy/rust-cuckoofilter](https://github.com/seiflotfy/rust-cuckoofilter))（原库名 `cuckoofilter` → CP 包名 `@cap/cuckoo-filter`）
+> **参考 / 吸收来源**：`crates.io:cuckoofilter` ([https://github.com/seiflotfy/rust-cuckoofilter](https://github.com/seiflotfy/rust-cuckoofilter))（原库名 `cuckoofilter` → CP 包名 `cuckoofilter`）
 
 Zero-allocation CoNEXT'14 Cuckoo Filter (`256` buckets × `4` slots = `1024` 16-bit fingerprints) with O(1) `insert`, `contains`, and safe `delete` for CP — clean-room MIT parity with Fan et al. (CoNEXT'14) and Rust `cuckoofilter`.
 
@@ -12,7 +12,7 @@ Zero-allocation CoNEXT'14 Cuckoo Filter (`256` buckets × `4` slots = `1024` 16-
 ## Install / 安装
 
 ```bash
-cap add @cap/cuckoo-filter
+cap add cuckoofilter
 ```
 
 ## API Reference / 接口一览

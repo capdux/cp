@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bloom
+# fastbloom
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:fastbloom` ([https://github.com/tomtomwombat/fastbloom](https://github.com/tomtomwombat/fastbloom))（原库名 `fastbloom` → CP 包名 `@cap/bloom`）
+> **参考 / 吸收来源**：`crates.io:fastbloom` ([https://github.com/tomtomwombat/fastbloom](https://github.com/tomtomwombat/fastbloom))（原库名 `fastbloom` → CP 包名 `fastbloom`）
 
 Zero-allocation Kirsch-Mitzenmacher double-hashing Bloom filters (`BloomFilter1024` / `BloomFilter4096`) for CP — clean-room MIT parity with Rust `bloomfilter` / `fastbloom` and npm `bloom-filters`.
 
@@ -12,7 +12,7 @@ Zero-allocation Kirsch-Mitzenmacher double-hashing Bloom filters (`BloomFilter10
 ## Install / 安装
 
 ```bash
-cap add @cap/bloom
+cap add fastbloom
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/bloom
 ## Usage / 使用示例
 
 ```cp
-import { BloomFilter4096 } from "@cap/bloom";
+import { BloomFilter4096 } from "fastbloom";
 
 let bf = BloomFilter4096.init(6 as u8);
 bf.insert("https://cap-lang.org");

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/strftime
+# strftime
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:strftime` ([https://github.com/samsonjs/strftime](https://github.com/samsonjs/strftime))
@@ -12,13 +12,13 @@ Supports `%Y`, `%y`, `%m`, `%d`, `%e`, `%H`, `%I`, `%M`, `%S`, `%p`, `%P`, `%a`,
 ## Install
 
 ```bash
-cap add @cap/strftime
+cap add strftime
 ```
 
 ## Usage
 
 ```cp
-import { formatUnix, formatIso8601Utc, fromUnixSeconds, strftime } from "@cap/strftime";
+import { formatUnix, formatIso8601Utc, fromUnixSeconds, strftime } from "strftime";
 
 let buf: [128]u8 = undefined;
 const iso = formatIso8601Utc(1700000000, buf[0..128]);

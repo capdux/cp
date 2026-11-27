@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/data-uri
+# data-uri-to-buffer
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:data-uri-to-buffer` ([https://github.com/TooTallNate/proxy-agents](https://github.com/TooTallNate/proxy-agents))（原库名 `data-uri-to-buffer` → CP 包名 `@cap/data-uri`）
+> **参考 / 吸收来源**：`npm:data-uri-to-buffer` ([https://github.com/TooTallNate/proxy-agents](https://github.com/TooTallNate/proxy-agents))（原库名 `data-uri-to-buffer` → CP 包名 `data-uri-to-buffer`）
 
 Zero-allocation RFC 2397 `data:[<mediatype>][;base64],<data>` URI parser, Base64/percent decoder, and builder for CP — clean-room MIT parity with npm `data-uri-to-buffer` / `datauri` and Rust `data-url`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 2397 `data:[<mediatype>][;base64],<data>` URI parser, Base64
 ## Install / 安装
 
 ```bash
-cap add @cap/data-uri
+cap add data-uri-to-buffer
 ```
 
 ## API Reference / 接口一览
@@ -35,7 +35,7 @@ import {
     encodeDataUriBase64,
     encodeDataUriText,
     isDataUri,
-} from "@cap/data-uri";
+} from "data-uri-to-buffer";
 
 let buf: [256]u8 = undefined;
 const uri = "data:text/plain;charset=utf-8;base64,SGVsbG8sIFdvcmxkIQ==";

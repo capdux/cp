@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/text-stats
+# reading-time
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:reading-time` ([https://github.com/ngryman/reading-time](https://github.com/ngryman/reading-time))（原库名 `reading-time` → CP 包名 `@cap/text-stats`）
+> **参考 / 吸收来源**：`npm:reading-time` ([https://github.com/ngryman/reading-time](https://github.com/ngryman/reading-time))（原库名 `reading-time` → CP 包名 `reading-time`）
 
 Zero-allocation bilingual English & CJK document statistics, reading-time estimator, and LLM token estimator for CP — clean-room MIT parity with npm `reading-time` and `word-count`.
 
@@ -12,7 +12,7 @@ Zero-allocation bilingual English & CJK document statistics, reading-time estima
 ## Install / 安装
 
 ```bash
-cap add @cap/text-stats
+cap add reading-time
 ```
 
 ## API Reference / 接口一览
@@ -27,7 +27,7 @@ cap add @cap/text-stats
 ## Usage / 使用示例
 
 ```cp
-import { analyzeText, analyzeTextWithWpm, formatReadingTime } from "@cap/text-stats";
+import { analyzeText, analyzeTextWithWpm, formatReadingTime } from "reading-time";
 
 const doc = "CP 是一门高性能系统语言。It compiles to native Zig!";
 const stats = analyzeText(doc);

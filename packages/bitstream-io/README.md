@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bitstream
+# bitstream-io
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:bitstream-io` ([https://github.com/tuffy/bitstream-io](https://github.com/tuffy/bitstream-io))（原库名 `bitstream-io` → CP 包名 `@cap/bitstream`）
+> **参考 / 吸收来源**：`crates.io:bitstream-io` ([https://github.com/tuffy/bitstream-io](https://github.com/tuffy/bitstream-io))（原库名 `bitstream-io` → CP 包名 `bitstream-io`）
 
 零堆分配的 CP MSB-first / LSB-first 双模式位级流式读写器 — 洁净室 MIT 实现，对标 Rust `bitstream-io`，支持任意 0..64 位跨字节读写、无损 `peekBits`、字节对齐与 H.264/HEVC Exp-Golomb 指数哥伦布编解码。
 
@@ -12,7 +12,7 @@ Zero-allocation MSB-first & LSB-first `BitReader` and `BitWriter` for CP — cle
 ## 安装 / Install
 
 ```bash
-cap add @cap/bitstream
+cap add bitstream-io
 ```
 
 ## API 参考 / API Reference
@@ -24,7 +24,7 @@ cap add @cap/bitstream
 ## 使用示例 / Usage
 
 ```cp
-import { BitWriter, BitReader } from "@cap/bitstream";
+import { BitWriter, BitReader } from "bitstream-io";
 
 let buf: [16]u8 = undefined;
 let w = BitWriter.initMsb(buf[0..16]);

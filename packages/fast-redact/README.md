@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/redact
+# fast-redact
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:fast-redact` ([https://github.com/davidmarkclements/fast-redact](https://github.com/davidmarkclements/fast-redact))（原库名 `fast-redact` → CP 包名 `@cap/redact`）
+> **参考 / 吸收来源**：`npm:fast-redact` ([https://github.com/davidmarkclements/fast-redact](https://github.com/davidmarkclements/fast-redact))（原库名 `fast-redact` → CP 包名 `fast-redact`）
 
 Zero-allocation PII & secret redaction/masking engine for CP — clean-room MIT parity with npm `fast-redact` / `maskdata` and Rust `secrecy`.
 
 ## Install
 
 ```bash
-cap add @cap/redact
+cap add fast-redact
 ```
 
 ## Features
@@ -23,7 +23,7 @@ cap add @cap/redact
 ## Usage
 
 ```cp
-import { RedactOptions, redactText, redactJsonFields } from "@cap/redact";
+import { RedactOptions, redactText, redactJsonFields } from "fast-redact";
 
 let out: [512]u8 = undefined;
 const clean = redactText("User alice@capdux.org used sk-proj-1234567890abcdef", RedactOptions.defaultAll(), out[0..512]);

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/polygon2d`
+# `point-in-polygon`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:point-in-polygon` ([https://github.com/substack/point-in-polygon](https://github.com/substack/point-in-polygon)) / `crates.io:geo-types` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `point-in-polygon` → CP 包名 `@cap/polygon2d`）
+> **参考 / 吸收来源**：`npm:point-in-polygon` ([https://github.com/substack/point-in-polygon](https://github.com/substack/point-in-polygon)) / `crates.io:geo-types` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `point-in-polygon` → CP 包名 `point-in-polygon`）
 
 Zero-heap 2D polygon geometry algorithms in pure CP: Shoelace signed/unsigned area, winding direction, perimeter, centroid, ray-casting point-in-polygon with edge tolerance, and convexity check.
 
@@ -16,7 +16,7 @@ Zero-heap 2D polygon geometry algorithms in pure CP: Shoelace signed/unsigned ar
 ## Quick Start
 
 ```cp
-import { Pt2, area, centroid, containsPoint, isConvex } from "@cap/polygon2d";
+import { Pt2, area, centroid, containsPoint, isConvex } from "point-in-polygon";
 
 const sq: [4]Pt2 = [
     Pt2 { x: 0.0, y: 0.0 },

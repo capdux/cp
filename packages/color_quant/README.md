@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/color-quant
+# color_quant
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:color_quant` ([https://github.com/image-rs/color_quant](https://github.com/image-rs/color_quant))
@@ -12,7 +12,7 @@ Zero-allocation pure CP 256-color palette quantizer, 6x6x6 Web-safe + grayscale 
 ## Install / 安装
 
 ```bash
-cap add @cap/color-quant
+cap add color_quant
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/color-quant
 ## Usage / 使用示例
 
 ```cp
-import { Rgb8, buildUniformPalette, quantizeHistogram, mapPixelsToPalette } from "@cap/color-quant";
+import { Rgb8, buildUniformPalette, quantizeHistogram, mapPixelsToPalette } from "color_quant";
 
 const pal = buildUniformPalette();
 const idx = pal.nearestIndex(Rgb8{ r: 255, g: 0, b: 0 });

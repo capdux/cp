@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/postgres-interval`
+# `postgres-interval`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:postgres-interval` ([https://github.com/bendrucker/postgres-interval](https://github.com/bendrucker/postgres-interval))
@@ -22,7 +22,7 @@ import {
     toIsoDuration,
     toPostgresString,
     totalSecondsApprox,
-} from "@cap/postgres-interval";
+} from "postgres-interval";
 ```
 
 ## License

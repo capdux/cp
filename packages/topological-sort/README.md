@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/toposort
+# topological-sort
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:topological-sort` ([https://github.com/gifnksm/topological-sort-rs](https://github.com/gifnksm/topological-sort-rs))（原库名 `topological-sort` → CP 包名 `@cap/toposort`）
+> **参考 / 吸收来源**：`crates.io:topological-sort` ([https://github.com/gifnksm/topological-sort-rs](https://github.com/gifnksm/topological-sort-rs))（原库名 `topological-sort` → CP 包名 `topological-sort`）
 
 零堆分配的 CP 确定性 Kahn 拓扑排序、有向图环路检测与 DAG 并行执行层级分层引擎 — 洁净室 MIT 实现，对标 Rust `topological-sort` / `petgraph::algo::toposort` 与 npm `toposort`。
 
@@ -12,7 +12,7 @@ Zero-allocation deterministic Kahn topological sort, cycle detection, and parall
 ## 安装 / Install
 
 ```bash
-cap add @cap/toposort
+cap add topological-sort
 ```
 
 ## API 参考 / API Reference
@@ -28,7 +28,7 @@ cap add @cap/toposort
 ## 使用示例 / Usage
 
 ```cp
-import { TopoGraph } from "@cap/toposort";
+import { TopoGraph } from "topological-sort";
 
 let g = TopoGraph.init(4 as usize);
 * = g.add_edge(0 as usize, 1 as usize);

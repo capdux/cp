@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/byteorder
+# untrusted
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:untrusted` ([https://github.com/briansmith/untrusted](https://github.com/briansmith/untrusted)) / `crates.io:byteorder` ([https://github.com/BurntSushi/byteorder](https://github.com/BurntSushi/byteorder))（原库名 `untrusted` → CP 包名 `@cap/byteorder`）
+> **参考 / 吸收来源**：`crates.io:untrusted` ([https://github.com/briansmith/untrusted](https://github.com/briansmith/untrusted)) / `crates.io:byteorder` ([https://github.com/BurntSushi/byteorder](https://github.com/BurntSushi/byteorder))（原库名 `untrusted` → CP 包名 `untrusted`）
 
 Zero-heap big-endian / little-endian binary codecs and bounds-checked forward-only `ByteReader` / `ByteWriter` in pure CP.
 
@@ -12,13 +12,13 @@ Inspired by Rust's `byteorder` (993M+ downloads) and `untrusted` (1.02B+ downloa
 ## Install
 
 ```bash
-cap add @cap/byteorder
+cap add untrusted
 ```
 
 ## Usage
 
 ```cp
-import { ByteWriter, ByteReader } from "@cap/byteorder";
+import { ByteWriter, ByteReader } from "untrusted";
 
 let buf: [64]u8 = undefined;
 let w = ByteWriter.init(buf[0..64]);

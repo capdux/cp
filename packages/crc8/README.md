@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/crc8`
+# `crc8`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:crc8` ([https://github.com/mrhooray/crc-rs](https://github.com/mrhooray/crc-rs))
@@ -29,7 +29,7 @@ import {
     crc8Autosar,
     crc8Cdma2000,
     crc8Bluetooth,
-} from "@cap/crc8";
+} from "crc8";
 ```
 
 ## License

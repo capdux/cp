@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/aes-gcm
+# aes-gcm
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:aes-gcm` ([https://github.com/RustCrypto/AEADs](https://github.com/RustCrypto/AEADs))
@@ -12,7 +12,7 @@ Zero-allocation NIST SP 800-38D AES-128-GCM and AES-256-GCM (96-bit nonce) AEAD 
 ## Install / 安装
 
 ```bash
-cap add @cap/aes-gcm
+cap add aes-gcm
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/aes-gcm
 ## Usage / 使用示例
 
 ```cp
-import { Aes128Gcm } from "@cap/aes-gcm";
+import { Aes128Gcm } from "aes-gcm";
 
 const cipher = Aes128Gcm.new(key);
 let ct: [32]u8 = undefined;

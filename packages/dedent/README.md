@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/indent-strip
+# dedent
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:dedent` ([https://github.com/dmnd/dedent](https://github.com/dmnd/dedent))（原库名 `dedent` → CP 包名 `@cap/indent-strip`）
+> **参考 / 吸收来源**：`npm:dedent` ([https://github.com/dmnd/dedent](https://github.com/dmnd/dedent))（原库名 `dedent` → CP 包名 `dedent`）
 
 Zero-heap common leading indentation detector, dedent stripper, and line indenter for CP.
 Compatible with npm `strip-indent`, `dedent`, and Rust `indoc`.

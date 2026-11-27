@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/module-details-from-path
+# module-details-from-path
 
 Zero-heap `node_modules` / `cap_modules` path parser in pure CP supporting scoped packages (`@scope/name`), nested module directories, and POSIX/Windows separators.
 

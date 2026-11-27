@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/grpc-frame`
+# `tonic`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:tonic` ([https://github.com/hyperium/tonic](https://github.com/hyperium/tonic)) / `npm:@grpc/grpc-js` ([https://github.com/grpc/grpc-node](https://github.com/grpc/grpc-node))（原库名 `tonic` → CP 包名 `@cap/grpc-frame`）
+> **参考 / 吸收来源**：`crates.io:tonic` ([https://github.com/hyperium/tonic](https://github.com/hyperium/tonic)) / `npm:@grpc/grpc-js` ([https://github.com/grpc/grpc-node](https://github.com/grpc/grpc-node))（原库名 `tonic` → CP 包名 `tonic`）
 
 Zero-heap-allocation gRPC over HTTP/2 Length-Prefixed Message frame codec, 17 canonical `grpc-status` codes, and `grpc-timeout` header parser/formatter in pure CP.
 
@@ -30,7 +30,7 @@ import {
     decodeHeader,
     parseTimeoutMicros,
     formatTimeoutMillis,
-} from "@cap/grpc-frame";
+} from "tonic";
 ```
 
 ## License

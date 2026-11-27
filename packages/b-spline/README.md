@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/bspline`
+# `b-spline`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:b-spline` ([https://github.com/thibauts/b-spline](https://github.com/thibauts/b-spline)) / `crates.io:bspline` ([https://github.com/Twinklebear/bspline](https://github.com/Twinklebear/bspline))（原库名 `b-spline` → CP 包名 `@cap/bspline`）
+> **参考 / 吸收来源**：`npm:b-spline` ([https://github.com/thibauts/b-spline](https://github.com/thibauts/b-spline)) / `crates.io:bspline` ([https://github.com/Twinklebear/bspline](https://github.com/Twinklebear/bspline))（原库名 `b-spline` → CP 包名 `b-spline`）
 
 Zero-heap cubic Hermite, Catmull-Rom, and uniform cubic B-Spline curve interpolation in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap cubic Hermite, Catmull-Rom, and uniform cubic B-Spline curve interpola
 ## Quick Start
 
 ```cp
-import { Pt2, evalCatmullRomChain, uniformCubicBSpline2D } from "@cap/bspline";
+import { Pt2, evalCatmullRomChain, uniformCubicBSpline2D } from "b-spline";
 
 const path: [4]Pt2 = [
     Pt2 { x: 0.0, y: 0.0 },

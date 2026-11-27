@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/language-tags
+# language-tags
 
 Zero-heap BCP 47 / RFC 5646 language tag parser, canonical formatter, and RFC 4647 basic range matcher in pure CP.
 

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/uri-template
+# url-template
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:url-template` ([https://github.com/bramstein/url-template](https://github.com/bramstein/url-template))（原库名 `url-template` → CP 包名 `@cap/uri-template`）
+> **参考 / 吸收来源**：`npm:url-template` ([https://github.com/bramstein/url-template](https://github.com/bramstein/url-template))（原库名 `url-template` → CP 包名 `url-template`）
 
 Zero-allocation RFC 6570 URI Template (Levels 1-4) expander, validator, and variable inspector for CP.
 
@@ -20,7 +20,7 @@ Zero-allocation RFC 6570 URI Template (Levels 1-4) expander, validator, and vari
 ## Usage
 
 ```cp
-import { TemplateVar, expand, isValid } from "@cap/uri-template";
+import { TemplateVar, expand, isValid } from "url-template";
 
 let vars: [2]TemplateVar = undefined;
 vars[0] = TemplateVar{ name: "owner", value: "cap-lang" };

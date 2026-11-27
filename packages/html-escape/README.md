@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/html-escape
+# html-escape
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:html-escape` ([https://github.com/magiclen/html-escape](https://github.com/magiclen/html-escape)) / `npm:html-entities` ([https://github.com/mdevils/html-entities](https://github.com/mdevils/html-entities))

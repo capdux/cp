@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ajv-formats` ([https://github.com/ajv-validator/ajv-formats](https://github.com/ajv-validator/ajv-formats)) | 许可：`MIT`
 
-# `@cap/ajv-formats`
+# `ajv-formats`
 
 零堆分配纯 CP JSON Schema Draft 2019-09 / 2020-12 字符串格式校验器，完整对标 npm **#205** `ajv-formats`（真实周下载 **2.12 亿/周**，AJV 生态核心校验依赖）。
 

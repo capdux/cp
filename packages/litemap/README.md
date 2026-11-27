@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/litemap
+# litemap
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:litemap` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x))
@@ -12,7 +12,7 @@ Zero-allocation compact sorted flat-array map with `O(log N)` binary search and 
 ## 安装 / Install
 
 ```bash
-cap add @cap/litemap
+cap add litemap
 ```
 
 ## API 参考 / API Reference
@@ -28,7 +28,7 @@ cap add @cap/litemap
 ## 使用示例 / Usage
 
 ```cp
-import { LiteMapStr, LiteMapU64 } from "@cap/litemap";
+import { LiteMapStr, LiteMapU64 } from "litemap";
 
 let m = LiteMapStr.init();
 * = m.insert("zh", "Chinese");

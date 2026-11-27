@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ssh-key
+# ssh-key
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ssh-key` ([https://github.com/RustCrypto/SSH](https://github.com/RustCrypto/SSH)) / `npm:sshpk` ([https://github.com/TritonDataCenter/node-sshpk](https://github.com/TritonDataCenter/node-sshpk))

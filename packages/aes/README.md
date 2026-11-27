@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/aes
+# aes
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:aes` ([https://github.com/RustCrypto/block-ciphers](https://github.com/RustCrypto/block-ciphers))
@@ -12,7 +12,7 @@ Zero-allocation pure CP implementation of the FIPS-197 AES-128, AES-192, and AES
 ## Install / 安装
 
 ```bash
-cap add @cap/aes
+cap add aes
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/aes
 ## Usage / 使用示例
 
 ```cp
-import { Aes128, Aes192, Aes256 } from "@cap/aes";
+import { Aes128, Aes192, Aes256 } from "aes";
 
 const key: [16]u8 = @as([16]u8, [
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,

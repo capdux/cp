@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:path-parse` ([https://github.com/jbgutierrez/path-parse](https://github.com/jbgutierrez/path-parse)) | 许可：`MIT`
 
-# `@cap/path-parse`
+# `path-parse`
 
 零堆分配、零拷贝纯 CP `path.parse()` 路径拆解库，对标 npm **#238** `path-parse`（真实周下载 **1.96 亿/周**），完整支持 POSIX 与 Win32 路径拆解为 `{ root, dir, base, ext, name }`。
 

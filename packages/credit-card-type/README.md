@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/card-bin
+# credit-card-type
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:credit-card-type` ([https://github.com/braintree/credit-card-type](https://github.com/braintree/credit-card-type))（原库名 `credit-card-type` → CP 包名 `@cap/card-bin`）
+> **参考 / 吸收来源**：`npm:credit-card-type` ([https://github.com/braintree/credit-card-type](https://github.com/braintree/credit-card-type))（原库名 `credit-card-type` → CP 包名 `credit-card-type`）
 
 Zero-allocation payment card BIN network detector, Luhn validator, formatter, and PCI-DSS masker for CP — clean-room MIT parity with npm `credit-card-type` (4M/wk) and `card-validator` (3M/wk).
 
@@ -12,7 +12,7 @@ Zero-allocation payment card BIN network detector, Luhn validator, formatter, an
 ## Install / 安装
 
 ```bash
-cap add @cap/card-bin
+cap add credit-card-type
 ```
 
 ## Supported Card Networks / 支持的卡组织
@@ -49,7 +49,7 @@ import {
     networkName,
     formatCardNumber,
     maskCardPci,
-} from "@cap/card-bin";
+} from "credit-card-type";
 
 const info = inspectCard("3782-822463-10005");
 // info.network == CardNetwork.Amex, info.is_valid == true, info.cvv_len == 4

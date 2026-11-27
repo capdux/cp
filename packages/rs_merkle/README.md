@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/merkle
+# rs_merkle
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rs_merkle` ([https://github.com/antouhou/rs-merkle](https://github.com/antouhou/rs-merkle))（原库名 `rs_merkle` → CP 包名 `@cap/merkle`）
+> **参考 / 吸收来源**：`crates.io:rs_merkle` ([https://github.com/antouhou/rs-merkle](https://github.com/antouhou/rs-merkle))（原库名 `rs_merkle` → CP 包名 `rs_merkle`）
 
 Zero-allocation RFC 6962 domain-separated SHA-256 Merkle tree and inclusion proof verifier for CP — clean-room MIT parity with Rust `rs_merkle` and npm `merkletreejs`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 6962 domain-separated SHA-256 Merkle tree and inclusion proo
 ## Install / 安装
 
 ```bash
-cap add @cap/merkle
+cap add rs_merkle
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/merkle
 ## Usage / 使用示例
 
 ```cp
-import { MerkleTree, verifyProof } from "@cap/merkle";
+import { MerkleTree, verifyProof } from "rs_merkle";
 
 let tree = MerkleTree.init();
 * = tree.addLeaf("pkg-a@1.0.0");

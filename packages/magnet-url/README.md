@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/magnet-uri
+# magnet-url
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:magnet-url` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `magnet-url` → CP 包名 `@cap/magnet-uri`）
+> **参考 / 吸收来源**：`crates.io:magnet-url` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `magnet-url` → CP 包名 `magnet-url`）
 
 Zero-heap BitTorrent Magnet URI (BEP-9 / BEP-53 `btih` v1 & `btmh` v2) parser, tracker extractor, and builder for CP.
 Compatible with npm `magnet-uri` and Rust `magnet-url`.

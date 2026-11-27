@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/dom-accessibility-name
+# dom-accessibility-api
 
 Zero-heap W3C Accessible Name and Description Computation (AccName) library in pure CP.
 

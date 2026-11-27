@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/crypto-bigint
+# crypto-bigint
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:crypto-bigint` ([https://github.com/RustCrypto/crypto-bigint](https://github.com/RustCrypto/crypto-bigint))
@@ -12,7 +12,7 @@ Zero-allocation constant-time fixed-width 256-bit unsigned integer (`U256`) arit
 ## Install / 安装
 
 ```bash
-cap add @cap/crypto-bigint
+cap add crypto-bigint
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/crypto-bigint
 ## Usage / 使用示例
 
 ```cp
-import { U256, addMod, subMod } from "@cap/crypto-bigint";
+import { U256, addMod, subMod } from "crypto-bigint";
 
 const a = U256.fromU64(100 as u64);
 const b = U256.fromU64(50 as u64);

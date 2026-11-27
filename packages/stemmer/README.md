@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/porter-stem`
+# `stemmer`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:stemmer` ([https://github.com/words/stemmer](https://github.com/words/stemmer)) / `crates.io:rust-stemmers` ([https://github.com/CurrySoftware/rust-stemmers](https://github.com/CurrySoftware/rust-stemmers)) / `crates.io:porter-stemmer` ([https://github.com/jwilm/porter-stemmer](https://github.com/jwilm/porter-stemmer))（原库名 `stemmer` → CP 包名 `@cap/porter-stem`）
+> **参考 / 吸收来源**：`npm:stemmer` ([https://github.com/words/stemmer](https://github.com/words/stemmer)) / `crates.io:rust-stemmers` ([https://github.com/CurrySoftware/rust-stemmers](https://github.com/CurrySoftware/rust-stemmers)) / `crates.io:porter-stemmer` ([https://github.com/jwilm/porter-stemmer](https://github.com/jwilm/porter-stemmer))（原库名 `stemmer` → CP 包名 `stemmer`）
 
 Zero-heap-allocation Martin Porter (1980) English Stemmer (Steps 1a, 1b, 1c, 2, 3, 4, 5a, 5b) in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation Martin Porter (1980) English Stemmer (Steps 1a, 1b, 1c, 2, 
 ## API
 
 ```cp
-import { stem, measure, sameStem } from "@cap/porter-stem";
+import { stem, measure, sameStem } from "stemmer";
 ```
 
 ## License

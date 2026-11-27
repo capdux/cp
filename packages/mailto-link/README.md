@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/mailto-uri`
+# `mailto-link`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:mailto-link` ([https://github.com/sindresorhus/mailto-link](https://github.com/sindresorhus/mailto-link)) / `crates.io:mailto` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `mailto-link` → CP 包名 `@cap/mailto-uri`）
+> **参考 / 吸收来源**：`npm:mailto-link` ([https://github.com/sindresorhus/mailto-link](https://github.com/sindresorhus/mailto-link)) / `crates.io:mailto` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `mailto-link` → CP 包名 `mailto-link`）
 
 Zero-heap-allocation RFC 6068 `mailto:` URI parser, recipient counter, email validator, and percent-encoding builder in pure CP.
 
@@ -23,7 +23,7 @@ import {
     countRecipients,
     formatMailto,
     isBasicEmail,
-} from "@cap/mailto-uri";
+} from "mailto-link";
 ```
 
 ## License

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/spdx-expression-parse
+# spdx-expression-parse
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:spdx-expression-parse` ([https://github.com/jslicense/spdx-expression-parse.js](https://github.com/jslicense/spdx-expression-parse.js))

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/tzfile`
+# `tzfile`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:tzfile` ([https://github.com/x-hgg-x/tz-rs](https://github.com/x-hgg-x/tz-rs))

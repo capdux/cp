@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`ipaddr.js`](https://github.com/whitequark/ipaddr.js)（`MIT`）（原库名 `ipaddr.js`，CP 包名 `@cap/ipaddr`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`ipaddr.js`](https://github.com/whitequark/ipaddr.js)（`MIT`）（原库名 `ipaddr.js`，CP 包名 `ipaddr.js`）。
 
-# @cap/ipaddr
+# ipaddr.js
 
 Zero-allocation IPv4 & IPv6 parser, RFC 5952 canonical formatter, CIDR matcher, IPv4-mapped IPv6 converter, and IANA address range classifier for CP — clean-room MIT parity with npm `ipaddr.js`.
 
@@ -12,7 +12,7 @@ Zero-allocation IPv4 & IPv6 parser, RFC 5952 canonical formatter, CIDR matcher, 
 ## Install / 安装
 
 ```bash
-cap add @cap/ipaddr
+cap add ipaddr.js
 ```
 
 ## API
@@ -31,7 +31,7 @@ cap add @cap/ipaddr
 ## Usage / 使用示例
 
 ```cp
-import { parseIpv4, parseIpv6, parseCidrV4, isValidIp } from "@cap/ipaddr";
+import { parseIpv4, parseIpv6, parseCidrV4, isValidIp } from "ipaddr.js";
 
 const v4 = parseIpv4("192.168.1.42");
 const rng = v4.range(); // "private"

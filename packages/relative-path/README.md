@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`relative-path`](https://github.com/udoprog/relative-path)（`MIT OR Apache-2.0`），以 Clean-room MIT 纯 CP 零堆方式实现，包名 `@cap/relative-path`。
+> **参考 / 吸收来源**：吸收自 **crates.io** [`relative-path`](https://github.com/udoprog/relative-path)（`MIT OR Apache-2.0`），以 Clean-room MIT 纯 CP 零堆方式实现，包名 `relative-path`。
 
-# `@cap/relative-path`
+# `relative-path`
 
 Portable, platform-independent UTF-8 relative path manipulation, lexical normalization, joining, parent/extension extraction, and relative-to calculation in zero-heap pure CP.
 

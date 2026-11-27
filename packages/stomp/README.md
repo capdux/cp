@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/stomp`
+# `stomp`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:stomp` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -29,7 +29,7 @@ import {
     encodeFrame,
     decodeFrame,
     getHeader,
-} from "@cap/stomp";
+} from "stomp";
 ```
 
 ## License

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`const-oid`](https://github.com/RustCrypto/formats)（`MIT OR Apache-2.0`）（包名 `@cap/const-oid`）。
+> **参考 / 吸收来源**：吸收自 **crates.io** [`const-oid`](https://github.com/RustCrypto/formats)（`MIT OR Apache-2.0`）（包名 `const-oid`）。
 
-# @cap/const-oid
+# const-oid
 
 Pure CP, zero-allocation ITU-T X.690 §8.19 ASN.1 Object Identifier (OID) parser, encoder, and comparator (parity with RustCrypto `const-oid`).
 

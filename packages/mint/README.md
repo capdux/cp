@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/mint`
+# `mint`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:mint` ([https://github.com/kvark/mint](https://github.com/kvark/mint))

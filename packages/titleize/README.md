@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/titleize
+# titleize
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:titleize` ([https://github.com/sindresorhus/titleize](https://github.com/sindresorhus/titleize))
@@ -12,7 +12,7 @@ Zero-allocation string title-case formatter for CP — clean-room MIT parity wit
 ## Install / 安装
 
 ```bash
-cap add @cap/titleize
+cap add titleize
 ```
 
 ## API
@@ -25,7 +25,7 @@ cap add @cap/titleize
 ## Usage / 使用示例
 
 ```cp
-import { titleize, upperCaseFirst } from "@cap/titleize";
+import { titleize, upperCaseFirst } from "titleize";
 
 let buf: [128]u8 = undefined;
 const n1 = titleize("unicorns and rainbows", buf[0..128]); // "Unicorns And Rainbows"

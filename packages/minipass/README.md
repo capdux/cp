@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/minipass
+# minipass
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:minipass` ([https://github.com/isaacs/minipass](https://github.com/isaacs/minipass))
@@ -12,7 +12,7 @@ Zero-allocation fixed-capacity ring-buffer byte stream with synchronous backpres
 ## Install / 安装
 
 ```bash
-cap add @cap/minipass
+cap add minipass
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/minipass
 ## Usage / 使用示例
 
 ```cp
-import { MinipassStream } from "@cap/minipass";
+import { MinipassStream } from "minipass";
 
 let src = MinipassStream.new();
 let dst = MinipassStream.new();

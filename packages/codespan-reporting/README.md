@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/codespan-reporting
+# codespan-reporting
 
 Zero-heap Rustc-style source code diagnostic renderer with 1-based line/column lookup, aligned gutter, `^^^` span underline, inline label, and `= note:` footer in pure CP.
 

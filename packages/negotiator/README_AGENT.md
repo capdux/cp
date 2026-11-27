@@ -41,4 +41,4 @@ negIsWs(b: u8): bool;
 - `q_milli` uses integer thousandths (`0..1000`) to avoid floating-point rounding drift.
 - `bestMediaType` / `bestEncoding` / `bestLanguage` cap header items at `NEG_MAX_SPECS` (`32`) and return `-1` when no candidate is acceptable.
 - Empty `Accept` / `Accept-Language` headers default to the first candidate (`index 0`); empty `Accept-Encoding` prefers `"identity"` if present.
-- Import directly from `"negotiator"` (never `@cap/negotiator`).
+- Import directly from `"negotiator"` (never `negotiator`).

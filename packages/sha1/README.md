@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sha1-crate
+# sha1
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:sha1` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `sha1` → CP 包名 `@cap/sha1-crate`）
+> **参考 / 吸收来源**：`crates.io:sha1` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `sha1` → CP 包名 `sha1`）
 
 Zero-allocation FIPS 180-4 SHA-1 cryptographic hash streaming implementation for CP — clean-room MIT parity with Rust `sha1` v0.10 (crates.io #35).
 
@@ -12,7 +12,7 @@ Zero-allocation FIPS 180-4 SHA-1 cryptographic hash streaming implementation for
 ## Install / 安装
 
 ```bash
-cap add @cap/sha1-crate
+cap add sha1
 ```
 
 ## API
@@ -33,7 +33,7 @@ cap add @cap/sha1-crate
 ## Usage / 使用示例
 
 ```cp
-import { Sha1Hasher, sha1Hex } from "@cap/sha1-crate";
+import { Sha1Hasher, sha1Hex } from "sha1";
 
 let hex: [40]u8 = undefined;
 const n = sha1Hex("abc", hex[0..40]); // "a9993e364706816aba3e25717850c26c9cd0d89d"

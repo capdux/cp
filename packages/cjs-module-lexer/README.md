@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/cjs-module-lexer
+# cjs-module-lexer
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:cjs-module-lexer` ([https://github.com/nodejs/cjs-module-lexer](https://github.com/nodejs/cjs-module-lexer))（原库名 `cjs-module-lexer` → CP 包名 `@cap/cjs-module-lexer`）
+> **参考 / 吸收来源**：`npm:cjs-module-lexer` ([https://github.com/nodejs/cjs-module-lexer](https://github.com/nodejs/cjs-module-lexer))（原库名 `cjs-module-lexer` → CP 包名 `cjs-module-lexer`）
 
 Zero-allocation CommonJS static named export and re-export lexer for CP — clean-room MIT implementation inspired by Node.js `cjs-module-lexer`.
 
@@ -12,7 +12,7 @@ Zero-allocation CommonJS static named export and re-export lexer for CP — clea
 ## Install / 安装
 
 ```bash
-cap add @cap/cjs-module-lexer
+cap add cjs-module-lexer
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/cjs-module-lexer
 ## Usage / 使用示例
 
 ```cp
-import { parseCjs } from "@cap/cjs-module-lexer";
+import { parseCjs } from "cjs-module-lexer";
 
 const src = "exports.alpha = 1;\nmodule.exports.beta = 2;\n__exportStar(require('./sub'), exports);";
 const res = parseCjs(src);

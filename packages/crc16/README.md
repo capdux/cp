@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/crc16`
+# `crc16`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:crc16` ([https://github.com/mrhooray/crc-rs](https://github.com/mrhooray/crc-rs))
@@ -12,7 +12,7 @@ Zero-heap industrial CRC-16 checksum engine in pure CP supporting CCITT-FALSE, X
 ## Installation
 
 ```bash
-cap add @cap/crc16
+cap add crc16
 ```
 
 ## Supported Standards (`"123456789"` Check Vectors)

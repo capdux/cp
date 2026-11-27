@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/base32-crockford
+# crockford-base32
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:crockford-base32` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `crockford-base32` → CP 包名 `@cap/base32-crockford`）
+> **参考 / 吸收来源**：`npm:crockford-base32` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `crockford-base32` → CP 包名 `crockford-base32`）
 
 Zero-allocation Douglas Crockford Base32 encoder and decoder for 64-bit integers (with optional mod-37 check symbol), arbitrary byte streams, and grouped hyphen formatting in CP.
 
@@ -17,7 +17,7 @@ Zero-allocation Douglas Crockford Base32 encoder and decoder for 64-bit integers
 ## Usage
 
 ```cp
-import { encodeU64, decodeU64, formatGrouped } from "@cap/base32-crockford";
+import { encodeU64, decodeU64, formatGrouped } from "crockford-base32";
 
 let buf: [16]u8 = undefined;
 const n = encodeU64(1234 as u64, true, buf[0..16]);

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/xorshift
+# rand_xorshift
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rand_xorshift` ([https://github.com/rust-random/rngs](https://github.com/rust-random/rngs)) / `npm:xorshift` ([https://github.com/AndreasMadsen/xorshift](https://github.com/AndreasMadsen/xorshift))（原库名 `rand_xorshift` → CP 包名 `@cap/xorshift`）
+> **参考 / 吸收来源**：`crates.io:rand_xorshift` ([https://github.com/rust-random/rngs](https://github.com/rust-random/rngs)) / `npm:xorshift` ([https://github.com/AndreasMadsen/xorshift](https://github.com/AndreasMadsen/xorshift))（原库名 `rand_xorshift` → CP 包名 `rand_xorshift`）
 
 Pure CP, zero-allocation Marsaglia Xorshift PRNG family (parity with Rust `rand_xorshift`).
 

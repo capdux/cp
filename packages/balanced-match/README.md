@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`balanced-match`](https://github.com/juliangruber/balanced-match)（`MIT`）（包名 `@cap/balanced-match`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`balanced-match`](https://github.com/juliangruber/balanced-match)（`MIT`）（包名 `balanced-match`）。
 
-# `@cap/balanced-match`
+# `balanced-match`
 
 Zero-heap-allocation nested balanced delimiter matcher in pure CP (clean-room MIT implementation inspired by npm `balanced-match` v3).
 
@@ -16,7 +16,7 @@ Zero-heap-allocation nested balanced delimiter matcher in pure CP (clean-room MI
 ## Usage
 
 ```cp
-import { BalancedResult, balanced, balancedRange, balancedAll } from "@cap/balanced-match";
+import { BalancedResult, balanced, balancedRange, balancedAll } from "balanced-match";
 ```
 
 ## License

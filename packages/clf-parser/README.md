@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/clf-log`
+# `clf-parser`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:clf-parser` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `clf-parser` → CP 包名 `@cap/clf-log`）
+> **参考 / 吸收来源**：`npm:clf-parser` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `clf-parser` → CP 包名 `clf-parser`）
 
 Zero-heap-allocation Apache/Nginx Common Log Format (CLF) and Combined Log Format parser and formatter in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation Apache/Nginx Common Log Format (CLF) and Combined Log Forma
 ## API
 
 ```cp
-import { ClfRecord, parseClf, formatClf } from "@cap/clf-log";
+import { ClfRecord, parseClf, formatClf } from "clf-parser";
 ```
 
 ## License

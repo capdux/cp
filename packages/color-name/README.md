@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/color-names
+# color-name
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:color-name` ([https://github.com/colorjs/color-name](https://github.com/colorjs/color-name))（原库名 `color-name` → CP 包名 `@cap/color-names`）
+> **参考 / 吸收来源**：`npm:color-name` ([https://github.com/colorjs/color-name](https://github.com/colorjs/color-name))（原库名 `color-name` → CP 包名 `color-name`）
 
 Zero-allocation 148 W3C CSS Color 4 named colors lookup and exact RGB ↔ HSL ↔ HSV ↔ HEX color space conversion engine for CP — clean-room MIT parity with npm `color-name` and `color-convert`.
 
@@ -12,7 +12,7 @@ Zero-allocation 148 W3C CSS Color 4 named colors lookup and exact RGB ↔ HSL �
 ## Install / 安装
 
 ```bash
-cap add @cap/color-names
+cap add color-name
 ```
 
 ## API Reference / 接口一览
@@ -43,7 +43,7 @@ import {
     mixRgb,
     lighten,
     darken,
-} from "@cap/color-names";
+} from "color-name";
 
 let hex_buf: [16]u8 = undefined;
 const purple = rgbFromCssName("RebeccaPurple").?; // Rgb{ r: 102, g: 51, b: 153 }

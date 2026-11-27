@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/noise`
+# `noise`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:noise` ([https://github.com/Razaekel/noise-rs](https://github.com/Razaekel/noise-rs))
@@ -12,7 +12,7 @@ Zero-heap 2D/3D Improved Perlin Noise, Fractal Brownian Motion (fBm), and Ridged
 ## Installation
 
 ```bash
-cap add @cap/noise
+cap add noise
 ```
 
 ## API

@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:tapable` ([https://github.com/webpack/tapable](https://github.com/webpack/tapable)) | 许可：`MIT`
 
-# `@cap/tapable`
+# `tapable`
 
 零堆分配纯 CP 插件钩子引擎，完整对标 npm **#242** `tapable` v2（真实周下载 **1.95 亿/周**，Webpack / Rspack 插件架构核心依赖）。
 

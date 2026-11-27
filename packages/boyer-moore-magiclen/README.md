@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bmh-search
+# boyer-moore-magiclen
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:boyer-moore-magiclen` ([https://github.com/magiclen/boyer-moore-magiclen](https://github.com/magiclen/boyer-moore-magiclen))（原库名 `boyer-moore-magiclen` → CP 包名 `@cap/bmh-search`）
+> **参考 / 吸收来源**：`crates.io:boyer-moore-magiclen` ([https://github.com/magiclen/boyer-moore-magiclen](https://github.com/magiclen/boyer-moore-magiclen))（原库名 `boyer-moore-magiclen` → CP 包名 `boyer-moore-magiclen`）
 
 Zero-heap Boyer-Moore-Horspool sublinear substring search in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap Boyer-Moore-Horspool sublinear substring search in pure CP.
 ## Usage
 
 ```cp
-import { compilePattern, findWithCompiled, findLast } from "@cap/bmh-search";
+import { compilePattern, findWithCompiled, findLast } from "boyer-moore-magiclen";
 
 const pat = compilePattern("needle");
 const pos = findWithCompiled("find a needle in haystack", "needle", pat); // 7

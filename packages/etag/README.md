@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/etag`
+# `etag`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:etag` ([https://github.com/jshttp/etag](https://github.com/jshttp/etag))
@@ -28,7 +28,7 @@ import {
     generateContentEtag,
     matchIfNoneMatch,
     matchIfMatch,
-} from "@cap/etag";
+} from "etag";
 ```
 
 ## License

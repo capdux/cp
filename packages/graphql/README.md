@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/graphql-parse`
+# `graphql`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:graphql` ([https://github.com/graphql/graphql-js](https://github.com/graphql/graphql-js))（原库名 `graphql` → CP 包名 `@cap/graphql-parse`）
+> **参考 / 吸收来源**：`npm:graphql` ([https://github.com/graphql/graphql-js](https://github.com/graphql/graphql-js))（原库名 `graphql` → CP 包名 `graphql`）
 
 Zero-heap GraphQL Spec lexer, recursive-descent document parser/validator, and query minifier in pure CP (clean-room MIT counterpart to npm `graphql` v16 parser).
 
@@ -25,7 +25,7 @@ Zero-heap GraphQL Spec lexer, recursive-descent document parser/validator, and q
 ## Quick Start
 
 ```cp
-import { parseGraphql, minifyGraphql, GQL_OP_QUERY } from "@cap/graphql-parse";
+import { parseGraphql, minifyGraphql, GQL_OP_QUERY } from "graphql";
 
 const doc = "query GetUser($id: ID!) { user(id: $id) { id name } }";
 const res = parseGraphql(doc);

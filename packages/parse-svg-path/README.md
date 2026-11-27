@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/svg-path
+# parse-svg-path
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:parse-svg-path` ([https://github.com/jkroso/parse-svg-path](https://github.com/jkroso/parse-svg-path))（原库名 `parse-svg-path` → CP 包名 `@cap/svg-path`）
+> **参考 / 吸收来源**：`npm:parse-svg-path` ([https://github.com/jkroso/parse-svg-path](https://github.com/jkroso/parse-svg-path))（原库名 `parse-svg-path` → CP 包名 `parse-svg-path`）
 
 Zero-allocation SVG 1.1/2.0 `<path d="...">` command parser, 2D bounding-box calculator, and canonical formatter for CP — clean-room MIT parity with npm `parse-svg-path` / `svg-path-parser` and Rust `svgtypes`.
 
@@ -12,7 +12,7 @@ Zero-allocation SVG 1.1/2.0 `<path d="...">` command parser, 2D bounding-box cal
 ## Install / 安装
 
 ```bash
-cap add @cap/svg-path
+cap add parse-svg-path
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/svg-path
 ## Usage / 使用示例
 
 ```cp
-import { parseSvgPath, computeBounds, formatSvgPath } from "@cap/svg-path";
+import { parseSvgPath, computeBounds, formatSvgPath } from "parse-svg-path";
 
 const path = parseSvgPath("M10-20l30 40H0Z");
 const box = computeBounds(path);

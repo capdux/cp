@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/zod-to-json-schema
+# zod-to-json-schema
 
 Zero-heap JSON Schema (Draft-07) builder and serializer in pure CP, ideal for AI Agent tool-calling parameter definitions and structured output contracts.
 

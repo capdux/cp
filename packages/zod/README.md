@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/zod-schema
+# zod
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:zod` ([https://github.com/colinhacks/zod](https://github.com/colinhacks/zod))（原库名 `zod` → CP 包名 `@cap/zod-schema`）
+> **参考 / 吸收来源**：`npm:zod` ([https://github.com/colinhacks/zod](https://github.com/colinhacks/zod))（原库名 `zod` → CP 包名 `zod`）
 
 零堆分配的 CP 原生类型安全数据校验框架，Clean-Room MIT 实现对标 npm Top 25 顶流包 `zod` v3（1.5 亿+/周下载）。
 

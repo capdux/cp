@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/proxy-addr
+# proxy-addr
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:proxy-addr` ([https://github.com/jshttp/proxy-addr](https://github.com/jshttp/proxy-addr))
@@ -20,7 +20,7 @@ Pure CP, zero-allocation reverse-proxy client IP resolver and trusted proxy chai
 ## Usage
 
 ```cp
-import { resolveClientIp, TRUST_ALL_PRIVATE } from "@cap/proxy-addr";
+import { resolveClientIp, TRUST_ALL_PRIVATE } from "proxy-addr";
 
 let out: [64]u8 = undefined;
 let n = resolveClientIp("10.0.0.1", "203.0.113.5, 172.16.0.2", TRUST_ALL_PRIVATE, 0, out[0..64]);

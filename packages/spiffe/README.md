@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/spiffe-id
+# spiffe
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:spiffe` ([https://github.com/maxlambrecht/rust-spiffe](https://github.com/maxlambrecht/rust-spiffe))（原库名 `spiffe` → CP 包名 `@cap/spiffe-id`）
+> **参考 / 吸收来源**：`crates.io:spiffe` ([https://github.com/maxlambrecht/rust-spiffe](https://github.com/maxlambrecht/rust-spiffe))（原库名 `spiffe` → CP 包名 `spiffe`）
 
 Zero-allocation CNCF SPIFFE ID (`spiffe://<trust-domain>/<workload-path>`) parser, strict security validator, and formatter for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation CNCF SPIFFE ID (`spiffe://<trust-domain>/<workload-path>`) parse
 ## Usage
 
 ```cp
-import { parseSpiffeId, belongsToTrustDomain, formatSpiffeId } from "@cap/spiffe-id";
+import { parseSpiffeId, belongsToTrustDomain, formatSpiffeId } from "spiffe";
 
 const id = parseSpiffeId("spiffe://prod.example.org/ns/default/sa/api-server");
 const ok = belongsToTrustDomain(id, "prod.example.org"); // true

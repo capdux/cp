@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/html-entities
+# he
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:he` ([https://github.com/mathiasbynens/he](https://github.com/mathiasbynens/he))（原库名 `he` → CP 包名 `@cap/html-entities`）
+> **参考 / 吸收来源**：`npm:he` ([https://github.com/mathiasbynens/he](https://github.com/mathiasbynens/he))（原库名 `he` → CP 包名 `he`）
 
 零堆分配的 HTML5 命名字符实体与数字字符引用 UTF-8 编解码引擎 — 洁净室 MIT 实现，对标 npm `he` / `escape-html` / `html-entities` 与 Rust `html-escape`。
 
@@ -19,7 +19,7 @@ Zero-allocation HTML5 named entity & numeric character reference UTF-8 encoder/d
 ## 安装 / Install
 
 ```bash
-cap add @cap/html-entities
+cap add he
 ```
 
 ## API 参考 / API Reference
@@ -39,7 +39,7 @@ import {
     encodeNonAscii,
     decodeHtmlEntities,
     needsHtmlEscape,
-} from "@cap/html-entities";
+} from "he";
 
 let buf: [512]u8 = undefined;
 const safe = escapeHtml("<script>alert(\"x\" & 'y')</script>", buf[0..512]);

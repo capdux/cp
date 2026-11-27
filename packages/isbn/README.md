@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/isbn
+# isbn
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:isbn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -16,7 +16,7 @@ Zero-allocation ISO 2108 ISBN-10, ISBN-13, ISSN, and EAN-13 validator and conver
 ## Usage
 
 ```cp
-import { isValidIsbn10, isbn10To13, isbn13To10 } from "@cap/isbn";
+import { isValidIsbn10, isbn10To13, isbn13To10 } from "isbn";
 
 const ok = isValidIsbn10("0-306-40615-2"); // true
 let out13: [13]u8 = undefined;

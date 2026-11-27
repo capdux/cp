@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/blake2-crate
+# blake2
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:blake2` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `blake2` → CP 包名 `@cap/blake2-crate`）
+> **参考 / 吸收来源**：`crates.io:blake2` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `blake2` → CP 包名 `blake2`）
 
 Zero-allocation RFC 7693 BLAKE2s-256 streaming cryptographic hash & keyed MAC implementation for CP — clean-room MIT parity with Rust `blake2` v0.10 (crates.io #140).
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 7693 BLAKE2s-256 streaming cryptographic hash & keyed MAC im
 ## Install / 安装
 
 ```bash
-cap add @cap/blake2-crate
+cap add blake2
 ```
 
 ## API
@@ -33,7 +33,7 @@ cap add @cap/blake2-crate
 ## Usage / 使用示例
 
 ```cp
-import { Blake2s256, blake2s256Hex } from "@cap/blake2-crate";
+import { Blake2s256, blake2s256Hex } from "blake2";
 
 let hex: [64]u8 = undefined;
 * = blake2s256Hex("abc", hex[0..64]);

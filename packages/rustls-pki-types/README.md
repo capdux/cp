@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/rustls-pki-types`
+# `rustls-pki-types`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rustls-pki-types` ([https://github.com/rustls/pki-types](https://github.com/rustls/pki-types))

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/dijkstra
+# pathfinding
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:pathfinding` ([https://github.com/evenfurther/pathfinding](https://github.com/evenfurther/pathfinding))（原库名 `pathfinding` → CP 包名 `@cap/dijkstra`）
+> **参考 / 吸收来源**：`crates.io:pathfinding` ([https://github.com/evenfurther/pathfinding](https://github.com/evenfurther/pathfinding))（原库名 `pathfinding` → CP 包名 `pathfinding`）
 
 Zero-allocation weighted shortest-path engine (Dijkstra + Bellman-Ford with negative-cycle detection + path reconstruction) for CP — clean-room MIT parity with Rust `pathfinding` and `petgraph::algo::dijkstra`.
 
@@ -12,7 +12,7 @@ Zero-allocation weighted shortest-path engine (Dijkstra + Bellman-Ford with nega
 ## Install / 安装
 
 ```bash
-cap add @cap/dijkstra
+cap add pathfinding
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/dijkstra
 ## Usage / 使用示例
 
 ```cp
-import { WeightedGraph } from "@cap/dijkstra";
+import { WeightedGraph } from "pathfinding";
 
 let g = WeightedGraph.init(4 as usize);
 * = g.addEdge(0 as usize, 1 as usize, 4 as i64);

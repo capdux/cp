@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/powerfmt`
+# `powerfmt`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:powerfmt` ([https://github.com/jhpratt/powerfmt](https://github.com/jhpratt/powerfmt)) / `npm:format-number` ([https://github.com/comfuture/format-number](https://github.com/comfuture/format-number))
@@ -17,7 +17,7 @@ Zero-heap high-performance integer formatting in pure CP (clean-room counterpart
 ## Quick Start
 
 ```cp
-import { formatDecPadded, formatHex, formatWithCommas } from "@cap/powerfmt";
+import { formatDecPadded, formatHex, formatWithCommas } from "powerfmt";
 
 let buf: [32]u8 = undefined;
 const n1 = formatDecPadded(-42, 5, &buf);     // "-0042"

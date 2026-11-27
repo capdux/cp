@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/kleur`
+# `kleur`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:kleur` ([https://github.com/lukeed/kleur](https://github.com/lukeed/kleur))
@@ -27,7 +27,7 @@ Zero-allocation composable chainable ANSI terminal style builder for CP with nes
 ## Example
 
 ```cp
-import { KleurChain } from "@cap/kleur";
+import { KleurChain } from "kleur";
 
 let out: [128]u8 = undefined;
 let n = KleurChain.on().bold().red().bgYellow().format("ALERT", out[0..128]);

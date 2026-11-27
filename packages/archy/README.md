@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ascii-tree
+# archy
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:archy` ([https://github.com/substack/node-archy](https://github.com/substack/node-archy))（原库名 `archy` → CP 包名 `@cap/ascii-tree`）
+> **参考 / 吸收来源**：`npm:archy` ([https://github.com/substack/node-archy](https://github.com/substack/node-archy))（原库名 `archy` → CP 包名 `archy`）
 
 Zero-allocation Unicode & ASCII dependency/directory tree renderer for CP — clean-room MIT parity with npm `archy` (35M/wk), `treeify`, and Rust `ptree`.
 
 ## Install
 
 ```bash
-cap add @cap/ascii-tree
+cap add archy
 ```
 
 ## Features
@@ -22,7 +22,7 @@ cap add @cap/ascii-tree
 ## Usage
 
 ```cp
-import { TreeBuilder, TreeStyle, renderTree } from "@cap/ascii-tree";
+import { TreeBuilder, TreeStyle, renderTree } from "archy";
 
 let t = TreeBuilder.init("my-agent@1.0.0");
 const deps = t.addChild(0, "@cap/lru@1.0.0") ?? 0;

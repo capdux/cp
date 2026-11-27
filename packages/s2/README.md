@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/s2`
+# `s2`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:s2` ([https://github.com/roydbt/s2](https://github.com/roydbt/s2))

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/shell-quote`
+# `shell-quote`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:shell-quote` ([https://github.com/ljharb/shell-quote](https://github.com/ljharb/shell-quote))
@@ -12,7 +12,7 @@ Zero-heap POSIX shell argument quoting (`quoteArg`, `quoteArgs`) and command-lin
 ## Installation
 
 ```bash
-cap add @cap/shell-quote
+cap add shell-quote
 ```
 
 ## API

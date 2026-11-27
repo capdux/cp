@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/accept-header
+# accept-header
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:accept-header` ([https://github.com/djc/accept-header](https://github.com/djc/accept-header))
@@ -29,7 +29,7 @@ Clean-room MIT, zero-heap RFC 7231 HTTP `Accept` header parser and media-type ne
 ## Usage
 
 ```typescript
-import { AcceptHeader, negotiateMediaType } from "@cap/accept-header";
+import { AcceptHeader, negotiateMediaType } from "accept-header";
 
 let avail: [2]string = ["text/html", "application/json"];
 let best = negotiateMediaType("text/html;q=0.8, application/json;q=0.95", avail[0..2]);

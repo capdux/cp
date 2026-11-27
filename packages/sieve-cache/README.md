@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sieve-cache
+# sieve-cache
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:sieve-cache` ([https://github.com/jedisct1/rust-sieve-cache](https://github.com/jedisct1/rust-sieve-cache))
@@ -12,7 +12,7 @@ Zero-allocation NSDI'24 **SIEVE** cache eviction engine for CP — clean-room MI
 ## Install / 安装
 
 ```bash
-cap add @cap/sieve-cache
+cap add sieve-cache
 ```
 
 ## API Reference / 接口一览

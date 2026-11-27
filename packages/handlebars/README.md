@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/handlebars-tpl
+# handlebars
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:handlebars` ([https://github.com/handlebars-lang/handlebars.js](https://github.com/handlebars-lang/handlebars.js))（原库名 `handlebars` → CP 包名 `@cap/handlebars-tpl`）
+> **参考 / 吸收来源**：`npm:handlebars` ([https://github.com/handlebars-lang/handlebars.js](https://github.com/handlebars-lang/handlebars.js))（原库名 `handlebars` → CP 包名 `handlebars`）
 
 Zero-allocation Handlebars template engine for CP — clean-room MIT parity with npm `handlebars` v4. Composes `@cap/escape-html` for XSS-safe `{{var}}` escaping with zero duplication.
 
@@ -12,7 +12,7 @@ Zero-allocation Handlebars template engine for CP — clean-room MIT parity with
 ## Install / 安装
 
 ```bash
-cap add @cap/handlebars-tpl
+cap add handlebars
 ```
 
 ## Dependencies / 跨包复用
@@ -44,7 +44,7 @@ cap add @cap/handlebars-tpl
 ## Usage / 使用示例
 
 ```cp
-import { HbsContext, renderHandlebars } from "@cap/handlebars-tpl";
+import { HbsContext, renderHandlebars } from "handlebars";
 
 let ctx = HbsContext.new();
 ctx.setStr("name", "<b>CP</b>");

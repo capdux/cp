@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/d3-time`
+# `d3-time`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:d3-time` ([https://github.com/d3/d3-time](https://github.com/d3/d3-time))
@@ -25,7 +25,7 @@ import {
     timeWeekFloor, timeWeekOffset,
     timeMonthFloor, timeMonthOffset,
     timeYearFloor, timeYearOffset,
-} from "@cap/d3-time";
+} from "d3-time";
 ```
 
 ## License

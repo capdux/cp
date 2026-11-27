@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/escape-html`
+# `escape-html`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:escape-html` ([https://github.com/component/escape-html](https://github.com/component/escape-html)) / `npm:entities` ([https://github.com/fb55/entities](https://github.com/fb55/entities))
@@ -17,7 +17,7 @@ Zero-heap single-pass HTML entity escaper and unescaper in pure CP (clean-room c
 ## Quick Start
 
 ```cp
-import { escapeHtml, unescapeHtml, escapedHtmlLen } from "@cap/escape-html";
+import { escapeHtml, unescapeHtml, escapedHtmlLen } from "escape-html";
 
 let buf: [128]u8 = undefined;
 const n = escapeHtml("<a href=\"/\">A & B</a>", &buf);

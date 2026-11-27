@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/d3-shape
+# d3-shape
 
 Zero-allocation SVG shape and pie chart path generator in pure CP.
 

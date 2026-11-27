@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/tdigest
+# tdigest
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:tdigest` ([https://github.com/MnO2/t-digest](https://github.com/MnO2/t-digest))
@@ -12,7 +12,7 @@ Zero-allocation Merging T-Digest streaming quantile (`P50`/`P95`/`P99`/`P99.9`) 
 ## Install / 安装
 
 ```bash
-cap add @cap/tdigest
+cap add tdigest
 ```
 
 ## API Reference / 接口一览

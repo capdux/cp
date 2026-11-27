@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/md5-crate
+# md-5
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:md-5` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `md-5` → CP 包名 `@cap/md5-crate`）
+> **参考 / 吸收来源**：`crates.io:md-5` ([https://github.com/RustCrypto/hashes](https://github.com/RustCrypto/hashes))（原库名 `md-5` → CP 包名 `md-5`）
 
 Zero-allocation RFC 1321 MD5 cryptographic hash streaming implementation for CP — clean-room MIT parity with Rust `md-5` / `md5` (crates.io #65).
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 1321 MD5 cryptographic hash streaming implementation for CP 
 ## Install / 安装
 
 ```bash
-cap add @cap/md5-crate
+cap add md-5
 ```
 
 ## API
@@ -33,7 +33,7 @@ cap add @cap/md5-crate
 ## Usage / 使用示例
 
 ```cp
-import { Md5Hasher, md5Hex } from "@cap/md5-crate";
+import { Md5Hasher, md5Hex } from "md-5";
 
 let hex: [32]u8 = undefined;
 const n = md5Hex("abc", hex[0..32]); // "900150983cd24fb0d6963f7d28e17f72"

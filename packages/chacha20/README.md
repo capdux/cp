@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/chacha20-crate
+# chacha20
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:chacha20` ([https://github.com/RustCrypto/stream-ciphers](https://github.com/RustCrypto/stream-ciphers))（原库名 `chacha20` → CP 包名 `@cap/chacha20-crate`）
+> **参考 / 吸收来源**：`crates.io:chacha20` ([https://github.com/RustCrypto/stream-ciphers](https://github.com/RustCrypto/stream-ciphers))（原库名 `chacha20` → CP 包名 `chacha20`）
 
 Zero-allocation RFC 8439 ChaCha20 stream cipher (256-bit key, 96-bit nonce, 32-bit block counter) for CP — clean-room MIT parity with Rust `chacha20` v0.9 (crates.io #115).
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 8439 ChaCha20 stream cipher (256-bit key, 96-bit nonce, 32-b
 ## Install / 安装
 
 ```bash
-cap add @cap/chacha20-crate
+cap add chacha20
 ```
 
 ## API
@@ -31,7 +31,7 @@ cap add @cap/chacha20-crate
 ## Usage / 使用示例
 
 ```cp
-import { ChaCha20Cipher } from "@cap/chacha20-crate";
+import { ChaCha20Cipher } from "chacha20";
 
 let cipher = ChaCha20Cipher.newWithCounter(key[0..32], nonce[0..12], 1 as u32)!;
 cipher.applyKeystream(buf[0..len]);

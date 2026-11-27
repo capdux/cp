@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/segment-tree
+# segment-tree
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:segment-tree` ([https://github.com/Darksonn/segment-tree](https://github.com/Darksonn/segment-tree))
@@ -12,7 +12,7 @@ Zero-allocation iterative 2×N Segment Tree simultaneously supporting O(log N) `
 ## Install / 安装
 
 ```bash
-cap add @cap/segment-tree
+cap add segment-tree
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/segment-tree
 ## Usage / 使用示例
 
 ```cp
-import { SegmentTree } from "@cap/segment-tree";
+import { SegmentTree } from "segment-tree";
 
 const prices: [5]i64 = [105, 98, 112, 95, 120];
 let st = SegmentTree.fromSlice(prices[0..5]);

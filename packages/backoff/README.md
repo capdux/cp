@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/backoff
+# backoff
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:backoff` ([https://github.com/ihrwein/backoff](https://github.com/ihrwein/backoff))
@@ -12,7 +12,7 @@ Zero-allocation deterministic retry backoff engine with Exponential, Linear, and
 ## Install / 安装
 
 ```bash
-cap add @cap/backoff
+cap add backoff
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/backoff
 ## Usage / 使用示例
 
 ```cp
-import { BackoffPolicy, BackoffState, JitterKind, expDelayMs } from "@cap/backoff";
+import { BackoffPolicy, BackoffState, JitterKind, expDelayMs } from "backoff";
 
 const policy = BackoffPolicy.defaultPolicy(); // 100ms..30000ms, 2x, 5 retries, Full jitter
 let state = BackoffState.init(policy, 12345 as u64);

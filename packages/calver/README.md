@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/calver
+# calver
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:calver` ([https://github.com/muratgozel/node-calver](https://github.com/muratgozel/node-calver))
@@ -12,7 +12,7 @@ Zero-allocation Calendar Versioning (CalVer) parser, validator, comparator, bump
 ## Install / 安装
 
 ```bash
-cap add @cap/calver
+cap add calver
 ```
 
 ## API Reference / 接口一览
@@ -36,7 +36,7 @@ import {
     compareCalver,
     bumpCalver,
     formatCalver,
-} from "@cap/calver";
+} from "calver";
 
 let buf: [64]u8 = undefined;
 const cur = parseCalver("2026.11.0");

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`yallist`](https://github.com/isaacs/yallist)（`ISC`）（包名 `@cap/yallist`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`yallist`](https://github.com/isaacs/yallist)（`ISC`）（包名 `yallist`）。
 
-# `@cap/yallist`
+# `yallist`
 
 Zero-heap-allocation O(1) index-pool doubly linked list in pure CP (clean-room ISC implementation inspired by npm `yallist` v5).
 
@@ -16,7 +16,7 @@ Zero-heap-allocation O(1) index-pool doubly linked list in pure CP (clean-room I
 ## Usage
 
 ```cp
-import { YALLIST_CAP, YallistU64 } from "@cap/yallist";
+import { YALLIST_CAP, YallistU64 } from "yallist";
 ```
 
 ## License

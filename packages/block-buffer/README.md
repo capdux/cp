@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/block-buffer
+# block-buffer
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:block-buffer` ([https://github.com/RustCrypto/utils](https://github.com/RustCrypto/utils)) / `crates.io:crypto-common` ([https://github.com/RustCrypto/traits](https://github.com/RustCrypto/traits))
@@ -16,7 +16,7 @@ Zero-allocation fixed-size cryptographic block streaming buffers (`BlockBuffer64
 ## Usage
 
 ```cp
-import { BlockBuffer64 } from "@cap/block-buffer";
+import { BlockBuffer64 } from "block-buffer";
 
 let bb = BlockBuffer64.new();
 let blocks: [128]u8 = undefined;

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/salsa20
+# salsa20
 
 Zero-heap Salsa20/20 stream cipher (256-bit key, 64-bit nonce, 64-bit block counter) in pure CP, verified against official D.J. Bernstein / eSTREAM test vectors.
 

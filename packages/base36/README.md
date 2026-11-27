@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/base36
+# base36
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:base36` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:radix_fmt` ([https://github.com/davimiku/radix_fmt](https://github.com/davimiku/radix_fmt))
@@ -15,7 +15,7 @@ Zero-heap Base36 (`0-9a-z` / `0-9A-Z`) and arbitrary radix `2..36` 64-bit unsign
 ## Usage
 
 ```cp
-import { encodeBase36, decodeBase36 } from "@cap/base36";
+import { encodeBase36, decodeBase36 } from "base36";
 
 let buf: [16]u8 = undefined;
 const n = encodeBase36(1234567890, buf[0..16]); // "kf12oi"

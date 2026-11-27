@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/is-path-inside
+# is-path-inside
 
 Zero-allocation path traversal containment guard checking whether `child_path` is strictly inside `parent_path` after normalizing `.`, `..`, and mixed POSIX/Windows separators.
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/fill-range
+# fill-range
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:fill-range` ([https://github.com/jonschlinkert/fill-range](https://github.com/jonschlinkert/fill-range))
@@ -17,7 +17,7 @@ Zero-heap numeric, alphabetic, stepped, and zero-padded range expansion engine i
 ## Usage
 
 ```cp
-import { formatRange, countRange } from "@cap/fill-range";
+import { formatRange, countRange } from "fill-range";
 
 let dst: [64]u8 = undefined;
 const n = formatRange("01", "05", 1, ",", dst[0..64]);

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/picocolors`
+# `picocolors`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:picocolors` ([https://github.com/alexeyraspopov/picocolors](https://github.com/alexeyraspopov/picocolors))
@@ -35,7 +35,7 @@ Fixed 1024-byte (`PICO_BUF_CAP`) accumulating buffer with `clear()`, `pushPlain(
 ## Example
 
 ```cp
-import { ColorConfig, PicoFormatter, PicoBuf } from "@cap/picocolors";
+import { ColorConfig, PicoFormatter, PicoBuf } from "picocolors";
 
 let fmt = PicoFormatter.fromConfig(ColorConfig.enabled());
 let out: [128]u8 = undefined;

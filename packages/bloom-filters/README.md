@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/bloom-filter`
+# `bloom-filters`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:bloom-filters` ([https://github.com/Callidon/bloom-filters](https://github.com/Callidon/bloom-filters)) / `crates.io:bloomfilter` ([https://github.com/jedisct1/rust-bloom-filter](https://github.com/jedisct1/rust-bloom-filter))（原库名 `bloom-filters` → CP 包名 `@cap/bloom-filter`）
+> **参考 / 吸收来源**：`npm:bloom-filters` ([https://github.com/Callidon/bloom-filters](https://github.com/Callidon/bloom-filters)) / `crates.io:bloomfilter` ([https://github.com/jedisct1/rust-bloom-filter](https://github.com/jedisct1/rust-bloom-filter))（原库名 `bloom-filters` → CP 包名 `bloom-filters`）
 
 Zero-heap classic Bloom filter in pure CP using Kirsch-Mitzenmacher double hashing (`FNV-1a 64-bit` + `DJB2/Murmur3 fmix64`).
 
@@ -17,7 +17,7 @@ Zero-heap classic Bloom filter in pure CP using Kirsch-Mitzenmacher double hashi
 ## Quick Start
 
 ```cp
-import { BloomFilter, optimalNumHashes, popcount, fillRatio } from "@cap/bloom-filter";
+import { BloomFilter, optimalNumHashes, popcount, fillRatio } from "bloom-filters";
 
 let bits: [1024]u8 = undefined;
 const k = optimalNumHashes(bits.len * 8, 200);

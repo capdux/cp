@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/raw-body`
+# `raw-body`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:raw-body` ([https://github.com/stream-utils/raw-body](https://github.com/stream-utils/raw-body))
@@ -52,7 +52,7 @@ import {
     RawBodyOptions,
     RawBodyReader,
     parseByteLimit
-} from "@cap/raw-body";
+} from "raw-body";
 
 let lim = parseByteLimit("100kb");
 let opts = RawBodyOptions {

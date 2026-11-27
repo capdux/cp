@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/accepts
+# accepts
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:accepts` ([https://github.com/jshttp/accepts](https://github.com/jshttp/accepts))
@@ -12,7 +12,7 @@ Zero-allocation RFC 9110 HTTP content negotiation engine (`Accept`, `Accept-Enco
 ## Install / 安装
 
 ```bash
-cap add @cap/accepts
+cap add accepts
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/accepts
 ## Usage / 使用示例
 
 ```cp
-import { negotiateEncoding, negotiateLanguage, negotiateMediaType } from "@cap/accepts";
+import { negotiateEncoding, negotiateLanguage, negotiateMediaType } from "accepts";
 
 const encs: [3][]const u8 = ["br", "gzip", "deflate"];
 const best = negotiateEncoding("gzip;q=0.8, br;q=1.0", encs[0..3]); // 0 ("br")

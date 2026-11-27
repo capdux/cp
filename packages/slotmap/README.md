@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/slotmap
+# slotmap
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:slotmap` ([https://github.com/orlp/slotmap](https://github.com/orlp/slotmap))
@@ -12,7 +12,7 @@ Zero-allocation generational-index slot map (`SlotKey`, `SlotMapI64`, `Secondary
 ## Install / 安装
 
 ```bash
-cap add @cap/slotmap
+cap add slotmap
 ```
 
 ## Design / 设计原理
@@ -61,7 +61,7 @@ cap add @cap/slotmap
 ## Usage / 使用示例
 
 ```cp
-import { SlotMapI64, SecondaryMapI64 } from "@cap/slotmap";
+import { SlotMapI64, SecondaryMapI64 } from "slotmap";
 
 let entities = SlotMapI64.new();
 let hp = SecondaryMapI64.new();

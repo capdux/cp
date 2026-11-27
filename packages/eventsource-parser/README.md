@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sse-parse
+# eventsource-parser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:eventsource-parser` ([https://github.com/rexxars/eventsource-parser](https://github.com/rexxars/eventsource-parser))（原库名 `eventsource-parser` → CP 包名 `@cap/sse-parse`）
+> **参考 / 吸收来源**：`npm:eventsource-parser` ([https://github.com/rexxars/eventsource-parser](https://github.com/rexxars/eventsource-parser))（原库名 `eventsource-parser` → CP 包名 `eventsource-parser`）
 
 Zero-allocation W3C Server-Sent Events (`text/event-stream`) incremental streaming parser for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation W3C Server-Sent Events (`text/event-stream`) incremental streami
 ## Usage
 
 ```cp
-import { SseParser } from "@cap/sse-parse";
+import { SseParser } from "eventsource-parser";
 
 let parser = SseParser.init();
 const chunk = "data: {\"delta\":\"hi\"}\n\n";

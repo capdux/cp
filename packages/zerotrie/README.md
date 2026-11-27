@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/zerotrie
+# zerotrie
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:zerotrie` ([https://github.com/unicode-org/icu4x](https://github.com/unicode-org/icu4x)) / `npm:trie-prefix-tree` ([https://github.com/lyndseybrowning/trie-prefix-tree](https://github.com/lyndseybrowning/trie-prefix-tree))

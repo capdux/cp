@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/json-pointer`
+# `jsonpointer`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:jsonpointer` ([https://github.com/janl/node-jsonpointer](https://github.com/janl/node-jsonpointer))（原库名 `jsonpointer` → CP 包名 `@cap/json-pointer`）
+> **参考 / 吸收来源**：`npm:jsonpointer` ([https://github.com/janl/node-jsonpointer](https://github.com/janl/node-jsonpointer))（原库名 `jsonpointer` → CP 包名 `jsonpointer`）
 
 Zero-heap-allocation RFC 6901 JSON Pointer implementation in pure CP.
 
@@ -29,7 +29,7 @@ import {
     appendSegment,
     parentPointer,
     PointerIter,
-} from "@cap/json-pointer";
+} from "jsonpointer";
 ```
 
 ## License

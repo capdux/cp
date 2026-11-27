@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`magic-string`](https://github.com/Rich-Harris/magic-string)（`MIT`）（包名 `@cap/magic-string`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`magic-string`](https://github.com/Rich-Harris/magic-string)（`MIT`）（包名 `magic-string`）。
 
-# `@cap/magic-string`
+# `magic-string`
 
 Zero-heap-allocation original-offset source string editor in pure CP (clean-room MIT implementation inspired by npm `magic-string`).
 
@@ -17,7 +17,7 @@ Zero-heap-allocation original-offset source string editor in pure CP (clean-room
 ## Usage
 
 ```cp
-import { MAGIC_STRING_MAX_CHUNKS, MagicString } from "@cap/magic-string";
+import { MAGIC_STRING_MAX_CHUNKS, MagicString } from "magic-string";
 ```
 
 ## License

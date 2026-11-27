@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/properties
+# properties-reader
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:properties-reader` ([https://github.com/steveukx/properties](https://github.com/steveukx/properties))（原库名 `properties-reader` → CP 包名 `@cap/properties`）
+> **参考 / 吸收来源**：`npm:properties-reader` ([https://github.com/steveukx/properties](https://github.com/steveukx/properties))（原库名 `properties-reader` → CP 包名 `properties-reader`）
 
 Zero-heap Java / Spring Boot / Android / i18n `.properties` configuration parser and formatter in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap Java / Spring Boot / Android / i18n `.properties` configuration parser
 ## Usage
 
 ```cp
-import { Properties, formatEntry } from "@cap/properties";
+import { Properties, formatEntry } from "properties-reader";
 
 const src = "app.name = Cap\napp.title : \\u4E2D\\u6587\n";
 const props = Properties.parse(src);

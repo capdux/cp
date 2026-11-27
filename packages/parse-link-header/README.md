@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/link-header
+# parse-link-header
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:parse-link-header` ([https://github.com/thlorenz/parse-link-header](https://github.com/thlorenz/parse-link-header))（原库名 `parse-link-header` → CP 包名 `@cap/link-header`）
+> **参考 / 吸收来源**：`npm:parse-link-header` ([https://github.com/thlorenz/parse-link-header](https://github.com/thlorenz/parse-link-header))（原库名 `parse-link-header` → CP 包名 `parse-link-header`）
 
 Zero-allocation RFC 8288 HTTP `Link` header parser and builder with GitHub / Stripe / REST API pagination helpers for CP — clean-room MIT parity with npm `parse-link-header` / `http-link-header` and Rust `parse_link_header`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 8288 HTTP `Link` header parser and builder with GitHub / Str
 ## Install / 安装
 
 ```bash
-cap add @cap/link-header
+cap add parse-link-header
 ```
 
 ## API Reference / 接口一览
@@ -33,7 +33,7 @@ import {
     parseLinkHeader,
     formatLinkHeader,
     formatPaginationLinks,
-} from "@cap/link-header";
+} from "parse-link-header";
 
 // 1. Parse GitHub API pagination Link header
 const raw = "<https://api.github.com/repos?page=2>; rel=\"next\", <https://api.github.com/repos?page=5>; rel=\"last\"";

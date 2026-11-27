@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/mat3
+# gl-mat3
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:gl-mat3` ([https://github.com/stackgl/gl-mat3](https://github.com/stackgl/gl-mat3)) / `crates.io:cgmath` ([https://github.com/rustgd/cgmath](https://github.com/rustgd/cgmath))（原库名 `gl-mat3` → CP 包名 `@cap/mat3`）
+> **参考 / 吸收来源**：`npm:gl-mat3` ([https://github.com/stackgl/gl-mat3](https://github.com/stackgl/gl-mat3)) / `crates.io:cgmath` ([https://github.com/rustgd/cgmath](https://github.com/rustgd/cgmath))（原库名 `gl-mat3` → CP 包名 `gl-mat3`）
 
 Zero-allocation 3x3 row-major matrix and 2D affine transform library for CP with built-in Taylor-series `sin`/`cos` (zero external dependencies).
 
@@ -16,7 +16,7 @@ Zero-allocation 3x3 row-major matrix and 2D affine transform library for CP with
 ## Usage
 
 ```cp
-import { fromTranslation, fromRotation, mul, transformPoint, Vec2D } from "@cap/mat3";
+import { fromTranslation, fromRotation, mul, transformPoint, Vec2D } from "gl-mat3";
 
 const t = fromTranslation(10.0 as f64, 5.0 as f64);
 const r = fromRotation(1.57079632679489661923 as f64);

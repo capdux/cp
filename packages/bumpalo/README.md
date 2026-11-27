@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bumpalo
+# bumpalo
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bumpalo` ([https://github.com/fitzgen/bumpalo](https://github.com/fitzgen/bumpalo))
@@ -12,7 +12,7 @@ Zero-allocation alignment-aware bump arena allocator (`BumpArena`, `BumpSlice`, 
 ## Install / 安装
 
 ```bash
-cap add @cap/bumpalo
+cap add bumpalo
 ```
 
 ## API
@@ -42,7 +42,7 @@ cap add @cap/bumpalo
 ## Usage / 使用示例
 
 ```cp
-import { BumpArena, BumpSlice } from "@cap/bumpalo";
+import { BumpArena, BumpSlice } from "bumpalo";
 
 let bump = BumpArena.new();
 let mark = bump.checkpoint();

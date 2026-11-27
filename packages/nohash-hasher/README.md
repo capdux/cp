@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/nohash-hasher
+# nohash-hasher
 
 Zero-overhead identity integer hasher (`IntHasher`, `nohashU64`, `nohashU32`) plus Fibonacci bucket indexing and SplitMix64 integer mixing in pure CP.
 

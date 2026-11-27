@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/count-min
+# count-min-sketch
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:count-min-sketch` ([https://github.com/amansarda/count-min-sketch](https://github.com/amansarda/count-min-sketch))（原库名 `count-min-sketch` → CP 包名 `@cap/count-min`）
+> **参考 / 吸收来源**：`crates.io:count-min-sketch` ([https://github.com/amansarda/count-min-sketch](https://github.com/amansarda/count-min-sketch))（原库名 `count-min-sketch` → CP 包名 `count-min-sketch`）
 
 Zero-allocation Count-Min Sketch streaming frequency estimator and heavy-hitter detector for CP — clean-room MIT parity with Rust `count-min-sketch` and Redis `CMS.INCRBY`.
 
@@ -12,7 +12,7 @@ Zero-allocation Count-Min Sketch streaming frequency estimator and heavy-hitter 
 ## Install / 安装
 
 ```bash
-cap add @cap/count-min
+cap add count-min-sketch
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/count-min
 ## Usage / 使用示例
 
 ```cp
-import { CountMinSketch } from "@cap/count-min";
+import { CountMinSketch } from "count-min-sketch";
 
 let cms = CountMinSketch.init();
 cms.add("/api/login", 500 as u32);

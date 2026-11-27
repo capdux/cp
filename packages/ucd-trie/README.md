@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ucd-trie
+# ucd-trie
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ucd-trie` ([https://github.com/BurntSushi/ucd-generate](https://github.com/BurntSushi/ucd-generate))

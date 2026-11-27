@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/parse-ms`
+# `parse-ms`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:parse-ms` ([https://github.com/sindresorhus/parse-ms](https://github.com/sindresorhus/parse-ms))
@@ -16,7 +16,7 @@ Zero-heap millisecond breakdown (`days`, `hours`, `minutes`, `seconds`, `millise
 ## Quick Start
 
 ```cp
-import { parseMs, parseMsF64, toMilliseconds } from "@cap/parse-ms";
+import { parseMs, parseMsF64, toMilliseconds } from "parse-ms";
 
 const p = parseMs(1337000001);
 // { days: 15, hours: 11, minutes: 23, seconds: 20, milliseconds: 1, microseconds: 0, nanoseconds: 0 }

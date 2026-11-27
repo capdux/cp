@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/prettier-fmt
+# prettier
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:prettier` ([https://github.com/prettier/prettier](https://github.com/prettier/prettier))（原库名 `prettier` → CP 包名 `@cap/prettier-fmt`）
+> **参考 / 吸收来源**：`npm:prettier` ([https://github.com/prettier/prettier](https://github.com/prettier/prettier))（原库名 `prettier` → CP 包名 `prettier`）
 
 零堆分配的 CP 原生 JSON 与 CSS 代码美化格式化器，Clean-Room MIT 实现对标 npm `prettier`。
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/is-unicode-supported
+# is-unicode-supported
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:is-unicode-supported` ([https://github.com/sindresorhus/is-unicode-supported](https://github.com/sindresorhus/is-unicode-supported))
@@ -12,7 +12,7 @@ Zero-allocation pure-logic terminal Unicode support detector for CP — clean-ro
 ## Install / 安装
 
 ```bash
-cap add @cap/is-unicode-supported
+cap add is-unicode-supported
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/is-unicode-supported
 ## Usage / 使用示例
 
 ```cp
-import { EnvInfo, isUnicodeSupported, selectFallback } from "@cap/is-unicode-supported";
+import { EnvInfo, isUnicodeSupported, selectFallback } from "is-unicode-supported";
 
 const ok1 = isUnicodeSupported(EnvInfo.posix());           // true
 const ok2 = isUnicodeSupported(EnvInfo.linuxConsole());    // false

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/predicates
+# predicates
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:predicates` ([https://github.com/assert-rs/predicates-rs](https://github.com/assert-rs/predicates-rs)) — `MIT OR Apache-2.0`

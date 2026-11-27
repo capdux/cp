@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/camelcase
+# ident_case
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:ident_case` ([https://github.com/TedDriggs/ident_case](https://github.com/TedDriggs/ident_case))（原库名 `ident_case` → CP 包名 `@cap/camelcase`）
+> **参考 / 吸收来源**：`crates.io:ident_case` ([https://github.com/TedDriggs/ident_case](https://github.com/TedDriggs/ident_case))（原库名 `ident_case` → CP 包名 `ident_case`）
 
 Zero-heap programming case conversion engine in pure CP (npm `camelcase` / `change-case` & Rust `heck` parity).
 
@@ -18,7 +18,7 @@ Zero-heap programming case conversion engine in pure CP (npm `camelcase` / `chan
 ## Usage
 
 ```cp
-import { toCamelCase, toSnakeCase } from "@cap/camelcase";
+import { toCamelCase, toSnakeCase } from "ident_case";
 
 let buf: [64]u8 = undefined;
 const n = toSnakeCase("XMLHttpRequest", buf[0..64]);

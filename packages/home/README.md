@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/home-dir`
+# `home`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:home` ([https://github.com/rust-lang/cargo](https://github.com/rust-lang/cargo)) / `npm:untildify` ([https://github.com/sindresorhus/untildify](https://github.com/sindresorhus/untildify)) / `npm:expand-tilde` ([https://github.com/jonschlinkert/expand-tilde](https://github.com/jonschlinkert/expand-tilde)) / `npm:os-homedir` ([https://github.com/sindresorhus/os-homedir](https://github.com/sindresorhus/os-homedir)) / `crates.io:dirs` ([https://github.com/dirs-dev/dirs-rs](https://github.com/dirs-dev/dirs-rs))（原库名 `home` → CP 包名 `@cap/home-dir`）
+> **参考 / 吸收来源**：`crates.io:home` ([https://github.com/rust-lang/cargo](https://github.com/rust-lang/cargo)) / `npm:untildify` ([https://github.com/sindresorhus/untildify](https://github.com/sindresorhus/untildify)) / `npm:expand-tilde` ([https://github.com/jonschlinkert/expand-tilde](https://github.com/jonschlinkert/expand-tilde)) / `npm:os-homedir` ([https://github.com/sindresorhus/os-homedir](https://github.com/sindresorhus/os-homedir)) / `crates.io:dirs` ([https://github.com/dirs-dev/dirs-rs](https://github.com/dirs-dev/dirs-rs))（原库名 `home` → CP 包名 `home`）
 
 Zero-heap cross-platform home directory resolver, tilde expansion/contraction, and XDG config directory builder in pure CP (clean-room counterpart to Rust `home` + npm `untildify`/`tildify`).
 
@@ -17,7 +17,7 @@ Zero-heap cross-platform home directory resolver, tilde expansion/contraction, a
 ## Quick Start
 
 ```cp
-import { resolveHomeDir, expandTilde, contractTilde, joinConfigDir } from "@cap/home-dir";
+import { resolveHomeDir, expandTilde, contractTilde, joinConfigDir } from "home";
 
 let buf: [128]u8 = undefined;
 const n1 = expandTilde("~/.cap/cache", "/home/alice", &buf); // "/home/alice/.cap/cache"

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/https-proxy-agent
+# https-proxy-agent
 
 Zero-heap HTTP/HTTPS proxy URL parser (IPv4, hostname, IPv6, Basic credentials) and RFC 9110 `CONNECT` tunnel handshake builder in pure CP (covers `https-proxy-agent` and `http-proxy-agent`).
 

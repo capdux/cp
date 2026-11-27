@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`object-hash`](https://github.com/puleos/object-hash)（`MIT`）（包名 `@cap/object-hash`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`object-hash`](https://github.com/puleos/object-hash)（`MIT`）（包名 `object-hash`）。
 
-# `@cap/object-hash`
+# `object-hash`
 
 Zero-allocation deterministic, key-order-independent structured object hasher in pure CP (clean-room MIT implementation inspired by npm `object-hash`).
 
@@ -17,7 +17,7 @@ Zero-allocation deterministic, key-order-independent structured object hasher in
 ## Usage
 
 ```cp
-import { HashField, hashFieldsFnv64, hashFieldsHex } from "@cap/object-hash";
+import { HashField, hashFieldsFnv64, hashFieldsHex } from "object-hash";
 ```
 
 ## License

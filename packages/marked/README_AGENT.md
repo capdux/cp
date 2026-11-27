@@ -1,44 +1,32 @@
-# marked@1.0.0 — AI Agent Quick Ref
+# marked@1.0.0 (Agent Quickref)
 
-- **Import**: `import { MarkedOptions, defaultMarkedOptions, parseMarkdown, parseMarkdownWithOptions, parseInlineMarkdown, stripMarkdown } from "marked";`
-- **Provenance**: npm `marked` (v14) clean-room parity | Zero-heap | License: MIT
-- **Deps**: `escape-html`
-- **Types**: `src/index.d.cp`
+> Zero-heap CommonMark/GFM Markdown to HTML compiler and plain-text stripper in pure CP with XSS-safe HTML escaping via @cap/escape-html (clean-room MIT counterpart to npm marked v14). | License: MIT
+> Import: `import { ... } from "marked";` | Full types: `src/index.d.cp`
+> Deps: `escape-html`
 
-## Core Types & Functions
-```cp
-export class MarkedOptions {
-    gfm: bool,            // GFM strikethrough ~~text~~ (default: true)
-    sanitize_links: bool, // block javascript:/vbscript:/data: URLs (default: true)
-    breaks: bool,         // convert single '\n' to <br> (default: false)
-}
-
-export fn defaultMarkedOptions(): MarkedOptions;
-export fn parseMarkdown(md: string, out: []u8): usize;
-export fn parseMarkdownWithOptions(md: string, opts: MarkedOptions, out: []u8): usize;
-export fn parseInlineMarkdown(src: string, out: []u8): usize;
-export fn stripMarkdown(md: string, out: []u8): usize;
-```
-
-## Supported Syntax
-- **Blocks**: ATX headings (`#`..`######`), paragraphs, fenced code blocks (`` ``` `` / `~~~` with lang class), blockquotes (`>`), unordered lists (`-`/`*`/`+`), ordered lists (`1.`), horizontal rules (`---`/`***`/`___`)
-- **Inline**: `**bold**` / `__bold__`, `*italic*` / `_italic_`, `~~strike~~` (GFM), `` `code` ``, `[label](url)`, `![alt](url)`, backslash escapes
-
-## Minimal Example
-```cp
-import { defaultMarkedOptions, parseMarkdownWithOptions, stripMarkdown } from "marked";
-
-let html: [1024]u8 = undefined;
-let opts = defaultMarkedOptions();
-opts.breaks = true;
-const n = parseMarkdownWithOptions("# Hi\n**CP**", opts, html[0..]);
-
-let plain: [256]u8 = undefined;
-const pn = stripMarkdown("# Hi\n**CP**", plain[0..]); // "Hi\nCP\n"
-```
-
-## Gotchas
-1. All rendering functions write into caller-provided `out: []u8` and return bytes written (clamped safely to `out.len`); allocate `2x–4x` input length for HTML output.
-2. `parseInlineMarkdown` skips block-level `<p>` wrapping; use it for titles, labels, or single-line snippets.
-3. Keep `sanitize_links: true` (from `defaultMarkedOptions()`) whenever rendering untrusted user Markdown.
-4. Internal helpers prefixed with `mkd*` are low-level parser internals; use the 5 public entrypoints above.
+## Functions
+- `export fn defaultMarkedOptions(): MarkedOptions;`
+- `export fn mkdWriteByte(out: []u8, pos: &mut usize, b: u8);`
+- `export fn mkdWriteStr(out: []u8, pos: &mut usize, s: string);`
+- `export fn mkdWriteEscaped(out: []u8, pos: &mut usize, s: string);`
+- `export fn mkdWriteEscapedByte(out: []u8, pos: &mut usize, b: u8);`
+- `export fn mkdIsSpace(c: u8): bool;`
+- `export fn mkdIsPunctEscape(c: u8): bool;`
+- `export fn mkdStartsWithIgnoreCaseClean(url: string, prefix: string): bool;`
+- `export fn mkdIsSafeUrl(url: string): bool;`
+- `export fn mkdFindLineEnd(s: string, start: usize): usize;`
+- `export fn mkdTrimCr(s: string, start: usize, end: usize): usize;`
+- `export fn mkdSkipIndent(s: string, start: usize, end: usize, max_spaces: usize): usize;`
+- `export fn mkdIsBlankLine(s: string, start: usize, end: usize): bool;`
+- `export fn mkdMatchHeading(s: string, line_start: usize, line_end: usize, content_start: &mut usize, content_end: &mut usize): usize;`
+- `export fn mkdIsHorizontalRule(s: string, line_start: usize, line_end: usize): bool;`
+- `export fn mkdMatchFenceOpen(s: string, line_start: usize, line_end: usize, fence_char: &mut u8, lang_start: &mut usize, lang_end: &mut usize): usize;`
+- `export fn mkdIsFenceClose(s: string, line_start: usize, line_end: usize, fence_char: u8, min_len: usize): bool;`
+- `export fn mkdIsBlockquoteLine(s: string, line_start: usize, line_end: usize): bool;`
+- `export fn mkdMatchUnorderedItem(s: string, line_start: usize, line_end: usize): usize;`
+- `export fn mkdMatchOrderedItem(s: string, line_start: usize, line_end: usize, num_out: &mut usize): usize;`
+- `export fn mkdStartsNewBlock(s: string, line_start: usize, line_end: usize): bool;`
+- `export fn mkdFindClosingDouble(s: string, start: usize, ch: u8): i64;`
+- `export fn mkdFindClosingSingle(s: string, start: usize, ch: u8): i64;`
+- `export fn mkdMatchLinkOrImage(s: string, open_bracket: usize, label_start: &mut usize, label_end: &mut usize, url_start: &mut usize, url_end: &mut usize): usize;`
+- *(+9 more in `src/index.d.cp`)*

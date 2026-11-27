@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/kalman
+# kalman-filters
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:kalman-filters` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `kalman-filters` → CP 包名 `@cap/kalman`）
+> **参考 / 吸收来源**：`crates.io:kalman-filters` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `kalman-filters` → CP 包名 `kalman-filters`）
 
 Zero-allocation 1D scalar (`Kalman1D`) and 2D constant-velocity (`Kalman2D`) Kalman filters with Joseph-form covariance update for CP — clean-room MIT parity with Rust `kalman-filters` and `kfilter`.
 
@@ -12,7 +12,7 @@ Zero-allocation 1D scalar (`Kalman1D`) and 2D constant-velocity (`Kalman2D`) Kal
 ## Install / 安装
 
 ```bash
-cap add @cap/kalman
+cap add kalman-filters
 ```
 
 ## API
@@ -25,7 +25,7 @@ cap add @cap/kalman
 ## Usage / 使用示例
 
 ```cp
-import { Kalman1D, Kalman2D } from "@cap/kalman";
+import { Kalman1D, Kalman2D } from "kalman-filters";
 
 let kf = Kalman1D.init(0.0, 1.0, 0.01, 0.25);
 const est = kf.step(10.2);

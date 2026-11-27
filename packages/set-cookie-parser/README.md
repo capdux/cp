@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/set-cookie-parser
+# set-cookie-parser
 
 Zero-allocation RFC 6265 `Set-Cookie` HTTP header parser and comma-joined header splitter in pure CP.
 

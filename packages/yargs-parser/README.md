@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/yargs-parser
+# yargs-parser
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:yargs-parser` ([https://github.com/yargs/yargs-parser](https://github.com/yargs/yargs-parser))
@@ -12,7 +12,7 @@ Zero-allocation CLI argument parser for CP — clean-room MIT parity with npm `y
 ## Install / 安装
 
 ```bash
-cap add @cap/yargs-parser
+cap add yargs-parser
 ```
 
 ## Dependencies / 跨包复用
@@ -32,7 +32,7 @@ cap add @cap/yargs-parser
 ## Usage / 使用示例
 
 ```cp
-import { parseArgs } from "@cap/yargs-parser";
+import { parseArgs } from "yargs-parser";
 
 const argv: [4]string = ["--max-retries=5", "-abc", "-p", "8080"];
 const parsed = parseArgs(argv[0..4]);

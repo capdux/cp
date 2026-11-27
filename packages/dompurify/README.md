@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`dompurify`](https://github.com/cure53/DOMPurify)（`Apache-2.0`）（包名 `@cap/dompurify`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`dompurify`](https://github.com/cure53/DOMPurify)（`Apache-2.0`）（包名 `dompurify`）。
 
-# `@cap/dompurify`
+# `dompurify`
 
 Zero-allocation HTML sanitizer in pure CP (clean-room Apache-2.0 implementation inspired by npm `DOMPurify`).
 
@@ -16,7 +16,7 @@ Zero-allocation HTML sanitizer in pure CP (clean-room Apache-2.0 implementation 
 ## Usage
 
 ```cp
-import { SanitizeHtmlOptions, defaultSanitizeOptions, sanitizeHtml, isSafeHtml } from "@cap/dompurify";
+import { SanitizeHtmlOptions, defaultSanitizeOptions, sanitizeHtml, isSafeHtml } from "dompurify";
 ```
 
 ## License

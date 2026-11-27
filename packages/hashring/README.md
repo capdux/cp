@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/consistent-hash
+# hashring
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:hashring` ([https://github.com/jeromefroe/hashring-rs](https://github.com/jeromefroe/hashring-rs))（原库名 `hashring` → CP 包名 `@cap/consistent-hash`）
+> **参考 / 吸收来源**：`crates.io:hashring` ([https://github.com/jeromefroe/hashring-rs](https://github.com/jeromefroe/hashring-rs))（原库名 `hashring` → CP 包名 `hashring`）
 
 Zero-allocation consistent hash ring with virtual nodes, `O(log V)` binary-search clockwise routing, and deduplicated replica selection for CP — clean-room MIT parity with Rust `hashring` and npm `hashring`.
 
@@ -12,7 +12,7 @@ Zero-allocation consistent hash ring with virtual nodes, `O(log V)` binary-searc
 ## Install / 安装
 
 ```bash
-cap add @cap/consistent-hash
+cap add hashring
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/consistent-hash
 ## Usage / 使用示例
 
 ```cp
-import { HashRing } from "@cap/consistent-hash";
+import { HashRing } from "hashring";
 
 let ring = HashRing.init(8);
 ring.addNode("node-a");

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/oid-registry
+# oid-registry
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:oid-registry` ([https://github.com/rusticata/oid-registry](https://github.com/rusticata/oid-registry))
@@ -12,7 +12,7 @@ Zero-allocation static X.509 / PKCS / TLS / NIST / RFC Object Identifier (OID) d
 ## Install / 安装
 
 ```bash
-cap add @cap/oid-registry
+cap add oid-registry
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/oid-registry
 ## Usage / 使用示例
 
 ```cp
-import { lookupOid, lookupShortName, encodeOidDer, decodeOidDer } from "@cap/oid-registry";
+import { lookupOid, lookupShortName, encodeOidDer, decodeOidDer } from "oid-registry";
 
 if (entry := lookupOid("1.3.101.112")) {
     // entry.short_name == "Ed25519"

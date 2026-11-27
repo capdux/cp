@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/kdtree-2d
+# kdbush
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:kdbush` ([https://github.com/mourner/kdbush](https://github.com/mourner/kdbush))（原库名 `kdbush` → CP 包名 `@cap/kdtree-2d`）
+> **参考 / 吸收来源**：`npm:kdbush` ([https://github.com/mourner/kdbush](https://github.com/mourner/kdbush))（原库名 `kdbush` → CP 包名 `kdbush`）
 
 Pure CP, zero-allocation static 2D K-D Tree spatial index with balanced in-place median-split construction and iterative explicit-stack queries (parity with npm `kdbush` / Rust `kiddo`).
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/lexical-parse-float
+# lexical-parse-float
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:lexical-parse-float` ([https://github.com/Alexhuszagh/rust-lexical](https://github.com/Alexhuszagh/rust-lexical))
@@ -12,7 +12,7 @@ Zero-allocation pure CP strict floating-point and radix integer string parser �
 ## Install / 安装
 
 ```bash
-cap add @cap/lexical-parse-float
+cap add lexical-parse-float
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/lexical-parse-float
 ## Usage / 使用示例
 
 ```cp
-import { parseFloat, parseIntRadix } from "@cap/lexical-parse-float";
+import { parseFloat, parseIntRadix } from "lexical-parse-float";
 
 const f = parseFloat("-3.14159e2");
 const i = parseIntRadix("ff", 16);

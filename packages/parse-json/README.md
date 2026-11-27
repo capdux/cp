@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/parse-json
+# parse-json
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:parse-json` ([https://github.com/sindresorhus/parse-json](https://github.com/sindresorhus/parse-json))（原库名 `parse-json` → CP 包名 `@cap/parse-json`）
+> **参考 / 吸收来源**：`npm:parse-json` ([https://github.com/sindresorhus/parse-json](https://github.com/sindresorhus/parse-json))（原库名 `parse-json` → CP 包名 `parse-json`）
 
 Zero-allocation RFC 8259 JSON diagnostic validator with precise line/column reporting and code frame rendering for CP — clean-room MIT implementation inspired by Sindre Sorhus `parse-json` v8.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 8259 JSON diagnostic validator with precise line/column repo
 ## Install / 安装
 
 ```bash
-cap add @cap/parse-json
+cap add parse-json
 ```
 
 ## API
@@ -35,7 +35,7 @@ cap add @cap/parse-json
 ## Usage / 使用示例
 
 ```cp
-import { validateJsonWithDiag, formatJsonError, JsonDiagKind } from "@cap/parse-json";
+import { validateJsonWithDiag, formatJsonError, JsonDiagKind } from "parse-json";
 
 const bad = "{\n  \"a\": 1,\n}";
 const diag = validateJsonWithDiag(bad);

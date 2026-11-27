@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/indoc
+# indoc
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:indoc` ([https://github.com/dtolnay/indoc](https://github.com/dtolnay/indoc))
@@ -12,7 +12,7 @@ Zero-allocation multiline string `dedent`, `indent`, `stripMargin`, `trimBlankLi
 ## Install / 安装
 
 ```bash
-cap add @cap/indoc
+cap add indoc
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/indoc
 ## Usage / 使用示例
 
 ```cp
-import { dedent, indent, stripMargin } from "@cap/indoc";
+import { dedent, indent, stripMargin } from "indoc";
 
 let out: [512]u8 = undefined;
 const sql = dedent("\n    SELECT *\n      FROM users\n    WHERE active = 1\n", out[0..512]);

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/humanize-url
+# humanize-url
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:humanize-url` ([https://github.com/sindresorhus/humanize-url](https://github.com/sindresorhus/humanize-url))
@@ -12,7 +12,7 @@ Zero-allocation & zero-copy URL humanizer for CP — clean-room MIT parity with 
 ## Install / 安装
 
 ```bash
-cap add @cap/humanize-url
+cap add humanize-url
 ```
 
 ## API
@@ -25,7 +25,7 @@ cap add @cap/humanize-url
 ## Usage / 使用示例
 
 ```cp
-import { humanizeUrl, humanizeUrlSlice } from "@cap/humanize-url";
+import { humanizeUrl, humanizeUrlSlice } from "humanize-url";
 
 const s = humanizeUrlSlice("https://www.sindresorhus.com/"); // "sindresorhus.com"
 

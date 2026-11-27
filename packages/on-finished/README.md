@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/on-finished`
+# `on-finished`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:on-finished` ([https://github.com/jshttp/on-finished](https://github.com/jshttp/on-finished))

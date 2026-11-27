@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sparkline
+# sparkly
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:sparkly` ([https://github.com/sindresorhus/sparkly](https://github.com/sindresorhus/sparkly))（原库名 `sparkly` → CP 包名 `@cap/sparkline`）
+> **参考 / 吸收来源**：`npm:sparkly` ([https://github.com/sindresorhus/sparkly](https://github.com/sindresorhus/sparkly))（原库名 `sparkly` → CP 包名 `sparkly`）
 
 Zero-heap Unicode sparkline (`▁▂▃▄▅▆▇█`), fractional horizontal bar chart (`▏▎▍▌▋▊▉█`), bucket downsampling, and summary statistics renderer for CLI & observability dashboards.
 
@@ -12,13 +12,13 @@ Clean-room MIT implementation in pure CP (replaces npm `sparkly` / `asciichart` 
 ## Install
 
 ```bash
-cap add @cap/sparkline
+cap add sparkly
 ```
 
 ## Usage
 
 ```cp
-import { render, renderAscii, renderBar, renderDownsampled, computeStats } from "@cap/sparkline";
+import { render, renderAscii, renderBar, renderDownsampled, computeStats } from "sparkly";
 
 const data: [f64; 8] = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 const spark = render(data[0..8]);      // "▁▂▃▄▅▆▇█"

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/class-variance-authority
+# class-variance-authority
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:class-variance-authority` ([https://github.com/joe-bell/cva](https://github.com/joe-bell/cva))（原库名 `class-variance-authority` → CP 包名 `@cap/class-variance-authority`）
+> **参考 / 吸收来源**：`npm:class-variance-authority` ([https://github.com/joe-bell/cva](https://github.com/joe-bell/cva))（原库名 `class-variance-authority` → CP 包名 `class-variance-authority`）
 
 零堆分配的 CP 原生 CSS 变体样式组合器，Clean-Room Apache-2.0 实现对标前端组件库顶流包 `class-variance-authority` / `cva`（85.0M+/周下载）。
 

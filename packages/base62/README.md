@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/base62`
+# `base62`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:base62` ([https://github.com/fbernier/base62](https://github.com/fbernier/base62))
@@ -12,7 +12,7 @@ Zero-heap URL-safe Base62 (`0-9A-Za-z`) encoder and decoder in pure CP, supporti
 ## Installation
 
 ```bash
-cap add @cap/base62
+cap add base62
 ```
 
 ## API

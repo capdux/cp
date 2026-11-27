@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/leb128
+# leb128
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:leb128` ([https://github.com/gimli-rs/leb128](https://github.com/gimli-rs/leb128)) / `npm:leb` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/stringprep
+# stringprep
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:stringprep` ([https://github.com/sfackler/rust-stringprep](https://github.com/sfackler/rust-stringprep))

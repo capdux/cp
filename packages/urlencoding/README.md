@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/urlencoding`
+# `urlencoding`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:urlencoding` ([https://github.com/kornelski/rust_urlencoding](https://github.com/kornelski/rust_urlencoding))（原库名 `urlencoding` → CP 包名 `@cap/urlencoding`）
+> **参考 / 吸收来源**：`crates.io:urlencoding` ([https://github.com/kornelski/rust_urlencoding](https://github.com/kornelski/rust_urlencoding))（原库名 `urlencoding` → CP 包名 `urlencoding`）
 
 Zero-heap RFC 3986 percent-encoding and decoding library in pure CP, modeled after Rust's `urlencoding` v2 crate. Encodes all bytes outside `A-Z`, `a-z`, `0-9`, `-`, `_`, `.`, `~` as uppercase `%XX`, supports binary buffers, strict decoding with error reporting (`-1`), and lossy passthrough decoding.
 
@@ -12,7 +12,7 @@ Zero-heap RFC 3986 percent-encoding and decoding library in pure CP, modeled aft
 ## Installation
 
 ```bash
-cap add @cap/urlencoding
+cap add urlencoding
 ```
 
 ## API

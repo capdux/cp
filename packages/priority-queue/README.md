@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/priority-queue
+# priority-queue
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:priority-queue` ([https://github.com/garro95/priority-queue](https://github.com/garro95/priority-queue))
@@ -12,7 +12,7 @@ Zero-allocation Indexed Binary Min-Heap with O(log N) dynamic `changePriority` a
 ## Install / 安装
 
 ```bash
-cap add @cap/priority-queue
+cap add priority-queue
 ```
 
 ## API
@@ -30,7 +30,7 @@ cap add @cap/priority-queue
 ## Usage / 使用示例
 
 ```cp
-import { IndexedMinHeap } from "@cap/priority-queue";
+import { IndexedMinHeap } from "priority-queue";
 
 let pq = IndexedMinHeap.init();
 * = pq.push(1 as u16, 50 as i64);

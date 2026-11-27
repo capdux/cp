@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/itertools
+# itertools
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:itertools` ([https://github.com/rust-itertools/itertools](https://github.com/rust-itertools/itertools))

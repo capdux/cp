@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ahash
+# ahash
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ahash` ([https://github.com/tkaitchuck/aHash](https://github.com/tkaitchuck/aHash))
@@ -12,7 +12,7 @@ Zero-allocation randomized high-speed non-cryptographic hasher with 4-key `Rando
 ## Install / 安装
 
 ```bash
-cap add @cap/ahash
+cap add ahash
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/ahash
 ## Usage / 使用示例
 
 ```cp
-import { RandomState, AHasher, hashBytes } from "@cap/ahash";
+import { RandomState, AHasher, hashBytes } from "ahash";
 
 const rs = RandomState.withSeeds(1 as u64, 2 as u64, 3 as u64, 4 as u64);
 const h = rs.hashOneBytes("hello world");

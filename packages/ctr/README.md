@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ctr
+# ctr
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ctr` ([https://github.com/RustCrypto/block-modes](https://github.com/RustCrypto/block-modes)) — `MIT OR Apache-2.0`

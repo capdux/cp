@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/humansize`
+# `humansize`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:humansize` ([https://github.com/LeopoldArkham/humansize](https://github.com/LeopoldArkham/humansize))（原库名 `humansize` → CP 包名 `@cap/humansize`）
+> **参考 / 吸收来源**：`crates.io:humansize` ([https://github.com/LeopoldArkham/humansize](https://github.com/LeopoldArkham/humansize))（原库名 `humansize` → CP 包名 `humansize`）
 
 Zero-heap human-readable byte size formatter in pure CP, modeled after Rust's `humansize` v2 crate. Supports SI `Decimal` (`1000`, `kB`/`MB`), IEC `Binary` (`1024`, `KiB`/`MiB`), and `Windows` (`1024`, `KB`/`MB`) bases, configurable decimal precision, optional space separator, and short/long unit names.
 
@@ -12,7 +12,7 @@ Zero-heap human-readable byte size formatter in pure CP, modeled after Rust's `h
 ## Installation
 
 ```bash
-cap add @cap/humansize
+cap add humansize
 ```
 
 ## API

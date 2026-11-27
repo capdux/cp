@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`http-status-codes`](https://github.com/prettymuchbryce/http-status-codes)（`MIT`）（原库名 `http-status-codes`，CP 包名 `@cap/http-status`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`http-status-codes`](https://github.com/prettymuchbryce/http-status-codes)（`MIT`）（原库名 `http-status-codes`，CP 包名 `http-status-codes`）。
 
-# @cap/http-status
+# http-status-codes
 
 Zero-allocation RFC 9110, WebDAV, and Cloudflare HTTP status code constants, bidirectional reason-phrase lookup, and semantic predicates for CP — clean-room MIT parity with npm `statuses` / `http-status-codes` and Rust `http::StatusCode`.
 
@@ -12,7 +12,7 @@ Zero-allocation RFC 9110, WebDAV, and Cloudflare HTTP status code constants, bid
 ## Install / 安装
 
 ```bash
-cap add @cap/http-status
+cap add http-status-codes
 ```
 
 ## API Reference / 接口一览
@@ -45,7 +45,7 @@ import {
     isRetryable,
     isEmptyBody,
     isCacheableByDefault,
-} from "@cap/http-status";
+} from "http-status-codes";
 
 const msg = reasonPhrase(TOO_MANY_REQUESTS); // => "Too Many Requests"
 const code = codeFromPhrase("not_found");    // => 404 (u16?)

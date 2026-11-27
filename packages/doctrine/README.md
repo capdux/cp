@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/doctrine
+# doctrine
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:doctrine` ([https://github.com/eslint/doctrine](https://github.com/eslint/doctrine))（原库名 `doctrine` → CP 包名 `@cap/doctrine`）
+> **参考 / 吸收来源**：`npm:doctrine` ([https://github.com/eslint/doctrine](https://github.com/eslint/doctrine))（原库名 `doctrine` → CP 包名 `doctrine`）
 
 Zero-allocation JSDoc comment parser for CP — clean-room Apache-2.0 implementation inspired by ESLint `doctrine`.
 
@@ -12,7 +12,7 @@ Zero-allocation JSDoc comment parser for CP — clean-room Apache-2.0 implementa
 ## Install / 安装
 
 ```bash
-cap add @cap/doctrine
+cap add doctrine
 ```
 
 ## API
@@ -37,7 +37,7 @@ cap add @cap/doctrine
 ## Usage / 使用示例
 
 ```cp
-import { parseJsDoc } from "@cap/doctrine";
+import { parseJsDoc } from "doctrine";
 
 const doc = parseJsDoc("/**\n * Greet a user.\n * @param {string} [name] - User name\n * @returns {string} Greeting\n */");
 const n = doc.tagCount(); // 2

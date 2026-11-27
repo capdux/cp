@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:shellexpand` ([https://gitlab.com/ijackson/rust-shellexpand](https://gitlab.com/ijackson/rust-shellexpand)) | 许可：`MIT OR Apache-2.0`
 
-# `@cap/shellexpand`
+# `shellexpand`
 
 零堆分配纯 CP Shell 风格波浪线（`~`）与环境变量（`$VAR` / `${VAR}` / `${VAR:-default}` / `$$`）展开引擎，对标 crates.io 高下载库 `shellexpand` v3。
 

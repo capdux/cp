@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/slice-ansi`
+# `slice-ansi`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:slice-ansi` ([https://github.com/chalk/slice-ansi](https://github.com/chalk/slice-ansi))
@@ -24,7 +24,7 @@ import {
     sliceAnsi,
     sliceAnsiFrom,
     truncateAnsi,
-} from "@cap/slice-ansi";
+} from "slice-ansi";
 ```
 
 ## License

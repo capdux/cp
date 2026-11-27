@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/wkt
+# wkt
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:wkt` ([https://github.com/georust/wkt](https://github.com/georust/wkt))

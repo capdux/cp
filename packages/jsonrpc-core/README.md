@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/json-rpc
+# jsonrpc-core
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:jsonrpc-core` ([https://github.com/paritytech/jsonrpc](https://github.com/paritytech/jsonrpc)) / `npm:json-rpc-2.0` ([https://github.com/shawninder/json-rpc-2.0](https://github.com/shawninder/json-rpc-2.0)) / `crates.io:jsonrpsee` ([https://github.com/paritytech/jsonrpsee](https://github.com/paritytech/jsonrpsee))（原库名 `jsonrpc-core` → CP 包名 `@cap/json-rpc`）
+> **参考 / 吸收来源**：`crates.io:jsonrpc-core` ([https://github.com/paritytech/jsonrpc](https://github.com/paritytech/jsonrpc)) / `npm:json-rpc-2.0` ([https://github.com/shawninder/json-rpc-2.0](https://github.com/shawninder/json-rpc-2.0)) / `crates.io:jsonrpsee` ([https://github.com/paritytech/jsonrpsee](https://github.com/paritytech/jsonrpsee))（原库名 `jsonrpc-core` → CP 包名 `jsonrpc-core`）
 
 Zero-heap JSON-RPC 2.0 protocol encoder, envelope validator, batch detector, and standard error codes in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap JSON-RPC 2.0 protocol encoder, envelope validator, batch detector, and
 ## Usage
 
 ```cp
-import { encodeRequest, isValidEnvelope } from "@cap/json-rpc";
+import { encodeRequest, isValidEnvelope } from "jsonrpc-core";
 
 let buf: [256]u8 = undefined;
 const n = encodeRequest("1", "tools/list", "{}", buf[0..256]);

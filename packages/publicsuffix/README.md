@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/publicsuffix`
+# `publicsuffix`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:publicsuffix` ([https://github.com/rushmorem/publicsuffix](https://github.com/rushmorem/publicsuffix))

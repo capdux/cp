@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/wordwrap
+# wordwrap
 
 Zero-heap text word wrapper with left indentation, column stop width, soft/hard wrapping modes, and explicit newline preservation in pure CP.
 

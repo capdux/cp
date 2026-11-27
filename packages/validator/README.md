@@ -1,16 +1,16 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **npm** [`validator`](https://github.com/validatorjs/validator.js)（`MIT`）（包名 `@cap/validator`）。
+> **参考 / 吸收来源**：吸收自 **npm** [`validator`](https://github.com/validatorjs/validator.js)（`MIT`）（包名 `validator`）。
 
-# @cap/validator
+# validator
 
 Zero-allocation schema & format validation engine for CP — clean-room MIT parity with npm `zod` / `validator` / `ajv` and Rust `validator`.
 
 ## Install
 
 ```bash
-cap add @cap/validator
+cap add validator
 ```
 
 ## Features
@@ -23,7 +23,7 @@ cap add @cap/validator
 ## Usage
 
 ```cp
-import { Validator, isEmail, isSemver } from "@cap/validator";
+import { Validator, isEmail, isSemver } from "validator";
 
 let v = Validator.init();
 v.required("username", "alice");

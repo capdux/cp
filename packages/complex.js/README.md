@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/complex-num
+# complex.js
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:complex.js` ([https://github.com/rawify/Complex.js](https://github.com/rawify/Complex.js))（原库名 `complex.js` → CP 包名 `@cap/complex-num`）
+> **参考 / 吸收来源**：`npm:complex.js` ([https://github.com/rawify/Complex.js](https://github.com/rawify/Complex.js))（原库名 `complex.js` → CP 包名 `complex.js`）
 
 Zero-heap-allocation complex number (`Complex`) algebra, polar conversion, exponential, integer powers, and principal square root library in pure CP with zero external dependencies.
 

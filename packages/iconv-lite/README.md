@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/iconv-lite
+# iconv-lite
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:iconv-lite` ([https://github.com/ashtuchkin/iconv-lite](https://github.com/ashtuchkin/iconv-lite))
@@ -12,7 +12,7 @@ Zero-allocation character encoding converter for CP — clean-room MIT parity wi
 ## Install / 安装
 
 ```bash
-cap add @cap/iconv-lite
+cap add iconv-lite
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/iconv-lite
 ## Usage / 使用示例
 
 ```cp
-import { parseCharset, decodeToUtf8, encodeFromUtf8 } from "@cap/iconv-lite";
+import { parseCharset, decodeToUtf8, encodeFromUtf8 } from "iconv-lite";
 
 const raw: [3]u8 = [0x80, 0x93, 0x99]; // €, “, ™ in Windows-1252
 let buf: [32]u8 = undefined;

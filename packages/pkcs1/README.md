@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/pkcs1`
+# `pkcs1`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:pkcs1` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))

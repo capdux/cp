@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/read-pkg
+# read-pkg
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:read-pkg` ([https://github.com/sindresorhus/read-pkg](https://github.com/sindresorhus/read-pkg))

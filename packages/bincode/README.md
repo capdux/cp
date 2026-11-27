@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/bincode
+# bincode
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:bincode` ([https://github.com/bincode-org/bincode](https://github.com/bincode-org/bincode))
@@ -12,7 +12,7 @@ Zero-allocation bincode v2 compact binary serializer & zero-copy decoder for CP 
 ## 安装 / Install
 
 ```bash
-cap add @cap/bincode
+cap add bincode
 ```
 
 ## API 参考 / API Reference
@@ -23,7 +23,7 @@ cap add @cap/bincode
 ## 使用示例 / Usage
 
 ```cp
-import { BincodeEncoder, BincodeDecoder } from "@cap/bincode";
+import { BincodeEncoder, BincodeDecoder } from "bincode";
 
 let buf: [128]u8 = undefined;
 let enc = BincodeEncoder.init(buf[0..128]);

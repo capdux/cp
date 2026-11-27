@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/termtree
+# termtree
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:termtree` ([https://github.com/rust-cli/termtree](https://github.com/rust-cli/termtree))
@@ -12,7 +12,7 @@ Zero-allocation CLI tree structure renderer with Unicode & ASCII glyph palettes 
 ## Install / 安装
 
 ```bash
-cap add @cap/termtree
+cap add termtree
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/termtree
 ## Usage / 使用示例
 
 ```cp
-import { TermTreeArena, GlyphPalette } from "@cap/termtree";
+import { TermTreeArena, GlyphPalette } from "termtree";
 
 let tree = TermTreeArena.init();
 const root = tree.newRoot("root");

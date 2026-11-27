@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/d3-time-format
+# d3-time-format
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:d3-time-format` ([https://github.com/d3/d3-time-format](https://github.com/d3/d3-time-format))（原库名 `d3-time-format` → CP 包名 `@cap/d3-time-format`）
+> **参考 / 吸收来源**：`npm:d3-time-format` ([https://github.com/d3/d3-time-format](https://github.com/d3/d3-time-format))（原库名 `d3-time-format` → CP 包名 `d3-time-format`）
 
 零堆分配的 CP 原生 UTC `strftime` / `strptime` 日期格式化与解析库，Clean-Room ISC 实现对标 D3.js 顶流时间格式化库 `d3-time-format`（1.05 亿+/周下载）。
 

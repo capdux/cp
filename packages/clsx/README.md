@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/clsx
+# clsx
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:clsx` ([https://github.com/lukeed/clsx](https://github.com/lukeed/clsx))
@@ -16,7 +16,7 @@ Zero-heap conditional CSS class name builder, whitespace normalizer, and dedupli
 ## Usage
 
 ```cp
-import { ClassBuilder, CondClass } from "@cap/clsx";
+import { ClassBuilder, CondClass } from "clsx";
 
 let buf: [128]u8 = undefined;
 let b = ClassBuilder.init(buf[0..128]);

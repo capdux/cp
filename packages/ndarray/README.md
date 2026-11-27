@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/ndarray`
+# `ndarray`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ndarray` ([https://github.com/rust-ndarray/ndarray](https://github.com/rust-ndarray/ndarray))

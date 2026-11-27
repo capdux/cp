@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/luhn`
+# `luhn`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:luhn` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -12,7 +12,7 @@ Zero-heap industrial check digit validation & generation in pure CP: ISO/IEC 781
 ## Installation
 
 ```bash
-cap add @cap/luhn
+cap add luhn
 ```
 
 ## API

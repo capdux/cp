@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/kd-tree`
+# `kiddo`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:kiddo` ([https://github.com/sdd/kiddo](https://github.com/sdd/kiddo))（原库名 `kiddo` → CP 包名 `@cap/kd-tree`）
+> **参考 / 吸收来源**：`crates.io:kiddo` ([https://github.com/sdd/kiddo](https://github.com/sdd/kiddo))（原库名 `kiddo` → CP 包名 `kiddo`）
 
 Zero-heap-allocation static 2D KD-Tree spatial index in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation static 2D KD-Tree spatial index in pure CP.
 ## API
 
 ```cp
-import { MAX_POINTS, KdPoint2D, NearestResult, KdTree2D } from "@cap/kd-tree";
+import { MAX_POINTS, KdPoint2D, NearestResult, KdTree2D } from "kiddo";
 ```
 
 ## License

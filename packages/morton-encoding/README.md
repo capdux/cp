@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/morton
+# morton-encoding
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:morton-encoding` ([https://github.com/morton-encoding/morton-encoding](https://github.com/morton-encoding/morton-encoding))（原库名 `morton-encoding` → CP 包名 `@cap/morton`）
+> **参考 / 吸收来源**：`crates.io:morton-encoding` ([https://github.com/morton-encoding/morton-encoding](https://github.com/morton-encoding/morton-encoding))（原库名 `morton-encoding` → CP 包名 `morton-encoding`）
 
 Zero-allocation 2D/3D Z-Order (Morton) bit-interleaving codec and 2D Hilbert space-filling curve mapper for CP — clean-room MIT parity with Rust `morton-encoding`.
 
@@ -12,7 +12,7 @@ Zero-allocation 2D/3D Z-Order (Morton) bit-interleaving codec and 2D Hilbert spa
 ## Install / 安装
 
 ```bash
-cap add @cap/morton
+cap add morton-encoding
 ```
 
 ## API Reference / 接口一览

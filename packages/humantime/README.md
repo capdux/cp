@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/humantime
+# humantime
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:humantime` ([https://github.com/tailhook/humantime](https://github.com/tailhook/humantime))

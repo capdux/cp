@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/http-errors
+# http-errors
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:http-errors` ([https://github.com/jshttp/http-errors](https://github.com/jshttp/http-errors))
@@ -12,7 +12,7 @@ Zero-allocation HTTP 4xx/5xx error constructors and RFC 9457 `application/proble
 ## Install / 安装
 
 ```bash
-cap add @cap/http-errors
+cap add http-errors
 ```
 
 ## API Reference / 接口一览
@@ -28,7 +28,7 @@ cap add @cap/http-errors
 ## Usage / 使用示例
 
 ```cp
-import { notFound, internalServerError, toProblemJson } from "@cap/http-errors";
+import { notFound, internalServerError, toProblemJson } from "http-errors";
 
 let out: [512]u8 = undefined;
 const err404 = notFound("User 42 not found").withInstance("/api/users/42");

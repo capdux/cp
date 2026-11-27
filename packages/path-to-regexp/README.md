@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/path-to-regexp
+# path-to-regexp
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:path-to-regexp` ([https://github.com/pillarjs/path-to-regexp](https://github.com/pillarjs/path-to-regexp)) / `npm:path-to-regexp` ([https://github.com/pillarjs/path-to-regexp](https://github.com/pillarjs/path-to-regexp))

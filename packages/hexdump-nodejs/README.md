@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/hex-dump`
+# `hexdump-nodejs`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:hexdump-nodejs` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:pretty-hex` ([https://github.com/wolandr/pretty-hex](https://github.com/wolandr/pretty-hex))（原库名 `hexdump-nodejs` → CP 包名 `@cap/hex-dump`）
+> **参考 / 吸收来源**：`npm:hexdump-nodejs` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:pretty-hex` ([https://github.com/wolandr/pretty-hex](https://github.com/wolandr/pretty-hex))（原库名 `hexdump-nodejs` → CP 包名 `hexdump-nodejs`）
 
 Zero-heap-allocation canonical `hexdump -C` binary debugger, spaced hex encoder, and first-diff locator in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap-allocation canonical `hexdump -C` binary debugger, spaced hex encoder,
 ## API
 
 ```cp
-import { formatLine, formatDump, encodeHexSpaced, firstDiffOffset } from "@cap/hex-dump";
+import { formatLine, formatDump, encodeHexSpaced, firstDiffOffset } from "hexdump-nodejs";
 ```
 
 ## License

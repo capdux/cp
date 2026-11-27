@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/lz-string
+# lz-string
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:lz-string` ([https://github.com/pieroxy/lz-string](https://github.com/pieroxy/lz-string))（原库名 `lz-string` → CP 包名 `@cap/lz-string`）
+> **参考 / 吸收来源**：`npm:lz-string` ([https://github.com/pieroxy/lz-string](https://github.com/pieroxy/lz-string))（原库名 `lz-string` → CP 包名 `lz-string`）
 
 零堆分配的 CP 原生 LZW 字节/字符串压缩库，Clean-Room MIT 实现对标 npm 顶流压缩包 `lz-string`（1.14 亿+/周下载）。
 

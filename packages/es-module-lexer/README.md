@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/es-module-lexer
+# es-module-lexer
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:es-module-lexer` ([https://github.com/guybedford/es-module-lexer](https://github.com/guybedford/es-module-lexer))
@@ -12,7 +12,7 @@ Zero-allocation ES module static/dynamic import and export lexer for CP — clea
 ## Install / 安装
 
 ```bash
-cap add @cap/es-module-lexer
+cap add es-module-lexer
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/es-module-lexer
 ## Usage / 使用示例
 
 ```cp
-import { parseEsm, isFacade, ImportSpecifier, ExportSpecifier } from "@cap/es-module-lexer";
+import { parseEsm, isFacade, ImportSpecifier, ExportSpecifier } from "es-module-lexer";
 
 const code = "import { a } from './a.js'; export { b as c } from './b.js';";
 let imps: [8]ImportSpecifier = undefined;

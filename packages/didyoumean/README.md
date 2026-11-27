@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/didyoumean
+# didyoumean
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:didyoumean` ([https://github.com/dcporter/didyoumean.js](https://github.com/dcporter/didyoumean.js))
@@ -10,7 +10,7 @@ Zero-allocation spell-suggestion & edit-distance engine for CP — clean-room MI
 ## Install
 
 ```bash
-cap add @cap/didyoumean
+cap add didyoumean
 ```
 
 ## Features
@@ -22,7 +22,7 @@ cap add @cap/didyoumean
 ## Usage
 
 ```cp
-import { didYouMean, damerauLevenshtein } from "@cap/didyoumean";
+import { didYouMean, damerauLevenshtein } from "didyoumean";
 
 const cmds: [4]string = ["deploy", "publish", "install", "remove"];
 const hit = didYouMean("depoly", cmds[0..4]); // "deploy"

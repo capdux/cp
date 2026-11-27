@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/formidable
+# formidable
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:formidable` ([https://github.com/node-formidable/formidable](https://github.com/node-formidable/formidable))
@@ -18,7 +18,7 @@ Zero-heap, pure CP `multipart/form-data` form and file upload parser (clean-room
 ```cp
 import {
     FormidableOptions, ParsedForm, parseMultipartForm
-} from "@cap/formidable";
+} from "formidable";
 
 let ct = "multipart/form-data; boundary=----FormBoundary";
 let opts = FormidableOptions.defaults();

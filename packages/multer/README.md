@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/multer
+# multer
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:multer` ([https://github.com/expressjs/multer](https://github.com/expressjs/multer))

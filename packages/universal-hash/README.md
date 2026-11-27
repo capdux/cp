@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ghash-gf128
+# universal-hash
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:universal-hash` ([https://github.com/RustCrypto/universal-hashes](https://github.com/RustCrypto/universal-hashes))（原库名 `universal-hash` → CP 包名 `@cap/ghash-gf128`）
+> **参考 / 吸收来源**：`crates.io:universal-hash` ([https://github.com/RustCrypto/universal-hashes](https://github.com/RustCrypto/universal-hashes))（原库名 `universal-hash` → CP 包名 `universal-hash`）
 
 Zero-heap-allocation NIST SP 800-38D GF(2^128) universal hash (`GHASH`, core authenticator for AES-GCM) in pure CP with branchless, overflow-free 128-round multiplication.
 

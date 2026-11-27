@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ansi-align
+# ansi-align
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ansi-align` ([https://github.com/nexdrew/ansi-align](https://github.com/nexdrew/ansi-align))
@@ -12,7 +12,7 @@ Zero-allocation ANSI-aware multiline text alignment for CP — clean-room ISC pa
 ## Install / 安装
 
 ```bash
-cap add @cap/ansi-align
+cap add ansi-align
 ```
 
 ## Dependencies / 跨包复用
@@ -33,7 +33,7 @@ cap add @cap/ansi-align
 ## Usage / 使用示例
 
 ```cp
-import { AlignMode, alignAnsi, alignCenter, alignRight } from "@cap/ansi-align";
+import { AlignMode, alignAnsi, alignCenter, alignRight } from "ansi-align";
 
 let buf: [256]u8 = undefined;
 const n1 = alignCenter("hi\nhello!", buf[0..256]); // "  hi\nhello!"

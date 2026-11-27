@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/wrap-ansi
+# wrap-ansi
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:wrap-ansi` ([https://github.com/chalk/wrap-ansi](https://github.com/chalk/wrap-ansi))
@@ -19,7 +19,7 @@ Zero-allocation ANSI-preserving text wrapper and visible-column slicer for CP �
 ## 安装 / Install
 
 ```bash
-cap add @cap/wrap-ansi
+cap add wrap-ansi
 ```
 
 ## API 参考 / API Reference
@@ -33,7 +33,7 @@ cap add @cap/wrap-ansi
 ## 使用示例 / Usage
 
 ```cp
-import { visibleWidth, wrapAnsi, sliceAnsi } from "@cap/wrap-ansi";
+import { visibleWidth, wrapAnsi, sliceAnsi } from "wrap-ansi";
 
 const w = visibleWidth("\x1b[31mHello 世界\x1b[0m"); // 10
 

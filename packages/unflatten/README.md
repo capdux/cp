@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/unflatten
+# unflatten
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:unflatten` ([https://github.com/hughsk/flat](https://github.com/hughsk/flat))
@@ -12,7 +12,7 @@ Zero-allocation nested JSON flatten & unflatten library for CP — clean-room MI
 ## Install / 安装
 
 ```bash
-cap add @cap/unflatten
+cap add unflatten
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/unflatten
 ## Usage / 使用示例
 
 ```cp
-import { FlatOptions, flattenToJson, unflattenJson } from "@cap/unflatten";
+import { FlatOptions, flattenToJson, unflattenJson } from "unflatten";
 
 const opts = FlatOptions.defaults();
 let flatBuf: [256]u8 = undefined;

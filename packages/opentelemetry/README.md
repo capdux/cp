@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/traceparent`
+# `opentelemetry`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:opentelemetry` ([https://github.com/open-telemetry/opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust))（原库名 `opentelemetry` → CP 包名 `@cap/traceparent`）
+> **参考 / 吸收来源**：`crates.io:opentelemetry` ([https://github.com/open-telemetry/opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust))（原库名 `opentelemetry` → CP 包名 `opentelemetry`）
 
 Zero-heap W3C Trace Context (`traceparent` and `tracestate`) distributed tracing header parser, validator, child span builder, and formatter in pure CP. Strictly enforces lowercase hex, non-zero trace/parent IDs, and version rules per W3C Trace Context Level 1.
 
@@ -12,7 +12,7 @@ Zero-heap W3C Trace Context (`traceparent` and `tracestate`) distributed tracing
 ## Installation
 
 ```bash
-cap add @cap/traceparent
+cap add opentelemetry
 ```
 
 ## API

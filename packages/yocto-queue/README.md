@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/yocto-queue
+# yocto-queue
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:yocto-queue` ([https://github.com/sindresorhus/yocto-queue](https://github.com/sindresorhus/yocto-queue))
@@ -16,7 +16,7 @@
 ## 使用示例
 
 ```cp
-import { YoctoQueueU64 } from "@cap/yocto-queue";
+import { YoctoQueueU64 } from "yocto-queue";
 
 let q = YoctoQueueU64.new();
 * = q.enqueue(10);

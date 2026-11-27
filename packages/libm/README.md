@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/libm
+# libm
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:libm` ([https://github.com/rust-lang/libm](https://github.com/rust-lang/libm))
@@ -18,7 +18,7 @@ Pure CP, zero-allocation IEEE 754 `f64` math library with zero external dependen
 ## Usage
 
 ```cp
-import { PI, sin, cos, sqrt, hypot, exp, ln, pow } from "@cap/libm";
+import { PI, sin, cos, sqrt, hypot, exp, ln, pow } from "libm";
 
 let h = hypot(3.0, 4.0);      // 5.0
 let s = sin(PI / 6.0);        // 0.5

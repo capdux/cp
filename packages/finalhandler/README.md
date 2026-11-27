@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/finalhandler
+# finalhandler
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:finalhandler` ([https://github.com/pillarjs/finalhandler](https://github.com/pillarjs/finalhandler))

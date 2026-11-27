@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/arrayvec
+# arrayvec
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:arrayvec` ([https://github.com/bluss/arrayvec](https://github.com/bluss/arrayvec))
@@ -12,7 +12,7 @@ Zero-allocation stack-backed fixed-capacity containers (`ArrayString64`, `ArrayS
 ## 安装 / Install
 
 ```bash
-cap add @cap/arrayvec
+cap add arrayvec
 ```
 
 ## API 参考 / API Reference
@@ -27,7 +27,7 @@ cap add @cap/arrayvec
 ## 使用示例 / Usage
 
 ```cp
-import { ArrayString64, ArrayVecU64 } from "@cap/arrayvec";
+import { ArrayString64, ArrayVecU64 } from "arrayvec";
 
 let s = ArrayString64.fromStr("GET ").?;
 * = s.tryPushStr("/api/v1");

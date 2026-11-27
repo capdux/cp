@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/subtle-ct
+# subtle
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:subtle` ([https://github.com/dalek-cryptography/subtle](https://github.com/dalek-cryptography/subtle)) / `npm:tsscmp` ([https://github.com/suryagh/tsscmp](https://github.com/suryagh/tsscmp)) / `npm:safe-compare` ([https://github.com/vadimdemedes/safe-compare](https://github.com/vadimdemedes/safe-compare))（原库名 `subtle` → CP 包名 `@cap/subtle-ct`）
+> **参考 / 吸收来源**：`crates.io:subtle` ([https://github.com/dalek-cryptography/subtle](https://github.com/dalek-cryptography/subtle)) / `npm:tsscmp` ([https://github.com/suryagh/tsscmp](https://github.com/suryagh/tsscmp)) / `npm:safe-compare` ([https://github.com/vadimdemedes/safe-compare](https://github.com/vadimdemedes/safe-compare))（原库名 `subtle` → CP 包名 `subtle`）
 
 Zero-heap-allocation branchless constant-time primitives and buffer zeroization in pure CP (inspired by RustCrypto `subtle` and `zeroize`), with overflow-free Debug-mode bitmask arithmetic.
 

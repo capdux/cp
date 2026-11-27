@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/unicase
+# unicase
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicase` ([https://github.com/seanmonstar/unicase](https://github.com/seanmonstar/unicase))

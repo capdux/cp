@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/destroy`
+# `destroy`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:destroy` ([https://github.com/stream-utils/destroy](https://github.com/stream-utils/destroy))

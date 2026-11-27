@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/hosts-file
+# hostile
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:hostile` ([https://github.com/feross/hostile](https://github.com/feross/hostile))（原库名 `hostile` → CP 包名 `@cap/hosts-file`）
+> **参考 / 吸收来源**：`npm:hostile` ([https://github.com/feross/hostile](https://github.com/feross/hostile))（原库名 `hostile` → CP 包名 `hostile`）
 
 零堆分配的 POSIX / Windows `/etc/hosts` 文件解析、域名正反向查表与规范化生成引擎 — 洁净室 MIT 实现，对标 npm `hostile` 与 Rust `hostsfile`。
 
@@ -19,7 +19,7 @@ Zero-allocation POSIX / Windows `/etc/hosts` parser, case-insensitive forward/fa
 ## 安装 / Install
 
 ```bash
-cap add @cap/hosts-file
+cap add hostile
 ```
 
 ## API 参考 / API Reference
@@ -37,7 +37,7 @@ cap add @cap/hosts-file
 ## 使用示例 / Usage
 
 ```cp
-import { parseHosts, lookupIp, lookupIpByFamily, reverseLookup, formatHosts } from "@cap/hosts-file";
+import { parseHosts, lookupIp, lookupIpByFamily, reverseLookup, formatHosts } from "hostile";
 
 const table = parseHosts("127.0.0.1 localhost api.local\n::1 localhost\n");
 const v4 = lookupIpByFamily(table, "LOCALHOST", false).?; // "127.0.0.1"

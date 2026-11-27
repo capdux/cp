@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/matchit
+# matchit
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:matchit` ([https://github.com/ibraheemdev/matchit](https://github.com/ibraheemdev/matchit))
@@ -12,7 +12,7 @@ Zero-allocation high-priority URL router for CP — clean-room MIT parity with R
 ## Install / 安装
 
 ```bash
-cap add @cap/matchit
+cap add matchit
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/matchit
 ## Usage / 使用示例
 
 ```cp
-import { Router } from "@cap/matchit";
+import { Router } from "matchit";
 
 let r = Router.init();
 * = r.insert("/users/me", 1 as u32);

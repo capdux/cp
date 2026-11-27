@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/fenwick
+# fenwick
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:fenwick` ([https://github.com/pwoolcoc/fenwick](https://github.com/pwoolcoc/fenwick))
@@ -12,7 +12,7 @@ Zero-allocation Binary Indexed Tree (Fenwick Tree) with O(log N) prefix/range su
 ## Install / 安装
 
 ```bash
-cap add @cap/fenwick
+cap add fenwick
 ```
 
 ## API
@@ -29,7 +29,7 @@ cap add @cap/fenwick
 ## Usage / 使用示例
 
 ```cp
-import { FenwickTree } from "@cap/fenwick";
+import { FenwickTree } from "fenwick";
 
 const weights: [4]i64 = [2, 3, 5, 10];
 let ft = FenwickTree.fromSlice(weights[0..4]);

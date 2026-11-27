@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:clean-stack` ([https://github.com/sindresorhus/clean-stack](https://github.com/sindresorhus/clean-stack)) | 许可：`MIT`
 
-# `@cap/clean-stack`
+# `clean-stack`
 
 零堆分配纯 CP 错误堆栈清理器，过滤 `node:internal/`、`internal/`、`(native)` 等运行时内部帧并支持 `pretty` 家目录缩写与 `base_path` 相对路径归一化，对标 npm Top-700 包 `clean-stack` v5。
 

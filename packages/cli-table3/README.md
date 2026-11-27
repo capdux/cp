@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/table` — Zero-Dependency CLI Table Renderer
+# `cli-table3` — Zero-Dependency CLI Table Renderer
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:cli-table3` ([https://github.com/cli-table/cli-table3](https://github.com/cli-table/cli-table3))（原库名 `cli-table3` → CP 包名 `@cap/table`）
+> **参考 / 吸收来源**：`npm:cli-table3` ([https://github.com/cli-table/cli-table3](https://github.com/cli-table/cli-table3))（原库名 `cli-table3` → CP 包名 `cli-table3`）
 
 > Clean-room pure-CP CLI table rendering library modeled after npm `cli-table3` / `table` and Rust `comfy-table` / `tabled` | MIT License
 >
@@ -12,7 +12,7 @@
 ## Installation / 安装
 
 ```bash
-cap add @cap/table
+cap add cli-table3
 ```
 
 ## Features / 核心特性
@@ -44,7 +44,7 @@ cap add @cap/table
 
 ```cp
 const std = @import("std");
-import { Table, BorderStyle, Align } from "@cap/table";
+import { Table, BorderStyle, Align } from "cli-table3";
 
 fn main() {
     const alloc: std.mem.Allocator = std.heap.page_allocator;

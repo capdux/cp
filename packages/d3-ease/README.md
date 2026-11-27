@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/d3-ease`
+# `d3-ease`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:d3-ease` ([https://github.com/d3/d3-ease](https://github.com/d3/d3-ease))
@@ -30,7 +30,7 @@ import {
     easeBackInOvershoot, easeBackOutOvershoot, easeBackInOutOvershoot,
     easeElasticIn, easeElasticOut, easeElasticInOut,
     easeElasticInParams, easeElasticOutParams, easeElasticInOutParams,
-} from "@cap/d3-ease";
+} from "d3-ease";
 ```
 
 ## License

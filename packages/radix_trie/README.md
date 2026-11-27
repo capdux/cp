@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/trie
+# radix_trie
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:radix_trie` ([https://github.com/michaelsproul/rust_radix_trie](https://github.com/michaelsproul/rust_radix_trie))（原库名 `radix_trie` → CP 包名 `@cap/trie`）
+> **参考 / 吸收来源**：`crates.io:radix_trie` ([https://github.com/michaelsproul/rust_radix_trie](https://github.com/michaelsproul/rust_radix_trie))（原库名 `radix_trie` → CP 包名 `radix_trie`）
 
 Zero-allocation LCRS (Left-Child Right-Sibling) static-pool byte prefix tree (`Trie`) for CP — clean-room MIT parity with Rust `radix_trie` / `qp-trie` and npm `trie-search`.
 
@@ -12,7 +12,7 @@ Zero-allocation LCRS (Left-Child Right-Sibling) static-pool byte prefix tree (`T
 ## Install / 安装
 
 ```bash
-cap add @cap/trie
+cap add radix_trie
 ```
 
 ## API Reference / 接口一览

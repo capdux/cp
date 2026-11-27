@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/morgan-log
+# morgan
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:morgan` ([https://github.com/expressjs/morgan](https://github.com/expressjs/morgan))（原库名 `morgan` → CP 包名 `@cap/morgan-log`）
+> **参考 / 吸收来源**：`npm:morgan` ([https://github.com/expressjs/morgan](https://github.com/expressjs/morgan))（原库名 `morgan` → CP 包名 `morgan`）
 
 Clean-room MIT, zero-heap HTTP access log template formatting engine for CP — modeled on npm `morgan` v1.10.
 

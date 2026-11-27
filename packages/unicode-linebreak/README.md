@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/unicode-linebreak
+# unicode-linebreak
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:unicode-linebreak` ([https://github.com/axelf4/unicode-linebreak](https://github.com/axelf4/unicode-linebreak))
@@ -12,7 +12,7 @@ Zero-allocation pure CP UAX #14 Unicode line break opportunity detector — clea
 ## Install / 安装
 
 ```bash
-cap add @cap/unicode-linebreak
+cap add unicode-linebreak
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/unicode-linebreak
 ## Usage / 使用示例
 
 ```cp
-import { LineBreak, BreakKind, findLineBreaks, countLineBreaks } from "@cap/unicode-linebreak";
+import { LineBreak, BreakKind, findLineBreaks, countLineBreaks } from "unicode-linebreak";
 
 let breaks: [16]LineBreak = undefined;
 const n = findLineBreaks("hello world", breaks[0..16]);

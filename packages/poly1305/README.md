@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/poly1305
+# poly1305
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:poly1305` ([https://github.com/RustCrypto/universal-hashes](https://github.com/RustCrypto/universal-hashes))

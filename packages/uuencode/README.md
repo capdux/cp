@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/uuencode
+# uuencode
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:uuencode` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp)) / `crates.io:uuencode` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))
@@ -15,7 +15,7 @@ Zero-heap POSIX/Unix `uuencode` and `uudecode` codec in pure CP.
 ## Usage
 
 ```cp
-import { encodeLine, decodeLine } from "@cap/uuencode";
+import { encodeLine, decodeLine } from "uuencode";
 
 let out: [16]u8 = undefined;
 const n = encodeLine("Cat", out[0..16]); // "#0V%T"

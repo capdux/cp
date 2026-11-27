@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/sql-escape`
+# `sqlstring`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:sqlstring` ([https://github.com/mysqljs/sqlstring](https://github.com/mysqljs/sqlstring)) / `npm:pg-format` ([https://github.com/datalanche/node-pg-format](https://github.com/datalanche/node-pg-format))（原库名 `sqlstring` → CP 包名 `@cap/sql-escape`）
+> **参考 / 吸收来源**：`npm:sqlstring` ([https://github.com/mysqljs/sqlstring](https://github.com/mysqljs/sqlstring)) / `npm:pg-format` ([https://github.com/datalanche/node-pg-format](https://github.com/datalanche/node-pg-format))（原库名 `sqlstring` → CP 包名 `sqlstring`）
 
 Zero-heap-allocation ANSI SQL / PostgreSQL / MySQL literal, identifier, and `LIKE` pattern escaper with placeholder counter in pure CP.
 
@@ -26,7 +26,7 @@ import {
     escapeLike,
     isSafeUnquotedIdent,
     countPlaceholders,
-} from "@cap/sql-escape";
+} from "sqlstring";
 ```
 
 ## License

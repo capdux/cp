@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/subtitle
+# subtitle
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:subtitle` ([https://github.com/gsantiago/subtitle.js](https://github.com/gsantiago/subtitle.js))
@@ -10,13 +10,13 @@ Zero-heap SRT & WebVTT subtitle parser, timecode formatter, cue time-shifter, an
 ## Install
 
 ```bash
-cap add @cap/subtitle
+cap add subtitle
 ```
 
 ## Usage
 
 ```cp
-import { parseSubtitles, shiftCues, formatSubtitles, SubtitleFormat } from "@cap/subtitle";
+import { parseSubtitles, shiftCues, formatSubtitles, SubtitleFormat } from "subtitle";
 
 let list = parseSubtitles("1\n00:00:01,000 --> 00:00:04,500\nHello Capdux!\n");
 shiftCues(&list, 1500); // delay by 1.5s

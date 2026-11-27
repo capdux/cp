@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/filenamify
+# filenamify
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:filenamify` ([https://github.com/sindresorhus/filenamify](https://github.com/sindresorhus/filenamify))
@@ -12,7 +12,7 @@ Zero-allocation cross-platform safe filename sanitizer for CP — clean-room MIT
 ## Install / 安装
 
 ```bash
-cap add @cap/filenamify
+cap add filenamify
 ```
 
 ## API
@@ -26,7 +26,7 @@ cap add @cap/filenamify
 ## Usage / 使用示例
 
 ```cp
-import { filenamify, filenamifyWithOptions, isReservedFilename } from "@cap/filenamify";
+import { filenamify, filenamifyWithOptions, isReservedFilename } from "filenamify";
 
 let buf: [128]u8 = undefined;
 const n1 = filenamify("<foo/bar:baz*>", buf[0..128]);          // "foo!bar!baz"

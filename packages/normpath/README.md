@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/normpath`
+# `normpath`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:normpath` ([https://github.com/dylni/normpath](https://github.com/dylni/normpath))
@@ -17,7 +17,7 @@ Zero-heap cross-platform lexical path normalization engine in pure CP (clean-roo
 ## Quick Start
 
 ```cp
-import { normalizePosix, normalizeWindows, joinNormalized } from "@cap/normpath";
+import { normalizePosix, normalizeWindows, joinNormalized } from "normpath";
 
 let buf: [128]u8 = undefined;
 const n1 = normalizePosix("/a/./b/../c///d/", buf[0..]); // "/a/c/d"

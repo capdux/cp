@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/yargs
+# yargs
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:yargs` ([https://github.com/yargs/yargs](https://github.com/yargs/yargs))
@@ -12,7 +12,7 @@ Zero-allocation CLI application framework for CP — clean-room MIT parity with 
 ## Install / 安装
 
 ```bash
-cap add @cap/yargs
+cap add yargs
 ```
 
 ## Dependencies / 跨包复用
@@ -33,7 +33,7 @@ cap add @cap/yargs
 ## Usage / 使用示例
 
 ```cp
-import { YargsApp, OptionSpec } from "@cap/yargs";
+import { YargsApp, OptionSpec } from "yargs";
 
 let app = YargsApp.new("cap-cli", "1.0.0");
 app.command("serve", "Start HTTP server");

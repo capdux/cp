@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/sanitize-uri
+# micromark-util-sanitize-uri
 
 Zero-allocation safe URI protocol sanitizer and RFC 3986 percent-encoder in pure CP (clean-room implementation of `micromark-util-sanitize-uri`).
 

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/dom-serializer
+# dom-serializer
 
 Zero-heap HTML/XML DOM node serializer in pure CP (covers `dom-serializer`, `domelementtype`, and `w3c-xmlserializer`).
 

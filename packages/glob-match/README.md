@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/glob-match`
+# `glob-match`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:glob-match` ([https://github.com/devongovett/glob-match](https://github.com/devongovett/glob-match))
@@ -43,7 +43,7 @@ import {
     globMatchAny,
     globMatchCaptures,
     isStaticGlob,
-} from "@cap/glob-match";
+} from "glob-match";
 
 fn example() {
     const ok = globMatch("src/**/*.{cp,zig}", "src/net/http/server.cp"); // true

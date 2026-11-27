@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/quinn-varint
+# quinn-proto
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:quinn-proto` ([https://github.com/quinn-rs/quinn](https://github.com/quinn-rs/quinn)) / `crates.io:quinn` ([https://github.com/quinn-rs/quinn](https://github.com/quinn-rs/quinn))（原库名 `quinn-proto` → CP 包名 `@cap/quinn-varint`）
+> **参考 / 吸收来源**：`crates.io:quinn-proto` ([https://github.com/quinn-rs/quinn](https://github.com/quinn-rs/quinn)) / `crates.io:quinn` ([https://github.com/quinn-rs/quinn](https://github.com/quinn-rs/quinn))（原库名 `quinn-proto` → CP 包名 `quinn-proto`）
 
 Pure CP, zero-allocation RFC 9000 QUIC variable-length integer codec and Long Header parser (parity with Rust `quinn-proto`).
 

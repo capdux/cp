@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/geo-dist
+# geo
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:geo` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `geo` → CP 包名 `@cap/geo-dist`）
+> **参考 / 吸收来源**：`crates.io:geo` ([https://github.com/georust/geo](https://github.com/georust/geo))（原库名 `geo` → CP 包名 `geo`）
 
 Zero-allocation WGS-84 spherical geometry engine for CP — clean-room MIT parity with Rust `geo` / `haversine` and npm `geolib`.
 
@@ -12,7 +12,7 @@ Zero-allocation WGS-84 spherical geometry engine for CP — clean-room MIT parit
 ## Install / 安装
 
 ```bash
-cap add @cap/geo-dist
+cap add geo
 ```
 
 ## API
@@ -31,7 +31,7 @@ cap add @cap/geo-dist
 ## Usage / 使用示例
 
 ```cp
-import { Coord, haversineMeters, initialBearing, destinationPoint } from "@cap/geo-dist";
+import { Coord, haversineMeters, initialBearing, destinationPoint } from "geo";
 
 const nyc = Coord{ lat: 40.7128, lon: -74.0060 };
 const lon = Coord{ lat: 51.5074, lon: -0.1278 };

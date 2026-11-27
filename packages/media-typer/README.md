@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/media-typer
+# media-typer
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:media-typer` ([https://github.com/jshttp/media-typer](https://github.com/jshttp/media-typer))

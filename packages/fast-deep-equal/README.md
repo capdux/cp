@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/fast-deep-equal`
+# `fast-deep-equal`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:fast-deep-equal` ([https://github.com/epoberezkin/fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal))
@@ -21,7 +21,7 @@ Zero-heap semantic JSON deep equality checker and root value classifier in pure 
 ## Quick Start
 
 ```cp
-import { jsonDeepEqual, kindOfJson, isPlainObjectJson } from "@cap/fast-deep-equal";
+import { jsonDeepEqual, kindOfJson, isPlainObjectJson } from "fast-deep-equal";
 
 const eq = jsonDeepEqual("{\"a\":1.0,\"b\":[2,3]}", "{ \"b\": [2, 3], \"a\": 1 }"); // true
 const is_obj = isPlainObjectJson("{\"k\":true}"); // true

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/levenshtein
+# fastest-levenshtein
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:fastest-levenshtein` ([https://github.com/ka-weihe/fastest-levenshtein](https://github.com/ka-weihe/fastest-levenshtein)) / `crates.io:levenshtein` ([https://github.com/wooorm/levenshtein-rs](https://github.com/wooorm/levenshtein-rs))（原库名 `fastest-levenshtein` → CP 包名 `@cap/levenshtein`）
+> **参考 / 吸收来源**：`npm:fastest-levenshtein` ([https://github.com/ka-weihe/fastest-levenshtein](https://github.com/ka-weihe/fastest-levenshtein)) / `crates.io:levenshtein` ([https://github.com/wooorm/levenshtein-rs](https://github.com/wooorm/levenshtein-rs))（原库名 `fastest-levenshtein` → CP 包名 `fastest-levenshtein`）
 
 Zero-heap Levenshtein edit distance, OSA Damerau-Levenshtein transposition distance, normalized similarity, and closest-match lookup in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap Levenshtein edit distance, OSA Damerau-Levenshtein transposition dista
 ## Usage
 
 ```cp
-import { distance, damerauDistance, closestIndex } from "@cap/levenshtein";
+import { distance, damerauDistance, closestIndex } from "fastest-levenshtein";
 
 const d = distance("kitten", "sitting");      // 3
 const t = damerauDistance("teh", "the");      // 1

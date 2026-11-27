@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/prom-text
+# prom-client
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:prom-client` ([https://github.com/siimon/prom-client](https://github.com/siimon/prom-client))（原库名 `prom-client` → CP 包名 `@cap/prom-text`）
+> **参考 / 吸收来源**：`npm:prom-client` ([https://github.com/siimon/prom-client](https://github.com/siimon/prom-client))（原库名 `prom-client` → CP 包名 `prom-client`）
 
 Zero-heap Prometheus / OpenMetrics `/metrics` text exposition format serializer in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap Prometheus / OpenMetrics `/metrics` text exposition format serializer 
 ## Usage
 
 ```cp
-import { PromWriter, Label, METRIC_COUNTER } from "@cap/prom-text";
+import { PromWriter, Label, METRIC_COUNTER } from "prom-client";
 
 let buf: [256]u8 = undefined;
 let w = PromWriter.init(buf[0..256]);

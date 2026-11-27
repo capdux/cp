@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/spki
+# spki
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:spki` ([https://github.com/RustCrypto/formats](https://github.com/RustCrypto/formats))

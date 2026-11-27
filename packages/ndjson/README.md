@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ndjson
+# ndjson
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ndjson` ([https://github.com/ndjson/ndjson.js](https://github.com/ndjson/ndjson.js))
@@ -16,7 +16,7 @@ Zero-heap NDJSON / JSON Lines streaming incremental line splitter, scanner, and 
 ## Usage
 
 ```cp
-import { NdjsonSplitter, writeLine } from "@cap/ndjson";
+import { NdjsonSplitter, writeLine } from "ndjson";
 
 let sp = NdjsonSplitter.init();
 // feed bytes chunk by chunk; when pushByte returns > 0, read sp.currentLine()

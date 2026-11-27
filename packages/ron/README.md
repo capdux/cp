@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ron
+# ron
 
 Zero-heap Rusty Object Notation (RON) lexer and top-level struct field extractor in pure CP.
 

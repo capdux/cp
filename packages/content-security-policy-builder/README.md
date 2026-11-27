@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/csp
+# content-security-policy-builder
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:content-security-policy-builder` ([https://github.com/helmetjs/content-security-policy-builder](https://github.com/helmetjs/content-security-policy-builder))（原库名 `content-security-policy-builder` → CP 包名 `@cap/csp`）
+> **参考 / 吸收来源**：`npm:content-security-policy-builder` ([https://github.com/helmetjs/content-security-policy-builder](https://github.com/helmetjs/content-security-policy-builder))（原库名 `content-security-policy-builder` → CP 包名 `content-security-policy-builder`）
 
 Zero-allocation W3C Content-Security-Policy 3 header builder and parser for CP.
 
@@ -16,7 +16,7 @@ Zero-allocation W3C Content-Security-Policy 3 header builder and parser for CP.
 ## Usage
 
 ```cp
-import { CspBuilder, CspPolicy } from "@cap/csp";
+import { CspBuilder, CspPolicy } from "content-security-policy-builder";
 
 let buf: [256]u8 = undefined;
 let builder = CspBuilder.init(buf[0..256]);

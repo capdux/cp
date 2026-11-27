@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/lilconfig
+# lilconfig
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:lilconfig` ([https://github.com/antonk52/lilconfig](https://github.com/antonk52/lilconfig))
@@ -18,7 +18,7 @@ Zero-heap, pure CP lightweight configuration explorer (clean-room MIT implementa
 ```cp
 import {
     LilconfigOptions, LilExplorer, isSupportedByDefault
-} from "@cap/lilconfig";
+} from "lilconfig";
 
 let opts = LilconfigOptions.defaults("postcss");
 let explorer = LilExplorer.new("/repo/packages/ui", opts);

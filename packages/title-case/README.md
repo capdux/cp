@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/title-case`
+# `title-case`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:title-case` ([https://github.com/blakeembrey/change-case](https://github.com/blakeembrey/change-case)) / `crates.io:titlecase` ([https://github.com/wezm/titlecase](https://github.com/wezm/titlecase))
@@ -18,7 +18,7 @@ Zero-heap-allocation AP/Chicago style English title-case, sentence-case, and cap
 ## API
 
 ```cp
-import { isSmallWord, toTitleCase, toSentenceCase, capitalizeFirst } from "@cap/title-case";
+import { isSmallWord, toTitleCase, toSentenceCase, capitalizeFirst } from "title-case";
 ```
 
 ## License

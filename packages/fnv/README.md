@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/fnv
+# fnv
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:rustc-hash` ([https://github.com/rust-lang/rustc-hash](https://github.com/rust-lang/rustc-hash)) / `crates.io:fnv` ([https://github.com/servo/rust-fnv](https://github.com/servo/rust-fnv))（原库名 `rustc-hash` → CP 包名 `@cap/fnv`）
+> **参考 / 吸收来源**：`crates.io:rustc-hash` ([https://github.com/rust-lang/rustc-hash](https://github.com/rust-lang/rustc-hash)) / `crates.io:fnv` ([https://github.com/servo/rust-fnv](https://github.com/servo/rust-fnv))（原库名 `rustc-hash` → CP 包名 `fnv`）
 
 Zero-allocation FNV-1a 32/64-bit and Rust `rustc-hash` FxHash 64-bit streaming non-cryptographic hashers for CP — clean-room MIT parity with Rust `fnv` and `rustc-hash`.
 
@@ -12,7 +12,7 @@ Zero-allocation FNV-1a 32/64-bit and Rust `rustc-hash` FxHash 64-bit streaming n
 ## Install / 安装
 
 ```bash
-cap add @cap/fnv
+cap add fnv
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/fnv
 ## Usage / 使用示例
 
 ```cp
-import { fnv1a32, fnv1a64, fxHash64, Fnv64Hasher } from "@cap/fnv";
+import { fnv1a32, fnv1a64, fxHash64, Fnv64Hasher } from "fnv";
 
 const h32 = fnv1a32("foobar"); // 0xbf9cf968
 const h64 = fnv1a64("foobar"); // 0x85944171f73967e8

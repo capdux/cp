@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/json-schema-traverse
+# json-schema-traverse
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:json-schema-traverse` ([https://github.com/epoberezkin/json-schema-traverse](https://github.com/epoberezkin/json-schema-traverse))
@@ -12,7 +12,7 @@ Zero-allocation JSON Schema traversal engine with RFC 6901 JSON Pointer generati
 ## Install / 安装
 
 ```bash
-cap add @cap/json-schema-traverse
+cap add json-schema-traverse
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/json-schema-traverse
 ## Usage / 使用示例
 
 ```cp
-import { traverseJsonSchema, findSubschemaByPointer, SchemaVisitEvent } from "@cap/json-schema-traverse";
+import { traverseJsonSchema, findSubschemaByPointer, SchemaVisitEvent } from "json-schema-traverse";
 
 const schema = "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"}}}";
 let events: [16]SchemaVisitEvent = undefined;

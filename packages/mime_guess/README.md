@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/mime-guess`
+# `mime_guess`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:mime_guess` ([https://github.com/abonander/mime_guess](https://github.com/abonander/mime_guess))（原库名 `mime_guess` → CP 包名 `@cap/mime-guess`）
+> **参考 / 吸收来源**：`crates.io:mime_guess` ([https://github.com/abonander/mime_guess](https://github.com/abonander/mime_guess))（原库名 `mime_guess` → CP 包名 `mime_guess`）
 
 Zero-allocation file path & extension MIME type guesser for CP (clean-room MIT implementation inspired by Rust's `mime_guess` v2, backed directly by `@cap/mime-types`).
 
@@ -21,7 +21,7 @@ import {
     extractExt,
     getExtForMime,
     getCharsetForMime,
-} from "@cap/mime-guess";
+} from "mime_guess";
 
 const g = MimeGuess.fromPath("/var/www/assets/LOGO.PNG");
 const mime: string = g.firstOrOctetStream(); // "image/png"

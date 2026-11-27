@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/rfc6979
+# rfc6979
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:rfc6979` ([https://github.com/RustCrypto/signatures](https://github.com/RustCrypto/signatures))

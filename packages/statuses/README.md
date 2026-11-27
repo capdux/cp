@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/statuses
+# statuses
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:statuses` ([https://github.com/jshttp/statuses](https://github.com/jshttp/statuses))
@@ -16,7 +16,7 @@ Zero-heap RFC 9110 / IANA HTTP status code lookup, reason phrases, reverse looku
 ## Usage
 
 ```cp
-import { message, codeFromMessage, isRetry } from "@cap/statuses";
+import { message, codeFromMessage, isRetry } from "statuses";
 
 const msg = message(429);               // "Too Many Requests"
 const code = codeFromMessage("not found"); // 404

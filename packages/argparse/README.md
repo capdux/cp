@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/argparse
+# argparse
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:argparse` ([https://github.com/nodeca/argparse](https://github.com/nodeca/argparse))
@@ -12,7 +12,7 @@ Zero-allocation Python-style CLI argument parser for CP — clean-room Python-2.
 ## Install / 安装
 
 ```bash
-cap add @cap/argparse
+cap add argparse
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/argparse
 ## Usage / 使用示例
 
 ```cp
-import { ArgParser, ArgDef } from "@cap/argparse";
+import { ArgParser, ArgDef } from "argparse";
 
 let parser = ArgParser.init();
 * = parser.addArgument(ArgDef{

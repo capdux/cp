@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/env-filter
+# env_filter
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:env_filter` ([https://github.com/rust-cli/env_logger](https://github.com/rust-cli/env_logger))
@@ -12,7 +12,7 @@ Zero-allocation `RUST_LOG`-style hierarchical log level filter parser and module
 ## Install / 安装
 
 ```bash
-cap add @cap/env-filter
+cap add env_filter
 ```
 
 ## API
@@ -32,7 +32,7 @@ cap add @cap/env-filter
 ## Usage / 使用示例
 
 ```cp
-import { EnvFilter, LogLevel } from "@cap/env-filter";
+import { EnvFilter, LogLevel } from "env_filter";
 
 const filter = EnvFilter.parse("warn,my_app=info,my_app::net=debug,quiet_mod=off");
 const ok1 = filter.enabled("my_app::net::tcp", LogLevel.Debug); // true

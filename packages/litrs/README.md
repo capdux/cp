@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/litrs
+# litrs
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:litrs` ([https://github.com/LukasKalbertodt/litrs](https://github.com/LukasKalbertodt/litrs))
@@ -12,7 +12,7 @@ Zero-allocation Rust literal lexer, validator, and string unescaper for CP — c
 ## Install / 安装
 
 ```bash
-cap add @cap/litrs
+cap add litrs
 ```
 
 ## API
@@ -27,7 +27,7 @@ cap add @cap/litrs
 ## Usage / 使用示例
 
 ```cp
-import { parseLiteral, unescapeString, LiteralKind } from "@cap/litrs";
+import { parseLiteral, unescapeString, LiteralKind } from "litrs";
 
 const lit = parseLiteral("0xFF_00u32"); // kind == Integer, int_val == 65280, suffix == "u32"
 const raw = parseLiteral("r#\"hello\\nworld\"#"); // kind == String, is_raw_string == true, hash_count == 1

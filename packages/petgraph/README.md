@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/petgraph-core
+# petgraph
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:petgraph` ([https://github.com/petgraph/petgraph](https://github.com/petgraph/petgraph))（原库名 `petgraph` → CP 包名 `@cap/petgraph-core`）
+> **参考 / 吸收来源**：`crates.io:petgraph` ([https://github.com/petgraph/petgraph](https://github.com/petgraph/petgraph))（原库名 `petgraph` → CP 包名 `petgraph`）
 
 Zero-allocation directed/undirected graph (`DiGraph`) and classic graph algorithms (BFS, iterative DFS, Kahn topological sort, cycle detection, Dijkstra shortest paths, reachability) for CP — clean-room MIT parity with Rust `petgraph` v0.6 (950M+ downloads).
 
@@ -12,7 +12,7 @@ Zero-allocation directed/undirected graph (`DiGraph`) and classic graph algorith
 ## Install / 安装
 
 ```bash
-cap add @cap/petgraph-core
+cap add petgraph
 ```
 
 ## API
@@ -45,7 +45,7 @@ cap add @cap/petgraph-core
 ## Usage / 使用示例
 
 ```cp
-import { DiGraph, PG_INF } from "@cap/petgraph-core";
+import { DiGraph, PG_INF } from "petgraph";
 
 let g = DiGraph.new();
 let a = g.addNode() ?? (0 as usize);

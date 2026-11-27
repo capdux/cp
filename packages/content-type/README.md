@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/content-type
+# content-type
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:content-type` ([https://github.com/jshttp/content-type](https://github.com/jshttp/content-type))

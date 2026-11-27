@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/amqp-url`
+# `amqplib`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:amqplib` ([https://github.com/amqp-node/amqplib](https://github.com/amqp-node/amqplib)) / `crates.io:lapin` ([https://github.com/amqp-rs/lapin](https://github.com/amqp-rs/lapin))（原库名 `amqplib` → CP 包名 `@cap/amqp-url`）
+> **参考 / 吸收来源**：`npm:amqplib` ([https://github.com/amqp-node/amqplib](https://github.com/amqp-node/amqplib)) / `crates.io:lapin` ([https://github.com/amqp-rs/lapin](https://github.com/amqp-rs/lapin))（原库名 `amqplib` → CP 包名 `amqplib`）
 
 Zero-heap-allocation AMQP 0-9-1 / RabbitMQ connection URI parser and log-redacting formatter in pure CP.
 
@@ -16,7 +16,7 @@ Zero-heap-allocation AMQP 0-9-1 / RabbitMQ connection URI parser and log-redacti
 ## API
 
 ```cp
-import { AmqpConfig, parseAmqpUrl, formatAmqpUrl } from "@cap/amqp-url";
+import { AmqpConfig, parseAmqpUrl, formatAmqpUrl } from "amqplib";
 ```
 
 ## License

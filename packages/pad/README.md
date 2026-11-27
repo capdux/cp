@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/pad-str`
+# `pad`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:pad` ([https://github.com/adaltas/node-pad](https://github.com/adaltas/node-pad)) / `crates.io:pad` ([https://github.com/ogham/rust-pad](https://github.com/ogham/rust-pad)) / `npm:left-pad` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `pad` → CP 包名 `@cap/pad-str`）
+> **参考 / 吸收来源**：`npm:pad` ([https://github.com/adaltas/node-pad](https://github.com/adaltas/node-pad)) / `crates.io:pad` ([https://github.com/ogham/rust-pad](https://github.com/ogham/rust-pad)) / `npm:left-pad` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `pad` → CP 包名 `pad`）
 
 Zero-heap-allocation UTF-8 codepoint-aware string padding (`padStart`, `padEnd`, `padCenter`) and `repeatStr` in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation UTF-8 codepoint-aware string padding (`padStart`, `padEnd`,
 ## API
 
 ```cp
-import { countChars, padStart, padEnd, padCenter, repeatStr } from "@cap/pad-str";
+import { countChars, padStart, padEnd, padCenter, repeatStr } from "pad";
 ```
 
 ## License

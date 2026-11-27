@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:flatted` ([https://github.com/WebReflection/flatted](https://github.com/WebReflection/flatted)) | 许可：`ISC`
 
-# `@cap/flatted`
+# `flatted`
 
 零堆分配纯 CP 循环引用安全扁平化 JSON 编码协议，完整对标 npm **#208** `flatted`（真实周下载 **2.10 亿/周**，ESLint / WebReflection 核心依赖）。
 

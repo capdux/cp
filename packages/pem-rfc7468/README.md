@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`pem-rfc7468`](https://github.com/RustCrypto/formats)（`MIT OR Apache-2.0`）（包名 `@cap/pem-rfc7468`）。
+> **参考 / 吸收来源**：吸收自 **crates.io** [`pem-rfc7468`](https://github.com/RustCrypto/formats)（`MIT OR Apache-2.0`）（包名 `pem-rfc7468`）。
 
-# `@cap/pem-rfc7468`
+# `pem-rfc7468`
 
 Zero-allocation RFC 7468 PEM encoder and strict decoder in pure CP (RustCrypto `pem-rfc7468` parity). Reuses `@cap/base64ct` for constant-time RFC 4648 Base64 encoding and canonical decoding.
 

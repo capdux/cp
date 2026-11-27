@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/magic-bytes
+# file-type
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:file-type` ([https://github.com/sindresorhus/file-type](https://github.com/sindresorhus/file-type)) / `crates.io:infer` ([https://github.com/bojand/infer](https://github.com/bojand/infer))（原库名 `file-type` → CP 包名 `@cap/magic-bytes`）
+> **参考 / 吸收来源**：`npm:file-type` ([https://github.com/sindresorhus/file-type](https://github.com/sindresorhus/file-type)) / `crates.io:infer` ([https://github.com/bojand/infer](https://github.com/bojand/infer))（原库名 `file-type` → CP 包名 `file-type`）
 
 Zero-allocation binary file magic bytes signature sniffer for CP.
 
@@ -22,7 +22,7 @@ Zero-allocation binary file magic bytes signature sniffer for CP.
 ## Usage
 
 ```cp
-import { detect, isImage } from "@cap/magic-bytes";
+import { detect, isImage } from "file-type";
 
 const ft = detect(headerBytes);
 if (ft.matched) {

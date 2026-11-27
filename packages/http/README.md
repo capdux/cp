@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/http-types
+# http
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:http` ([https://github.com/hyperium/http](https://github.com/hyperium/http))（原库名 `http` → CP 包名 `@cap/http-types`）
+> **参考 / 吸收来源**：`crates.io:http` ([https://github.com/hyperium/http](https://github.com/hyperium/http))（原库名 `http` → CP 包名 `http`）
 
 Zero-allocation HTTP Method, StatusCode, Version, and HeaderName core types for CP — clean-room MIT parity with crates.io `http` v1 and RFC 9110.
 
@@ -14,7 +14,7 @@ Composes [`@cap/unicase`](../unicase) (`eqAscii`) for ASCII case-insensitive hea
 ```json
 {
   "dependencies": {
-    "@cap/http-types": "1.0.0"
+    "http": "1.0.0"
   }
 }
 ```
@@ -33,7 +33,7 @@ import {
     httpVersionAsStr,
     isValidHeaderName,
     headerNameEq,
-} from "@cap/http-types";
+} from "http";
 
 const m = parseMethod("GET"); // METHOD_GET
 const ok = StatusCode.fromU16(200);

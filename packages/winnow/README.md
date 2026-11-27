@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/nom-bytes
+# winnow
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:winnow` ([https://github.com/winnow-rs/winnow](https://github.com/winnow-rs/winnow))（原库名 `winnow` → CP 包名 `@cap/nom-bytes`）
+> **参考 / 吸收来源**：`crates.io:winnow` ([https://github.com/winnow-rs/winnow](https://github.com/winnow-rs/winnow))（原库名 `winnow` → CP 包名 `winnow`）
 
 Zero-allocation byte-level zero-copy parser combinators for CP (`winnow` / `nom` parity).
 
@@ -15,7 +15,7 @@ Zero-allocation byte-level zero-copy parser combinators for CP (`winnow` / `nom`
 ## Usage
 
 ```cp
-import { Cursor, alpha1, multispace0, charLit, parseI64 } from "@cap/nom-bytes";
+import { Cursor, alpha1, multispace0, charLit, parseI64 } from "winnow";
 
 let cur = Cursor.new("  timeout = -42");
 * = multispace0(&cur);

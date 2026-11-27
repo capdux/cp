@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/multimap
+# multimap
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:multimap` ([https://github.com/havarnov/multimap](https://github.com/havarnov/multimap))
@@ -12,7 +12,7 @@ Zero-allocation insertion-ordered one-to-many string multimap for CP — clean-r
 ## 安装 / Install
 
 ```bash
-cap add @cap/multimap
+cap add multimap
 ```
 
 ## API 参考 / API Reference
@@ -28,7 +28,7 @@ cap add @cap/multimap
 ## 使用示例 / Usage
 
 ```cp
-import { MultiMapStr } from "@cap/multimap";
+import { MultiMapStr } from "multimap";
 
 let hdrs = MultiMapStr.init();
 * = hdrs.insert("Set-Cookie", "sid=abc; HttpOnly");

@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/path-slash`
+# `path-slash`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:path-slash` ([https://github.com/rhysd/path-slash](https://github.com/rhysd/path-slash))
@@ -17,7 +17,7 @@ Zero-heap bidirectional path separator conversion between POSIX `/` and Windows 
 ## Quick Start
 
 ```cp
-import { toSlash, fromSlash, joinSlash } from "@cap/path-slash";
+import { toSlash, fromSlash, joinSlash } from "path-slash";
 
 let buf: [128]u8 = undefined;
 const n1 = toSlash("C:\\Users\\dev\\file.cp", buf[0..]);     // "C:/Users/dev/file.cp"

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/geohash-pure
+# ngeohash
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:ngeohash` ([https://github.com/sunng87/node-geohash](https://github.com/sunng87/node-geohash))（原库名 `ngeohash` → CP 包名 `@cap/geohash-pure`）
+> **参考 / 吸收来源**：`npm:ngeohash` ([https://github.com/sunng87/node-geohash](https://github.com/sunng87/node-geohash))（原库名 `ngeohash` → CP 包名 `ngeohash`）
 
 Zero-allocation Geohash Base32 spatial coordinate encoder, decoder, and bounding box library for CP.
 
@@ -15,7 +15,7 @@ Zero-allocation Geohash Base32 spatial coordinate encoder, decoder, and bounding
 ## Usage
 
 ```cp
-import { encode, decode } from "@cap/geohash-pure";
+import { encode, decode } from "ngeohash";
 
 let buf: [12]u8 = undefined;
 const n = encode(42.6 as f64, -5.6 as f64, 5, buf[0..12]); // "ezs42"

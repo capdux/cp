@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/camelcase-keys`
+# `camelcase-keys`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:camelcase-keys` ([https://github.com/sindresorhus/camelcase-keys](https://github.com/sindresorhus/camelcase-keys)) / `npm:decamelize-keys` ([https://github.com/sindresorhus/decamelize-keys](https://github.com/sindresorhus/decamelize-keys))
@@ -16,7 +16,7 @@ Zero-heap streaming JSON object key case converter (`camelCase`, `snake_case`, `
 ## Quick Start
 
 ```cp
-import { convertJsonKeysToCamel, convertJsonKeysToSnake, convertJsonKeysToPascal } from "@cap/camelcase-keys";
+import { convertJsonKeysToCamel, convertJsonKeysToSnake, convertJsonKeysToPascal } from "camelcase-keys";
 
 let buf: [256]u8 = undefined;
 const n = convertJsonKeysToCamel("{\"user_id\":1,\"first_name\":\"foo_bar\"}", &buf);

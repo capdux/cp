@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`pbkdf2`](https://github.com/RustCrypto/password-hashes)（`MIT OR Apache-2.0`）（原库名 `pbkdf2`，CP 包名 `@cap/pbkdf2-sha256`）。
+> **参考 / 吸收来源**：吸收自 **crates.io** [`pbkdf2`](https://github.com/RustCrypto/password-hashes)（`MIT OR Apache-2.0`）（原库名 `pbkdf2`，CP 包名 `pbkdf2`）。
 
-# @cap/pbkdf2-sha256
+# pbkdf2
 
 Pure CP, zero-allocation RFC 2898 / RFC 8018 PBKDF2-HMAC-SHA256 password-based key derivation and constant-time verification (parity with RustCrypto `pbkdf2` & npm `pbkdf2`).
 

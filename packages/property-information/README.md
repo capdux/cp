@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/property-information
+# property-information
 
 Zero-allocation HTML/SVG attribute and DOM property name mapping library in pure CP.
 

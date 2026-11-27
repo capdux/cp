@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/reed-solomon
+# reed-solomon-erasure
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:reed-solomon-erasure` ([https://github.com/darrenldl/reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-erasure))（原库名 `reed-solomon-erasure` → CP 包名 `@cap/reed-solomon`）
+> **参考 / 吸收来源**：`crates.io:reed-solomon-erasure` ([https://github.com/darrenldl/reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-erasure))（原库名 `reed-solomon-erasure` → CP 包名 `reed-solomon-erasure`）
 
 Zero-allocation GF(2^8) Cauchy Reed-Solomon erasure coding and FEC reconstruction engine for CP — clean-room MIT parity with Rust `reed-solomon-erasure`.
 
@@ -12,7 +12,7 @@ Zero-allocation GF(2^8) Cauchy Reed-Solomon erasure coding and FEC reconstructio
 ## Install / 安装
 
 ```bash
-cap add @cap/reed-solomon
+cap add reed-solomon-erasure
 ```
 
 ## API Reference / 接口一览

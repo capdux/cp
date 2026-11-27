@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ordered-float
+# ordered-float
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:ordered-float` ([https://github.com/reem/rust-ordered-float](https://github.com/reem/rust-ordered-float))

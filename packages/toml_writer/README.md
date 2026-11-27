@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/toml-writer
+# toml_writer
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:toml_writer` ([https://github.com/toml-rs/toml](https://github.com/toml-rs/toml))（原库名 `toml_writer` → CP 包名 `@cap/toml-writer`）
+> **参考 / 吸收来源**：`crates.io:toml_writer` ([https://github.com/toml-rs/toml](https://github.com/toml-rs/toml))（原库名 `toml_writer` → CP 包名 `toml_writer`）
 
 Zero-heap TOML 1.0 serializer and formatter in pure CP (inspired by Rust `toml_writer`, 321M+ downloads).
 
@@ -12,13 +12,13 @@ Automatically chooses bare vs quoted keys, escapes control characters and quotes
 ## Install
 
 ```bash
-cap add @cap/toml-writer
+cap add toml_writer
 ```
 
 ## Usage
 
 ```cp
-import { TomlWriter } from "@cap/toml-writer";
+import { TomlWriter } from "toml_writer";
 
 let buf: [512]u8 = undefined;
 let w = TomlWriter.init(buf[0..512]);

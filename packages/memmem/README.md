@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/memmem
+# memmem
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:memmem` ([https://github.com/BurntSushi/memchr](https://github.com/BurntSushi/memchr))
@@ -12,7 +12,7 @@ Zero-allocation byte-substring search engine with precompiled BMH + KMP `Finder`
 ## Install / 安装
 
 ```bash
-cap add @cap/memmem
+cap add memmem
 ```
 
 ## API
@@ -28,7 +28,7 @@ cap add @cap/memmem
 ## Usage / 使用示例
 
 ```cp
-import { Finder, find, rfind, count } from "@cap/memmem";
+import { Finder, find, rfind, count } from "memmem";
 
 const idx = find("hello world world", "world");   // 6
 const last = rfind("hello world world", "world"); // 12

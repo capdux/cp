@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/pcg32
+# pcg-random
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:pcg-random` ([https://github.com/ThomWright/pcg-random](https://github.com/ThomWright/pcg-random))（原库名 `pcg-random` → CP 包名 `@cap/pcg32`）
+> **参考 / 吸收来源**：`npm:pcg-random` ([https://github.com/ThomWright/pcg-random](https://github.com/ThomWright/pcg-random))（原库名 `pcg-random` → CP 包名 `pcg-random`）
 
 Zero-heap Melissa O'Neill PCG-XSH-RR 32-bit deterministic PRNG in pure CP (Rust `rand_pcg` / npm `pcg-random` parity).
 
@@ -17,7 +17,7 @@ Zero-heap Melissa O'Neill PCG-XSH-RR 32-bit deterministic PRNG in pure CP (Rust 
 ## Usage
 
 ```cp
-import { Pcg32 } from "@cap/pcg32";
+import { Pcg32 } from "pcg-random";
 
 let rng = Pcg32.fromSeed(42);
 const r = rng.nextU32();

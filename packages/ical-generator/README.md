@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/ical`
+# `ical-generator`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:ical-generator` ([https://github.com/sebbo2002/ical-generator](https://github.com/sebbo2002/ical-generator))（原库名 `ical-generator` → CP 包名 `@cap/ical`）
+> **参考 / 吸收来源**：`npm:ical-generator` ([https://github.com/sebbo2002/ical-generator](https://github.com/sebbo2002/ical-generator))（原库名 `ical-generator` → CP 包名 `ical-generator`）
 
 Zero-heap-allocation RFC 5545 iCalendar (`.ics`) generator and parser in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation RFC 5545 iCalendar (`.ics`) generator and parser in pure CP
 ## API
 
 ```cp
-import { IcalEvent, IcalWriter, ParsedEvent, parseFirstEvent, unescapeText } from "@cap/ical";
+import { IcalEvent, IcalWriter, ParsedEvent, parseFirstEvent, unescapeText } from "ical-generator";
 ```
 
 ## License

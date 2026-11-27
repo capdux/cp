@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/varint
+# unsigned-varint
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:unsigned-varint` ([https://github.com/paritytech/unsigned-varint](https://github.com/paritytech/unsigned-varint))（原库名 `unsigned-varint` → CP 包名 `@cap/varint`）
+> **参考 / 吸收来源**：`crates.io:unsigned-varint` ([https://github.com/paritytech/unsigned-varint](https://github.com/paritytech/unsigned-varint))（原库名 `unsigned-varint` → CP 包名 `unsigned-varint`）
 
 Zero-allocation 3-in-1 variable-length integer codec (ULEB128, SLEB128, Protobuf ZigZag, and QUIC RFC 9000 varint) for CP — clean-room MIT parity with Rust `unsigned-varint`, `leb128`, and `integer-encoding`.
 
@@ -12,7 +12,7 @@ Zero-allocation 3-in-1 variable-length integer codec (ULEB128, SLEB128, Protobuf
 ## Install / 安装
 
 ```bash
-cap add @cap/varint
+cap add unsigned-varint
 ```
 
 ## API Reference / 接口一览
@@ -29,7 +29,7 @@ cap add @cap/varint
 ## Usage / 使用示例
 
 ```cp
-import { encodeUleb128, decodeUleb128, encodeQuicVarint, decodeQuicVarint } from "@cap/varint";
+import { encodeUleb128, decodeUleb128, encodeQuicVarint, decodeQuicVarint } from "unsigned-varint";
 
 let buf: [16]u8 = undefined;
 const n = encodeUleb128(624485, buf[0..16]).?;

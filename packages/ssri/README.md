@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/ssri
+# ssri
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:ssri` ([https://github.com/npm/ssri](https://github.com/npm/ssri))
@@ -12,7 +12,7 @@ Zero-allocation W3C Subresource Integrity (SRI) multi-algorithm parser, validato
 ## Install / 安装
 
 ```bash
-cap add @cap/ssri
+cap add ssri
 ```
 
 ## Features / 核心特性
@@ -45,7 +45,7 @@ import {
     strongestHash,
     matchesIntegrity,
     formatHash,
-} from "@cap/ssri";
+} from "ssri";
 
 const expected = parseIntegrity("sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU= sha512-z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==?ct=application/js");
 const best = strongestHash(expected); // Sha512

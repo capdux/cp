@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/syslog
+# syslog
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:syslog` ([https://github.com/Geal/rust-syslog](https://github.com/Geal/rust-syslog))
@@ -17,7 +17,7 @@ Zero-heap RFC 5424 Syslog message parser and formatter in pure CP.
 ## Usage
 
 ```cp
-import { formatRfc5424, parseRfc5424, FAC_LOCAL0, SEV_INFO } from "@cap/syslog";
+import { formatRfc5424, parseRfc5424, FAC_LOCAL0, SEV_INFO } from "syslog";
 
 let buf: [256]u8 = undefined;
 const n = formatRfc5424(FAC_LOCAL0, SEV_INFO, "2026-11-26T12:00:00Z", "node1", "capd", "42", "ID1", "started", buf[0..256]);

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/robots
+# robots-parser
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:robots-parser` ([https://github.com/samclarke/robots-parser](https://github.com/samclarke/robots-parser))（原库名 `robots-parser` → CP 包名 `@cap/robots`）
+> **参考 / 吸收来源**：`npm:robots-parser` ([https://github.com/samclarke/robots-parser](https://github.com/samclarke/robots-parser))（原库名 `robots-parser` → CP 包名 `robots-parser`）
 
 Zero-allocation RFC 9309 `robots.txt` rule parser and URL compliance engine for CP.
 
@@ -20,7 +20,7 @@ Zero-allocation RFC 9309 `robots.txt` rule parser and URL compliance engine for 
 ## Usage
 
 ```cp
-import { isAllowed, crawlDelay, firstSitemap } from "@cap/robots";
+import { isAllowed, crawlDelay, firstSitemap } from "robots-parser";
 
 const rules = "User-agent: *\nDisallow: /admin/\nAllow: /admin/public\nCrawl-delay: 5\nSitemap: https://example.com/sitemap.xml\n";
 const ok = isAllowed(rules, "CapBot/1.0", "/admin/public/page"); // true

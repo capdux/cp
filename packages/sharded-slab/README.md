@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/slab
+# sharded-slab
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:sharded-slab` ([https://github.com/hawkw/sharded-slab](https://github.com/hawkw/sharded-slab))（原库名 `sharded-slab` → CP 包名 `@cap/slab`）
+> **参考 / 吸收来源**：`crates.io:sharded-slab` ([https://github.com/hawkw/sharded-slab](https://github.com/hawkw/sharded-slab))（原库名 `sharded-slab` → CP 包名 `sharded-slab`）
 
 Zero-allocation O(1) generational slab allocator and ABA-safe handle pool for CP — clean-room MIT parity with Rust `slab` (1.19B downloads on crates.io) + `generational-arena`.
 
@@ -12,7 +12,7 @@ Zero-allocation O(1) generational slab allocator and ABA-safe handle pool for CP
 ## Install / 安装
 
 ```bash
-cap add @cap/slab
+cap add sharded-slab
 ```
 
 ## Features / 核心特性
@@ -37,7 +37,7 @@ cap add @cap/slab
 ## Usage / 使用示例
 
 ```cp
-import { SlabI64, SlabKey } from "@cap/slab";
+import { SlabI64, SlabKey } from "sharded-slab";
 
 let pool = SlabI64.init();
 const k1 = pool.insert(42 as i64) ?? SlabKey{ index: 0 as u32, generation: 0 as u32 };

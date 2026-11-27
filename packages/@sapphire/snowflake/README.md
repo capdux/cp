@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/snowflake
+# @sapphire/snowflake
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:@sapphire/snowflake` ([https://github.com/sapphiredev/utilities](https://github.com/sapphiredev/utilities)) / `crates.io:sonyflake` ([https://github.com/sony/sonyflake](https://github.com/sony/sonyflake))（原库名 `@sapphire/snowflake` → CP 包名 `@cap/snowflake`）
+> **参考 / 吸收来源**：`npm:@sapphire/snowflake` ([https://github.com/sapphiredev/utilities](https://github.com/sapphiredev/utilities)) / `crates.io:sonyflake` ([https://github.com/sony/sonyflake](https://github.com/sony/sonyflake))（原库名 `@sapphire/snowflake` → CP 包名 `@sapphire/snowflake`）
 
 Zero-heap 64-bit Twitter / Discord Snowflake distributed unique ID generator, decomposer, clock-rollback guard, and decimal formatter in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap 64-bit Twitter / Discord Snowflake distributed unique ID generator, de
 ## Usage
 
 ```cp
-import { initGenerator, nextId, TWITTER_EPOCH_MS } from "@cap/snowflake";
+import { initGenerator, nextId, TWITTER_EPOCH_MS } from "@sapphire/snowflake";
 
 let gen = initGenerator(TWITTER_EPOCH_MS, 1, 2);
 const id = nextId(&gen, 1732620000000);

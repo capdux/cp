@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/glob-to-regex`
+# `glob-to-regexp`
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:glob-to-regexp` ([https://github.com/fitzgen/glob-to-regexp](https://github.com/fitzgen/glob-to-regexp))（原库名 `glob-to-regexp` → CP 包名 `@cap/glob-to-regex`）
+> **参考 / 吸收来源**：`npm:glob-to-regexp` ([https://github.com/fitzgen/glob-to-regexp](https://github.com/fitzgen/glob-to-regexp))（原库名 `glob-to-regexp` → CP 包名 `glob-to-regexp`）
 
 Zero-heap-allocation POSIX/glob wildcard to ECMAScript/PCRE regular expression converter in pure CP.
 
@@ -17,7 +17,7 @@ Zero-heap-allocation POSIX/glob wildcard to ECMAScript/PCRE regular expression c
 ## API
 
 ```cp
-import { GlobOptions, globToRegex, globToRegexDefault } from "@cap/glob-to-regex";
+import { GlobOptions, globToRegex, globToRegexDefault } from "glob-to-regexp";
 ```
 
 ## License

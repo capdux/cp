@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/cliui`
+# `cliui`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:cliui` ([https://github.com/yargs/cliui](https://github.com/yargs/cliui))
@@ -21,7 +21,7 @@ Reuses:
 ## Usage
 
 ```cp
-import { Align, alignToU8, Column, CliUi, formatTwoCol } from "@cap/cliui";
+import { Align, alignToU8, Column, CliUi, formatTwoCol } from "cliui";
 ```
 
 ## License

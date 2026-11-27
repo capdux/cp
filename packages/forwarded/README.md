@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/forwarded
+# forwarded
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`crates.io:forwarded-header-value` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `forwarded-header-value` → CP 包名 `@cap/forwarded`）
+> **参考 / 吸收来源**：`crates.io:forwarded-header-value` ([https://github.com/cp-lang/cp](https://github.com/cp-lang/cp))（原库名 `forwarded-header-value` → CP 包名 `forwarded`）
 
 零堆分配的 RFC 7239 `Forwarded` 与 `X-Forwarded-For` 代理链安全解析引擎 — 洁净室 MIT 实现，对标 npm `forwarded` 与 `proxy-addr`。
 
@@ -19,7 +19,7 @@ Zero-allocation RFC 7239 `Forwarded` & `X-Forwarded-For` proxy chain parser with
 ## 安装 / Install
 
 ```bash
-cap add @cap/forwarded
+cap add forwarded
 ```
 
 ## API 参考 / API Reference
@@ -40,7 +40,7 @@ import {
     parseForwarded,
     extractClientIp,
     isPrivateIp,
-} from "@cap/forwarded";
+} from "forwarded";
 
 // 1. 解析 RFC 7239 Forwarded 头 / Parse RFC 7239 header
 const chain = parseForwarded("for=\"[2001:db8:cafe::17]:4711\";proto=https;host=api.example.com, for=198.51.100.1;by=203.0.113.43");

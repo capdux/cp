@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/version-compare`
+# `version-compare`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:version-compare` ([https://github.com/timvisee/version-compare](https://github.com/timvisee/version-compare))
@@ -17,7 +17,7 @@ Zero-heap flexible version string comparison engine in pure CP (clean-room count
 ## Quick Start
 
 ```cp
-import { VersionCmp, compareVersions, isLess, satisfies } from "@cap/version-compare";
+import { VersionCmp, compareVersions, isLess, satisfies } from "version-compare";
 
 const c = compareVersions("v1.2.0-beta.1", "1.2.0-rc.1"); // VersionCmp.Lt
 const lt = isLess("1.0.0-alpha", "1.0.0");                 // true

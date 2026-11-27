@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/anstyle`
+# `anstyle`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:anstyle` ([https://github.com/rust-cli/anstyle](https://github.com/rust-cli/anstyle)) / `crates.io:console` ([https://github.com/console-rs/console](https://github.com/console-rs/console)) / `crates.io:colored` ([https://github.com/colored-rs/colored](https://github.com/colored-rs/colored))
@@ -17,7 +17,7 @@ Zero-heap ANSI terminal styling model in pure CP (clean-room counterpart to Rust
 ## Quick Start
 
 ```cp
-import { Color, Style } from "@cap/anstyle";
+import { Color, Style } from "anstyle";
 
 const base = Style.new();
 const red = base.fgColor(Color.ansi(1));

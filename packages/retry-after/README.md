@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/retry-after`
+# `retry-after`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:retry-after` ([https://github.com/jwilm/retry-after](https://github.com/jwilm/retry-after))
@@ -12,7 +12,7 @@ Zero-heap RFC 9110 HTTP `Retry-After` header parser and formatter in pure CP. Su
 ## Installation
 
 ```bash
-cap add @cap/retry-after
+cap add retry-after
 ```
 
 ## API

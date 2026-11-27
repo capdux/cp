@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/parse5
+# parse5
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:parse5` ([https://github.com/inikulin/parse5](https://github.com/inikulin/parse5))

@@ -1,9 +1,9 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/pg-dsn
+# pg-connection-string
 
 <!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:pg-connection-string` ([https://github.com/brianc/node-postgres](https://github.com/brianc/node-postgres)) / `crates.io:tokio-postgres` ([https://github.com/sfackler/rust-postgres](https://github.com/sfackler/rust-postgres))（原库名 `pg-connection-string` → CP 包名 `@cap/pg-dsn`）
+> **参考 / 吸收来源**：`npm:pg-connection-string` ([https://github.com/brianc/node-postgres](https://github.com/brianc/node-postgres)) / `crates.io:tokio-postgres` ([https://github.com/sfackler/rust-postgres](https://github.com/sfackler/rust-postgres))（原库名 `pg-connection-string` → CP 包名 `pg-connection-string`）
 
 Zero-heap PostgreSQL connection string parser and URI builder supporting both `postgresql://` / `postgres://` URIs and libpq `key=value` DSNs in pure CP.
 
@@ -18,7 +18,7 @@ Zero-heap PostgreSQL connection string parser and URI builder supporting both `p
 ## Usage
 
 ```cp
-import { parse, formatUri } from "@cap/pg-dsn";
+import { parse, formatUri } from "pg-connection-string";
 
 const cfg = parse("postgresql://admin:s3cr3t@db.local:5432/app?sslmode=require");
 let safe: [128]u8 = undefined;

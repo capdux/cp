@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/npm-run-path`
+# `npm-run-path`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:npm-run-path` ([https://github.com/sindresorhus/npm-run-path](https://github.com/sindresorhus/npm-run-path))

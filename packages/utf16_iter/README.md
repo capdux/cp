@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# @cap/utf16-iter
+# utf16_iter
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:utf16_iter` ([https://github.com/hsivonen/utf16_iter](https://github.com/hsivonen/utf16_iter), `Apache-2.0 OR MIT`)

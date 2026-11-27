@@ -1,6 +1,6 @@
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
 
-# `@cap/supports-color`
+# `supports-color`
 
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:supports-color` ([https://github.com/chalk/supports-color](https://github.com/chalk/supports-color))
@@ -28,7 +28,7 @@ import {
     detectColorLevel,
     detectColorSupport,
     translateLevel,
-} from "@cap/supports-color";
+} from "supports-color";
 ```
 
 ## License

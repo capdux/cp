@@ -3,7 +3,7 @@
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:pathe` ([https://github.com/unjs/pathe](https://github.com/unjs/pathe)) | 许可：`MIT`
 
-# `@cap/pathe`
+# `pathe`
 
 零堆分配纯 CP 跨平台路径处理库（始终输出 POSIX `/` 分隔符），完整对标 npm **#219** `pathe`（真实周下载 **2.07 亿/周**，UnJS / Nuxt / Nitro / Vite 生态核心依赖）。
 
