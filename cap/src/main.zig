@@ -339,6 +339,8 @@ pub fn main(init: std.process.Init) !void {
         try @import("brief.zig").handleBrief(allocator, global_io, cap_root, args[2..]);
     } else if (std.mem.eql(u8, cmd, "fix")) {
         try @import("fix.zig").handleFix(allocator, global_io, cap_root, args[2..]);
+    } else if (std.mem.eql(u8, cmd, "check")) {
+        try @import("fix.zig").handleCheck(allocator, global_io, cap_root, args[2..]);
     } else if (std.mem.eql(u8, cmd, "sniff")) {
         try sniffHardware();
     } else if (std.mem.eql(u8, cmd, "version") or std.mem.eql(u8, cmd, "--version") or std.mem.eql(u8, cmd, "-V")) {
@@ -525,6 +527,8 @@ fn handleLint(allocator: std.mem.Allocator, args: []const []const u8) !void {
     defer cmd_list.deinit(allocator);
     try cmd_list.append(allocator, cpc_bin);
     try cmd_list.append(allocator, "brief");
+    try cmd_list.append(allocator, "fix");
+    try cmd_list.append(allocator, "check");
     for (flags.items) |f| {
         try cmd_list.append(allocator, f);
     }
@@ -600,6 +604,8 @@ fn usage() void {
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)
         \\  cap demangle [trace_file]     Demangle Zig stack traces to original CP lines
         \\  cap brief <pkg>               AI-First package brief (README_AGENT.md / README.md + src/index.d.cp)
+        \\  cap fix [--dry-run] <path>    AI-First auto-fixer (legacy @cap/<pkg> -> bare original pkg names)
+        \\  cap check <file.cp|dir>       AI-First zero-build fast type/borrow/syntax check via cpc --check
         \\  cap init [app|agent|lib|web] [dir] Initialize a new CP project template (--template <name>)
         \\  cap add <pkg> [-d] [-g]       Add a dependency (@scope/pkg, file:./..., -d dev, -g global)
         \\  cap remove <package>          Remove a dependency from cap.json, cap.lock & cap_modules

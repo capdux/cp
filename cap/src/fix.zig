@@ -213,3 +213,103 @@ pub fn handleFix(
     defer allocator.free(summary);
     out.writeStreamingAll(io, summary) catch {};
 }
+
+fn checkSingleFile(
+    io: std.Io,
+    cpc_bin: []const u8,
+    file_path: []const u8,
+) !bool {
+    const argv = [_][]const u8{ cpc_bin, "check", file_path };
+    var child = std.process.spawn(io, .{
+        .argv = &argv,
+        .stdout = .inherit,
+        .stderr = .inherit,
+    }) catch return false;
+    const term = child.wait(io) catch return false;
+    return switch (term) {
+        .exited => |code| code == 0,
+        else => false,
+    };
+}
+
+pub fn handleCheck(
+    allocator: std.mem.Allocator,
+    io: std.Io,
+    cap_root: []const u8,
+    args: []const []const u8,
+) !void {
+    const out = std.Io.File.stdout();
+    var targets: std.ArrayList([]const u8) = .empty;
+    defer targets.deinit(allocator);
+
+    for (args) |arg| {
+        if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+            out.writeStreamingAll(io,
+                \\Usage: cap check <file.cp|dir> [...]
+                \\  AI-First zero-build fast type/borrow/syntax check via `cpc --check`.
+                \\  Outputs Rustc-style three-stage self-healing diagnostics for agents & engineers.
+                \\
+            ) catch {};
+            return;
+        }
+        try targets.append(allocator, arg);
+    }
+
+    if (targets.items.len == 0) {
+        try targets.append(allocator, ".");
+    }
+
+    const cpc_rel = try std.fmt.allocPrint(allocator, "{s}/cpc/target/release/cpc", .{cap_root});
+    defer allocator.free(cpc_rel);
+    const cpc_bin: []const u8 = blk: {
+        if (std.Io.Dir.accessAbsolute(io, cpc_rel, .{})) |_| {
+            break :blk cpc_rel;
+        } else |_| {
+            break :blk "cpc";
+        }
+    };
+
+    var passed: usize = 0;
+    var failed: usize = 0;
+
+    for (targets.items) |target| {
+        if (std.mem.endsWith(u8, target, ".cp")) {
+            if (try checkSingleFile(io, cpc_bin, target)) {
+                passed += 1;
+            } else {
+                failed += 1;
+            }
+        } else if (isDir(io, target)) {
+            var dir = std.Io.Dir.openDir(.cwd(), io, target, .{ .iterate = true }) catch continue;
+            defer dir.close(io);
+            var walker = try dir.walk(allocator);
+            defer walker.deinit();
+            while (try walker.next(io)) |entry| {
+                if (entry.kind != .file) continue;
+                if (!std.mem.endsWith(u8, entry.path, ".cp")) continue;
+                if (std.mem.endsWith(u8, entry.path, ".d.cp")) continue;
+                const full = if (std.mem.eql(u8, target, "."))
+                    try allocator.dupe(u8, entry.path)
+                else
+                    try std.fmt.allocPrint(allocator, "{s}/{s}", .{ target, entry.path });
+                defer allocator.free(full);
+                if (try checkSingleFile(io, cpc_bin, full)) {
+                    passed += 1;
+                } else {
+                    failed += 1;
+                }
+            }
+        }
+    }
+
+    const summary = try std.fmt.allocPrint(allocator, "cap check: {d} passed, {d} failed ({d} total).\n", .{
+        passed,
+        failed,
+        passed + failed,
+    });
+    defer allocator.free(summary);
+    out.writeStreamingAll(io, summary) catch {};
+    if (failed > 0) {
+        std.process.exit(1);
+    }
+}

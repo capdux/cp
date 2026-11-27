@@ -24,7 +24,7 @@ pub struct SmolStr {
     pub ext: string,
 
     pub static fn empty(): SmolStr {
-        let buf: [24]u8 = [0; 24];
+        let buf: [24]u8 = undefined;
         return SmolStr {
             inline_buf: buf,
             inline_len: 0,
@@ -34,7 +34,7 @@ pub struct SmolStr {
     }
 
     pub static fn new(s: string): SmolStr {
-        let buf: [24]u8 = [0; 24];
+        let buf: [24]u8 = undefined;
         if (s.len <= SMOL_INLINE_CAP) {
             let i: usize = 0;
             while (i < s.len) {
@@ -57,7 +57,7 @@ pub struct SmolStr {
     }
 
     pub static fn fromInt(v: i64): SmolStr {
-        let buf: [24]u8 = [0; 24];
+        let buf: [24]u8 = undefined;
         if (v == 0) {
             buf[0] = 48; // '0'
             return SmolStr {
@@ -75,7 +75,7 @@ pub struct SmolStr {
         } else {
             mag = v as u64;
         }
-        let rev: [24]u8 = [0; 24];
+        let rev: [24]u8 = undefined;
         let digits: usize = 0;
         while (mag > 0) {
             let rem: u64 = mag % 10;

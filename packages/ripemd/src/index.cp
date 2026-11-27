@@ -1,3 +1,6 @@
+import { hexCharLower } from "cap:ascii";
+import { readU32Le, writeU32Le } from "cap:bin";
+
 pub const RIPEMD160_DIGEST_LEN: usize = 20;
 pub const RIPEMD160_BLOCK_LEN: usize = 64;
 
@@ -53,27 +56,6 @@ fn rmdKr(round: usize): u32 {
     return 0;
 }
 
-fn rmdReadU32Le(buf: []u8, off: usize): u32 {
-    return (buf[off] as u32)
-        | ((buf[off + 1] as u32) << 8)
-        | ((buf[off + 2] as u32) << 16)
-        | ((buf[off + 3] as u32) << 24);
-}
-
-fn rmdWriteU32Le(v: u32, out: []u8, off: usize) {
-    out[off] = (v & 255) as u8;
-    out[off + 1] = ((v >> 8) & 255) as u8;
-    out[off + 2] = ((v >> 16) & 255) as u8;
-    out[off + 3] = ((v >> 24) & 255) as u8;
-}
-
-fn rmdHexNibble(v: u8): u8 {
-    if (v < 10) {
-        return 48 + v;
-    }
-    return 87 + v; // 'a' (97) - 10 = 87
-}
-
 fn rmdCompress(state: [5]u32, block: []u8): [5]u32 {
     let rl: [80]usize = [
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -104,10 +86,10 @@ fn rmdCompress(state: [5]u32, block: []u8): [5]u32 {
         8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
     ];
 
-    let x: [16]u32 = [0; 16];
+    let x: [16]u32 = undefined;
     let wi: usize = 0;
     while (wi < 16) {
-        x[wi] = rmdReadU32Le(block, wi * 4);
+        x[wi] = readU32Le(block, wi * 4);
         wi = wi + 1;
     }
 
@@ -163,7 +145,7 @@ pub struct Ripemd160 {
 
     pub static fn new(): Ripemd160 {
         let init_state: [5]u32 = [1732584193, 4023233417, 2562383102, 271733878, 3285377520];
-        let zero_buf: [64]u8 = [0; 64];
+        let zero_buf: [64]u8 = undefined;
         return Ripemd160 {
             state: init_state,
             buf: zero_buf,
@@ -220,7 +202,7 @@ pub struct Ripemd160 {
             return;
         }
         let st: [5]u32 = [_.state[0], _.state[1], _.state[2], _.state[3], _.state[4]];
-        let pad: [64]u8 = [0; 64];
+        let pad: [64]u8 = undefined;
         let pi: usize = 0;
         while (pi < _.buf_len) {
             pad[pi] = _.buf[pi];
@@ -251,7 +233,7 @@ pub struct Ripemd160 {
 
         let oi: usize = 0;
         while (oi < 5) {
-            rmdWriteU32Le(st[oi], out20, oi * 4);
+            writeU32Le(out20, oi * 4, st[oi]);
             oi = oi + 1;
         }
     }
@@ -260,13 +242,13 @@ pub struct Ripemd160 {
         if (out40.len < 40) {
             return 0;
         }
-        let digest: [20]u8 = [0; 20];
+        let digest: [20]u8 = undefined;
         _.finalize(digest[0..20]);
         let i: usize = 0;
         while (i < 20) {
             let b: u8 = digest[i];
-            out40[i * 2] = rmdHexNibble((b >> 4) & 15);
-            out40[i * 2 + 1] = rmdHexNibble(b & 15);
+            out40[i * 2] = hexCharLower((b >> 4) & 15);
+            out40[i * 2 + 1] = hexCharLower(b & 15);
             i = i + 1;
         }
         return 40;

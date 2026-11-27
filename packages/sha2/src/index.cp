@@ -34,7 +34,7 @@ pub struct Sha256 {
     }
 
     pub fn updateStr(*_, s: string) {
-        let chunk: [64]u8 = [0; 64];
+        let chunk: [64]u8 = undefined;
         let pos: usize = 0;
         while (pos < s.len) {
             let rem = s.len - pos;
@@ -54,7 +54,7 @@ pub struct Sha256 {
     }
 
     pub fn finalizeHex(*_, out64: []u8): usize {
-        let dig: [32]u8 = [0; 32];
+        let dig: [32]u8 = undefined;
         sha256Final(*_.st, dig[0..32]);
         return sh2EncodeHex(dig[0..32], out64);
     }
@@ -86,7 +86,7 @@ pub struct Sha224 {
     }
 
     pub fn updateStr(*_, s: string) {
-        let chunk: [64]u8 = [0; 64];
+        let chunk: [64]u8 = undefined;
         let pos: usize = 0;
         while (pos < s.len) {
             let rem = s.len - pos;
@@ -102,7 +102,7 @@ pub struct Sha224 {
     }
 
     pub fn finalize(*_, out28: []u8) {
-        let dig32: [32]u8 = [0; 32];
+        let dig32: [32]u8 = undefined;
         sha256Final(*_.st, dig32[0..32]);
         let i: usize = 0;
         while (i < 28 && i < out28.len) {
@@ -112,7 +112,7 @@ pub struct Sha224 {
     }
 
     pub fn finalizeHex(*_, out56: []u8): usize {
-        let dig28: [28]u8 = [0; 28];
+        let dig28: [28]u8 = undefined;
         _.finalize(dig28[0..28]);
         return sh2EncodeHex(dig28[0..28], out56);
     }

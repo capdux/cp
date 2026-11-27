@@ -14,14 +14,14 @@ pub struct HkdfSha256 {
             HmacSha256.newFromSlice(salt)
         };
         mac.update(ikm);
-        let prk_out: [32]u8 = [0; 32];
+        let prk_out: [32]u8 = undefined;
         mac.finalize(prk_out[0..32]);
         return HkdfSha256 { prk: prk_out };
     }
 
     pub static fn fromPrk(prk_in: []u8): HkdfSha256? {
         if (prk_in.len < HKDF_HASH_LEN) { return null; }
-        let buf: [32]u8 = [0; 32];
+        let buf: [32]u8 = undefined;
         let i: usize = 0;
         while (i < 32) {
             buf[i] = prk_in[i];
@@ -34,7 +34,7 @@ pub struct HkdfSha256 {
         if (okm.len > HKDF_MAX_OKM_LEN) { return false; }
         if (okm.len == 0) { return true; }
         let n_blocks = (okm.len + HMAC_SHA256_LEN - 1) / HMAC_SHA256_LEN;
-        let prev_t: [32]u8 = [0; 32];
+        let prev_t: [32]u8 = undefined;
         let out_pos: usize = 0;
         let ctr: usize = 1;
         let prk_local: [32]u8 = _.prk;

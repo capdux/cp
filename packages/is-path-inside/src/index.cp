@@ -1,6 +1,8 @@
 // @cap/is-path-inside — Zero-allocation path containment check in pure CP
 // Clean-room MIT implementation of npm `is-path-inside` (#655, 88.6M/wk).
 
+import { bytesEq } from "cap:bin";
+
 fn ipiIsSep(b: u8): bool {
     return b == 47 || b == 92; // '/' or '\'
 }
@@ -12,8 +14,8 @@ fn ipiNormalize(input: string, out: []u8): usize {
         return 0;
     }
     let is_abs = ipiIsSep(input[0]);
-    let seg_starts: [128]usize = [0; 128];
-    let seg_lens: [128]usize = [0; 128];
+    let seg_starts: [128]usize = undefined;
+    let seg_lens: [128]usize = undefined;
     let seg_count: usize = 0;
 
     let i: usize = 0;
@@ -94,8 +96,8 @@ pub fn isPathInside(child_path: string, parent_path: string): bool {
         return false;
     }
 
-    let cbuf: [1024]u8 = [0; 1024];
-    let pbuf: [1024]u8 = [0; 1024];
+    let cbuf: [1024]u8 = undefined;
+    let pbuf: [1024]u8 = undefined;
     const clen = ipiNormalize(child_path, cbuf[0..1024]);
     const plen = ipiNormalize(parent_path, pbuf[0..1024]);
 
@@ -108,13 +110,9 @@ pub fn isPathInside(child_path: string, parent_path: string): bool {
         return clen > 1 && cbuf[0] == 47;
     }
 
-    // Check prefix match
-    let i: usize = 0;
-    while (i < plen) {
-        if (cbuf[i] != pbuf[i]) {
-            return false;
-        }
-        i += 1;
+    // SIMD 16-lane prefix match
+    if (!bytesEq(cbuf[0..plen], pbuf[0..plen])) {
+        return false;
     }
     // Next character in child MUST be '/' so "/a/bc" is NOT inside "/a/b"
     return cbuf[plen] == 47;
@@ -128,21 +126,14 @@ pub fn isPathInsideOrEqual(child_path: string, parent_path: string): bool {
     if (child_path.len == 0 || parent_path.len == 0) {
         return false;
     }
-    let cbuf: [1024]u8 = [0; 1024];
-    let pbuf: [1024]u8 = [0; 1024];
+    let cbuf: [1024]u8 = undefined;
+    let pbuf: [1024]u8 = undefined;
     const clen = ipiNormalize(child_path, cbuf[0..1024]);
     const plen = ipiNormalize(parent_path, pbuf[0..1024]);
     if (clen != plen) {
         return false;
     }
-    let i: usize = 0;
-    while (i < clen) {
-        if (cbuf[i] != pbuf[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return bytesEq(cbuf[0..clen], pbuf[0..plen]);
 }
 
 export {

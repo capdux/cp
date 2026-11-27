@@ -1,9 +1,9 @@
 // Type definitions for CP
 
+import { strEq } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 import { FindUpOptions, FindUpWalker, joinDirAndName } from "../../find-up/src/index.cp";
 import { dirnameOf } from "../../npm-run-path/src/index.cp";
-export fn rfStrEq(a: string, b: string): bool;
-export fn rfPush(out: []u8, pos: usize, s: string): usize;
 export fn rfExists(path: string, files: []string): bool;
 export fn isRelativeSpecifier(spec: string): bool;
 export fn isScopedSpecifier(spec: string): bool;

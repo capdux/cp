@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { bytesEq } from "cap:bin";
 export fn ipiIsSep(b: u8): bool;
 export fn ipiNormalize(input: string, out: []u8): usize;
 export fn isPathInside(child_path: string, parent_path: string): bool;
