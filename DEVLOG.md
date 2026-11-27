@@ -602,3 +602,7 @@
 ## 2026-11-27: 紧急热修 `bun_agy` 工单 `task-bun-20261127-enum-slice-by-val`（防 Use-After-Return 悬垂栈切片）
 - **根因**：两层叠加——① `actor.rs` 将带负载 tagged `enum` 一刀切按值传 `self: Data`，且未识别返回自身/含借用视图结构体（如 `Data.substring()`）；② `pattern.rs` 在 `switch (self.*)` 中生成值捕获 `|arr|` 会把 `[16]u8` 拷贝到栈上导致 `arr[0..4]` 悬垂。
 - **修复**：`actor.rs` 仅对纯无负载 `enum` 按值传参、对带负载 tagged `enum`/`union(enum)` 启用 `needs_const_ptr_self` 并深度识别含借用视图返回类型；`pattern.rs` 对固定数组/值容器变体自动提升为 `|*arr|`。通过 `clobberStack()` 运行时地址区间测试与 `bun/src/sql/shared/Data.cp` 验证，已部署 release `cpc`、直通同步 `cpc_dev` 并结单通知 `bun_agy`。
+
+## 2026-11-27: 紧急热修 `bun_agy` 工单 `task-bun-20261127-zero-arg-call`（零参大写方法调用保留 `()`）
+- 对比测试 `BoringSSL.bar()` / `BoringSSL.ERR_clear_error(1)` / `BoringSSL.ERR_clear_error()` 10 秒锁定根因：Parser 将双大写标识符+`()` 解析为 `Expr::EnumInit { tuple_args: Some([]) }`，而 `error_flow.rs:952` 对 `!is_enum` 未检查 `ei.tuple_args.is_some()` 直接输出 `Obj.Prop`。
+- 在 `cpc/src/codegen/expr/error_flow.rs` 补充 `(!is_enum || is_enum_method) && ei.tuple_args.is_some()` 分支输出 `Obj.Prop()`，同步 `cpc_dev`，通过全部单测与 Zig 0.17 实测并发布 release `cpc` 结单通知 `bun_agy`。

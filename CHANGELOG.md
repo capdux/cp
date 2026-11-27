@@ -1434,3 +1434,6 @@
 ## [2026-11-27] - 紧急热修 `task-bun-20261127-enum-slice-by-val`：消除 `union(enum)`/tagged `enum` 只读方法返回内联数组切片的 Use-After-Return 隐患
 - `cpc/src/codegen/actor.rs`: 区分纯无负载枚举与带负载 tagged `enum`/`union(enum)`，新增 `returns_borrowed_view_in_ctx` 支持返回切片/指针/字符串或含借用视图的聚合类型（如 `Data.substring()`）时自动生成 `self: *const Self`。
 - `cpc/src/codegen/pattern.rs`: 对 `switch (self.*)` 中仅用于切片/索引/成员访问的固定数组/值容器变体自动提升为指针捕获 `|*arr|`，彻底避免按值拷贝栈帧悬垂切片（已通过 `clobberStack()` 运行时内存区间实测并发布 release 版 `cpc`）。
+
+## [2026-11-27] - 紧急热修 `task-bun-20261127-zero-arg-call`：修复大写命名空间/枚举方法零参调用丢失 `()` 的 Codegen 缺陷
+- `cpc/src/codegen/expr/error_flow.rs`: 在 `Expr::EnumInit` 的 `fields_slice.is_empty()` 分支中，当 `(!is_enum || is_enum_method) && ei.tuple_args.is_some()` 时输出 `Obj.Method()`（保留空参数调用括号），彻底修复 `BoringSSL.ERR_clear_error()` 被误生成为 `_ = BoringSSL.ERR_clear_error;` 的问题，已发布 release `cpc` 并同步 `cpc_dev`。

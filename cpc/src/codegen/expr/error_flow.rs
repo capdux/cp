@@ -948,7 +948,15 @@ impl Codegen {
                     }
                 } else if fields_slice.is_empty() {
                     let is_enum = self.enum_defs.contains_key(&ei.enum_name.sym);
-                    if !is_enum {
+                    let is_enum_method =
+                        self.enum_defs.get(&ei.enum_name.sym).map_or(false, |en| {
+                            en.methods
+                                .iter()
+                                .any(|m| m.ident.sym == ei.variant_name.sym)
+                        });
+                    if (!is_enum || is_enum_method) && ei.tuple_args.is_some() {
+                        format!("{}.{}()", ei.enum_name.sym, ei.variant_name.sym)
+                    } else if !is_enum {
                         format!("{}.{}", ei.enum_name.sym, ei.variant_name.sym)
                     } else {
                         let is_pure_enum =

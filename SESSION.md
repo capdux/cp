@@ -7824,3 +7824,9 @@
 - **复现用例**：`/data/dev/cp/temp/repro_enum_slice_self_by_val.cp`
 - **根因与修复**：`cpc/src/codegen/actor.rs` 区分纯无负载 `enum` 与带负载 tagged `enum`/`union(enum)`，对返回切片/指针/字符串或含借用视图聚合类型的只读方法自动生成 `self: *const Self`（覆盖 `Data.slice`/`sliceZ`/`substring`）；`cpc/src/codegen/pattern.rs` 对 `switch (self.*)` 中仅做切片/索引/成员访问的固定数组/值容器变体自动提升为指针捕获 `|*arr|` 彻底消除 Use-After-Return 悬垂栈切片。
 - **验证与结单**：已直通同步回 `cpc_dev/src/codegen/`，执行 `bash scripts/sync_cpc.sh release` 原子部署生效，通过 `cargo test`、`clobberStack()` 运行时地址区间实测与 `/data/dev/bun/src/sql/shared/Data.cp` 验证，已调用 `resolve_task.py` 结单通知 `bun_agy`。
+
+### [2026-11-27 15:06] 下游工单紧急热修结单（来自 `bun_agy`）
+- **任务编号**：`task-bun-20261127-zero-arg-call`
+- **复现用例**：`/data/dev/cp/temp/repro_zero_arg_extern_call.cp`
+- **根因与修复**：双大写标识零参调用（如 `BoringSSL.ERR_clear_error()`）被 Parser 解析为 `Expr::EnumInit { tuple_args: Some([]) }`；`cpc/src/codegen/expr/error_flow.rs:949` 在 `!is_enum` 且 `fields_slice.is_empty()` 分支中未判断 `ei.tuple_args.is_some()` 导致丢失 `()`。已修复为 `if (!is_enum || is_enum_method) && ei.tuple_args.is_some() { format!("{}.{}()", ...) }` 并同步回 `cpc_dev/src/codegen/expr/error_flow.rs`。
+- **验证与结单**：`cargo test --lib` + `golden_and_fuzz` 6/6 全绿，已执行 `bash scripts/sync_cpc.sh release` 原子部署生效，`repro_zero_arg_extern_call.cp` 正确生成 `_ = BoringSSL.ERR_clear_error();`（`ZIG_VOID_DISCARD_OK`），已调用 `resolve_task.py` 结单并 `ack` 确认。
