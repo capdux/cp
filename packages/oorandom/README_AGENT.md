@@ -6,3 +6,4 @@
 ## Functions
 - `export fn oorStep(st: u64, inc: u64): u64;`
 - `export fn oorOutput(oldstate: u64): u32;`
+- `export fn oorAdvanceState(st_in: u64, inc: u64, delta_in: u64): u64;`

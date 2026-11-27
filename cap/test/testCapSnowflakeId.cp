@@ -1,7 +1,10 @@
 import { test, expect_eq } from "cap:test";
 import {
     SnowflakeGenerator, encodeSnowflake, decodeSnowflake,
-    formatSnowflake, parseSnowflake, TWITTER_EPOCH_MS, DISCORD_EPOCH_MS, SF_MAX_SEQUENCE
+    compose, decompose, timestamp, datacenterId, workerId, sequence,
+    minIdForTimestamp, maxIdForTimestamp, isValidSnowflakeString,
+    formatSnowflake, parseSnowflake, parse,
+    TWITTER_EPOCH_MS, DISCORD_EPOCH_MS, SF_MAX_SEQUENCE
 } from "../../packages/snowflake/src/index.cp";
 
 fn eqBuf(buf: []const u8, len: usize, expected: string): bool {
@@ -73,5 +76,42 @@ fn main() {
         expect_eq(parsed, id);
         expect_eq(parseSnowflake("not-a-num") == null, true);
         expect_eq(parseSnowflake("") == null, true);
+    });
+
+    test("7. @cap/snowflake-id — compose, decompose, field extractors & parse", () => {
+        let custom_epoch: u64 = 1600000000000;
+        let ts: u64 = custom_epoch + 54321;
+        let id = compose(custom_epoch, ts, 19, 27, 1023);
+        let p = decompose(id, custom_epoch);
+        expect_eq(p.timestamp_ms, ts);
+        expect_eq(p.datacenter_id, 19);
+        expect_eq(p.worker_id, 27);
+        expect_eq(p.sequence, 1023);
+        expect_eq(timestamp(id, custom_epoch), ts);
+        expect_eq(datacenterId(id), 19);
+        expect_eq(workerId(id), 27);
+        expect_eq(sequence(id), 1023);
+        expect_eq(id >= minIdForTimestamp(custom_epoch, ts), true);
+        expect_eq(id <= maxIdForTimestamp(custom_epoch, ts), true);
+        expect_eq(parse("18446744073709551615") != null, true);
+        expect_eq(parse("18446744073709551616") == null, true);
+        expect_eq(isValidSnowflakeString("123456789"), true);
+        expect_eq(isValidSnowflakeString("123a"), false);
+    });
+
+    test("8. @cap/snowflake-id — withTwitterEpoch, withDiscordEpoch, nextBatch, compose/decompose/reset", () => {
+        let tw = SnowflakeGenerator.withTwitterEpoch(2, 4);
+        let dc = SnowflakeGenerator.withDiscordEpoch(6, 8);
+        let batch: [4]u64 = [0, 0, 0, 0];
+        let count = tw.nextBatch(TWITTER_EPOCH_MS + 1000, batch[0..4]);
+        expect_eq(count, 4);
+        expect_eq(tw.timestamp(batch[0]), TWITTER_EPOCH_MS + 1000);
+        expect_eq(tw.decompose(batch[3]).sequence, 3);
+        let manual = dc.compose(DISCORD_EPOCH_MS + 2000, 77);
+        expect_eq(dc.decompose(manual).worker_id, 8);
+        expect_eq(dc.decompose(manual).sequence, 77);
+        tw.reset();
+        expect_eq(tw.last_ts_ms, 0);
+        expect_eq(tw.sequence, 0);
     });
 }

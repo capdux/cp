@@ -1,8 +1,13 @@
 import { test, expect_eq } from "cap:test";
 import {
     encode,
+    encodeString,
     decode,
+    decodeNext,
     encodedLen,
+    countFrames,
+    isValidNetstring,
+    NetstringDecoder,
     NS_OK,
     NS_INCOMPLETE,
     NS_INVALID,
@@ -85,5 +90,43 @@ fn main() {
         expect_eq(decode("abc").status, NS_INVALID);
         let tiny: [4]u8 = undefined;
         expect_eq(encode("hello", tiny[0..4]), -1);
+    });
+
+    test("decodeNext streaming multi-frame & NetstringDecoder cursor", () => {
+        const stream: []const u8 = "3:foo,5:hello,0:,2:hi,";
+        expect_eq(countFrames(stream), 4);
+        expect_eq(isValidNetstring("3:foo,"), true);
+        expect_eq(isValidNetstring("3:foo,0:,"), false);
+        expect_eq(countFrames("3:foo,01:bad,"), -1);
+
+        let off: usize = 0;
+        let f1 = decodeNext(stream, off);
+        expect_eq(f1.isOk(), true);
+        expect_eq(eqBytes(f1.payload(stream), "foo"), true);
+        off += f1.consumed;
+
+        let f2 = decodeNext(stream, off);
+        expect_eq(f2.isOk(), true);
+        expect_eq(eqBytes(f2.payload(stream), "hello"), true);
+        off += f2.consumed;
+
+        let decoder = NetstringDecoder.new();
+        let d1 = decoder.next(stream);
+        let d2 = decoder.next(stream);
+        let d3 = decoder.next(stream);
+        let d4 = decoder.next(stream);
+        let d5 = decoder.next(stream);
+        expect_eq(eqBytes(d1.payload(stream), "foo"), true);
+        expect_eq(eqBytes(d2.payload(stream), "hello"), true);
+        expect_eq(d3.payload_len, 0);
+        expect_eq(eqBytes(d4.payload(stream), "hi"), true);
+        expect_eq(d5.isIncomplete(), true);
+        expect_eq(decoder.position(), stream.len);
+        decoder.reset();
+        expect_eq(decoder.position(), 0);
+
+        let buf: [16]u8 = undefined;
+        expect_eq(encodeString("cp", buf[0..16]), 5);
+        expect_eq(eqBytes(buf[0..5], "2:cp,"), true);
     });
 }

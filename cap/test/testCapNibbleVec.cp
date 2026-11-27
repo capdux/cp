@@ -2,6 +2,7 @@ import { test, expect_eq } from "cap:test";
 import {
     NIBBLE_MAX_BYTES,
     NibbleVec,
+    Nibblet,
 } from "../../packages/nibble_vec/src/index.cp";
 
 fn main() {
@@ -82,5 +83,54 @@ fn main() {
         expect_eq(v.len(), 128);
         expect_eq(v.push(0x1), false);
         expect_eq(v.get(127).?, 0xF);
+    });
+
+    test("7. @cap/nibble-vec — fromByteSlice, Nibblet alias, asBytes, copyBytes & byteLen", () => {
+        const raw: [3]u8 = [0xDE, 0xAD, 0xBE];
+        let v: Nibblet = NibbleVec.fromByteSlice(raw[0..3]);
+        expect_eq(v.len(), 6);
+        expect_eq(v.byteLen(), 3);
+        const view: []const u8 = v.asBytes();
+        expect_eq(view.len, 3);
+        expect_eq(view[0], 0xDE);
+        expect_eq(view[2], 0xBE);
+
+        let out: [4]u8 = [0, 0, 0, 0];
+        expect_eq(v.copyBytes(out[0..4]), 3);
+        expect_eq(out[1], 0xAD);
+    });
+
+    test("8. @cap/nibble-vec — split, join, extend, slice, hasPrefix, equals, truncate & clear", () => {
+        const raw: [3]u8 = [0x12, 0x34, 0x56];
+        let v = NibbleVec.fromByteSlice(raw[0..3]);
+        const orig = NibbleVec.fromByteSlice(raw[0..3]);
+
+        // Split at odd nibble index 3: [1,2,3] and [4,5,6]
+        const tail = v.split(3);
+        expect_eq(v.len(), 3);
+        expect_eq(tail.len(), 3);
+        expect_eq(v.get(0).?, 0x1);
+        expect_eq(v.get(2).?, 0x3);
+        expect_eq(tail.get(0).?, 0x4);
+        expect_eq(tail.get(2).?, 0x6);
+
+        // Join restores original vector
+        const rejoined = v.join(tail);
+        expect_eq(rejoined.equals(orig), true);
+        expect_eq(orig.hasPrefix(v), true);
+
+        // slice [1..5) -> [2,3,4,5]
+        const sub = orig.slice(1, 5);
+        expect_eq(sub.len(), 4);
+        expect_eq(sub.get(0).?, 0x2);
+        expect_eq(sub.get(3).?, 0x5);
+
+        // extend, truncate & clear
+        expect_eq(v.extend(tail), true);
+        expect_eq(v.equals(orig), true);
+        v.truncate(2);
+        expect_eq(v.len(), 2);
+        v.clear();
+        expect_eq(v.isEmpty(), true);
     });
 }

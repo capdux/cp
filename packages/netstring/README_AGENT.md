@@ -6,4 +6,8 @@
 ## Functions
 - `export fn encodedLen(payload_len: usize): usize;`
 - `export fn encode(payload: &[]u8, dst: []u8): i64;`
+- `export fn encodeString(payload: string, dst: []u8): i64;`
 - `export fn decode(buf: &[]u8): NetstringFrame;`
+- `export fn decodeNext(buf: &[]u8, offset: usize): NetstringFrame;`
+- `export fn countFrames(buf: &[]u8): i64;`
+- `export fn isValidNetstring(buf: &[]u8): bool;`

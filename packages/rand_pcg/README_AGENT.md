@@ -6,4 +6,8 @@
 ## Functions
 - `export fn wrapAdd64(a: u64, b: u64): u64;`
 - `export fn wrapMul64(a: u64, b: u64): u64;`
+- `export fn mul64Full(a: u64, b: u64): U128Pair;`
+- `export fn wrapMul128(a_hi: u64, a_lo: u64, b_hi: u64, b_lo: u64): U128Pair;`
 - `export fn rotr32(x: u32, r: u32): u32;`
+- `export fn rotr64(x: u64, r: u32): u64;`
+- `export fn splitmix64Next(x_in: u64): u64;`

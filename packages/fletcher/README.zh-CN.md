@@ -19,10 +19,14 @@ import { fletcher16 } from "fletcher";
 ## 核心导出 API
 
 - `export fn fletcher16(data: string): u16;`
-- `export fn fletcher16Bytes(data: []u8): u16;`
+- `export fn fletcher16Bytes(data: &[]u8): u16;`
+- `export fn calcFletcher16(data: &[]u8): u16;`
 - `export fn fletcher32(data: string): u32;`
-- `export fn fletcher32Bytes(data: []u8): u32;`
+- `export fn fletcher32Bytes(data: &[]u8): u32;`
+- `export fn calcFletcher32(words: &[]u16): u32;`
 - `export fn fletcher64(data: string): u64;`
+- `export fn fletcher64Bytes(data: &[]u8): u64;`
+- `export fn calcFletcher64(words: &[]u32): u64;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

@@ -4,9 +4,21 @@ import {
     F64Margin,
     F32Margin,
     approxEqF64,
+    approxNeF64,
     approxEqF32,
+    approxNeF32,
     approxEqRatioF64,
-    approxOrdF64
+    approxEqRatioF32,
+    approxOrdF64,
+    approxOrdF32,
+    ulpsDiffF64,
+    ulpsDiffF32,
+    nextUp,
+    nextDown,
+    nextUpF64,
+    nextDownF64,
+    nextUpF32,
+    nextDownF32
 } from "../../packages/float-cmp/src/index.cp";
 
 fn main() {
@@ -104,5 +116,45 @@ fn main() {
         expect_eq(approxOrdF64(nan, nan, m), 0);
         expect_eq(approxOrdF64(nan, pos_inf, m), 1);
         expect_eq(approxOrdF64(pos_inf, nan, m), -1);
+    });
+
+    test("7. @cap/float-cmp — ulpsDiffF64/F32 & nextUp/nextDown", () => {
+        let a64: f64 = 1.0;
+        let up64: f64 = nextUp(a64);
+        let dn64: f64 = nextDown(a64);
+        expect_eq(up64 > a64, true);
+        expect_eq(dn64 < a64, true);
+        expect_eq(nextDownF64(up64), a64);
+        expect_eq(nextUpF64(dn64), a64);
+        expect_eq(ulpsDiffF64(up64, a64) ?? 0, 1);
+        expect_eq(ulpsDiffF64(dn64, a64) ?? 0, -1);
+        // Cross-zero ULP diff: nextDown(0.0) to nextUp(0.0) is 2 ULPs
+        expect_eq(ulpsDiffF64(nextUp(0.0), nextDown(0.0)) ?? 0, 2);
+
+        let a32: f32 = 1.0;
+        let up32: f32 = nextUpF32(a32);
+        let dn32: f32 = nextDownF32(a32);
+        expect_eq(up32 > a32, true);
+        expect_eq(dn32 < a32, true);
+        expect_eq(nextDownF32(up32), a32);
+        expect_eq(ulpsDiffF32(up32, a32) ?? 0, 1);
+        expect_eq(ulpsDiffF32(dn32, a32) ?? 0, -1);
+
+        let z: f64 = 0.0;
+        let nan: f64 = z / z;
+        expect_eq(ulpsDiffF64(nan, 1.0) == null, true);
+    });
+
+    test("8. @cap/float-cmp — approxNe, approxEqRatioF32, approxOrdF32 & fromTuple", () => {
+        let m64 = F64Margin.fromTuple(1.0e-9, 2);
+        expect_eq(approxNeF64(1.0, 2.0, m64), true);
+        expect_eq(approxNeF64(1.0, 1.0, m64), false);
+
+        let m32 = F32Margin.fromTuple(1.0e-5, 2);
+        expect_eq(approxNeF32(1.0, 2.0, m32), true);
+        expect_eq(approxEqRatioF32(1000.0, 1000.005, 1.0e-4), true);
+        expect_eq(approxOrdF32(1.0, 1.000001, m32), 0);
+        expect_eq(approxOrdF32(1.0, 2.0, m32), -1);
+        expect_eq(approxOrdF32(2.0, 1.0, m32), 1);
     });
 }

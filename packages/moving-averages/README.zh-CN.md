@@ -13,13 +13,21 @@ cap add moving-averages
 ```
 
 ```cp
-import { smaSlice } from "moving-averages";
+import { maNan } from "moving-averages";
 ```
 
 ## 核心导出 API
 
+- `export fn maNan(): f64;`
 - `export fn smaSlice(xs: []f64): f64;`
 - `export fn wmaSlice(xs: []f64): f64;`
+- `export fn ma(data: &[]f64, size: usize, out: []f64): usize;`
+- `export fn sma(data: &[]f64, size: usize, out: []f64): usize;`
+- `export fn dma(data: &[]f64, alpha: f64, out: []f64): usize;`
+- `export fn ema(data: &[]f64, size: usize, out: []f64): usize;`
+- `export fn smma(data: &[]f64, size: usize, out: []f64): usize;`
+- `export fn wma(data: &[]f64, size: usize, out: []f64): usize;`
+- `export fn cma(data: &[]f64, out: []f64): usize;`
 
 <!-- cap-source-attribution -->
 ## 上游来源与许可证说明

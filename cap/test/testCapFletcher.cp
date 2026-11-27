@@ -1,7 +1,9 @@
 import { test, expect_eq } from "cap:test";
 import {
-    Fletcher16, fletcher16, fletcher16Bytes,
-    fletcher32, fletcher32Bytes, fletcher64
+    Fletcher16, Fletcher32, Fletcher64,
+    fletcher16, fletcher16Bytes, calcFletcher16,
+    fletcher32, fletcher32Bytes, calcFletcher32,
+    fletcher64, fletcher64Bytes, calcFletcher64
 } from "../../packages/fletcher/src/index.cp";
 
 fn main() {
@@ -43,5 +45,49 @@ fn main() {
         let h3 = fletcher64("hgfedcba");
         expect_eq(h1, h2);
         expect_eq(h1 != h3, true);
+    });
+
+    test("Fletcher16 init/value/reset/withInitialValues & calcFletcher16", () => {
+        let h = Fletcher16.init();
+        h.update("abcde");
+        expect_eq(h.value(), 0xC8F0 as u16);
+        h.reset();
+        expect_eq(h.value(), 0 as u16);
+
+        const raw: [5]u8 = [97, 98, 99, 100, 101];
+        expect_eq(calcFletcher16(raw[0..5]), 0xC8F0 as u16);
+
+        let h2 = Fletcher16.withInitialValues(1, 2);
+        expect_eq(h2.value(), 0x0201 as u16);
+    });
+
+    test("Fletcher32 streaming across odd chunk boundaries & calcFletcher32", () => {
+        let h = Fletcher32.init();
+        h.update("a");
+        h.update("bc");
+        h.update("de");
+        expect_eq(h.value(), fletcher32("abcde"));
+        h.reset();
+        h.update("abc");
+        h.update("defgh");
+        expect_eq(h.digest(), fletcher32("abcdefgh"));
+
+        const words: [2]u16 = [0x6261, 0x6463]; // "abcd" little-endian
+        expect_eq(calcFletcher32(words[0..2]), fletcher32("abcd"));
+    });
+
+    test("Fletcher64 streaming across unaligned chunks, fletcher64Bytes & calcFletcher64", () => {
+        let h = Fletcher64.init();
+        h.update("a");
+        h.update("bc");
+        h.update("def");
+        h.update("gh");
+        expect_eq(h.value(), fletcher64("abcdefgh"));
+
+        const raw: [8]u8 = [97, 98, 99, 100, 101, 102, 103, 104];
+        expect_eq(fletcher64Bytes(raw[0..8]), fletcher64("abcdefgh"));
+
+        const words: [2]u32 = [0x64636261, 0x68676665]; // "abcdefgh" little-endian
+        expect_eq(calcFletcher64(words[0..2]), fletcher64("abcdefgh"));
     });
 }
