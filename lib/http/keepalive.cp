@@ -80,7 +80,7 @@ export struct KeepAliveParams {
     max_requests: u64?,
 
     /// Parse `Keep-Alive: timeout=5, max=100` (case-insensitive, skips unknown parameters).
-    pub fn parse(header: []const u8): KeepAliveParams {
+    pub static fn parse(header: []const u8): KeepAliveParams {
         let res = KeepAliveParams {
             timeout_sec: null,
             max_requests: null,

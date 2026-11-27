@@ -171,7 +171,7 @@ export struct PreferHeader {
 
     /// Parse standard RFC 7240 preferences from a `Prefer` header value.
     /// First occurrence wins per RFC 7240 §2.
-    pub fn parse(header: []const u8): PreferHeader {
+    pub static fn parse(header: []const u8): PreferHeader {
         let res = PreferHeader {
             respond_async: false,
             return_pref: ReturnPref.none,

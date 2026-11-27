@@ -70,7 +70,7 @@ export struct ClearSiteData {
 
     /// Parse W3C Clear-Site-Data header (`"cache", "cookies", "storage", "executionContexts"`, `"clientHints"`, or `"*"`).
     /// Per W3C Clear-Site-Data §3.1, directives are case-sensitive quoted strings; unknown or unquoted tokens are ignored.
-    pub fn parse(header: []const u8): ClearSiteData {
+    pub static fn parse(header: []const u8): ClearSiteData {
         let res = ClearSiteData.none();
         let pos: usize = 0;
         while (pos < header.len) {

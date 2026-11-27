@@ -248,7 +248,7 @@ export struct CacheControl {
     only_if_cached: bool = false;
 
     /// 解析 HTTP Cache-Control 头部（大小写无关，严格校验 delta-seconds）
-    fn parse(header: []const u8): CacheControl {
+    static fn parse(header: []const u8): CacheControl {
         let cc = CacheControl{};
         let it = CacheControlIter.init(header);
 

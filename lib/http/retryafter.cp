@@ -118,7 +118,7 @@ export struct RetryAfter {
     target_unix_sec: i64,
 
     /// Parse an RFC 9110 §10.2.3 `Retry-After` header (either non-negative integer seconds or IMF-fixdate).
-    pub fn parse(header: []const u8): RetryAfter? {
+    pub static fn parse(header: []const u8): RetryAfter? {
         const s = trimWs(header);
         if (s.len == 0) return null;
         if (secs := parseU64Strict(s)) {
