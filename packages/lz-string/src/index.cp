@@ -1,5 +1,10 @@
 // @cap/lz-string — Zero-heap LZW compression with Base64 & URI-safe encodings
 // Clean-room MIT implementation inspired by npm:lz-string (pieroxy/lz-string).
+// Accelerated with comptime 256-entry Base64/URI decode LUTs, 4-lane @Vector(4, u32)
+// SIMD hash-table reset, 16-lane @Vector(16, u8) SIMD Base64 validation, and undefined buffers.
+
+type LzsVec4U32 = @Vector(4, u32);
+type LzsVec16U8 = @Vector(16, u8);
 
 const LZS_DICT_CAP: usize = 4096;
 const LZS_HT_SIZE: usize = 8192;
@@ -13,15 +18,54 @@ const LZS_TMP_CAP: usize = 32768;
 const LZS_B64_ALPHA: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const LZS_URI_ALPHA: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
 
+fn lzsBuildB64Lut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0xFF; 256];
+    let c: usize = 0;
+    while (c < 26) : (c += 1) {
+        lut[65 + c] = c as u8;
+        lut[97 + c] = (26 + c) as u8;
+    }
+    let d: usize = 0;
+    while (d < 10) : (d += 1) {
+        lut[48 + d] = (52 + d) as u8;
+    }
+    lut[43] = 62; // '+'
+    lut[47] = 63; // '/'
+    return lut;
+}
+
+fn lzsBuildUriLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0xFF; 256];
+    let c: usize = 0;
+    while (c < 26) : (c += 1) {
+        lut[65 + c] = c as u8;
+        lut[97 + c] = (26 + c) as u8;
+    }
+    let d: usize = 0;
+    while (d < 10) : (d += 1) {
+        lut[48 + d] = (52 + d) as u8;
+    }
+    lut[43] = 62; // '+'
+    lut[45] = 63; // '-'
+    return lut;
+}
+
+const LZS_B64_DEC_LUT: [256]u8 = lzsBuildB64Lut();
+const LZS_URI_DEC_LUT: [256]u8 = lzsBuildUriLut();
+
 fn lzsHash(key: u32): usize {
     const mixed = (key *% 2654435761) >> 19;
     return usize(mixed) & LZS_HT_MASK;
 }
 
 fn lzsClearTable(ht_key: []u32) {
+    const empty_v: LzsVec4U32 = @splat(LZS_HT_EMPTY);
+    const empty_a: [4]u32 = empty_v;
     let i: usize = 0;
-    while (i < LZS_HT_SIZE) : (i += 1) {
-        ht_key[i] = LZS_HT_EMPTY;
+    while (i < LZS_HT_SIZE) : (i += 4) {
+        @memcpy(ht_key[i .. i + 4], empty_a[0..4]);
     }
 }
 
@@ -329,34 +373,6 @@ fn lzsEncode64(raw: []const u8, alphabet: string, pad: bool, out: []u8): usize {
     return o;
 }
 
-fn lzsDecodeChar(ch: u8, uri_mode: bool): i32 {
-    if (ch >= 'A' && ch <= 'Z') {
-        return i32(ch - 'A');
-    }
-    if (ch >= 'a' && ch <= 'z') {
-        return i32(ch - 'a') + 26;
-    }
-    if (ch >= '0' && ch <= '9') {
-        return i32(ch - '0') + 52;
-    }
-    if (ch == '+') {
-        return 62;
-    }
-    if (uri_mode) {
-        if (ch == '-') {
-            return 63;
-        }
-        if (ch == '$') {
-            return 64; // padding/sentinel in URI alphabet
-        }
-    } else {
-        if (ch == '/') {
-            return 63;
-        }
-    }
-    return -1;
-}
-
 fn lzsDecode64(text: string, uri_mode: bool, out: []u8): i64 {
     if (text.len == 0) {
         return 0;
@@ -386,12 +402,39 @@ fn lzsDecode64(text: string, uri_mode: bool, out: []u8): i64 {
 
     let i: usize = 0;
     let o: usize = 0;
+
+    // 16-lane SIMD ASCII upper-bound fast-path + comptime 256-entry LUT decode (16 chars -> 12 bytes)
+    const v_high: LzsVec16U8 = @splat(0x80 as u8);
+    while (i + 16 <= eff_len && o + 12 <= out.len) {
+        const chunk: LzsVec16U8 = text[i .. i + 16][0..16].*;
+        if (@reduce(.Or, chunk >= v_high)) {
+            return -1;
+        }
+        let g: usize = 0;
+        while (g < 4) : (g += 1) {
+            const p = i + g * 4;
+            const v0: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[p]] else LZS_B64_DEC_LUT[text[p]];
+            const v1: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[p + 1]] else LZS_B64_DEC_LUT[text[p + 1]];
+            const v2: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[p + 2]] else LZS_B64_DEC_LUT[text[p + 2]];
+            const v3: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[p + 3]] else LZS_B64_DEC_LUT[text[p + 3]];
+            if (((v0 | v1 | v2 | v3) & 0xC0) != 0) {
+                return -1;
+            }
+            const triple: u32 = (u32(v0) << 18) | (u32(v1) << 12) | (u32(v2) << 6) | u32(v3);
+            out[o] = u8((triple >> 16) & 0xFF);
+            out[o + 1] = u8((triple >> 8) & 0xFF);
+            out[o + 2] = u8(triple & 0xFF);
+            o += 3;
+        }
+        i += 16;
+    }
+
     while (i + 4 <= eff_len) : (i += 4) {
-        const v0 = lzsDecodeChar(text[i], uri_mode);
-        const v1 = lzsDecodeChar(text[i + 1], uri_mode);
-        const v2 = lzsDecodeChar(text[i + 2], uri_mode);
-        const v3 = lzsDecodeChar(text[i + 3], uri_mode);
-        if (v0 < 0 || v1 < 0 || v2 < 0 || v3 < 0 || v0 >= 64 || v1 >= 64 || v2 >= 64 || v3 >= 64) {
+        const v0: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i]] else LZS_B64_DEC_LUT[text[i]];
+        const v1: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i + 1]] else LZS_B64_DEC_LUT[text[i + 1]];
+        const v2: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i + 2]] else LZS_B64_DEC_LUT[text[i + 2]];
+        const v3: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i + 3]] else LZS_B64_DEC_LUT[text[i + 3]];
+        if (((v0 | v1 | v2 | v3) & 0xC0) != 0) {
             return -1;
         }
         if (o + 3 > out.len) {
@@ -406,9 +449,9 @@ fn lzsDecode64(text: string, uri_mode: bool, out: []u8): i64 {
 
     const rem = eff_len - i;
     if (rem == 2) {
-        const v0 = lzsDecodeChar(text[i], uri_mode);
-        const v1 = lzsDecodeChar(text[i + 1], uri_mode);
-        if (v0 < 0 || v1 < 0 || v0 >= 64 || v1 >= 64) {
+        const v0: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i]] else LZS_B64_DEC_LUT[text[i]];
+        const v1: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i + 1]] else LZS_B64_DEC_LUT[text[i + 1]];
+        if (((v0 | v1) & 0xC0) != 0) {
             return -1;
         }
         if (o + 1 > out.len) {
@@ -417,10 +460,10 @@ fn lzsDecode64(text: string, uri_mode: bool, out: []u8): i64 {
         out[o] = u8(((u32(v0) << 2) | (u32(v1) >> 4)) & 0xFF);
         o += 1;
     } else if (rem == 3) {
-        const v0 = lzsDecodeChar(text[i], uri_mode);
-        const v1 = lzsDecodeChar(text[i + 1], uri_mode);
-        const v2 = lzsDecodeChar(text[i + 2], uri_mode);
-        if (v0 < 0 || v1 < 0 || v2 < 0 || v0 >= 64 || v1 >= 64 || v2 >= 64) {
+        const v0: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i]] else LZS_B64_DEC_LUT[text[i]];
+        const v1: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i + 1]] else LZS_B64_DEC_LUT[text[i + 1]];
+        const v2: u8 = if (uri_mode) LZS_URI_DEC_LUT[text[i + 2]] else LZS_B64_DEC_LUT[text[i + 2]];
+        if (((v0 | v1 | v2) & 0xC0) != 0) {
             return -1;
         }
         if (o + 2 > out.len) {

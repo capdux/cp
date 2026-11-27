@@ -1,6 +1,8 @@
 // @cap/pbkdf2-sha256 — Pure CP zero-allocation RFC 2898 / RFC 8018 PBKDF2-HMAC-SHA256
 // Parity with RustCrypto `pbkdf2` & npm `pbkdf2`.
 // Reuses SHA-256 & constant-time `ctEqual` from `@cap/cookie-signature`.
+// Accelerated with 16-lane @Vector(16, u8) SIMD pad XOR & 32-byte block XOR accumulation,
+// plus bulk @memcpy/@memset and undefined stack buffers.
 
 import {
     Sha256State,
@@ -11,42 +13,47 @@ import {
     ctEqual
 } from "../../cookie-signature/src/index.cp";
 
+type PbkVec16 = @Vector(16, u8);
+
 struct Pbkdf2Pads {
     inner_base: Sha256State,
     outer_base: Sha256State,
 }
 
+fn pbkdf2Xor32Simd(acc: *[32]u8, cur: [32]u8) {
+    const a0: PbkVec16 = acc.*[0..16].*;
+    const a1: PbkVec16 = acc.*[16..32].*;
+    const b0: PbkVec16 = cur[0..16].*;
+    const b1: PbkVec16 = cur[16..32].*;
+    const r0: [16]u8 = a0 ^ b0;
+    const r1: [16]u8 = a1 ^ b1;
+    @memcpy(acc.*[0..16], r0[0..16]);
+    @memcpy(acc.*[16..32], r1[0..16]);
+}
+
 fn pbkdf2InitPads(password: []const u8): Pbkdf2Pads {
     let key_blk: [64]u8 = undefined;
-    let i: usize = 0;
-    while (i < 64) {
-        key_blk[i] = 0;
-        i = i + 1;
-    }
+    @memset(key_blk[0..64], 0);
 
     if (password.len > 64) {
-        let kh: [32]u8 = undefined;
-        sha256(password, kh[0..32]);
-        i = 0;
-        while (i < 32) {
-            key_blk[i] = kh[i];
-            i = i + 1;
-        }
-    } else {
-        i = 0;
-        while (i < password.len) {
-            key_blk[i] = password[i];
-            i = i + 1;
-        }
+        sha256(password, key_blk[0..32]);
+    } else if (password.len > 0) {
+        @memcpy(key_blk[0..password.len], password[0..password.len]);
     }
 
     let ipad: [64]u8 = undefined;
     let opad: [64]u8 = undefined;
-    i = 0;
-    while (i < 64) {
-        ipad[i] = key_blk[i] ^ 0x36;
-        opad[i] = key_blk[i] ^ 0x5C;
-        i = i + 1;
+    const v36: PbkVec16 = @splat(0x36 as u8);
+    const v5c: PbkVec16 = @splat(0x5C as u8);
+
+    let off: usize = 0;
+    while (off < 64) {
+        const kv: PbkVec16 = key_blk[off .. off + 16][0..16].*;
+        const iv: [16]u8 = kv ^ v36;
+        const ov: [16]u8 = kv ^ v5c;
+        @memcpy(ipad[off .. off + 16], iv[0..16]);
+        @memcpy(opad[off .. off + 16], ov[0..16]);
+        off += 16;
     }
 
     let inner_base = sha256Init();
@@ -62,7 +69,7 @@ fn pbkdf2InitPads(password: []const u8): Pbkdf2Pads {
 }
 
 fn pbkdf2HmacSaltBlock(pads: Pbkdf2Pads, salt: []const u8, block_idx: u32, out32: []u8) {
-    let idx_be: [4]u8 = [
+    const idx_be: [4]u8 = [
         ((block_idx >> 24) & 0xFF) as u8,
         ((block_idx >> 16) & 0xFF) as u8,
         ((block_idx >> 8) & 0xFF) as u8,
@@ -107,7 +114,7 @@ pub fn pbkdf2HmacSha256(
         return true;
     }
 
-    let pads = pbkdf2InitPads(password);
+    const pads = pbkdf2InitPads(password);
     let u_prev: [32]u8 = undefined;
     let u_cur: [32]u8 = undefined;
     let t_acc: [32]u8 = undefined;
@@ -118,37 +125,22 @@ pub fn pbkdf2HmacSha256(
     while (out_pos < out_dk.len) {
         // U_1 = PRF(Password, Salt || INT_32_BE(i))
         pbkdf2HmacSaltBlock(pads, salt, block_idx, u_prev[0..32]);
-        let j: usize = 0;
-        while (j < 32) {
-            t_acc[j] = u_prev[j];
-            j = j + 1;
-        }
+        @memcpy(t_acc[0..32], u_prev[0..32]);
 
-        // U_2 .. U_c
+        // U_2 .. U_c with 16-lane SIMD XOR accumulation
         let iter: u32 = 1;
         while (iter < iterations) {
             pbkdf2Hmac32(pads, u_prev[0..32], u_cur[0..32]);
-            j = 0;
-            while (j < 32) {
-                t_acc[j] = t_acc[j] ^ u_cur[j];
-                u_prev[j] = u_cur[j];
-                j = j + 1;
-            }
-            iter = iter + 1;
+            pbkdf2Xor32Simd(&t_acc, u_cur);
+            @memcpy(u_prev[0..32], u_cur[0..32]);
+            iter += 1;
         }
 
-        let rem = out_dk.len - out_pos;
-        let copy_len: usize = 32;
-        if (rem < copy_len) {
-            copy_len = rem;
-        }
-        j = 0;
-        while (j < copy_len) {
-            out_dk[out_pos + j] = t_acc[j];
-            j = j + 1;
-        }
-        out_pos = out_pos + copy_len;
-        block_idx = block_idx + 1;
+        const rem = out_dk.len - out_pos;
+        const copy_len = if (rem < 32) rem else 32;
+        @memcpy(out_dk[out_pos .. out_pos + copy_len], t_acc[0..copy_len]);
+        out_pos += copy_len;
+        block_idx += 1;
     }
 
     return true;
@@ -173,7 +165,7 @@ pub fn pbkdf2Verify(
     }
 
     // Streaming constant-time verification for expected_dk > 256 bytes
-    let pads = pbkdf2InitPads(password);
+    const pads = pbkdf2InitPads(password);
     let u_prev: [32]u8 = undefined;
     let u_cur: [32]u8 = undefined;
     let t_acc: [32]u8 = undefined;
@@ -183,34 +175,32 @@ pub fn pbkdf2Verify(
 
     while (pos < expected_dk.len) {
         pbkdf2HmacSaltBlock(pads, salt, block_idx, u_prev[0..32]);
-        let j: usize = 0;
-        while (j < 32) {
-            t_acc[j] = u_prev[j];
-            j = j + 1;
-        }
+        @memcpy(t_acc[0..32], u_prev[0..32]);
         let iter: u32 = 1;
         while (iter < iterations) {
             pbkdf2Hmac32(pads, u_prev[0..32], u_cur[0..32]);
-            j = 0;
-            while (j < 32) {
-                t_acc[j] = t_acc[j] ^ u_cur[j];
-                u_prev[j] = u_cur[j];
-                j = j + 1;
+            pbkdf2Xor32Simd(&t_acc, u_cur);
+            @memcpy(u_prev[0..32], u_cur[0..32]);
+            iter += 1;
+        }
+        const rem = expected_dk.len - pos;
+        if (rem >= 32) {
+            const ta0: PbkVec16 = t_acc[0..16].*;
+            const ta1: PbkVec16 = t_acc[16..32].*;
+            const ex0: PbkVec16 = expected_dk[pos .. pos + 16][0..16].*;
+            const ex1: PbkVec16 = expected_dk[pos + 16 .. pos + 32][0..16].*;
+            const dv: PbkVec16 = (ta0 ^ ex0) | (ta1 ^ ex1);
+            diff |= @reduce(.Or, dv);
+            pos += 32;
+        } else {
+            let j: usize = 0;
+            while (j < rem) {
+                diff |= t_acc[j] ^ expected_dk[pos + j];
+                j += 1;
             }
-            iter = iter + 1;
+            pos += rem;
         }
-        let rem = expected_dk.len - pos;
-        let cmp_len: usize = 32;
-        if (rem < cmp_len) {
-            cmp_len = rem;
-        }
-        j = 0;
-        while (j < cmp_len) {
-            diff = diff | (t_acc[j] ^ expected_dk[pos + j]);
-            j = j + 1;
-        }
-        pos = pos + cmp_len;
-        block_idx = block_idx + 1;
+        block_idx += 1;
     }
     return diff == 0;
 }

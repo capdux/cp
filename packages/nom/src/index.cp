@@ -1,8 +1,65 @@
 // packages/@cap/nom-parse/src/index.cp
 // Zero-allocation parser combinator primitives inspired by Rust `nom` v7.
 // Clean-room MIT implementation.
+// Accelerated with comptime 256-entry character-class & hex LUTs,
+// and 16-lane @Vector(16, u8) SIMD scanning for tag/takeUntil/digit/alpha/alnum/space/lineEnding.
 
 import { eqAscii } from "../../unicase/src/index.cp";
+
+type NomVec16 = @Vector(16, u8);
+
+const NOM_CLS_DIGIT: u8 = 1;
+const NOM_CLS_HEX: u8 = 2;
+const NOM_CLS_ALPHA: u8 = 4;
+const NOM_CLS_SPACE: u8 = 8;
+const NOM_CLS_MULTISPACE: u8 = 16;
+
+fn nomBuildClassLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        let f: u8 = 0;
+        if (c >= 48 && c <= 57) {
+            f |= NOM_CLS_DIGIT | NOM_CLS_HEX;
+        }
+        if ((c >= 97 && c <= 102) || (c >= 65 && c <= 70)) {
+            f |= NOM_CLS_HEX;
+        }
+        if ((c >= 97 && c <= 122) || (c >= 65 && c <= 90)) {
+            f |= NOM_CLS_ALPHA;
+        }
+        if (c == 32 || c == 9) {
+            f |= NOM_CLS_SPACE | NOM_CLS_MULTISPACE;
+        }
+        if (c == 13 || c == 10) {
+            f |= NOM_CLS_MULTISPACE;
+        }
+        lut[c] = f;
+        c += 1;
+    }
+    return lut;
+}
+
+fn nomBuildHexValLut(): [256]u8 {
+    @setEvalBranchQuota(20000);
+    let lut: [256]u8 = [0; 256];
+    let c: usize = 0;
+    while (c < 256) {
+        if (c >= 48 && c <= 57) {
+            lut[c] = (c - 48) as u8;
+        } else if (c >= 97 && c <= 102) {
+            lut[c] = (c - 97 + 10) as u8;
+        } else if (c >= 65 && c <= 70) {
+            lut[c] = (c - 65 + 10) as u8;
+        }
+        c += 1;
+    }
+    return lut;
+}
+
+const NOM_CLASS_LUT: [256]u8 = nomBuildClassLut();
+const NOM_HEX_LUT: [256]u8 = nomBuildHexValLut();
 
 // ---------------------------------------------------------------------------
 // Public Result Types
@@ -54,40 +111,31 @@ fn nomContainsByte(set: string, b: u8): bool {
 }
 
 fn nomIsDigit(b: u8): bool {
-    return b >= ('0' as u8) && b <= ('9' as u8);
+    return (NOM_CLASS_LUT[b] & NOM_CLS_DIGIT) != 0;
 }
 
 fn nomIsHexDigit(b: u8): bool {
-    return (b >= ('0' as u8) && b <= ('9' as u8))
-        || (b >= ('a' as u8) && b <= ('f' as u8))
-        || (b >= ('A' as u8) && b <= ('F' as u8));
+    return (NOM_CLASS_LUT[b] & NOM_CLS_HEX) != 0;
 }
 
 fn nomHexVal(b: u8): u64 {
-    if (b >= ('0' as u8) && b <= ('9' as u8)) {
-        return (b - ('0' as u8)) as u64;
-    }
-    if (b >= ('a' as u8) && b <= ('f' as u8)) {
-        return ((b - ('a' as u8)) as u64) + (10 as u64);
-    }
-    return ((b - ('A' as u8)) as u64) + (10 as u64);
+    return NOM_HEX_LUT[b] as u64;
 }
 
 fn nomIsAlpha(b: u8): bool {
-    return (b >= ('a' as u8) && b <= ('z' as u8))
-        || (b >= ('A' as u8) && b <= ('Z' as u8));
+    return (NOM_CLASS_LUT[b] & NOM_CLS_ALPHA) != 0;
 }
 
 fn nomIsAlnum(b: u8): bool {
-    return nomIsAlpha(b) || nomIsDigit(b);
+    return (NOM_CLASS_LUT[b] & (NOM_CLS_ALPHA | NOM_CLS_DIGIT)) != 0;
 }
 
 fn nomIsSpace(b: u8): bool {
-    return b == (' ' as u8) || b == ('\t' as u8);
+    return (NOM_CLASS_LUT[b] & NOM_CLS_SPACE) != 0;
 }
 
 fn nomIsMultispace(b: u8): bool {
-    return b == (' ' as u8) || b == ('\t' as u8) || b == ('\r' as u8) || b == ('\n' as u8);
+    return (NOM_CLASS_LUT[b] & NOM_CLS_MULTISPACE) != 0;
 }
 
 fn nomSliceEq(a: string, b: string): bool {
@@ -95,6 +143,14 @@ fn nomSliceEq(a: string, b: string): bool {
         return false;
     }
     let i: usize = 0;
+    while (i + 16 <= a.len) {
+        const va: NomVec16 = a[i .. i + 16][0..16].*;
+        const vb: NomVec16 = b[i .. i + 16][0..16].*;
+        if (@reduce(.Or, va != vb)) {
+            return false;
+        }
+        i += 16;
+    }
     while (i < a.len) {
         if (a[i] != b[i]) {
             return false;
@@ -147,9 +203,24 @@ pub fn takeUntil(input: string, needle: string): ParseRes {
         return nomFail(input);
     }
     const limit: usize = input.len - needle.len;
+    const first: u8 = needle[0];
+    const v_first: NomVec16 = @splat(first);
     let i: usize = 0;
+    while (i + 16 <= limit + 1) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, v == v_first)) {
+            let k: usize = 0;
+            while (k < 16 && i + k <= limit) {
+                if (input[i + k] == first && nomSliceEq(input[(i + k)..(i + k + needle.len)], needle)) {
+                    return nomOk(input, i + k);
+                }
+                k += 1;
+            }
+        }
+        i += 16;
+    }
     while (i <= limit) {
-        if (nomSliceEq(input[i..(i + needle.len)], needle)) {
+        if (input[i] == first && nomSliceEq(input[i..(i + needle.len)], needle)) {
             return nomOk(input, i);
         }
         i += 1;
@@ -160,11 +231,37 @@ pub fn takeUntil(input: string, needle: string): ParseRes {
 /// Matches the longest non-empty prefix containing none of `forbidden_chars`.
 pub fn isNot(input: string, forbidden_chars: string): ParseRes {
     let i: usize = 0;
-    while (i < input.len) {
-        if (nomContainsByte(forbidden_chars, input[i])) {
-            break;
+    if (forbidden_chars.len == 1) {
+        const fb = forbidden_chars[0];
+        const v_fb: NomVec16 = @splat(fb);
+        while (i + 16 <= input.len) {
+            const v: NomVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v == v_fb)) {
+                break;
+            }
+            i += 16;
         }
-        i += 1;
+        while (i < input.len && input[i] != fb) {
+            i += 1;
+        }
+    } else if (input.len >= 16 && forbidden_chars.len > 1) {
+        let mask: [256]u8 = undefined;
+        @memset(mask[0..256], 0);
+        let j: usize = 0;
+        while (j < forbidden_chars.len) {
+            mask[forbidden_chars[j]] = 1;
+            j += 1;
+        }
+        while (i < input.len && mask[input[i]] == 0) {
+            i += 1;
+        }
+    } else {
+        while (i < input.len) {
+            if (nomContainsByte(forbidden_chars, input[i])) {
+                break;
+            }
+            i += 1;
+        }
     }
     if (i == 0) {
         return nomFail(input);
@@ -175,11 +272,37 @@ pub fn isNot(input: string, forbidden_chars: string): ParseRes {
 /// Matches the longest non-empty prefix containing only bytes in `allowed_chars`.
 pub fn isA(input: string, allowed_chars: string): ParseRes {
     let i: usize = 0;
-    while (i < input.len) {
-        if (!nomContainsByte(allowed_chars, input[i])) {
-            break;
+    if (allowed_chars.len == 1) {
+        const ab = allowed_chars[0];
+        const v_ab: NomVec16 = @splat(ab);
+        while (i + 16 <= input.len) {
+            const v: NomVec16 = input[i .. i + 16][0..16].*;
+            if (@reduce(.Or, v != v_ab)) {
+                break;
+            }
+            i += 16;
         }
-        i += 1;
+        while (i < input.len && input[i] == ab) {
+            i += 1;
+        }
+    } else if (input.len >= 16 && allowed_chars.len > 1) {
+        let mask: [256]u8 = undefined;
+        @memset(mask[0..256], 0);
+        let j: usize = 0;
+        while (j < allowed_chars.len) {
+            mask[allowed_chars[j]] = 1;
+            j += 1;
+        }
+        while (i < input.len && mask[input[i]] != 0) {
+            i += 1;
+        }
+    } else {
+        while (i < input.len) {
+            if (!nomContainsByte(allowed_chars, input[i])) {
+                break;
+            }
+            i += 1;
+        }
     }
     if (i == 0) {
         return nomFail(input);
@@ -193,6 +316,15 @@ pub fn isA(input: string, allowed_chars: string): ParseRes {
 
 pub fn digit0(input: string): ParseRes {
     let i: usize = 0;
+    const v_0: NomVec16 = @splat('0' as u8);
+    const v_9: NomVec16 = @splat('9' as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        if (!@reduce(.And, (v >= v_0) & (v <= v_9))) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && nomIsDigit(input[i])) {
         i += 1;
     }
@@ -209,6 +341,20 @@ pub fn digit1(input: string): ParseRes {
 
 pub fn hexDigit1(input: string): ParseRes {
     let i: usize = 0;
+    const v_0: NomVec16 = @splat('0' as u8);
+    const v_9: NomVec16 = @splat('9' as u8);
+    const v_a: NomVec16 = @splat('a' as u8);
+    const v_f: NomVec16 = @splat('f' as u8);
+    const v_lc: NomVec16 = @splat(0x20 as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        const vl: NomVec16 = v | v_lc;
+        const ok = ((v >= v_0) & (v <= v_9)) | ((vl >= v_a) & (vl <= v_f));
+        if (!@reduce(.And, ok)) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && nomIsHexDigit(input[i])) {
         i += 1;
     }
@@ -220,6 +366,17 @@ pub fn hexDigit1(input: string): ParseRes {
 
 pub fn alpha0(input: string): ParseRes {
     let i: usize = 0;
+    const v_a: NomVec16 = @splat('a' as u8);
+    const v_z: NomVec16 = @splat('z' as u8);
+    const v_lc: NomVec16 = @splat(0x20 as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        const vl: NomVec16 = v | v_lc;
+        if (!@reduce(.And, (vl >= v_a) & (vl <= v_z))) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && nomIsAlpha(input[i])) {
         i += 1;
     }
@@ -236,6 +393,20 @@ pub fn alpha1(input: string): ParseRes {
 
 pub fn alphanumeric0(input: string): ParseRes {
     let i: usize = 0;
+    const v_0: NomVec16 = @splat('0' as u8);
+    const v_9: NomVec16 = @splat('9' as u8);
+    const v_a: NomVec16 = @splat('a' as u8);
+    const v_z: NomVec16 = @splat('z' as u8);
+    const v_lc: NomVec16 = @splat(0x20 as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        const vl: NomVec16 = v | v_lc;
+        const ok = ((v >= v_0) & (v <= v_9)) | ((vl >= v_a) & (vl <= v_z));
+        if (!@reduce(.And, ok)) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && nomIsAlnum(input[i])) {
         i += 1;
     }
@@ -252,6 +423,15 @@ pub fn alphanumeric1(input: string): ParseRes {
 
 pub fn space0(input: string): ParseRes {
     let i: usize = 0;
+    const v_sp: NomVec16 = @splat(' ' as u8);
+    const v_tb: NomVec16 = @splat('\t' as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        if (!@reduce(.And, (v == v_sp) | (v == v_tb))) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && nomIsSpace(input[i])) {
         i += 1;
     }
@@ -268,6 +448,18 @@ pub fn space1(input: string): ParseRes {
 
 pub fn multispace0(input: string): ParseRes {
     let i: usize = 0;
+    const v_sp: NomVec16 = @splat(' ' as u8);
+    const v_tb: NomVec16 = @splat('\t' as u8);
+    const v_cr: NomVec16 = @splat('\r' as u8);
+    const v_lf: NomVec16 = @splat('\n' as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        const ok = (v == v_sp) | (v == v_tb) | (v == v_cr) | (v == v_lf);
+        if (!@reduce(.And, ok)) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && nomIsMultispace(input[i])) {
         i += 1;
     }
@@ -296,6 +488,15 @@ pub fn lineEnding(input: string): ParseRes {
 /// Recognizes zero or more bytes that are neither `\r` nor `\n`.
 pub fn notLineEnding(input: string): ParseRes {
     let i: usize = 0;
+    const v_cr: NomVec16 = @splat('\r' as u8);
+    const v_lf: NomVec16 = @splat('\n' as u8);
+    while (i + 16 <= input.len) {
+        const v: NomVec16 = input[i .. i + 16][0..16].*;
+        if (@reduce(.Or, (v == v_cr) | (v == v_lf))) {
+            break;
+        }
+        i += 16;
+    }
     while (i < input.len && input[i] != ('\r' as u8) && input[i] != ('\n' as u8)) {
         i += 1;
     }

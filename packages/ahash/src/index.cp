@@ -1,95 +1,49 @@
 // @cap/ahash — Zero-allocation randomized high-speed hasher with 4-key RandomState & folded-multiply rounds for CP
 // Clean-room MIT implementation inspired by Rust `ahash` (946M downloads).
+// Accelerated with hardware u128 folded-multiply, hardware rotl64 & wrapping arithmetic (+%, *%),
+// 16-lane @Vector(16, u8) chunked loads, and bulk @memcpy tail buffering.
 
-import { readU64LE } from "cap:bin";
+type AhashVec16 = @Vector(16, u8);
 
-fn makeU64(hi: u32, lo: u32) -> u64 {
-    return ((hi as u64) * (0x100000000 as u64)) | (lo as u64);
-}
-
-fn addWrap64(a: u64, b: u64) -> u64 {
-    const mask32: u64 = 0xFFFFFFFF;
-    const shift32: u64 = 0x100000000;
-    const lo = (a & mask32) + (b & mask32);
-    const carry = lo / shift32;
-    const hi = ((a / shift32) + (b / shift32) + carry) & mask32;
-    return (hi * shift32) | (lo & mask32);
-}
-
-fn mulWrap64(a: u64, b: u64) -> u64 {
-    const mask32: u64 = 0xFFFFFFFF;
-    const shift32: u64 = 0x100000000;
-    const a_lo = a & mask32;
-    const a_hi = a / shift32;
-    const b_lo = b & mask32;
-    const b_hi = b / shift32;
-    const p_lo = a_lo * b_lo;
-    const mid1 = (a_lo * b_hi) & mask32;
-    const mid2 = (a_hi * b_lo) & mask32;
-    const hi_sum = ((p_lo / shift32) + mid1 + mid2) & mask32;
-    return (hi_sum * shift32) | (p_lo & mask32);
-}
-
-fn pow2_64(n: u32) -> u64 {
-    let v: u64 = 1;
-    let i: u32 = 0;
-    while (i < n) {
-        v = v * (2 as u64);
-        i += 1 as u32;
-    }
-    return v;
-}
+const AHASH_MULTIPLE: u64 = ((0x63641362 as u64) << 32) | (0x23846793 as u64);
+const AHASH_PI0: u64 = ((0x243F6A88 as u64) << 32) | (0x85A308D3 as u64);
+const AHASH_PI1: u64 = ((0x13198A2E as u64) << 32) | (0x03707344 as u64);
+const AHASH_PI2: u64 = ((0xA4093822 as u64) << 32) | (0x299F31D0 as u64);
+const AHASH_PI3: u64 = ((0x082EFA98 as u64) << 32) | (0xEC4E6C89 as u64);
 
 fn rotl64(x: u64, r_in: u32) -> u64 {
-    const r = r_in % (64 as u32);
+    const r: u32 = r_in & (63 as u32);
     if (r == (0 as u32)) {
         return x;
     }
-    const loShift = pow2_64(r);
-    const hiDiv = pow2_64((64 as u32) - r);
-    return mulWrap64(x, loShift) | (x / hiDiv);
+    const ls: u6 = @intCast(r);
+    const rs: u6 = @intCast((64 as u32) - r);
+    return (x << ls) | (x >> rs);
 }
 
 fn foldedMultiply(x: u64, y: u64) -> u64 {
-    const mask32: u64 = 0xFFFFFFFF;
-    const shift32: u64 = 0x100000000;
-
-    const x0 = x & mask32;
-    const x1 = x / shift32;
-    const y0 = y & mask32;
-    const y1 = y / shift32;
-
-    const p00 = x0 * y0;
-    const p01 = x0 * y1;
-    const p10 = x1 * y0;
-    const p11 = x1 * y1;
-
-    const lo_lo = p00 & mask32;
-    const mid = (p00 / shift32) + (p01 & mask32) + (p10 & mask32);
-    const lo = lo_lo | ((mid & mask32) * shift32);
-    const hi = p11 + (p01 / shift32) + (p10 / shift32) + (mid / shift32);
-
-    return lo ^ hi;
+    const wide: u128 = (x as u128) * (y as u128);
+    return (wide as u64) ^ ((wide >> 64) as u64);
 }
 
-fn multipleConst() -> u64 {
-    return makeU64(0x63641362 as u32, 0x23846793 as u32);
+fn ahashReadLe64(b: []const u8, off: usize) -> u64 {
+    const lo: u64 = (b[off] as u64)
+        | ((b[off + 1] as u64) << 8)
+        | ((b[off + 2] as u64) << 16)
+        | ((b[off + 3] as u64) << 24);
+    const hi: u64 = (b[off + 4] as u64)
+        | ((b[off + 5] as u64) << 8)
+        | ((b[off + 6] as u64) << 16)
+        | ((b[off + 7] as u64) << 24);
+    return lo | (hi << 32);
 }
-
-fn pi0() -> u64 { return makeU64(0x243F6A88 as u32, 0x85A308D3 as u32); }
-fn pi1() -> u64 { return makeU64(0x13198A2E as u32, 0x03707344 as u32); }
-fn pi2() -> u64 { return makeU64(0xA4093822 as u32, 0x299F31D0 as u32); }
-fn pi3() -> u64 { return makeU64(0x082EFA98 as u32, 0xEC4E6C89 as u32); }
 
 fn packTail(tail: [8]u8, tail_len: usize) -> u64 {
     let v: u64 = 0;
-    let mul: u64 = 1;
     let i: usize = 0;
     while (i < tail_len && i < 8) {
-        v = v | ((tail[i] as u64) * mul);
-        if (i < 7) {
-            mul = mul * (256 as u64);
-        }
+        const sh: u6 = @intCast(i * 8);
+        v |= (tail[i] as u64) << sh;
         i += 1;
     }
     return v;
@@ -105,14 +59,12 @@ pub struct AHasher {
 
     pub static fn init(k0: u64, k1: u64, k2: u64, k3: u64) -> AHasher {
         let ek: [2]u64 = undefined;
-        ek[0] = k2 ^ pi2();
-        ek[1] = k3 ^ pi3();
+        ek[0] = k2 ^ AHASH_PI2;
+        ek[1] = k3 ^ AHASH_PI3;
 
         const t: [8]u8 = undefined;
-
-        const mult = multipleConst();
-        const b0 = foldedMultiply(k0 ^ pi0(), mult);
-        const p0 = foldedMultiply(k1 ^ pi1(), mult);
+        const b0 = foldedMultiply(k0 ^ AHASH_PI0, AHASH_MULTIPLE);
+        const p0 = foldedMultiply(k1 ^ AHASH_PI1, AHASH_MULTIPLE);
 
         return AHasher{
             buffer: b0,
@@ -129,74 +81,108 @@ pub struct AHasher {
         _.tail_len += 1;
         _.total_len += 1 as u64;
         if (_.tail_len == 8) {
-            const word = readU64LE(_.tail[0..8], 0) ?? 0;
-            const mult = multipleConst();
-            _.buffer = rotl64(foldedMultiply(addWrap64(word, _.buffer), mult), 23 as u32);
-            _.pad = addWrap64(_.pad, word ^ _.extra_keys[0]);
+            const word = ahashReadLe64(_.tail[0..8], 0);
+            _.buffer = rotl64(foldedMultiply(word +% _.buffer, AHASH_MULTIPLE), 23 as u32);
+            _.pad = _.pad +% (word ^ _.extra_keys[0]);
             _.tail_len = 0 as usize;
         }
     }
 
     pub fn writeU32(*_, v: u32) {
-        _.writeU8((v & (0xFF as u32)) as u8);
-        _.writeU8(((v / (256 as u32)) & (0xFF as u32)) as u8);
-        _.writeU8(((v / (65536 as u32)) & (0xFF as u32)) as u8);
-        _.writeU8(((v / (16777216 as u32)) & (0xFF as u32)) as u8);
+        _.writeU8((v & 0xFF) as u8);
+        _.writeU8(((v >> 8) & 0xFF) as u8);
+        _.writeU8(((v >> 16) & 0xFF) as u8);
+        _.writeU8(((v >> 24) & 0xFF) as u8);
     }
 
     pub fn writeU64(*_, v: u64) {
         if (_.tail_len == 0) {
-            const mult = multipleConst();
-            _.buffer = rotl64(foldedMultiply(addWrap64(v, _.buffer), mult), 23 as u32);
-            _.pad = addWrap64(_.pad, v ^ _.extra_keys[0]);
+            _.buffer = rotl64(foldedMultiply(v +% _.buffer, AHASH_MULTIPLE), 23 as u32);
+            _.pad = _.pad +% (v ^ _.extra_keys[0]);
             _.total_len += 8 as u64;
             return;
         }
         let cur = v;
         let i: usize = 0;
         while (i < 8) {
-            _.writeU8((cur & (0xFF as u64)) as u8);
-            cur = cur / (256 as u64);
+            _.writeU8((cur & 0xFF) as u8);
+            cur >>= 8;
             i += 1;
         }
     }
 
     pub fn writeBytes(*_, data: []const u8) {
-        let i: usize = 0;
-        while (i < data.len && _.tail_len > 0) {
-            _.writeU8(data[i]);
-            i += 1;
+        if (data.len == 0) {
+            return;
         }
-        const mult = multipleConst();
+        let i: usize = 0;
+        if (_.tail_len > 0) {
+            const need = (8 as usize) - _.tail_len;
+            const take = if (data.len < need) data.len else need;
+            @memcpy(_.tail[_.tail_len .. _.tail_len + take], data[0..take]);
+            _.tail_len += take;
+            _.total_len += take as u64;
+            i += take;
+            if (_.tail_len == 8) {
+                const word = ahashReadLe64(_.tail[0..8], 0);
+                _.buffer = rotl64(foldedMultiply(word +% _.buffer, AHASH_MULTIPLE), 23 as u32);
+                _.pad = _.pad +% (word ^ _.extra_keys[0]);
+                _.tail_len = 0 as usize;
+            }
+        }
+
+        const ek0 = _.extra_keys[0];
+        let buf = _.buffer;
+        let pad = _.pad;
+
+        // 16-lane @Vector(16, u8) chunked load (2x 64-bit words per iteration)
+        while (i + 16 <= data.len) {
+            const chunk_v: AhashVec16 = data[i .. i + 16][0..16].*;
+            const chunk: [16]u8 = chunk_v;
+            const w0 = ahashReadLe64(chunk[0..16], 0);
+            buf = rotl64(foldedMultiply(w0 +% buf, AHASH_MULTIPLE), 23 as u32);
+            pad = pad +% (w0 ^ ek0);
+            const w1 = ahashReadLe64(chunk[0..16], 8);
+            buf = rotl64(foldedMultiply(w1 +% buf, AHASH_MULTIPLE), 23 as u32);
+            pad = pad +% (w1 ^ ek0);
+            _.total_len += 16 as u64;
+            i += 16;
+        }
+
         while (i + 8 <= data.len) {
-            const word = readU64LE(data, i) ?? 0;
-            _.buffer = rotl64(foldedMultiply(addWrap64(word, _.buffer), mult), 23 as u32);
-            _.pad = addWrap64(_.pad, word ^ _.extra_keys[0]);
+            const word = ahashReadLe64(data, i);
+            buf = rotl64(foldedMultiply(word +% buf, AHASH_MULTIPLE), 23 as u32);
+            pad = pad +% (word ^ ek0);
             _.total_len += 8 as u64;
             i += 8;
         }
-        while (i < data.len) {
-            _.writeU8(data[i]);
-            i += 1;
+
+        _.buffer = buf;
+        _.pad = pad;
+
+        const rem = data.len - i;
+        if (rem > 0) {
+            @memcpy(_.tail[0..rem], data[i..data.len]);
+            _.tail_len = rem;
+            _.total_len += rem as u64;
         }
     }
 
     pub fn finish() -> u64 {
-        const mult = multipleConst();
         let buf = _.buffer;
         let p = _.pad;
 
         if (_.tail_len > 0) {
             const word = packTail(_.tail, _.tail_len);
-            buf = rotl64(foldedMultiply(addWrap64(word, buf), mult), 23 as u32);
-            p = addWrap64(p, word ^ _.extra_keys[0]);
+            buf = rotl64(foldedMultiply(word +% buf, AHASH_MULTIPLE), 23 as u32);
+            p = p +% (word ^ _.extra_keys[0]);
         }
 
         // Mix total_len and extra_keys with data-dependent rotation
-        buf = foldedMultiply(buf ^ _.total_len ^ _.extra_keys[0], mult);
+        buf = foldedMultiply(buf ^ _.total_len ^ _.extra_keys[0], AHASH_MULTIPLE);
         const rot = ((buf & (63 as u64)) as u32);
         buf = rotl64(buf, rot);
-        buf = foldedMultiply(buf ^ p ^ _.extra_keys[1], mult);
+        buf = foldedMultiply(buf ^ p ^ _.extra_keys[1], AHASH_MULTIPLE);
         return buf;
     }
 }
@@ -218,10 +204,10 @@ pub struct RandomState {
 
     pub static fn defaultState() -> RandomState {
         return RandomState{
-            k0: pi0(),
-            k1: pi1(),
-            k2: pi2(),
-            k3: pi3(),
+            k0: AHASH_PI0,
+            k1: AHASH_PI1,
+            k2: AHASH_PI2,
+            k3: AHASH_PI3,
         };
     }
 
@@ -243,13 +229,13 @@ pub struct RandomState {
 }
 
 pub fn hashBytes(data: []const u8, k0: u64, k1: u64) -> u64 {
-    let h = AHasher.init(k0, k1, pi2(), pi3());
+    let h = AHasher.init(k0, k1, AHASH_PI2, AHASH_PI3);
     h.writeBytes(data);
     return h.finish();
 }
 
 pub fn hashU64(v: u64, k0: u64, k1: u64) -> u64 {
-    let h = AHasher.init(k0, k1, pi2(), pi3());
+    let h = AHasher.init(k0, k1, AHASH_PI2, AHASH_PI3);
     h.writeU64(v);
     return h.finish();
 }
