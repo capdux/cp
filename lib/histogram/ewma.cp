@@ -33,7 +33,7 @@ pub struct Ewma {
     }
 
     /// Standard 1-minute EWMA with 5-second tick interval (`alpha = 1 - exp(-5/60)`).
-    pub fn initOneMinute(): Ewma {
+    pub static fn initOneMinute(): Ewma {
         return Ewma{
             alpha: 1.0 - @exp(-5.0 / 60.0),
             interval_secs: 5.0,
@@ -44,7 +44,7 @@ pub struct Ewma {
     }
 
     /// Standard 5-minute EWMA with 5-second tick interval (`alpha = 1 - exp(-5/300)`).
-    pub fn initFiveMinutes(): Ewma {
+    pub static fn initFiveMinutes(): Ewma {
         return Ewma{
             alpha: 1.0 - @exp(-5.0 / 300.0),
             interval_secs: 5.0,
@@ -55,7 +55,7 @@ pub struct Ewma {
     }
 
     /// Standard 15-minute EWMA with 5-second tick interval (`alpha = 1 - exp(-5/900)`).
-    pub fn initFifteenMinutes(): Ewma {
+    pub static fn initFifteenMinutes(): Ewma {
         return Ewma{
             alpha: 1.0 - @exp(-5.0 / 900.0),
             interval_secs: 5.0,
@@ -101,7 +101,7 @@ pub struct SlidingWindowCounter {
     has_data: bool = false,
 
     /// Initialize a sliding window covering `window_ms` milliseconds split into `bucket_count` slots.
-    pub fn init(
+    pub static fn init(
         alloc: std.mem.Allocator,
         window_ms: i64,
         bucket_count: usize,

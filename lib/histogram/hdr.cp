@@ -99,7 +99,7 @@ pub struct HdrHistogram {
 
     /// Initialize an HDR Histogram covering `[lowest_discernible_value, highest_trackable_value]`
     /// with `significant_digits` in `1..5`.
-    pub fn init(
+    pub static fn init(
         alloc: std.mem.Allocator,
         lowest_discernible_value: u64,
         highest_trackable_value: u64,

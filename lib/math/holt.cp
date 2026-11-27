@@ -21,7 +21,7 @@ pub struct HoltConfig {
     beta: f64,
     phi: f64,
 
-    fn default(): HoltConfig {
+    static fn default(): HoltConfig {
         return {
             alpha: 0.3,
             beta: 0.1,

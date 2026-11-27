@@ -130,7 +130,7 @@ pub struct CosineLsh {
     /// - `planes_buf >= num_tables * num_bits * dim`
     /// - `heads_buf >= num_tables * num_buckets`
     /// - `entries_buf >= 1` (each `insert` consumes `num_tables` entries)
-    fn init(
+    static fn init(
         dim: usize,
         num_tables: usize,
         num_bits: usize,
@@ -291,7 +291,7 @@ pub struct CosineLsh {
     }
 
     /// Static convenience forwarder to `estimatedCosineFromHamming`.
-    fn estimatedCosineFromHamming(sig_a: u64, sig_b: u64, num_bits: usize): f64 {
+    static fn estimatedCosineFromHamming(sig_a: u64, sig_b: u64, num_bits: usize): f64 {
         return cosineFromHammingImpl(sig_a, sig_b, num_bits);
     }
 }
@@ -315,7 +315,7 @@ pub struct EuclideanLsh {
     /// - `proj_b_buf >= num_tables * num_proj`
     /// - `heads_buf >= num_tables * num_buckets`
     /// - `entries_buf >= 1` (each `insert` consumes `num_tables` entries)
-    fn init(
+    static fn init(
         dim: usize,
         num_tables: usize,
         num_proj: usize,
