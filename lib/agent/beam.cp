@@ -146,7 +146,7 @@ pub struct BeamSearch {
 
     /// Initializes `BeamSearch` over caller-provided ping-pong and finished hypothesis buffers.
     /// Returns `null` if `beam_width == 0`, `max_len == 0`, `length_penalty_alpha` is `NaN`, or any buffer is undersized.
-    fn init(
+    static fn init(
         cfg: BeamConfig,
         tokens_a: *[]u32,
         tokens_b: *[]u32,

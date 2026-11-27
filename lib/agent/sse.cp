@@ -66,7 +66,7 @@ pub struct SseStreamParser {
     need_reset_event: bool,
 
     /// Initializes `SseStreamParser` over caller-provided scratch buffers.
-    fn init(
+    static fn init(
         line_buf: *[]u8,
         data_buf: *[]u8,
         event_buf: *[]u8,

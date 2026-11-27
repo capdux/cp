@@ -43,7 +43,8 @@ fn testHitMissAndScopeIsolation()! {
     expect_eq(std.mem.eql(u8, cache.lookup(k_s2, 1100) ?? "", "beta-scope2"), true);
     expect_eq(std.mem.eql(u8, cache.lookup(k_other_arg, 1100) ?? "", "file-b"), true);
     expect_eq(cache.lookup(k_empty, 1100) != null, true);
-    expect_eq((cache.lookup(k_empty, 1100) ?? "x").len, 0);
+    const empty_val: string = cache.lookup(k_empty, 1100) ?? "x";
+    expect_eq(empty_val.len, 0);
 
     // Overwrite same key updates payload without duplicating slot
     expect_eq(cache.put(k_s1, ToolSideEffectMode.ReadOnlyCacheable, "alpha-v2", 5000, 150, 1200), true);

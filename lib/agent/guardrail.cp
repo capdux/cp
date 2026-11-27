@@ -174,7 +174,7 @@ pub struct GuardConfig {
     block_risk_threshold: u32,
 
     /// Returns production-safe default guardrail limits.
-    fn default(): GuardConfig {
+    static fn default(): GuardConfig {
         return GuardConfig {
             max_bytes: 65536,
             max_json_depth: 32,
