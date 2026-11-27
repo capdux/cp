@@ -1,0 +1,8 @@
+{
+  "dependencies": {},
+  "description": "Migrated from TypeScript / JavaScript to CP via `cap from -ts`",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "name": "@puppeteer-test/test",
+  "version": "latest"
+}

@@ -1,9 +1,10 @@
 # CP 生态开发交接文档（PROGRESS.md）
 
-> 更新时间：2026-11-28 03:06 (+11:00) | 历史交接归档：`PROGRESS_H1.md`、`PROGRESS_H2.md`
-> 当前仓库状态：**Top-2000 生态整理 + 浏览器自动化双核心 (`puppeteer` & `playwright`) 全面达成！**
-> 全仓 **906 个零重复生态包**（覆盖 `registry.json` **1,265 条目**）+ **2,632+ 纯 CP 标准库文件**：
-> - 新增共享原生 CDP 协议底座 **`lib/cdp/` (`cap:cdp`)**，并建成一等公民 **`packages/puppeteer/`**（`10/10 PASS`）与 **`packages/playwright/`**（`7/7 PASS`），兼容 `puppeteer-core` / `playwright-core` / `playwright-chromium`；
+> 更新时间：2026-11-28 09:34 (+11:00) | 历史交接归档：`PROGRESS_H1.md`、`PROGRESS_H2.md`
+> 当前仓库状态：**Top-2000 生态整理 + 浏览器自动化双核心 + `cap:test` Bun/Jest 化 + 真机 Chromium 158 联调全部达成！**
+> 全仓 **906 个零重复生态包**（覆盖 `registry.json` **1,265 条目**）+ **2,634+ 纯 CP 标准库文件**：
+> - **`cap:test` 升级**：打通 [lib/test.cp](file:///data/dev/cp/lib/test.cp) 与 `lib/test_runner/{expect,sdk}.cp`，全面支持 Bun/Jest 风格 `describe`/`it`/`expect`/钩子/`MockSpy`/`FakeTimerClock`/`SnapshotStore`（`testCapTestSdk.cp` PASSED），`cap from --test` 自动映射主流 Node 测试框架；
+> - **浏览器自动化双核心 + 真机联调**：共享原生 **`lib/cdp/` (`cap:cdp`)** 底座，**`packages/puppeteer/`** 与 **`packages/playwright/`** 分别全量吸收上游测试（131/131 与 691/691，100.0% 语法解析），并在 CentOS Stream 10 真机 `/usr/bin/chromium-browser` (`158.0.8127.88`) 跑通完整 WebSocket CDP 端到端实测（详见双包 `test/stats.md`）；
 > - `cpc` / `cap from -npm` 与 TS→CP 转译器升级（裸包名 `packages/<name>`、`packages/registry.json` 自动同步、文档/类型自动生成、`constructor`→`init`、`#private`、`Symbol`、无括号多行控制流），实测 `puppeteer-core` 语法解析 **185/185 (100.0%)**、`E0130` 降至 **0**；
 > - `scripts/test_cap_ai_toolchain.py` E2E 全量 **51 / 51 PASS**；`scripts/check_ecosystem_health.py` **16 / 16 (100%) PASS**；
 > - “做全不做薄”短包补全 **Batch 1~8 全部 76 个核心短包收官**（净增 **+17,828 LOC**，**623 / 623 PASS**）；

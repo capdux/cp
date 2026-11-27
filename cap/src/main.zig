@@ -548,7 +548,7 @@ fn handleLint(allocator: std.mem.Allocator, args: []const []const u8) !void {
 
 fn handleFrom(allocator: std.mem.Allocator, args: []const []const u8) !void {
     if (args.len == 0) {
-        std.debug.print("Usage:\n  cap from -ts <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>] [--verify]\n  cap from -rs <src_dir> [-o <out_dir>] [--no-deps] [--max-depth <N>] [--verify]\n  cap from -npm <pkg[@ver]> [-o <packages_root>] [--registry <json>] [--verify]\n  cap from -crate <name[@ver]> [-o <packages_root>] [--registry <json>] [--verify]\n", .{});
+        std.debug.print("Usage:\n  cap from -ts <src_dir> [-o <out_dir>] [--test] [--no-deps] [--max-depth <N>] [--verify]\n  cap from -rs <src_dir> [-o <out_dir>] [--test] [--no-deps] [--max-depth <N>] [--verify]\n  cap from -npm <pkg[@ver]> [-o <packages_root>] [--registry <json>] [--verify]\n  cap from -crate <name[@ver]> [-o <packages_root>] [--registry <json>] [--verify]\n", .{});
         std.process.exit(1);
     }
     const cpc_bin = try getCpcBin(allocator);
@@ -641,7 +641,7 @@ fn usage() void {
         \\  cap clean [--all]             Clean .cap/ build caches (use --all to also remove bin/)
         \\  cap fmt [--check] [--stdout] [path...] Format CP source files (default: .)
         \\  cap lint [--dead] [path...]   Run syntax, borrow, 4-gate audit or --dead unused symbol check
-        \\  cap from <-ts|-rs> <dir>      Migrate TypeScript or Rust project & deps to CP + migrate.md
+        \\  cap from <-ts|-rs> <dir> [--test] Migrate TypeScript or Rust project & deps to CP + migrate.md
         \\  cap test [dir] [options]      Run test suite (default: test/) (--filter/-k <pat>, -m, --fuzz)
         \\  cap fuzz [target] [options]   Fuzz test target using LLVM libFuzzer + ASan
         \\  cap bench <file.cp>           Run microsecond benchmark (ReleaseFast)

@@ -1,0 +1,8 @@
+{
+  "dependencies": {},
+  "description": "Migrated from TypeScript / JavaScript to CP via `cap from -ts`",
+  "license": "MIT",
+  "main": "src/index.cp",
+  "name": "tests",
+  "version": "0.1.0"
+}

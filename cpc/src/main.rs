@@ -187,7 +187,7 @@ enum Commands {
         #[arg(long)]
         verify: bool,
         /// Include test files (*.test.ts, *.spec.ts, *.test.tsx, *.spec.tsx, __tests__/, test/, tests/)
-        #[arg(long)]
+        #[arg(long = "test", visible_alias = "include-tests")]
         include_tests: bool,
     },
     /// Run Language Server Protocol daemon

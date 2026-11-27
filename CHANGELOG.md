@@ -1485,3 +1485,9 @@
 - 同步更新 [cp_ref.md](file:///data/dev/cp/cp_ref.md) 第二章与第十三章：对齐裸包名规范、`cap.json` 2.0 清单、透明 Zig `@import` 模块引入、`cap from <-ts|-rs|-npm|-crate>`、`cap fix`、`cap brief`、`cpc check --json/--brief`、`packages/registry.json` 去重体系并补充详细示例代码。
 - 新增 `## 十八、常见反模式与语法禁手对照清单（Top 29 Antipatterns）`，将全部 29 条语法禁手展开为“错误写法 vs 正确写法 + 编译器诊断与底层原理解析 + 4 组完整正例代码”。
 - 清除 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 第一章与第十三章的 `[SYNC_PENDING: 2026-11-25]` 标记。
+
+## [2026-11-28] - CLI `--test` 精简、`cap:test` 全面打通 Bun/Jest 风格 API、上游测试全量吸收与 CentOS 10 真机 Chromium 158 CDP 实测
+- 将 `cpc` / `cap from` 的 `--include-tests` 简化为 `--test`（保留 `--include-tests` 兼容别名），并在 [cpc/src/migrate/deps.rs](file:///data/dev/cp/cpc/src/migrate/deps.rs) 补充 `jest` / `@jest/globals` / `mocha` / `vitest` / `bun:test` / `node:test` / `node:assert` / `ava` / `uvu` → `cap:test` 映射，重新部署 Release `cpc` 与 `cap`。
+- 升级打通 [lib/test.cp](file:///data/dev/cp/lib/test.cp)（`cap:test`）与 `lib/test_runner/{expect,sdk}.cp`，提供完整 Bun/Jest 风格 `describe` / `it` / `test` / 生命周期钩子 / 链式 `expect(...).toBe/.toEqual/.toContain/.not...` / `MockSpy` / `FakeTimerClock` / `SnapshotStore`，新增 [doc/lib/test.md](file:///data/dev/cp/doc/lib/test.md)、更新 [cp_lib_ref.md](file:///data/dev/cp/cp_lib_ref.md) 与 [cp_agent_lib_ref.md](file:///data/dev/cp/cp_agent_lib_ref.md)（stdlib=210），并通过 [testCapTestSdk.cp](file:///data/dev/cp/cap/test/testCapTestSdk.cp)（PASSED 569ms）。
+- 全量吸收上游测试：`packages/puppeteer/test/`（131/131, 100.0%）与 `packages/playwright/test/`（691/691, 100.0%）。
+- 在 CentOS Stream 10 + `/usr/bin/chromium-browser` (`158.0.8127.88`) 完成真机 WebSocket CDP 连接与端到端脚本实测，详细结果写入 [packages/puppeteer/test/stats.md](file:///data/dev/cp/packages/puppeteer/test/stats.md) 与 [packages/playwright/test/stats.md](file:///data/dev/cp/packages/playwright/test/stats.md)。

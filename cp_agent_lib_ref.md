@@ -1,7 +1,7 @@
 # CP 智能体标准库与生态极简速查手册 (`cp_agent_lib_ref.md`)
 
 > **更新日期**：2026-11-28 | **自动生成**：`python3 scripts/gen_agent_lib_ref.py`
-> **覆盖规模**：内置标准库 **209 通道**（`cap:*`）+ 官方 Web 插件 **34 包**（`@web/*`）+ 官方纯 CP/原生包 **873 包**（`@cap/*`）+ 上游映射 **1262 条**（npm 676 / crates.io 586）。
+> **覆盖规模**：内置标准库 **210 通道**（`cap:*`）+ 官方 Web 插件 **34 包**（`@web/*`）+ 官方纯 CP/原生包 **873 包**（`@cap/*`）+ 上游映射 **1265 条**（npm 679 / crates.io 586）。
 > **AGY 查库铁律（极省 Token）**：
 > 1. **写代码前先查本文件**：优先用内置 `cap:*`（零安装），其次 `import ... from "@cap/<name>"`，**严禁重复造轮子**；
 > 2. **查精确签名不读全量源码**：内置库看 `doc/lib/<mod>.md` 或 `lib/<mod>/index.cp`；`@cap/*` 直接读 **`packages/@cap/<name>/src/index.d.cp`**（极短类型声明）；
@@ -87,6 +87,7 @@
 | `cap:bigint` | `BigInt`, `BigInt256` | 任意精度大整数与 EVM/Web3 256 位定宽大数… |
 | `cap:bundler` | `BundleTarget`, `OutputFormat`, `ChunkKind` 等 | 静态打包、跨平台目标、输出格式/Windows PE… |
 | `cap:resolver` | `DataURL`, `PackageJson`, `TsConfigJson` 等 | 工业级模块解析、目录缓存/软链穿透、零堆元数据 64-… |
+| `cap:test` | `test`, `expect_eq`, `describe` 等 | Bun/Jest 风格零开销原生测试框架：`descr… |
 | `cap:test_runner` | `TestOrder`, `Prng64`, `TestRunner` 等 | 生产级测试套件编排、零堆调试树 `DebugTreeW… |
 | `cap:time` | `TimeUnit`, `Duration`, `WallClock` 等 | 单调/墙钟、RFC 3339/ISO 8601、44… |
 | `cap:csv` | `CsvOptions`, `.tsv()`, `CsvRow` 等 | RFC 4180 CSV/TSV 增量流式解析与写入… |

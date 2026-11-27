@@ -639,3 +639,7 @@
 
 ## 2026-11-28: 同步 `cp_agent_ref.md` 至面向人类工程师的权威技术白皮书 `cp_ref.md`
 - 依据 [cp_agent_ref.md](file:///data/dev/cp/cp_agent_ref.md) 中两处 `[SYNC_PENDING: 2026-11-25]` 标记与最新工具链演进，采用按章节局部定位方式精修 1.1 万行的 `cp_ref.md`，对齐模块裸包名、透明 `@import`、`cap from/fix/brief` 生态命令，并新增第十八章展开 Top 29 常见语法反模式对比表与综合正例代码。
+
+## 2026-11-28: `cap:test` Bun/Jest API 打通、上游测试吸收与 CentOS 10 真机 Chromium 158 CDP 联调
+- **测试框架打通**：打通此前割裂的 `lib/test.cp` (`cap:test`) 与 `lib/test_runner/`（20 模块），补齐 `expect.cp` 与 `sdk.cp`；并将 `cap from --test` 的 `jest`/`vitest`/`mocha`/`node:test` 自动映射至 `cap:test`。
+- **真机 Chromium 联调**：在 CentOS Stream 10（`/usr/bin/chromium-browser` 158.0.8127.88）上通过真实 TCP + RFC 6455 WebSocket 握手对接 `Puppeteer.connectWithTransport` 与 `chromium.connectOverCDP`，实测 `Browser.getVersion`、`Target.createTarget`、`Target.attachToTarget`、`Page.navigate`、`Runtime.evaluate` 及零内存泄漏析构全通，报告落盘于双包 `test/stats.md`。
