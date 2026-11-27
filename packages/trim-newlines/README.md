@@ -1,26 +1,80 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quick Ref](./README_AGENT.md)
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：`npm:trim-newlines` ([https://github.com/sindresorhus/trim-newlines](https://github.com/sindresorhus/trim-newlines)) | 许可：`MIT`
+# trim-newlines
 
-# `trim-newlines`
+Zero-allocation, zero-copy trimming of leading and trailing `\r` / `\n` newlines from strings for CP, matching npm [`trim-newlines`](https://github.com/sindresorhus/trim-newlines) v5.
 
-零堆分配、零拷贝纯 CP 字符串首尾换行符（`\r` / `\n`）裁剪库，完整对标 npm Top-700 包 `trim-newlines` v5。
+## Source Alignment
 
-## 核心 API
+- **Upstream**: npm `trim-newlines` v5 (`sindresorhus/trim-newlines`, MIT)
+- **CP Package**: `trim-newlines` v1.0.0 (clean-room MIT in pure CP)
+- **Design**: 100% zero-copy sub-slicing — trims only CR (`\r`, `0x0D`) and LF (`\n`, `0x0A`) bytes while preserving spaces, tabs, and inner newlines.
 
-- `trimNewlines(input: string): string` — 裁剪首尾全部 `\r` / `\n`（保留空格、Tab 与中间换行）
-- `trimNewlinesStart(input: string): string` — 仅裁剪前导 `\r` / `\n`
-- `trimNewlinesEnd(input: string): string` — 仅裁剪尾部 `\r` / `\n`
-- `countLeadingNewlines(input: string): usize` — 统计前导换行字节数
-- `countTrailingNewlines(input: string): usize` — 统计尾部换行字节数
+## Installation & Import
 
-## 示例
-
-```typescript
-import { trimNewlines, trimNewlinesStart, trimNewlinesEnd } from "trim-newlines";
-
-const a = trimNewlines("\r\n\nhello\nworld\r\n"); // "hello\nworld"
-const b = trimNewlinesStart("\n\n  cp  \n");      // "  cp  \n"
-const c = trimNewlinesEnd("\n  cp  \r\n");         // "\n  cp  "
+```bash
+cap add trim-newlines
 ```
+
+```cp
+import {
+    trimNewlines,
+    trimNewlinesStart,
+    trimNewlinesEnd,
+    countLeadingNewlines,
+    countTrailingNewlines,
+} from "trim-newlines";
+```
+
+## Core API
+
+| Function | Signature | Description |
+| :--- | :--- | :--- |
+| `trimNewlines` | `fn trimNewlines(input: string): string` | Returns a zero-copy sub-slice with both leading and trailing `\r` and `\n` bytes removed |
+| `trimNewlinesStart` | `fn trimNewlinesStart(input: string): string` | Returns a zero-copy sub-slice with all leading `\r` and `\n` bytes removed |
+| `trimNewlinesEnd` | `fn trimNewlinesEnd(input: string): string` | Returns a zero-copy sub-slice with all trailing `\r` and `\n` bytes removed |
+| `countLeadingNewlines` | `fn countLeadingNewlines(input: string): usize` | Counts leading `\r` / `\n` bytes |
+| `countTrailingNewlines` | `fn countTrailingNewlines(input: string): usize` | Counts trailing `\r` / `\n` bytes |
+
+## Examples
+
+### 1. Trimming Leading, Trailing, or Both Ends
+
+```cp
+import { trimNewlines, trimNewlinesStart, trimNewlinesEnd } from "trim-newlines";
+import { print } from "cap:io";
+
+pub fn main() {
+    print(trimNewlines("\r\n  hello\nworld  \r\n")); // "  hello\nworld  "
+    print(trimNewlinesStart("\n\nunicorn\n"));       // "unicorn\n"
+    print(trimNewlinesEnd("\nunicorn\r\n\n"));       // "\nunicorn"
+}
+```
+
+### 2. Measuring Leading & Trailing Newline Bytes
+
+```cp
+import { countLeadingNewlines, countTrailingNewlines } from "trim-newlines";
+
+pub fn inspectPadding(text: string): usize {
+    const lead = countLeadingNewlines(text);   // "\r\nfoo\n" -> 2
+    const trail = countTrailingNewlines(text); // "\r\nfoo\n" -> 1
+    return lead + trail;
+}
+```
+
+### 3. Safe Handling of All-Newline Strings
+
+```cp
+import { trimNewlines } from "trim-newlines";
+
+pub fn isOnlyNewlines(text: string): bool {
+    return trimNewlines(text).len == 0;
+}
+```
+
+## Differences from npm `trim-newlines` & Safety Highlights
+
+- **True Zero-Copy**: Returns borrowed sub-slices of `input` in O(k) time (proportional only to the number of leading/trailing newline bytes), with zero heap allocation.
+- **Preserves Horizontal Whitespace**: Unlike generic `trim()`, spaces (`' '`) and tabs (`'\t'`) at either end are preserved untouched.
+- **Extra Counters**: Adds `countLeadingNewlines` and `countTrailingNewlines` for line-offset tracking.
