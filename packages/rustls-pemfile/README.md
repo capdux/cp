@@ -1,33 +1,107 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | [AI Agent Quick Ref](README_AGENT.md)
 
-<!-- cap-source-attribution -->
-> **参考 / 吸收来源**：吸收自 **crates.io** [`rustls-pemfile`](https://github.com/rustls/pemfile)（`MIT OR Apache-2.0`）（包名 `rustls-pemfile`）。
+# rustls-pemfile
 
-# `rustls-pemfile`
+> **Source Attribution**: Clean-room MIT CP port of **crates.io** [`rustls-pemfile`](https://github.com/rustls/pemfile) (`v2` / `MIT OR Apache-2.0`), CP package `rustls-pemfile@1.0.0`.
 
-Zero-allocation streaming TLS PEM bundle reader in pure CP (`rustls-pemfile` v2 parity). Reuses `pem-rfc7468` for RFC 7468 PEM framing, label validation, and Base64 decoding without duplicating any PEM or Base64 logic.
+Zero-allocation streaming TLS PEM bundle reader in pure CP. Reuses `pem-rfc7468` for RFC 7468 framing, label validation, and constant-time Base64 decoding.
 
-## Item Kinds
+## Why CP `rustls-pemfile`?
 
-- `PEM_ITEM_NONE` (`0`) — No item / invalid label / EOF
-- `PEM_ITEM_X509_CERT` (`1`) — `CERTIFICATE`
-- `PEM_ITEM_PKCS8_KEY` (`2`) — `PRIVATE KEY`
-- `PEM_ITEM_PKCS1_KEY` (`3`) — `RSA PRIVATE KEY`
-- `PEM_ITEM_SEC1_KEY` (`4`) — `EC PRIVATE KEY`
-- `PEM_ITEM_SPKI_PUBKEY` (`5`) — `PUBLIC KEY`
-- `PEM_ITEM_CRL` (`6`) — `X509 CRL`
-- `PEM_ITEM_CSR` (`7`) — `CERTIFICATE REQUEST`
-- `PEM_ITEM_UNKNOWN` (`8`) — Any other valid RFC 7468 PEM label
+- **Zero Heap Allocation**: `PemBundleReader` maintains only a `(input, offset)` cursor and decodes each PEM block directly into a caller-supplied `der_out: []u8` buffer.
+- **Zero-Overhead Stack Scratch**: Internal 64-byte label scratch buffers use `undefined` initialization, eliminating redundant stack zeroing on every `nextItem` / `peekNextKind` call.
+- **Full TLS Item Classification**: Recognizes X.509 certificates, PKCS#8 / PKCS#1 / SEC1 private keys, SPKI public keys, CRLs, and CSRs.
+- **No-Decode Counting & Peeking**: `countItems()`, `countCerts()`, and `peekNextKind()` inspect PEM framing without decoding Base64 bodies.
 
-## API
+## Zero-Cost Migration (Rust → CP)
 
-- `PemItem` — Decoded item descriptor (`kind: u8`, `der_len: usize`, `ok: bool`, `eof: bool`, plus `isCert()` / `isPrivateKey()`)
-- `PemBundleReader.new(input: string): PemBundleReader` — Creates a zero-allocation cursor over a multi-block PEM bundle
-- `reader.nextItem(der_out: []u8): PemItem` — Skips inter-block comments/whitespace, decodes the next PEM block into `der_out` via `pem-rfc7468::decodePem`, and classifies its label
-- `reader.countItems(): usize` — Counts all well-framed PEM blocks from the current cursor without decoding Base64
-- `reader.countCerts(): usize` — Counts `CERTIFICATE` blocks from the current cursor without decoding Base64
-- `reader.peekNextKind(): u8` — Peeks the next PEM item kind via `pem-rfc7468::decodeLabel` without advancing the cursor
-- `reader.remaining(): usize` / `reader.isEof(): bool` / `reader.reset()` — Cursor state helpers
-- `classifyPemLabel(label: string): u8` — Maps RFC 7468 PEM label strings to `PEM_ITEM_*` constants
-- `isPrivateKeyKind(kind: u8): bool` — Checks whether an item kind is PKCS#8, PKCS#1, or SEC1
-- `readFirstPrivateKey(input: string, der_out: []u8): PemItem` — Scans a mixed certificate + key bundle and decodes the first private key (`PRIVATE KEY`, `RSA PRIVATE KEY`, or `EC PRIVATE KEY`)
+Keep the exact same package name (`rustls-pemfile`) — no renaming required.
+
+**Rust (`Cargo.toml` / `main.rs`):**
+```rust
+use rustls_pemfile::{certs, private_key, read_one, Item};
+```
+
+**CP (`cap.json` / `main.cp`):**
+```typescript
+import {
+    PemBundleReader, PemItem, readFirstPrivateKey,
+    classifyPemLabel, isPrivateKeyKind,
+    PEM_ITEM_X509_CERT, PEM_ITEM_PKCS8_KEY, PEM_ITEM_PKCS1_KEY, PEM_ITEM_SEC1_KEY
+} from "rustls-pemfile";
+```
+
+## Quick Start
+
+### Stream a Certificate Chain & Private Key Bundle
+
+```typescript
+import { PemBundleReader, PEM_ITEM_X509_CERT } from "rustls-pemfile";
+
+export fn loadTlsBundle(pem_bundle: string): usize {
+    let mut reader = PemBundleReader.new(pem_bundle);
+    let mut der_buf: [4096]u8 = undefined;
+    let mut cert_count: usize = 0;
+
+    while (!reader.isEof()) {
+        let item = reader.nextItem(der_buf[0..4096]);
+        if (item.eof) {
+            break;
+        }
+        if (!item.ok) {
+            return 0; // malformed PEM or buffer too small
+        }
+        if (item.isCert()) {
+            let cert_der = der_buf[0..item.der_len];
+            cert_count += 1;
+            _ = cert_der;
+        } else if (item.isPrivateKey()) {
+            let key_der = der_buf[0..item.der_len];
+            _ = key_der;
+        }
+    }
+    return cert_count;
+}
+```
+
+### Extract the First Private Key from a Mixed Bundle
+
+```typescript
+import { readFirstPrivateKey } from "rustls-pemfile";
+
+export fn loadPrivateKey(bundle: string, out: []u8): usize {
+    let item = readFirstPrivateKey(bundle, out);
+    if (item.ok && item.isPrivateKey()) {
+        return item.der_len;
+    }
+    return 0;
+}
+```
+
+## API Reference
+
+### Item Kind Constants (`u8`)
+
+| Constant | Value | PEM Label |
+| :--- | :---: | :--- |
+| `PEM_ITEM_NONE` | `0` | None / EOF / invalid label |
+| `PEM_ITEM_X509_CERT` | `1` | `CERTIFICATE` |
+| `PEM_ITEM_PKCS8_KEY` | `2` | `PRIVATE KEY` |
+| `PEM_ITEM_PKCS1_KEY` | `3` | `RSA PRIVATE KEY` |
+| `PEM_ITEM_SEC1_KEY` | `4` | `EC PRIVATE KEY` |
+| `PEM_ITEM_SPKI_PUBKEY` | `5` | `PUBLIC KEY` |
+| `PEM_ITEM_CRL` | `6` | `X509 CRL` |
+| `PEM_ITEM_CSR` | `7` | `CERTIFICATE REQUEST` |
+| `PEM_ITEM_UNKNOWN` | `8` | Any other valid RFC 7468 label |
+
+### Types & Functions
+
+- `PemItem` — `{ kind: u8, der_len: usize, ok: bool, eof: bool }` with `makeEof()`, `makeErr()`, `isCert()`, `isPrivateKey()`.
+- `PemBundleReader` — `new(input: string)`, `nextItem(der_out: []u8): PemItem`, `peekNextKind(): u8`, `countItems(): usize`, `countCerts(): usize`, `remaining(): usize`, `isEof(): bool`, `reset()`.
+- `readFirstPrivateKey(input: string, der_out: []u8): PemItem` — Scans a bundle and decodes the first PKCS#8, PKCS#1, or SEC1 private key.
+- `classifyPemLabel(label: string): u8` — Classifies a PEM label string into `PEM_ITEM_*`.
+- `isPrivateKeyKind(kind: u8): bool` — Returns `true` for PKCS#8, PKCS#1, or SEC1.
+
+## License
+
+MIT
