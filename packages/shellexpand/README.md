@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:shellexpand` ([https://gitlab.com/ijackson/rust-shellexpand](https://gitlab.com/ijackson/rust-shellexpand)) | 许可：`MIT OR Apache-2.0`
 

@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { isSpace, isAlpha, isDigit } from "cap:ascii";
 export enum CssTokKind {
     Ident,
     AtKeyword,
@@ -30,8 +31,6 @@ export class CssToken {
     end: usize,
 }
 
-export fn csspIsWs(c: u8): bool;
-export fn csspIsDigit(c: u8): bool;
 export fn csspIsIdentStart(c: u8): bool;
 export fn csspIsIdentChar(c: u8): bool;
 export fn csspStartsIdent(s: string, pos: usize): bool;

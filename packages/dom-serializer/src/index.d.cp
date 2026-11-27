@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { eqIgnoreCase } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export enum DomNodeKind {
     Element,
     Text,
@@ -18,10 +20,7 @@ export class SerializeOptions {
     self_closing_tags: bool,
 }
 
-export fn dsrlToLowerByte(c: u8): u8;
-export fn dsrlEqIgnoreCase(a: string, b: string): bool;
 export fn dsrlWriteByte(out: []u8, pos: usize, b: u8): usize;
-export fn dsrlWriteStr(out: []u8, pos: usize, s: string): usize;
 export fn dsrlWriteAttrValue(out: []u8, pos: usize, val: string): usize;
 export fn isVoidElement(tag: string): bool;
 export fn serializeText(text: string, out: []u8): usize;

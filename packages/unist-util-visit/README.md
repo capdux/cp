@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/unist-util-visit
 
 Zero-heap arena-based `unist` AST tree pre-order visitor, ancestor-chain collector, and node predicate matcher in pure CP (covers `unist-util-visit`, `unist-util-visit-parents`, and `unist-util-is`).

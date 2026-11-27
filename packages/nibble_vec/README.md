@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/nibble-vec
 
 Zero-heap 4-bit nibble vector in pure CP for radix trees and prefix compression (up to 128 nibbles / 64 bytes inline).

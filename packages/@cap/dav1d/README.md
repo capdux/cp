@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **c** [`dav1d`](https://code.videolan.org/videolan/dav1d)（`BSD-2-Clause`）（包名 `@cap/dav1d`）。
 

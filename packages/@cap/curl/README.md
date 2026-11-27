@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **c** [`curl`](https://github.com/curl/curl)（`curl`）（包名 `@cap/curl`）。
 

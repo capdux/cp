@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/smawk
 
 Zero-heap matrix row-minima algorithms (SMAWK / divide-and-conquer monotone row minima and total monotonicity validation) in pure CP.

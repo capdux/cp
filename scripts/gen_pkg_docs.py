@@ -44,13 +44,32 @@ def discover_packages():
     return pkgs
 
 
-def extract_api_lines(dcp_text: str):
+def extract_exported_names(cp_text: str):
+    """Extract explicitly exported symbol names from `export { ... };` block if present."""
+    m = re.search(r"export\s*\{([^}]+)\}\s*;", cp_text, re.DOTALL)
+    if not m:
+        return None
+    names = set()
+    for tok in re.split(r"[,\s]+", m.group(1)):
+        t = tok.strip()
+        if t and re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", t):
+            names.add(t)
+    return names if names else None
+
+
+def extract_api_lines(dcp_text: str, exported_names=None):
     fns, types = [], []
     for line in dcp_text.splitlines():
         s = line.strip()
         if s.startswith("pub fn ") or s.startswith("export fn "):
+            m = re.search(r"fn\s+([A-Za-z_][A-Za-z0-9_]*)", s)
+            if exported_names is not None and m and m.group(1) not in exported_names:
+                continue
             fns.append(s)
-        elif s.startswith("pub struct ") or s.startswith("pub enum ") or s.startswith("pub const ") or s.startswith("pub type "):
+        elif s.startswith("pub struct ") or s.startswith("pub enum ") or s.startswith("pub const ") or s.startswith("pub type ") or s.startswith("export struct ") or s.startswith("export enum ") or s.startswith("export const "):
+            m = re.search(r"(?:struct|enum|const|type)\s+([A-Za-z_][A-Za-z0-9_]*)", s)
+            if exported_names is not None and m and m.group(1) not in exported_names:
+                continue
             types.append(s)
     return types, fns
 
@@ -63,12 +82,12 @@ def first_fn_name(fns):
     return "example"
 
 
-def build_agent_doc(pkg_name: str, cj: dict, dcp_text: str) -> str:
+def build_agent_doc(pkg_name: str, cj: dict, dcp_text: str, exported_names=None) -> str:
     desc = (cj.get("description") or f"CP package {pkg_name}").strip()
     ver = cj.get("version") or cj.get("ver") or "1.0.0"
     lic = cj.get("license") or "MIT"
     deps = cj.get("dependencies") or cj.get("deps") or {}
-    types, fns = extract_api_lines(dcp_text)
+    types, fns = extract_api_lines(dcp_text, exported_names)
 
     lines = [
         f"# {pkg_name}@{ver} (Agent Quickref)",
@@ -97,13 +116,13 @@ def build_agent_doc(pkg_name: str, cj: dict, dcp_text: str) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def build_zh_doc(pkg_name: str, cj: dict, dcp_text: str) -> str:
+def build_zh_doc(pkg_name: str, cj: dict, dcp_text: str, exported_names=None) -> str:
     desc = (cj.get("description") or f"CP 官方生态包 {pkg_name}").strip()
     ver = cj.get("version") or cj.get("ver") or "1.0.0"
     lic = cj.get("license") or "MIT"
     src = cj.get("source") or {}
     sources = cj.get("sources") or ([src] if src else [])
-    types, fns = extract_api_lines(dcp_text)
+    types, fns = extract_api_lines(dcp_text, exported_names)
     sample_fn = first_fn_name(fns)
 
     lines = [
@@ -168,6 +187,7 @@ def ensure_lang_bar(readme_path: Path, dry_run: bool) -> bool:
 
 def main():
     apply = "--apply" in sys.argv
+    force = "--force" in sys.argv
     dry_run = not apply
     pkgs = discover_packages()
 
@@ -192,11 +212,15 @@ def main():
                 if res.returncode == 0 and res.stdout.strip():
                     dcp_path.write_text(res.stdout, encoding="utf-8")
                     emitted_dcp += 1
+                elif dcp_path.is_file():
+                    emitted_dcp += 1
                 else:
                     failed_dcp += 1
             else:
                 emitted_dcp += 1
 
+        cp_text = cp_path.read_text(encoding="utf-8", errors="ignore") if cp_path.is_file() else ""
+        exported_names = extract_exported_names(cp_text)
         dcp_text = dcp_path.read_text(encoding="utf-8", errors="ignore") if dcp_path.is_file() else ""
 
         # 2. Ensure language bar in README.md
@@ -205,16 +229,16 @@ def main():
 
         # 3. Generate README.zh-CN.md
         zh_path = pdir / "README.zh-CN.md"
-        if not zh_path.is_file():
+        if force or not zh_path.is_file():
             if not dry_run:
-                zh_path.write_text(build_zh_doc(pkg_name, cj, dcp_text), encoding="utf-8")
+                zh_path.write_text(build_zh_doc(pkg_name, cj, dcp_text, exported_names), encoding="utf-8")
             written_zh += 1
 
         # 4. Generate README_AGENT.md
         ag_path = pdir / "README_AGENT.md"
-        if not ag_path.is_file():
+        if force or not ag_path.is_file():
             if not dry_run:
-                ag_path.write_text(build_agent_doc(pkg_name, cj, dcp_text), encoding="utf-8")
+                ag_path.write_text(build_agent_doc(pkg_name, cj, dcp_text, exported_names), encoding="utf-8")
             written_agent += 1
 
     print(

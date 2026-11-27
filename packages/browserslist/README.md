@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/browserslist-query
 
 Zero-heap Browserslist target query clause parser and version matcher in pure CP.

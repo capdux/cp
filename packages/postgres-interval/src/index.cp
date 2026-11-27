@@ -1,6 +1,9 @@
 // @cap/postgres-interval — Zero-allocation PostgreSQL INTERVAL parser & formatter in pure CP
 // Reference: npm:postgres-interval (https://github.com/bendrucker/postgres-interval, MIT)
 
+import { isSpace, isDigit, isAlpha, toLowerByte, eqIgnoreCase, trim } from "cap:ascii";
+import { writeStr, writeU64, writeI64 } from "cap:fmt";
+
 pub struct PgInterval {
     valid: bool,
     years: i32,
@@ -27,55 +30,32 @@ struct PgivWriter {
         _.pos += 1;
     }
 
-    fn writeStr(*_, s: string) {
+    fn putStr(*_, s: string) {
         if (_.overflow) return;
         if (_.pos + s.len > _.buf.len) {
             _.overflow = true;
             return;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.buf[_.pos + i] = s[i];
-            i += 1;
-        }
-        _.pos += s.len;
+        _.pos = writeStr(s, _.buf, _.pos);
     }
 
-    fn writeU64(*_, val: u64) {
+    fn putU64(*_, val: u64) {
         let tmp: [24]u8 = undefined;
-        let len: usize = 0;
-        let v = val;
-        if (v == 0) {
-            _.writeByte('0');
-            return;
-        }
-        while (v > 0) {
-            const digit = u8(v % 10);
-            tmp[len] = u8('0') + digit;
-            len += 1;
-            v /= 10;
-        }
-        while (len > 0) {
-            len -= 1;
-            _.writeByte(tmp[len]);
-        }
+        const len = writeU64(val, tmp[0..24], 0);
+        _.putStr(tmp[0..len]);
     }
 
     fn writeI32(*_, val: i32) {
-        if (val < 0) {
-            _.writeByte('-');
-            const neg: i64 = 0 - (val as i64);
-            _.writeU64(neg as u64);
-        } else {
-            _.writeU64(val as u64);
-        }
+        let tmp: [24]u8 = undefined;
+        const len = writeI64(val as i64, tmp[0..24], 0);
+        _.putStr(tmp[0..len]);
     }
 
     fn writeU64Pad2(*_, val: u64) {
         if (val < 10) {
             _.writeByte('0');
         }
-        _.writeU64(val);
+        _.putU64(val);
     }
 
     fn writeMsTrimmed(*_, ms_abs: u64) {
@@ -131,38 +111,9 @@ fn pgivZero(): PgInterval {
     };
 }
 
-fn pgivIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-fn pgivIsDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
-fn pgivIsAlpha(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-fn pgivToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn pgivEqIgnoreCase(a: string, b: string): bool {
-    if (a.len != b.len) return false;
-    let i: usize = 0;
-    while (i < a.len) {
-        if (pgivToLower(a[i]) != pgivToLower(b[i])) return false;
-        i += 1;
-    }
-    return true;
-}
-
 fn pgivSkipSpace(s: string, start: usize): usize {
     let i = start;
-    while (i < s.len && pgivIsSpace(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i += 1;
     }
     return i;
@@ -170,11 +121,11 @@ fn pgivSkipSpace(s: string, start: usize): usize {
 
 fn pgivParseUint(s: string, start: usize): PgivIntRes {
     let i = start;
-    if (i >= s.len || !pgivIsDigit(s[i])) {
+    if (i >= s.len || !isDigit(s[i])) {
         return PgivIntRes{ ok: false, val: 0, next: start };
     }
     let acc: i64 = 0;
-    while (i < s.len && pgivIsDigit(s[i])) {
+    while (i < s.len && isDigit(s[i])) {
         const d = (s[i] - '0') as i64;
         if (acc > 214748364) {
             return PgivIntRes{ ok: false, val: 0, next: i };
@@ -189,7 +140,7 @@ fn pgivParseFracMs(s: string, start: usize): PgivFracRes {
     let i = start;
     let ms: i32 = 0;
     let scale: i32 = 100;
-    while (i < s.len && pgivIsDigit(s[i])) {
+    while (i < s.len && isDigit(s[i])) {
         const d = (s[i] - '0') as i32;
         if (scale > 0) {
             ms += d * scale;
@@ -244,13 +195,13 @@ fn pgivParseIso(s: string, start: usize, end: usize): PgInterval {
         if (i < end && (s[i] == '.' || s[i] == ',')) {
             has_frac = true;
             i += 1;
-            if (i >= end || !pgivIsDigit(s[i])) return pgivInvalid();
+            if (i >= end || !isDigit(s[i])) return pgivInvalid();
             const fr = pgivParseFracMs(s, i);
             frac_ms = fr.ms;
             i = fr.next;
         }
         if (i >= end) return pgivInvalid();
-        const unit = pgivToLower(s[i]);
+        const unit = toLowerByte(s[i]);
         i += 1;
         const sign = global_sign * local_sign;
         const v32 = (num.val as i32) * sign;
@@ -290,20 +241,18 @@ fn pgivParseIso(s: string, start: usize, end: usize): PgInterval {
 }
 
 pub fn parsePgInterval(input: string): PgInterval {
-    let start = pgivSkipSpace(input, 0);
-    let end = input.len;
-    while (end > start && pgivIsSpace(input[end - 1])) {
-        end -= 1;
-    }
-    if (start >= end) return pgivInvalid();
+    const trimmed = trim(input);
+    if (trimmed.len == 0) return pgivInvalid();
+    const start: usize = 0;
+    const end: usize = trimmed.len;
 
     // Detect ISO-8601 duration: P... / +P... / -P...
-    if (input[start] == 'P' || input[start] == 'p') {
-        return pgivParseIso(input, start, end);
+    if (trimmed[start] == 'P' || trimmed[start] == 'p') {
+        return pgivParseIso(trimmed, start, end);
     }
-    if ((input[start] == '+' || input[start] == '-') && start + 1 < end &&
-        (input[start + 1] == 'P' || input[start + 1] == 'p')) {
-        return pgivParseIso(input, start, end);
+    if ((trimmed[start] == '+' || trimmed[start] == '-') && start + 1 < end &&
+        (trimmed[start + 1] == 'P' || trimmed[start + 1] == 'p')) {
+        return pgivParseIso(trimmed, start, end);
     }
 
     let iv = pgivZero();
@@ -311,25 +260,25 @@ pub fn parsePgInterval(input: string): PgInterval {
     let parsed_any = false;
 
     // Optional '@' prefix (postgres_verbose)
-    if (i < end && input[i] == '@') {
+    if (i < end && trimmed[i] == '@') {
         i += 1;
-        i = pgivSkipSpace(input, i);
+        i = pgivSkipSpace(trimmed, i);
     }
 
     while (i < end) {
-        while (i < end && (pgivIsSpace(input[i]) || input[i] == ',')) {
+        while (i < end && (isSpace(trimmed[i]) || trimmed[i] == ',')) {
             i += 1;
         }
         if (i >= end) break;
 
         // Check trailing "ago"
-        if (pgivIsAlpha(input[i])) {
+        if (isAlpha(trimmed[i])) {
             const wstart = i;
-            while (i < end && pgivIsAlpha(input[i])) {
+            while (i < end && isAlpha(trimmed[i])) {
                 i += 1;
             }
-            const word = input[wstart..i];
-            if (pgivEqIgnoreCase(word, "ago") && parsed_any) {
+            const word = trimmed[wstart..i];
+            if (eqIgnoreCase(word, "ago") && parsed_any) {
                 const y = iv.years;
                 const mo = iv.months;
                 const d = iv.days;
@@ -351,35 +300,35 @@ pub fn parsePgInterval(input: string): PgInterval {
 
         // Parse optional sign
         let sign: i32 = 1;
-        if (input[i] == '+' || input[i] == '-') {
-            if (input[i] == '-') sign = -1;
+        if (trimmed[i] == '+' || trimmed[i] == '-') {
+            if (trimmed[i] == '-') sign = -1;
             i += 1;
         }
 
-        const first = pgivParseUint(input, i);
+        const first = pgivParseUint(trimmed, i);
         if (!first.ok) return pgivInvalid();
         i = first.next;
 
         // Time literal HH:MM[:SS[.fff]]
-        if (i < end && input[i] == ':') {
+        if (i < end && trimmed[i] == ':') {
             i += 1;
-            const mins = pgivParseUint(input, i);
+            const mins = pgivParseUint(trimmed, i);
             if (!mins.ok) return pgivInvalid();
             i = mins.next;
 
             let secs_val: i64 = 0;
             let frac_ms: i32 = 0;
-            if (i < end && input[i] == ':') {
+            if (i < end && trimmed[i] == ':') {
                 i += 1;
-                const secs = pgivParseUint(input, i);
+                const secs = pgivParseUint(trimmed, i);
                 if (!secs.ok) return pgivInvalid();
                 secs_val = secs.val;
                 i = secs.next;
 
-                if (i < end && input[i] == '.') {
+                if (i < end && trimmed[i] == '.') {
                     i += 1;
-                    if (i >= end || !pgivIsDigit(input[i])) return pgivInvalid();
-                    const fr = pgivParseFracMs(input, i);
+                    if (i >= end || !isDigit(trimmed[i])) return pgivInvalid();
+                    const fr = pgivParseFracMs(trimmed, i);
                     frac_ms = fr.ms;
                     i = fr.next;
                 }
@@ -396,61 +345,61 @@ pub fn parsePgInterval(input: string): PgInterval {
         // Optional fractional part before unit (e.g. "1.5 secs")
         let frac_ms: i32 = 0;
         let has_frac = false;
-        if (i < end && input[i] == '.') {
+        if (i < end && trimmed[i] == '.') {
             has_frac = true;
             i += 1;
-            if (i >= end || !pgivIsDigit(input[i])) return pgivInvalid();
-            const fr = pgivParseFracMs(input, i);
+            if (i >= end || !isDigit(trimmed[i])) return pgivInvalid();
+            const fr = pgivParseFracMs(trimmed, i);
             frac_ms = fr.ms;
             i = fr.next;
         }
 
-        i = pgivSkipSpace(input, i);
-        if (i >= end || !pgivIsAlpha(input[i])) {
+        i = pgivSkipSpace(trimmed, i);
+        if (i >= end || !isAlpha(trimmed[i])) {
             return pgivInvalid();
         }
         const ustart = i;
-        while (i < end && pgivIsAlpha(input[i])) {
+        while (i < end && isAlpha(trimmed[i])) {
             i += 1;
         }
-        const unit = input[ustart..i];
+        const unit = trimmed[ustart..i];
         const v32 = (first.val as i32) * sign;
 
-        if (pgivEqIgnoreCase(unit, "year") || pgivEqIgnoreCase(unit, "years") ||
-            pgivEqIgnoreCase(unit, "yr") || pgivEqIgnoreCase(unit, "yrs") ||
-            pgivEqIgnoreCase(unit, "y")) {
+        if (eqIgnoreCase(unit, "year") || eqIgnoreCase(unit, "years") ||
+            eqIgnoreCase(unit, "yr") || eqIgnoreCase(unit, "yrs") ||
+            eqIgnoreCase(unit, "y")) {
             if (has_frac) return pgivInvalid();
             iv.years += v32;
-        } else if (pgivEqIgnoreCase(unit, "mon") || pgivEqIgnoreCase(unit, "mons") ||
-            pgivEqIgnoreCase(unit, "month") || pgivEqIgnoreCase(unit, "months")) {
+        } else if (eqIgnoreCase(unit, "mon") || eqIgnoreCase(unit, "mons") ||
+            eqIgnoreCase(unit, "month") || eqIgnoreCase(unit, "months")) {
             if (has_frac) return pgivInvalid();
             iv.months += v32;
-        } else if (pgivEqIgnoreCase(unit, "week") || pgivEqIgnoreCase(unit, "weeks") ||
-            pgivEqIgnoreCase(unit, "w")) {
+        } else if (eqIgnoreCase(unit, "week") || eqIgnoreCase(unit, "weeks") ||
+            eqIgnoreCase(unit, "w")) {
             if (has_frac) return pgivInvalid();
             iv.days += v32 * 7;
-        } else if (pgivEqIgnoreCase(unit, "day") || pgivEqIgnoreCase(unit, "days") ||
-            pgivEqIgnoreCase(unit, "d")) {
+        } else if (eqIgnoreCase(unit, "day") || eqIgnoreCase(unit, "days") ||
+            eqIgnoreCase(unit, "d")) {
             if (has_frac) return pgivInvalid();
             iv.days += v32;
-        } else if (pgivEqIgnoreCase(unit, "hour") || pgivEqIgnoreCase(unit, "hours") ||
-            pgivEqIgnoreCase(unit, "hr") || pgivEqIgnoreCase(unit, "hrs") ||
-            pgivEqIgnoreCase(unit, "h")) {
+        } else if (eqIgnoreCase(unit, "hour") || eqIgnoreCase(unit, "hours") ||
+            eqIgnoreCase(unit, "hr") || eqIgnoreCase(unit, "hrs") ||
+            eqIgnoreCase(unit, "h")) {
             if (has_frac) return pgivInvalid();
             iv.hours += v32;
-        } else if (pgivEqIgnoreCase(unit, "min") || pgivEqIgnoreCase(unit, "mins") ||
-            pgivEqIgnoreCase(unit, "minute") || pgivEqIgnoreCase(unit, "minutes") ||
-            pgivEqIgnoreCase(unit, "m")) {
+        } else if (eqIgnoreCase(unit, "min") || eqIgnoreCase(unit, "mins") ||
+            eqIgnoreCase(unit, "minute") || eqIgnoreCase(unit, "minutes") ||
+            eqIgnoreCase(unit, "m")) {
             if (has_frac) return pgivInvalid();
             iv.minutes += v32;
-        } else if (pgivEqIgnoreCase(unit, "sec") || pgivEqIgnoreCase(unit, "secs") ||
-            pgivEqIgnoreCase(unit, "second") || pgivEqIgnoreCase(unit, "seconds") ||
-            pgivEqIgnoreCase(unit, "s")) {
+        } else if (eqIgnoreCase(unit, "sec") || eqIgnoreCase(unit, "secs") ||
+            eqIgnoreCase(unit, "second") || eqIgnoreCase(unit, "seconds") ||
+            eqIgnoreCase(unit, "s")) {
             iv.seconds += v32;
             iv.milliseconds += frac_ms * sign;
-        } else if (pgivEqIgnoreCase(unit, "ms") || pgivEqIgnoreCase(unit, "msec") ||
-            pgivEqIgnoreCase(unit, "msecs") || pgivEqIgnoreCase(unit, "millisecond") ||
-            pgivEqIgnoreCase(unit, "milliseconds")) {
+        } else if (eqIgnoreCase(unit, "ms") || eqIgnoreCase(unit, "msec") ||
+            eqIgnoreCase(unit, "msecs") || eqIgnoreCase(unit, "millisecond") ||
+            eqIgnoreCase(unit, "milliseconds")) {
             if (has_frac) return pgivInvalid();
             iv.milliseconds += v32;
         } else {
@@ -471,7 +420,7 @@ pub fn toIsoDuration(iv: PgInterval, out: []u8): usize {
     const has_time = iv.hours != 0 || iv.minutes != 0 || iv.seconds != 0 || iv.milliseconds != 0;
 
     if (!has_date && !has_time) {
-        w.writeStr("PT0S");
+        w.putStr("PT0S");
         if (w.overflow) return 0;
         return w.pos;
     }
@@ -512,7 +461,7 @@ pub fn toIsoDuration(iv: PgInterval, out: []u8): usize {
             }
             const sec_part: u64 = abs_ms / 1000;
             const ms_part: u64 = abs_ms % 1000;
-            w.writeU64(sec_part);
+            w.putU64(sec_part);
             w.writeMsTrimmed(ms_part);
             w.writeByte('S');
         }
@@ -530,7 +479,7 @@ pub fn toPostgresString(iv: PgInterval, out: []u8): usize {
     const has_time = iv.hours != 0 || iv.minutes != 0 || iv.seconds != 0 || iv.milliseconds != 0;
 
     if (!has_date && !has_time) {
-        w.writeStr("00:00:00");
+        w.putStr("00:00:00");
         if (w.overflow) return 0;
         return w.pos;
     }
@@ -539,9 +488,9 @@ pub fn toPostgresString(iv: PgInterval, out: []u8): usize {
     if (iv.years != 0) {
         w.writeI32(iv.years);
         if (iv.years == 1 || iv.years == -1) {
-            w.writeStr(" year");
+            w.putStr(" year");
         } else {
-            w.writeStr(" years");
+            w.putStr(" years");
         }
         need_space = true;
     }
@@ -549,9 +498,9 @@ pub fn toPostgresString(iv: PgInterval, out: []u8): usize {
         if (need_space) w.writeByte(' ');
         w.writeI32(iv.months);
         if (iv.months == 1 || iv.months == -1) {
-            w.writeStr(" mon");
+            w.putStr(" mon");
         } else {
-            w.writeStr(" mons");
+            w.putStr(" mons");
         }
         need_space = true;
     }
@@ -559,9 +508,9 @@ pub fn toPostgresString(iv: PgInterval, out: []u8): usize {
         if (need_space) w.writeByte(' ');
         w.writeI32(iv.days);
         if (iv.days == 1 || iv.days == -1) {
-            w.writeStr(" day");
+            w.putStr(" day");
         } else {
-            w.writeStr(" days");
+            w.putStr(" days");
         }
         need_space = true;
     }
@@ -588,13 +537,13 @@ pub fn toPostgresString(iv: PgInterval, out: []u8): usize {
             let t_sp = false;
             if (iv.hours != 0) {
                 w.writeI32(iv.hours);
-                w.writeStr(" hours");
+                w.putStr(" hours");
                 t_sp = true;
             }
             if (iv.minutes != 0) {
                 if (t_sp) w.writeByte(' ');
                 w.writeI32(iv.minutes);
-                w.writeStr(" mins");
+                w.putStr(" mins");
                 t_sp = true;
             }
             if (iv.seconds != 0 || iv.milliseconds != 0) {
@@ -603,7 +552,7 @@ pub fn toPostgresString(iv: PgInterval, out: []u8): usize {
                 if (iv.milliseconds != 0) {
                     w.writeMsTrimmed(pgivAbsI32ToU64(iv.milliseconds));
                 }
-                w.writeStr(" secs");
+                w.putStr(" secs");
             }
         }
     }

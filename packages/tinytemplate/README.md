@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/template` — 零分配、默认 XSS 安全防护模板引擎
 
 <!-- cap-source-attribution -->

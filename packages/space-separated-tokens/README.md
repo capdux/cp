@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/space-separated-tokens
 
 Zero-allocation HTML/SVG space-separated and comma-separated token list parser and serializer in pure CP (covers both `space-separated-tokens` and `comma-separated-tokens`).

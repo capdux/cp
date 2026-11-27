@@ -1,6 +1,8 @@
 // @cap/postgres-date — Zero-allocation PostgreSQL TIMESTAMP / TIMESTAMPTZ parser in pure CP
 // Clean-room MIT implementation of npm `postgres-date` (#505, 112M/wk).
 
+import { strEq, isDigit, endsWith, findByte } from "cap:ascii";
+
 pub enum PgDateKind {
     Invalid,
     Finite,
@@ -25,26 +27,12 @@ pub struct PgDateTime {
     }
 }
 
-fn pgdStrEq(a: string, b: string): bool {
-    if (a.len != b.len) { return false; }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) { return false; }
-        i += 1;
-    }
-    return true;
-}
-
-fn pgdIsDigit(b: u8): bool {
-    return b >= 48 && b <= 57;
-}
-
 fn pgdParseDigits(s: string): i32? {
     if (s.len == 0) { return null; }
     let acc: i32 = 0;
     let i: usize = 0;
     while (i < s.len) {
-        if (!pgdIsDigit(s[i])) { return null; }
+        if (!isDigit(s[i])) { return null; }
         acc = acc * 10 + ((s[i] - 48) as i32);
         i += 1;
     }
@@ -72,14 +60,14 @@ pub fn parsePgDate(input: string): PgDateTime {
         hour: 0, minute: 0, second: 0, microsecond: 0,
         tz_offset_sec: 0, is_bc: false,
     };
-    if (pgdStrEq(input, "infinity")) {
+    if (strEq(input, "infinity")) {
         return PgDateTime {
             kind: .PosInfinity, year: 0, month: 0, day: 0,
             hour: 0, minute: 0, second: 0, microsecond: 0,
             tz_offset_sec: 0, is_bc: false,
         };
     }
-    if (pgdStrEq(input, "-infinity")) {
+    if (strEq(input, "-infinity")) {
         return PgDateTime {
             kind: .NegInfinity, year: 0, month: 0, day: 0,
             hour: 0, minute: 0, second: 0, microsecond: 0,
@@ -89,14 +77,13 @@ pub fn parsePgDate(input: string): PgDateTime {
 
     let s = input;
     let is_bc = false;
-    if (s.len >= 3 && s[s.len - 3] == 32 && s[s.len - 2] == 66 && s[s.len - 1] == 67) { // " BC"
+    if (endsWith(s, " BC")) {
         is_bc = true;
         s = s[0..(s.len - 3)];
     }
 
     // Parse YYYY-MM-DD
-    let dash1: usize = 0;
-    while (dash1 < s.len && s[dash1] != 45) { dash1 += 1; }
+    const dash1 = findByte(s, 45, 0) ?? s.len;
     if (dash1 < 4 || dash1 + 6 > s.len) { return inv; }
     if (s[dash1 + 3] != 45) { return inv; }
 
@@ -137,7 +124,7 @@ pub fn parsePgDate(input: string): PgDateTime {
             pos += 1;
             let scale: u32 = 100000;
             let digits_read: usize = 0;
-            while (pos < s.len && pgdIsDigit(s[pos])) {
+            while (pos < s.len && isDigit(s[pos])) {
                 if (scale > 0) {
                     micro += ((s[pos] - 48) as u32) * scale;
                     scale = scale / 10;

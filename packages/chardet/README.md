@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/chardet
 
 Zero-allocation character encoding detector in pure CP supporting BOM detection (UTF-8, UTF-16LE/BE, UTF-32LE/BE), BOM-less UTF-16 cadence detection, strict UTF-8/ASCII validation, Shift-JIS, GBK/GB18030, Windows-1252, and ISO-8859-1.

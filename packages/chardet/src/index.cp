@@ -1,6 +1,9 @@
 // @cap/chardet — Zero-allocation character encoding detector in pure CP
 // Clean-room MIT implementation of npm `chardet` (#641, 90.3M/wk).
 
+import { isAscii } from "cap:ascii";
+import { isValidUtf8 } from "cap:utf8";
+
 pub enum DetectedCharset {
     Utf8,
     Utf8Bom,
@@ -34,50 +37,6 @@ pub fn charsetName(cs: DetectedCharset): string {
     if (cs == .ShiftJis) { return "Shift_JIS"; }
     if (cs == .Gbk) { return "GB18030"; }
     return "unknown";
-}
-
-/// Checks strict UTF-8 validity and returns whether any multi-byte sequence was seen.
-/// Returns: 0 = invalid UTF-8, 1 = pure ASCII, 2 = valid multi-byte UTF-8.
-fn chdCheckUtf8(data: []const u8): u8 {
-    let i: usize = 0;
-    let has_multibyte = false;
-    while (i < data.len) {
-        const b0 = data[i];
-        if (b0 < 0x80) {
-            i += 1;
-            continue;
-        }
-        has_multibyte = true;
-        if (b0 >= 0xC2 && b0 <= 0xDF) {
-            if (i + 1 >= data.len) { return 0; }
-            const b1 = data[i + 1];
-            if ((b1 & 0xC0) != 0x80) { return 0; }
-            i += 2;
-        } else if (b0 >= 0xE0 && b0 <= 0xEF) {
-            if (i + 2 >= data.len) { return 0; }
-            const b1 = data[i + 1];
-            const b2 = data[i + 2];
-            if ((b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80) { return 0; }
-            if (b0 == 0xE0 && b1 < 0xA0) { return 0; } // overlong
-            if (b0 == 0xED && b1 >= 0xA0) { return 0; } // surrogate
-            i += 3;
-        } else if (b0 >= 0xF0 && b0 <= 0xF4) {
-            if (i + 3 >= data.len) { return 0; }
-            const b1 = data[i + 1];
-            const b2 = data[i + 2];
-            const b3 = data[i + 3];
-            if ((b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80 || (b3 & 0xC0) != 0x80) { return 0; }
-            if (b0 == 0xF0 && b1 < 0x90) { return 0; } // overlong
-            if (b0 == 0xF4 && b1 > 0x8F) { return 0; } // > U+10FFFF
-            i += 4;
-        } else {
-            return 0;
-        }
-    }
-    if (has_multibyte) {
-        return 2;
-    }
-    return 1;
 }
 
 /// Scores how well `data` fits Shift-JIS double-byte lead/trail byte rules (0..100).
@@ -197,11 +156,10 @@ pub fn detect(data: []const u8): CharsetMatch {
     }
 
     // 3. Strict UTF-8 / ASCII check
-    const utf8_res = chdCheckUtf8(data);
-    if (utf8_res == 1) {
+    if (isAscii(data)) {
         return CharsetMatch { charset: .Ascii, name: "ASCII", confidence: 100 };
     }
-    if (utf8_res == 2) {
+    if (isValidUtf8(data)) {
         return CharsetMatch { charset: .Utf8, name: "UTF-8", confidence: 95 };
     }
 

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/ufo
 
 Zero-heap URL protocol detection, slash normalization, double-slash cleanup, and safe URL joining utilities in pure CP.

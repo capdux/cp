@@ -1,6 +1,9 @@
 // @cap/bowser — Zero-allocation User-Agent parser in pure CP
 // Clean-room MIT implementation inspired by npm `bowser`.
 
+import { isDigit, eqIgnoreCase } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
+
 /// Device / client platform classification.
 pub enum PlatformType {
     Desktop,
@@ -25,40 +28,8 @@ struct BwsPair {
     version: string,
 }
 
-fn bwsToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
 fn bwsIsVersionChar(c: u8): bool {
-    return (c >= '0' && c <= '9') || c == '.' || c == '_';
-}
-
-fn bwsFindSubstr(haystack: string, needle: string): usize? {
-    if (needle.len == 0) {
-        return 0;
-    }
-    if (needle.len > haystack.len) {
-        return null;
-    }
-    const limit: usize = haystack.len - needle.len;
-    let i: usize = 0;
-    while (i <= limit) : (i += 1) {
-        let j: usize = 0;
-        let matched: bool = true;
-        while (j < needle.len) : (j += 1) {
-            if (haystack[i + j] != needle[j]) {
-                matched = false;
-                break;
-            }
-        }
-        if (matched) {
-            return i;
-        }
-    }
-    return null;
+    return isDigit(c) || c == '.' || c == '_';
 }
 
 fn bwsFindSubstrCI(haystack: string, needle: string): usize? {
@@ -71,15 +42,7 @@ fn bwsFindSubstrCI(haystack: string, needle: string): usize? {
     const limit: usize = haystack.len - needle.len;
     let i: usize = 0;
     while (i <= limit) : (i += 1) {
-        let j: usize = 0;
-        let matched: bool = true;
-        while (j < needle.len) : (j += 1) {
-            if (bwsToLower(haystack[i + j]) != bwsToLower(needle[j])) {
-                matched = false;
-                break;
-            }
-        }
-        if (matched) {
+        if (eqIgnoreCase(haystack[i..(i + needle.len)], needle)) {
             return i;
         }
     }
@@ -87,7 +50,7 @@ fn bwsFindSubstrCI(haystack: string, needle: string): usize? {
 }
 
 fn bwsContains(haystack: string, needle: string): bool {
-    return bwsFindSubstr(haystack, needle) != null;
+    return indexOfBytes(haystack, needle, 0) != null;
 }
 
 fn bwsContainsCI(haystack: string, needle: string): bool {
@@ -106,7 +69,7 @@ fn bwsExtractVersionAt(ua: string, start: usize): string {
 }
 
 fn bwsExtractAfter(ua: string, token: string): string {
-    if (pos := bwsFindSubstr(ua, token)) {
+    if (pos := indexOfBytes(ua, token, 0)) {
         return bwsExtractVersionAt(ua, pos + token.len);
     }
     return "";

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`crates.io:cast` ([https://github.com/japaric/cast.rs](https://github.com/japaric/cast.rs)) | 许可：`MIT OR Apache-2.0`
 

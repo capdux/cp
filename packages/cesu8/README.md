@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/cesu8
 
 Zero-heap CESU-8 and Java Modified UTF-8 (MUTF-8) ↔ standard UTF-8 transcoder in pure CP.

@@ -1,6 +1,9 @@
 // @cap/dompurify — Zero-allocation HTML sanitizer in pure CP
 // Clean-room Apache-2.0 implementation inspired by npm `dompurify`.
 
+import { toLowerByte, isSpace, isAlnum, eqIgnoreCase, toLower } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 /// Configuration options for `sanitizeHtml`.
 pub struct SanitizeHtmlOptions {
     allow_links: bool,
@@ -17,45 +20,15 @@ pub fn defaultSanitizeOptions(): SanitizeHtmlOptions {
     };
 }
 
-fn dmpToLower(c: u8): u8 {
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
-    }
-    return c;
-}
-
-fn dmpIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0C;
-}
-
 fn dmpIsNameChar(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
-}
-
-fn dmpEqCI(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) : (i += 1) {
-        if (dmpToLower(a[i]) != dmpToLower(b[i])) {
-            return false;
-        }
-    }
-    return true;
+    return isAlnum(c) || c == '-' || c == '_';
 }
 
 fn dmpHasPrefixCI(s: string, prefix: string): bool {
     if (prefix.len > s.len) {
         return false;
     }
-    let i: usize = 0;
-    while (i < prefix.len) : (i += 1) {
-        if (dmpToLower(s[i]) != dmpToLower(prefix[i])) {
-            return false;
-        }
-    }
-    return true;
+    return eqIgnoreCase(s[0..prefix.len], prefix);
 }
 
 fn dmpWriteByte(out: []u8, pos: usize, b: u8): usize {
@@ -66,63 +39,49 @@ fn dmpWriteByte(out: []u8, pos: usize, b: u8): usize {
     return pos;
 }
 
-fn dmpWriteStr(out: []u8, pos: usize, s: string, lowercase: bool): usize {
-    let cur: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && cur < out.len) : (i += 1) {
-        if (lowercase) {
-            out[cur] = dmpToLower(s[i]);
-        } else {
-            out[cur] = s[i];
-        }
-        cur += 1;
-    }
-    return cur;
-}
-
 fn dmpIsBlockedContentTag(tag: string): bool {
-    return dmpEqCI(tag, "script") ||
-        dmpEqCI(tag, "style") ||
-        dmpEqCI(tag, "iframe") ||
-        dmpEqCI(tag, "object") ||
-        dmpEqCI(tag, "form");
+    return eqIgnoreCase(tag, "script") ||
+        eqIgnoreCase(tag, "style") ||
+        eqIgnoreCase(tag, "iframe") ||
+        eqIgnoreCase(tag, "object") ||
+        eqIgnoreCase(tag, "form");
 }
 
 fn dmpIsBlockedVoidTag(tag: string): bool {
-    return dmpEqCI(tag, "embed");
+    return eqIgnoreCase(tag, "embed");
 }
 
 fn dmpIsAllowedTag(tag: string, opts: SanitizeHtmlOptions): bool {
-    if (dmpEqCI(tag, "a")) {
+    if (eqIgnoreCase(tag, "a")) {
         return opts.allow_links;
     }
-    if (dmpEqCI(tag, "img")) {
+    if (eqIgnoreCase(tag, "img")) {
         return opts.allow_images;
     }
-    return dmpEqCI(tag, "p") ||
-        dmpEqCI(tag, "b") ||
-        dmpEqCI(tag, "i") ||
-        dmpEqCI(tag, "em") ||
-        dmpEqCI(tag, "strong") ||
-        dmpEqCI(tag, "ul") ||
-        dmpEqCI(tag, "ol") ||
-        dmpEqCI(tag, "li") ||
-        dmpEqCI(tag, "code") ||
-        dmpEqCI(tag, "pre") ||
-        dmpEqCI(tag, "div") ||
-        dmpEqCI(tag, "span") ||
-        dmpEqCI(tag, "h1") ||
-        dmpEqCI(tag, "h2") ||
-        dmpEqCI(tag, "h3") ||
-        dmpEqCI(tag, "h4") ||
-        dmpEqCI(tag, "h5") ||
-        dmpEqCI(tag, "h6") ||
-        dmpEqCI(tag, "br") ||
-        dmpEqCI(tag, "hr");
+    return eqIgnoreCase(tag, "p") ||
+        eqIgnoreCase(tag, "b") ||
+        eqIgnoreCase(tag, "i") ||
+        eqIgnoreCase(tag, "em") ||
+        eqIgnoreCase(tag, "strong") ||
+        eqIgnoreCase(tag, "ul") ||
+        eqIgnoreCase(tag, "ol") ||
+        eqIgnoreCase(tag, "li") ||
+        eqIgnoreCase(tag, "code") ||
+        eqIgnoreCase(tag, "pre") ||
+        eqIgnoreCase(tag, "div") ||
+        eqIgnoreCase(tag, "span") ||
+        eqIgnoreCase(tag, "h1") ||
+        eqIgnoreCase(tag, "h2") ||
+        eqIgnoreCase(tag, "h3") ||
+        eqIgnoreCase(tag, "h4") ||
+        eqIgnoreCase(tag, "h5") ||
+        eqIgnoreCase(tag, "h6") ||
+        eqIgnoreCase(tag, "br") ||
+        eqIgnoreCase(tag, "hr");
 }
 
 fn dmpIsEventAttr(attr: string): bool {
-    return attr.len >= 3 && dmpToLower(attr[0]) == 'o' && dmpToLower(attr[1]) == 'n';
+    return attr.len >= 3 && toLowerByte(attr[0]) == 'o' && toLowerByte(attr[1]) == 'n';
 }
 
 fn dmpIsSafeUrl(url: string): bool {
@@ -146,22 +105,22 @@ fn dmpIsSafeAttr(tag: string, attr: string, val: string, opts: SanitizeHtmlOptio
     if (dmpIsEventAttr(attr)) {
         return false;
     }
-    if (dmpEqCI(attr, "href")) {
-        return opts.allow_links && dmpEqCI(tag, "a") && dmpIsSafeUrl(val);
+    if (eqIgnoreCase(attr, "href")) {
+        return opts.allow_links && eqIgnoreCase(tag, "a") && dmpIsSafeUrl(val);
     }
-    if (dmpEqCI(attr, "src")) {
-        return opts.allow_images && dmpEqCI(tag, "img") && dmpIsSafeUrl(val);
+    if (eqIgnoreCase(attr, "src")) {
+        return opts.allow_images && eqIgnoreCase(tag, "img") && dmpIsSafeUrl(val);
     }
-    return dmpEqCI(attr, "alt") ||
-        dmpEqCI(attr, "title") ||
-        dmpEqCI(attr, "class") ||
-        dmpEqCI(attr, "id") ||
-        dmpEqCI(attr, "width") ||
-        dmpEqCI(attr, "height") ||
-        dmpEqCI(attr, "target") ||
-        dmpEqCI(attr, "rel") ||
-        dmpEqCI(attr, "dir") ||
-        dmpEqCI(attr, "lang");
+    return eqIgnoreCase(attr, "alt") ||
+        eqIgnoreCase(attr, "title") ||
+        eqIgnoreCase(attr, "class") ||
+        eqIgnoreCase(attr, "id") ||
+        eqIgnoreCase(attr, "width") ||
+        eqIgnoreCase(attr, "height") ||
+        eqIgnoreCase(attr, "target") ||
+        eqIgnoreCase(attr, "rel") ||
+        eqIgnoreCase(attr, "dir") ||
+        eqIgnoreCase(attr, "lang");
 }
 
 fn dmpFindTagClose(html: string, start: usize): usize {
@@ -189,10 +148,10 @@ fn dmpFindClosingTagEnd(html: string, start: usize, tag: string): usize {
     while (i + 2 < html.len) : (i += 1) {
         if (html[i] == '<' && html[i + 1] == '/') {
             let j: usize = i + 2;
-            while (j < html.len && dmpIsSpace(html[j])) : (j += 1) {}
+            while (j < html.len && isSpace(html[j])) : (j += 1) {}
             const name_start: usize = j;
             while (j < html.len && dmpIsNameChar(html[j])) : (j += 1) {}
-            if (dmpEqCI(html[name_start..j], tag)) {
+            if (eqIgnoreCase(html[name_start..j], tag)) {
                 const close_gt: usize = dmpFindTagClose(html, j);
                 if (close_gt < html.len) {
                     return close_gt + 1;
@@ -223,7 +182,7 @@ pub fn sanitizeHtml(html: string, opts: SanitizeHtmlOptions, out: []u8): usize {
             while (cend + 2 < html.len && !(html[cend] == '-' && html[cend + 1] == '-' && html[cend + 2] == '>')) : (cend += 1) {}
             const after_comment: usize = if (cend + 2 < html.len) (cend + 3) else html.len;
             if (!opts.strip_comments) {
-                out_pos = dmpWriteStr(out, out_pos, html[i..after_comment], false);
+                out_pos = writeStr(html[i..after_comment], out, out_pos);
             }
             i = after_comment;
             continue;
@@ -238,12 +197,12 @@ pub fn sanitizeHtml(html: string, opts: SanitizeHtmlOptions, out: []u8): usize {
         }
 
         let p: usize = i + 1;
-        while (p < gt && dmpIsSpace(html[p])) : (p += 1) {}
+        while (p < gt && isSpace(html[p])) : (p += 1) {}
         let is_closing: bool = false;
         if (p < gt && html[p] == '/') {
             is_closing = true;
             p += 1;
-            while (p < gt && dmpIsSpace(html[p])) : (p += 1) {}
+            while (p < gt && isSpace(html[p])) : (p += 1) {}
         }
 
         const name_start: usize = p;
@@ -280,8 +239,8 @@ pub fn sanitizeHtml(html: string, opts: SanitizeHtmlOptions, out: []u8): usize {
         }
 
         if (is_closing) {
-            out_pos = dmpWriteStr(out, out_pos, "</", false);
-            out_pos = dmpWriteStr(out, out_pos, tag_name, true);
+            out_pos = writeStr("</", out, out_pos);
+            out_pos += toLower(tag_name, out[out_pos..out.len]);
             out_pos = dmpWriteByte(out, out_pos, '>');
             i = gt + 1;
             continue;
@@ -289,29 +248,29 @@ pub fn sanitizeHtml(html: string, opts: SanitizeHtmlOptions, out: []u8): usize {
 
         // Emit opening tag with filtered safe attributes
         out_pos = dmpWriteByte(out, out_pos, '<');
-        out_pos = dmpWriteStr(out, out_pos, tag_name, true);
+        out_pos += toLower(tag_name, out[out_pos..out.len]);
 
         const attr_end_limit: usize = if (self_closing) (gt - 1) else gt;
         while (p < attr_end_limit) {
-            while (p < attr_end_limit && dmpIsSpace(html[p])) : (p += 1) {}
+            while (p < attr_end_limit && isSpace(html[p])) : (p += 1) {}
             if (p >= attr_end_limit) {
                 break;
             }
             const a_start: usize = p;
-            while (p < attr_end_limit && !dmpIsSpace(html[p]) && html[p] != '=' && html[p] != '/') : (p += 1) {}
+            while (p < attr_end_limit && !isSpace(html[p]) && html[p] != '=' && html[p] != '/') : (p += 1) {}
             const attr_name: string = html[a_start..p];
             if (attr_name.len == 0) {
                 p += 1;
                 continue;
             }
 
-            while (p < attr_end_limit && dmpIsSpace(html[p])) : (p += 1) {}
+            while (p < attr_end_limit && isSpace(html[p])) : (p += 1) {}
             let has_val: bool = false;
             let attr_val: string = "";
             if (p < attr_end_limit && html[p] == '=') {
                 has_val = true;
                 p += 1;
-                while (p < attr_end_limit && dmpIsSpace(html[p])) : (p += 1) {}
+                while (p < attr_end_limit && isSpace(html[p])) : (p += 1) {}
                 if (p < attr_end_limit && (html[p] == '"' || html[p] == '\'')) {
                     const q: u8 = html[p];
                     p += 1;
@@ -323,24 +282,24 @@ pub fn sanitizeHtml(html: string, opts: SanitizeHtmlOptions, out: []u8): usize {
                     }
                 } else {
                     const v_start: usize = p;
-                    while (p < attr_end_limit && !dmpIsSpace(html[p])) : (p += 1) {}
+                    while (p < attr_end_limit && !isSpace(html[p])) : (p += 1) {}
                     attr_val = html[v_start..p];
                 }
             }
 
             if (dmpIsSafeAttr(tag_name, attr_name, attr_val, opts)) {
                 out_pos = dmpWriteByte(out, out_pos, ' ');
-                out_pos = dmpWriteStr(out, out_pos, attr_name, true);
+                out_pos += toLower(attr_name, out[out_pos..out.len]);
                 if (has_val) {
-                    out_pos = dmpWriteStr(out, out_pos, "=\"", false);
-                    out_pos = dmpWriteStr(out, out_pos, attr_val, false);
+                    out_pos = writeStr("=\"", out, out_pos);
+                    out_pos = writeStr(attr_val, out, out_pos);
                     out_pos = dmpWriteByte(out, out_pos, '"');
                 }
             }
         }
 
         if (self_closing) {
-            out_pos = dmpWriteStr(out, out_pos, "/>", false);
+            out_pos = writeStr("/>", out, out_pos);
         } else {
             out_pos = dmpWriteByte(out, out_pos, '>');
         }
@@ -373,12 +332,12 @@ pub fn isSafeHtml(html: string): bool {
         }
 
         let p: usize = i + 1;
-        while (p < gt && dmpIsSpace(html[p])) : (p += 1) {}
+        while (p < gt && isSpace(html[p])) : (p += 1) {}
         let is_closing: bool = false;
         if (p < gt && html[p] == '/') {
             is_closing = true;
             p += 1;
-            while (p < gt && dmpIsSpace(html[p])) : (p += 1) {}
+            while (p < gt && isSpace(html[p])) : (p += 1) {}
         }
 
         const name_start: usize = p;
@@ -393,22 +352,22 @@ pub fn isSafeHtml(html: string): bool {
             const self_closing: bool = gt > i + 1 && html[gt - 1] == '/';
             const attr_end_limit: usize = if (self_closing) (gt - 1) else gt;
             while (p < attr_end_limit) {
-                while (p < attr_end_limit && dmpIsSpace(html[p])) : (p += 1) {}
+                while (p < attr_end_limit && isSpace(html[p])) : (p += 1) {}
                 if (p >= attr_end_limit) {
                     break;
                 }
                 const a_start: usize = p;
-                while (p < attr_end_limit && !dmpIsSpace(html[p]) && html[p] != '=' && html[p] != '/') : (p += 1) {}
+                while (p < attr_end_limit && !isSpace(html[p]) && html[p] != '=' && html[p] != '/') : (p += 1) {}
                 const attr_name: string = html[a_start..p];
                 if (attr_name.len == 0) {
                     p += 1;
                     continue;
                 }
-                while (p < attr_end_limit && dmpIsSpace(html[p])) : (p += 1) {}
+                while (p < attr_end_limit && isSpace(html[p])) : (p += 1) {}
                 let attr_val: string = "";
                 if (p < attr_end_limit && html[p] == '=') {
                     p += 1;
-                    while (p < attr_end_limit && dmpIsSpace(html[p])) : (p += 1) {}
+                    while (p < attr_end_limit && isSpace(html[p])) : (p += 1) {}
                     if (p < attr_end_limit && (html[p] == '"' || html[p] == '\'')) {
                         const q: u8 = html[p];
                         p += 1;
@@ -420,7 +379,7 @@ pub fn isSafeHtml(html: string): bool {
                         }
                     } else {
                         const v_start: usize = p;
-                        while (p < attr_end_limit && !dmpIsSpace(html[p])) : (p += 1) {}
+                        while (p < attr_end_limit && !isSpace(html[p])) : (p += 1) {}
                         attr_val = html[v_start..p];
                     }
                 }

@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isAscii } from "cap:ascii";
+import { isValidUtf8 } from "cap:utf8";
 export enum DetectedCharset {
     Utf8,
     Utf8Bom,
@@ -22,7 +24,6 @@ export class CharsetMatch {
 }
 
 export fn charsetName(cs: DetectedCharset): string;
-export fn chdCheckUtf8(data: &[]u8): u8;
 export fn chdScoreShiftJis(data: &[]u8): u8;
 export fn chdScoreGbk(data: &[]u8): u8;
 export fn detect(data: &[]u8): CharsetMatch;

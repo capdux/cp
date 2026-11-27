@@ -1,26 +1,7 @@
 // @cap/is-binary-path — Zero-allocation binary file extension checker in pure CP
 // Clean-room MIT implementation of npm `is-binary-path` (#534, 107M/wk) & `binary-extensions`.
 
-fn ibpToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn ibpEqLower(s: string, target: string): bool {
-    if (s.len != target.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < s.len) {
-        if (ibpToLower(s[i]) != target[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
+import { eqIgnoreCase } from "cap:ascii";
 
 /// Extracts the lowercase-comparable extension slice (without leading '.') from a file path.
 pub fn extractExtension(file_path: string): string {
@@ -50,68 +31,68 @@ pub fn isBinaryExtension(ext: string): bool {
         return false;
     }
     // Images & graphics
-    if (ibpEqLower(ext, "png") || ibpEqLower(ext, "jpg") || ibpEqLower(ext, "jpeg") ||
-        ibpEqLower(ext, "gif") || ibpEqLower(ext, "webp") || ibpEqLower(ext, "avif") ||
-        ibpEqLower(ext, "bmp") || ibpEqLower(ext, "ico") || ibpEqLower(ext, "icns") ||
-        ibpEqLower(ext, "tif") || ibpEqLower(ext, "tiff") || ibpEqLower(ext, "psd") ||
-        ibpEqLower(ext, "heic") || ibpEqLower(ext, "heif") || ibpEqLower(ext, "cur") ||
-        ibpEqLower(ext, "dds") || ibpEqLower(ext, "tga") || ibpEqLower(ext, "jp2") ||
-        ibpEqLower(ext, "jxl") || ibpEqLower(ext, "exr") || ibpEqLower(ext, "hdr") ||
-        ibpEqLower(ext, "raw") || ibpEqLower(ext, "cr2") || ibpEqLower(ext, "nef")) {
+    if (eqIgnoreCase(ext, "png") || eqIgnoreCase(ext, "jpg") || eqIgnoreCase(ext, "jpeg") ||
+        eqIgnoreCase(ext, "gif") || eqIgnoreCase(ext, "webp") || eqIgnoreCase(ext, "avif") ||
+        eqIgnoreCase(ext, "bmp") || eqIgnoreCase(ext, "ico") || eqIgnoreCase(ext, "icns") ||
+        eqIgnoreCase(ext, "tif") || eqIgnoreCase(ext, "tiff") || eqIgnoreCase(ext, "psd") ||
+        eqIgnoreCase(ext, "heic") || eqIgnoreCase(ext, "heif") || eqIgnoreCase(ext, "cur") ||
+        eqIgnoreCase(ext, "dds") || eqIgnoreCase(ext, "tga") || eqIgnoreCase(ext, "jp2") ||
+        eqIgnoreCase(ext, "jxl") || eqIgnoreCase(ext, "exr") || eqIgnoreCase(ext, "hdr") ||
+        eqIgnoreCase(ext, "raw") || eqIgnoreCase(ext, "cr2") || eqIgnoreCase(ext, "nef")) {
         return true;
     }
     // Audio & video
-    if (ibpEqLower(ext, "mp3") || ibpEqLower(ext, "mp4") || ibpEqLower(ext, "m4a") ||
-        ibpEqLower(ext, "m4v") || ibpEqLower(ext, "wav") || ibpEqLower(ext, "flac") ||
-        ibpEqLower(ext, "ogg") || ibpEqLower(ext, "oga") || ibpEqLower(ext, "ogv") ||
-        ibpEqLower(ext, "opus") || ibpEqLower(ext, "aac") || ibpEqLower(ext, "wma") ||
-        ibpEqLower(ext, "wmv") || ibpEqLower(ext, "avi") || ibpEqLower(ext, "mov") ||
-        ibpEqLower(ext, "mkv") || ibpEqLower(ext, "webm") || ibpEqLower(ext, "flv") ||
-        ibpEqLower(ext, "3gp") || ibpEqLower(ext, "mid") || ibpEqLower(ext, "midi") ||
-        ibpEqLower(ext, "aif") || ibpEqLower(ext, "aiff") || ibpEqLower(ext, "mpeg") ||
-        ibpEqLower(ext, "mpg")) {
+    if (eqIgnoreCase(ext, "mp3") || eqIgnoreCase(ext, "mp4") || eqIgnoreCase(ext, "m4a") ||
+        eqIgnoreCase(ext, "m4v") || eqIgnoreCase(ext, "wav") || eqIgnoreCase(ext, "flac") ||
+        eqIgnoreCase(ext, "ogg") || eqIgnoreCase(ext, "oga") || eqIgnoreCase(ext, "ogv") ||
+        eqIgnoreCase(ext, "opus") || eqIgnoreCase(ext, "aac") || eqIgnoreCase(ext, "wma") ||
+        eqIgnoreCase(ext, "wmv") || eqIgnoreCase(ext, "avi") || eqIgnoreCase(ext, "mov") ||
+        eqIgnoreCase(ext, "mkv") || eqIgnoreCase(ext, "webm") || eqIgnoreCase(ext, "flv") ||
+        eqIgnoreCase(ext, "3gp") || eqIgnoreCase(ext, "mid") || eqIgnoreCase(ext, "midi") ||
+        eqIgnoreCase(ext, "aif") || eqIgnoreCase(ext, "aiff") || eqIgnoreCase(ext, "mpeg") ||
+        eqIgnoreCase(ext, "mpg")) {
         return true;
     }
     // Archives & compression
-    if (ibpEqLower(ext, "zip") || ibpEqLower(ext, "tar") || ibpEqLower(ext, "gz") ||
-        ibpEqLower(ext, "tgz") || ibpEqLower(ext, "bz2") || ibpEqLower(ext, "xz") ||
-        ibpEqLower(ext, "zst") || ibpEqLower(ext, "zstd") || ibpEqLower(ext, "lz4") ||
-        ibpEqLower(ext, "lz") || ibpEqLower(ext, "lzma") || ibpEqLower(ext, "br") ||
-        ibpEqLower(ext, "7z") || ibpEqLower(ext, "rar") || ibpEqLower(ext, "cab") ||
-        ibpEqLower(ext, "deb") || ibpEqLower(ext, "rpm") || ibpEqLower(ext, "dmg") ||
-        ibpEqLower(ext, "iso") || ibpEqLower(ext, "img") || ibpEqLower(ext, "apk") ||
-        ibpEqLower(ext, "ipa") || ibpEqLower(ext, "jar") || ibpEqLower(ext, "war") ||
-        ibpEqLower(ext, "ear") || ibpEqLower(ext, "whl") || ibpEqLower(ext, "egg") ||
-        ibpEqLower(ext, "asar") || ibpEqLower(ext, "crx") || ibpEqLower(ext, "xpi")) {
+    if (eqIgnoreCase(ext, "zip") || eqIgnoreCase(ext, "tar") || eqIgnoreCase(ext, "gz") ||
+        eqIgnoreCase(ext, "tgz") || eqIgnoreCase(ext, "bz2") || eqIgnoreCase(ext, "xz") ||
+        eqIgnoreCase(ext, "zst") || eqIgnoreCase(ext, "zstd") || eqIgnoreCase(ext, "lz4") ||
+        eqIgnoreCase(ext, "lz") || eqIgnoreCase(ext, "lzma") || eqIgnoreCase(ext, "br") ||
+        eqIgnoreCase(ext, "7z") || eqIgnoreCase(ext, "rar") || eqIgnoreCase(ext, "cab") ||
+        eqIgnoreCase(ext, "deb") || eqIgnoreCase(ext, "rpm") || eqIgnoreCase(ext, "dmg") ||
+        eqIgnoreCase(ext, "iso") || eqIgnoreCase(ext, "img") || eqIgnoreCase(ext, "apk") ||
+        eqIgnoreCase(ext, "ipa") || eqIgnoreCase(ext, "jar") || eqIgnoreCase(ext, "war") ||
+        eqIgnoreCase(ext, "ear") || eqIgnoreCase(ext, "whl") || eqIgnoreCase(ext, "egg") ||
+        eqIgnoreCase(ext, "asar") || eqIgnoreCase(ext, "crx") || eqIgnoreCase(ext, "xpi")) {
         return true;
     }
     // Executables, bytecode, native libraries & objects
-    if (ibpEqLower(ext, "exe") || ibpEqLower(ext, "dll") || ibpEqLower(ext, "so") ||
-        ibpEqLower(ext, "dylib") || ibpEqLower(ext, "node") || ibpEqLower(ext, "wasm") ||
-        ibpEqLower(ext, "o") || ibpEqLower(ext, "obj") || ibpEqLower(ext, "a") ||
-        ibpEqLower(ext, "lib") || ibpEqLower(ext, "pdb") || ibpEqLower(ext, "bin") ||
-        ibpEqLower(ext, "dat") || ibpEqLower(ext, "class") || ibpEqLower(ext, "pyc") ||
-        ibpEqLower(ext, "pyo") || ibpEqLower(ext, "pyd") || ibpEqLower(ext, "beam") ||
-        ibpEqLower(ext, "msi") || ibpEqLower(ext, "app") || ibpEqLower(ext, "elf") ||
-        ibpEqLower(ext, "dex") || ibpEqLower(ext, "bc") || ibpEqLower(ext, "rlib")) {
+    if (eqIgnoreCase(ext, "exe") || eqIgnoreCase(ext, "dll") || eqIgnoreCase(ext, "so") ||
+        eqIgnoreCase(ext, "dylib") || eqIgnoreCase(ext, "node") || eqIgnoreCase(ext, "wasm") ||
+        eqIgnoreCase(ext, "o") || eqIgnoreCase(ext, "obj") || eqIgnoreCase(ext, "a") ||
+        eqIgnoreCase(ext, "lib") || eqIgnoreCase(ext, "pdb") || eqIgnoreCase(ext, "bin") ||
+        eqIgnoreCase(ext, "dat") || eqIgnoreCase(ext, "class") || eqIgnoreCase(ext, "pyc") ||
+        eqIgnoreCase(ext, "pyo") || eqIgnoreCase(ext, "pyd") || eqIgnoreCase(ext, "beam") ||
+        eqIgnoreCase(ext, "msi") || eqIgnoreCase(ext, "app") || eqIgnoreCase(ext, "elf") ||
+        eqIgnoreCase(ext, "dex") || eqIgnoreCase(ext, "bc") || eqIgnoreCase(ext, "rlib")) {
         return true;
     }
     // Fonts
-    if (ibpEqLower(ext, "woff") || ibpEqLower(ext, "woff2") || ibpEqLower(ext, "ttf") ||
-        ibpEqLower(ext, "otf") || ibpEqLower(ext, "eot")) {
+    if (eqIgnoreCase(ext, "woff") || eqIgnoreCase(ext, "woff2") || eqIgnoreCase(ext, "ttf") ||
+        eqIgnoreCase(ext, "otf") || eqIgnoreCase(ext, "eot")) {
         return true;
     }
     // Documents, databases & 3D/media assets
-    if (ibpEqLower(ext, "pdf") || ibpEqLower(ext, "doc") || ibpEqLower(ext, "docx") ||
-        ibpEqLower(ext, "xls") || ibpEqLower(ext, "xlsx") || ibpEqLower(ext, "ppt") ||
-        ibpEqLower(ext, "pptx") || ibpEqLower(ext, "odt") || ibpEqLower(ext, "ods") ||
-        ibpEqLower(ext, "odp") || ibpEqLower(ext, "epub") || ibpEqLower(ext, "mobi") ||
-        ibpEqLower(ext, "sqlite") || ibpEqLower(ext, "sqlite3") || ibpEqLower(ext, "db") ||
-        ibpEqLower(ext, "mdb") || ibpEqLower(ext, "parquet") || ibpEqLower(ext, "avro") ||
-        ibpEqLower(ext, "pb") || ibpEqLower(ext, "onnx") || ibpEqLower(ext, "safetensors") ||
-        ibpEqLower(ext, "gguf") || ibpEqLower(ext, "pt") || ibpEqLower(ext, "pth") ||
-        ibpEqLower(ext, "glb") || ibpEqLower(ext, "fbx") || ibpEqLower(ext, "blend") ||
-        ibpEqLower(ext, "swf") || ibpEqLower(ext, "ds_store")) {
+    if (eqIgnoreCase(ext, "pdf") || eqIgnoreCase(ext, "doc") || eqIgnoreCase(ext, "docx") ||
+        eqIgnoreCase(ext, "xls") || eqIgnoreCase(ext, "xlsx") || eqIgnoreCase(ext, "ppt") ||
+        eqIgnoreCase(ext, "pptx") || eqIgnoreCase(ext, "odt") || eqIgnoreCase(ext, "ods") ||
+        eqIgnoreCase(ext, "odp") || eqIgnoreCase(ext, "epub") || eqIgnoreCase(ext, "mobi") ||
+        eqIgnoreCase(ext, "sqlite") || eqIgnoreCase(ext, "sqlite3") || eqIgnoreCase(ext, "db") ||
+        eqIgnoreCase(ext, "mdb") || eqIgnoreCase(ext, "parquet") || eqIgnoreCase(ext, "avro") ||
+        eqIgnoreCase(ext, "pb") || eqIgnoreCase(ext, "onnx") || eqIgnoreCase(ext, "safetensors") ||
+        eqIgnoreCase(ext, "gguf") || eqIgnoreCase(ext, "pt") || eqIgnoreCase(ext, "pth") ||
+        eqIgnoreCase(ext, "glb") || eqIgnoreCase(ext, "fbx") || eqIgnoreCase(ext, "blend") ||
+        eqIgnoreCase(ext, "swf") || eqIgnoreCase(ext, "ds_store")) {
         return true;
     }
     return false;

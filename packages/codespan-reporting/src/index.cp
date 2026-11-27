@@ -1,6 +1,8 @@
 // @cap/codespan-reporting — Zero-heap Rustc-style source diagnostic renderer in pure CP
 // Clean-room Apache-2.0 implementation of crates.io `codespan-reporting` (#702, 177.4M downloads).
 
+import { BufWriter } from "cap:fmt";
+
 pub enum DiagSeverity {
     Bug,
     Error,
@@ -25,52 +27,6 @@ pub struct Diagnostic {
     pub span_end: usize,
     pub label: string,
     pub note: string,
-}
-
-fn csrWriteStr(s: string, out: []u8, pos: usize): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn csrWriteRepeat(ch: u8, count: usize, out: []u8, pos: usize): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < count && p < out.len) {
-        out[p] = ch;
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn csrWriteUsize(val: usize, out: []u8, pos: usize): usize {
-    let digits: [24]u8 = [0; 24];
-    let n: usize = 0;
-    let v = val;
-    if (v == 0) {
-        digits[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0 && n < 24) {
-            digits[n] = ((v % 10) as u8) + 48;
-            v = v / 10;
-            n += 1;
-        }
-    }
-    let p = pos;
-    let k = n;
-    while (k > 0 && p < out.len) {
-        k -= 1;
-        out[p] = digits[k];
-        p += 1;
-    }
-    return p;
 }
 
 fn csrDigitWidth(val: usize): usize {
@@ -122,46 +78,46 @@ pub fn locateOffset(source: string, offset: usize): LineCol {
 
 /// Renders a Rustc/codespan-style diagnostic snippet into `out`; returns bytes written.
 pub fn renderDiagnostic(source: string, diag: Diagnostic, out: []u8): usize {
-    let p: usize = 0;
+    let w = BufWriter.new(out);
     // Header: error[E0105]: message
-    p = csrWriteStr(severityLabel(diag.severity), out, p);
+    w.writeStr(severityLabel(diag.severity));
     if (diag.code.len > 0) {
-        p = csrWriteStr("[", out, p);
-        p = csrWriteStr(diag.code, out, p);
-        p = csrWriteStr("]", out, p);
+        w.writeStr("[");
+        w.writeStr(diag.code);
+        w.writeStr("]");
     }
-    p = csrWriteStr(": ", out, p);
-    p = csrWriteStr(diag.message, out, p);
-    p = csrWriteStr("\n", out, p);
+    w.writeStr(": ");
+    w.writeStr(diag.message);
+    w.writeStr("\n");
 
     const loc = locateOffset(source, diag.span_start);
     const gutter = csrDigitWidth(loc.line);
 
     // Location line: "  --> file:line:col"
-    p = csrWriteRepeat(32, gutter, out, p);
-    p = csrWriteStr(" --> ", out, p);
-    p = csrWriteStr(diag.file_name, out, p);
-    p = csrWriteStr(":", out, p);
-    p = csrWriteUsize(loc.line, out, p);
-    p = csrWriteStr(":", out, p);
-    p = csrWriteUsize(loc.col, out, p);
-    p = csrWriteStr("\n", out, p);
+    w.writeRepeat(32, gutter);
+    w.writeStr(" --> ");
+    w.writeStr(diag.file_name);
+    w.writeStr(":");
+    w.writeU64(loc.line as u64);
+    w.writeStr(":");
+    w.writeU64(loc.col as u64);
+    w.writeStr("\n");
 
     // Empty gutter line
-    p = csrWriteRepeat(32, gutter + 1, out, p);
-    p = csrWriteStr("|\n", out, p);
+    w.writeRepeat(32, gutter + 1);
+    w.writeStr("|\n");
 
     // Source code line
-    p = csrWriteUsize(loc.line, out, p);
-    p = csrWriteStr(" | ", out, p);
-    p = csrWriteStr(source[loc.line_start..loc.line_end], out, p);
-    p = csrWriteStr("\n", out, p);
+    w.writeU64(loc.line as u64);
+    w.writeStr(" | ");
+    w.writeStr(source[loc.line_start..loc.line_end]);
+    w.writeStr("\n");
 
     // Caret underline line
-    p = csrWriteRepeat(32, gutter + 1, out, p);
-    p = csrWriteStr("| ", out, p);
+    w.writeRepeat(32, gutter + 1);
+    w.writeStr("| ");
     const caret_pad = loc.col - 1;
-    p = csrWriteRepeat(32, caret_pad, out, p);
+    w.writeRepeat(32, caret_pad);
 
     let span_len: usize = 1;
     if (diag.span_end > diag.span_start) {
@@ -173,20 +129,20 @@ pub fn renderDiagnostic(source: string, diag: Diagnostic, out: []u8): usize {
             span_len = clamped_end - diag.span_start;
         }
     }
-    p = csrWriteRepeat(94, span_len, out, p); // '^'
+    w.writeRepeat(94, span_len); // '^'
     if (diag.label.len > 0) {
-        p = csrWriteStr(" ", out, p);
-        p = csrWriteStr(diag.label, out, p);
+        w.writeStr(" ");
+        w.writeStr(diag.label);
     }
-    p = csrWriteStr("\n", out, p);
+    w.writeStr("\n");
 
     if (diag.note.len > 0) {
-        p = csrWriteRepeat(32, gutter + 1, out, p);
-        p = csrWriteStr("= note: ", out, p);
-        p = csrWriteStr(diag.note, out, p);
-        p = csrWriteStr("\n", out, p);
+        w.writeRepeat(32, gutter + 1);
+        w.writeStr("= note: ");
+        w.writeStr(diag.note);
+        w.writeStr("\n");
     }
-    return p;
+    return w.written();
 }
 
 export {

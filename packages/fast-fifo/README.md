@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/fast-fifo
 
 Zero-heap O(1) power-of-two ring-buffer FIFO queues (`FifoI64`, `FifoStr`) in pure CP.

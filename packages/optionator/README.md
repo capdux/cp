@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/optionator
 
 Zero-heap CLI option specification and auto-aligned `--help` documentation generator in pure CP.

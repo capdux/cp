@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/ccount
 
 Zero-allocation character/substring occurrence counter and longest consecutive streak finder in pure CP (covers both `ccount` and `longest-streak`).

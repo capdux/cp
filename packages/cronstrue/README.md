@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/cron-desc` — 零分配 Cron 表达式自然语言翻译引擎（中/英双语）
 
 <!-- cap-source-attribution -->

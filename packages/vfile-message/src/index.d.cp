@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { writeStr, writeU64 } from "cap:fmt";
 export class Point {
     line: u32,
     column: u32,
@@ -28,8 +29,6 @@ export class VFileMessage {
     fn hasPosition(): bool;
 }
 
-export fn vfmWriteStr(s: string, out: []u8, pos: usize): usize;
-export fn vfmWriteU32(val: u32, out: []u8, pos: usize): usize;
 export fn makePoint(line: u32, column: u32, offset: u32): Point;
 export fn makePosition(start: Point, end: Point): Position;
 export fn pointAtOffset(text: string, offset: usize): Point;

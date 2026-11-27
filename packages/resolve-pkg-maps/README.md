@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/resolve-pkg-maps
 
 Zero-heap `package.json` `"exports"` subpath wildcard and condition resolver in pure CP.

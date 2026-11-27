@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/vfile-message
 
 Zero-allocation structured lint/AST diagnostic message and `unist` `Point`/`Position` formatter in pure CP (covers `vfile-message` and `unist-util-position`).

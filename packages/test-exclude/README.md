@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/test-exclude
 
 Zero-heap test and coverage file path glob filter engine in pure CP.

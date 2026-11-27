@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **crates.io** [`cron`](https://github.com/zslayton/cron)（`MIT OR Apache-2.0`）（原库名 `cron`，CP 包名 `@cap/cron-next`）。
 

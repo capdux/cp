@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/lru` — 零堆分配 O(1) 工业级 LRU 缓存
 
 <!-- cap-source-attribution -->

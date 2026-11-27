@@ -1,6 +1,9 @@
 // @cap/css-what — Zero-allocation CSS selector parser & serializer in pure CP
 // Reference: npm:css-what (https://github.com/fb55/css-what, BSD-2-Clause)
 
+import { isSpace, isAlpha, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+
 pub enum CssTokenKind {
     Tag,
     Universal,
@@ -50,42 +53,27 @@ struct CwhWriter {
         _.pos += 1;
     }
 
-    fn writeStr(*_, s: string) {
+    fn putStr(*_, s: string) {
         if (_.overflow) return;
         if (_.pos + s.len > _.buf.len) {
             _.overflow = true;
             return;
         }
-        let i: usize = 0;
-        while (i < s.len) {
-            _.buf[_.pos + i] = s[i];
-            i += 1;
-        }
-        _.pos += s.len;
+        _.pos = writeStr(s, _.buf, _.pos);
     }
-}
-
-fn cwhIsSpace(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0x0C;
 }
 
 fn cwhIsIdentStart(c: u8): bool {
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '-' || c >= 0x80) {
-        return true;
-    }
-    return false;
+    return isAlpha(c) || c == '_' || c == '-' || c >= 0x80;
 }
 
 fn cwhIsIdentChar(c: u8): bool {
-    if (cwhIsIdentStart(c) || (c >= '0' && c <= '9')) {
-        return true;
-    }
-    return false;
+    return cwhIsIdentStart(c) || isDigit(c);
 }
 
 fn cwhSkipSpace(s: string, start: usize): usize {
     let i = start;
-    while (i < s.len && cwhIsSpace(s[i])) {
+    while (i < s.len && isSpace(s[i])) {
         i += 1;
     }
     return i;
@@ -125,7 +113,7 @@ fn cwhToken(kind: CssTokenKind, name: string, value: string, action: AttrAction,
 pub fn parseCssSelector(selector: string, out: []CssSelectorToken): i64 {
     let i = cwhSkipSpace(selector, 0);
     let end = selector.len;
-    while (end > i && cwhIsSpace(selector[end - 1])) {
+    while (end > i && isSpace(selector[end - 1])) {
         end -= 1;
     }
     if (i >= end) return 0;
@@ -135,7 +123,7 @@ pub fn parseCssSelector(selector: string, out: []CssSelectorToken): i64 {
     let had_space = false;
 
     while (i < end) {
-        if (cwhIsSpace(selector[i])) {
+        if (isSpace(selector[i])) {
             had_space = true;
             i = cwhSkipSpace(selector, i);
             continue;
@@ -267,7 +255,7 @@ pub fn parseCssSelector(selector: string, out: []CssSelectorToken): i64 {
                 if (!closed) return -1;
             } else {
                 const vstart = i;
-                while (i < end && !cwhIsSpace(selector[i]) && selector[i] != ']') {
+                while (i < end && !isSpace(selector[i]) && selector[i] != ']') {
                     if (selector[i] == '\\') {
                         if (i + 1 >= end) return -1;
                         i += 2;
@@ -383,68 +371,68 @@ pub fn stringifyCssSelector(tokens: []const CssSelectorToken, out: []u8): usize 
     while (i < tokens.len) {
         const tok = tokens[i];
         if (tok.kind == .Tag) {
-            w.writeStr(tok.name);
+            w.putStr(tok.name);
         } else if (tok.kind == .Universal) {
             w.writeByte('*');
         } else if (tok.kind == .Id) {
             w.writeByte('#');
-            w.writeStr(tok.name);
+            w.putStr(tok.name);
         } else if (tok.kind == .Class) {
             w.writeByte('.');
-            w.writeStr(tok.name);
+            w.putStr(tok.name);
         } else if (tok.kind == .Attribute) {
             w.writeByte('[');
-            w.writeStr(tok.name);
+            w.putStr(tok.name);
             if (tok.action != .Exists) {
                 if (tok.action == .Equals) {
                     w.writeByte('=');
                 } else if (tok.action == .Start) {
-                    w.writeStr("^=");
+                    w.putStr("^=");
                 } else if (tok.action == .End) {
-                    w.writeStr("$=");
+                    w.putStr("$=");
                 } else if (tok.action == .Any) {
-                    w.writeStr("*=");
+                    w.putStr("*=");
                 } else if (tok.action == .Not) {
-                    w.writeStr("!=");
+                    w.putStr("!=");
                 } else if (tok.action == .Element) {
-                    w.writeStr("~=");
+                    w.putStr("~=");
                 } else if (tok.action == .Hyphen) {
-                    w.writeStr("|=");
+                    w.putStr("|=");
                 }
                 w.writeByte('"');
-                w.writeStr(tok.value);
+                w.putStr(tok.value);
                 w.writeByte('"');
                 if (tok.ignore_case) {
-                    w.writeStr(" i");
+                    w.putStr(" i");
                 }
             }
             w.writeByte(']');
         } else if (tok.kind == .Pseudo) {
             w.writeByte(':');
-            w.writeStr(tok.name);
+            w.putStr(tok.name);
             if (tok.value.len > 0) {
                 w.writeByte('(');
-                w.writeStr(tok.value);
+                w.putStr(tok.value);
                 w.writeByte(')');
             }
         } else if (tok.kind == .PseudoElement) {
-            w.writeStr("::");
-            w.writeStr(tok.name);
+            w.putStr("::");
+            w.putStr(tok.name);
             if (tok.value.len > 0) {
                 w.writeByte('(');
-                w.writeStr(tok.value);
+                w.putStr(tok.value);
                 w.writeByte(')');
             }
         } else if (tok.kind == .Descendant) {
             w.writeByte(' ');
         } else if (tok.kind == .Child) {
-            w.writeStr(" > ");
+            w.putStr(" > ");
         } else if (tok.kind == .Adjacent) {
-            w.writeStr(" + ");
+            w.putStr(" + ");
         } else if (tok.kind == .Sibling) {
-            w.writeStr(" ~ ");
+            w.putStr(" ~ ");
         } else if (tok.kind == .Comma) {
-            w.writeStr(", ");
+            w.putStr(", ");
         }
         i += 1;
     }

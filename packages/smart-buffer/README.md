@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/smart-buffer
 
 Zero-heap cursor-based binary reader/writer buffer (1024-byte stack backing) in pure CP.

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/damerau-levenshtein
 
 Zero-heap Damerau-Levenshtein (Optimal String Alignment) edit distance and similarity calculator in pure CP supporting insertions, deletions, substitutions, and adjacent transpositions.

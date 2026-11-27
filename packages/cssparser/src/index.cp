@@ -1,5 +1,7 @@
 // @cap/cssparser — Zero-heap CSS Syntax Level 3 lexer in pure CP.
 
+import { isSpace, isAlpha, isDigit } from "cap:ascii";
+
 pub enum CssTokKind {
     Ident,
     AtKeyword,
@@ -30,20 +32,12 @@ pub struct CssToken {
     end: usize,
 }
 
-fn csspIsWs(c: u8): bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0C;
-}
-
-fn csspIsDigit(c: u8): bool {
-    return c >= '0' && c <= '9';
-}
-
 fn csspIsIdentStart(c: u8): bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c >= 0x80;
+    return isAlpha(c) || c == '_' || c >= 0x80;
 }
 
 fn csspIsIdentChar(c: u8): bool {
-    return csspIsIdentStart(c) || csspIsDigit(c) || c == '-';
+    return csspIsIdentStart(c) || isDigit(c) || c == '-';
 }
 
 fn csspStartsIdent(s: string, pos: usize): bool {
@@ -68,17 +62,17 @@ fn csspStartsNumber(s: string, pos: usize): bool {
         return false;
     }
     const c = s[pos];
-    if (csspIsDigit(c)) {
+    if (isDigit(c)) {
         return true;
     }
     if (c == '.') {
-        return pos + 1 < s.len && csspIsDigit(s[pos + 1]);
+        return pos + 1 < s.len && isDigit(s[pos + 1]);
     }
     if (c == '+' || c == '-') {
-        if (pos + 1 < s.len && csspIsDigit(s[pos + 1])) {
+        if (pos + 1 < s.len && isDigit(s[pos + 1])) {
             return true;
         }
-        if (pos + 2 < s.len && s[pos + 1] == '.' && csspIsDigit(s[pos + 2])) {
+        if (pos + 2 < s.len && s[pos + 1] == '.' && isDigit(s[pos + 2])) {
             return true;
         }
     }
@@ -96,19 +90,19 @@ fn csspScanNumber(s: string, start: usize): usize {
     if (p < s.len && (s[p] == '+' || s[p] == '-')) {
         p += 1;
     }
-    while (p < s.len && csspIsDigit(s[p])) : (p += 1) {}
-    if (p + 1 < s.len && s[p] == '.' && csspIsDigit(s[p + 1])) {
+    while (p < s.len && isDigit(s[p])) : (p += 1) {}
+    if (p + 1 < s.len && s[p] == '.' && isDigit(s[p + 1])) {
         p += 1;
-        while (p < s.len && csspIsDigit(s[p])) : (p += 1) {}
+        while (p < s.len && isDigit(s[p])) : (p += 1) {}
     }
     if (p < s.len && (s[p] == 'e' || s[p] == 'E')) {
         let ep = p + 1;
         if (ep < s.len && (s[ep] == '+' || s[ep] == '-')) {
             ep += 1;
         }
-        if (ep < s.len && csspIsDigit(s[ep])) {
+        if (ep < s.len && isDigit(s[ep])) {
             p = ep;
-            while (p < s.len && csspIsDigit(s[p])) : (p += 1) {}
+            while (p < s.len && isDigit(s[p])) : (p += 1) {}
         }
     }
     return p;
@@ -117,7 +111,7 @@ fn csspScanNumber(s: string, start: usize): usize {
 fn csspSkipWsAndComments(s: string, start: usize): usize {
     let p = start;
     while (p < s.len) {
-        if (csspIsWs(s[p])) {
+        if (isSpace(s[p])) {
             p += 1;
             continue;
         }

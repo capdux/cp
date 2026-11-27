@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { BufWriter } from "cap:fmt";
 export enum SchemaType {
     String,
     Number,
@@ -28,7 +29,4 @@ export fn prop(name: string, kind: SchemaType, description: string, required: bo
 export fn stringProp(name: string, description: string, format: string, required: bool): SchemaProp;
 export fn intProp(name: string, description: string, required: bool, min_val: i64, max_val: i64): SchemaProp;
 export fn arrayProp(name: string, item_kind: SchemaType, description: string, required: bool): SchemaProp;
-export fn zjsWriteStr(s: string, out: []u8, pos: usize): usize;
-export fn zjsWriteJsonStr(s: string, out: []u8, pos: usize): usize;
-export fn zjsWriteI64(val: i64, out: []u8, pos: usize): usize;
 export fn toJsonSchema(title: string, props: &[]SchemaProp, additional_properties: bool, out: []u8): usize;

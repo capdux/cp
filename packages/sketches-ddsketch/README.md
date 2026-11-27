@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/sketches-ddsketch
 
 Zero-heap DDSketch relative-accuracy quantile sketch (`DDSketch`) with 512 logarithmic collapsing buckets for low-memory latency statistics in pure CP.

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/debugid
 
 Zero-heap Sentry/Breakpad/PDB `DebugId` (128-bit UUID + appendix age) parser and formatter in pure CP.

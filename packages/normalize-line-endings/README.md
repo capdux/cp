@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/normalize-line-endings
 
 Zero-heap line ending detector and normalizer (`CRLF`/`CR` ↔ `LF`) in pure CP.

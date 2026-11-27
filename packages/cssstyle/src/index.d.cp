@@ -1,15 +1,13 @@
 // Type definitions for CP
 
+import { isSpace, eqIgnoreCase, trim, toLower } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export class CssProp {
     name: string,
     value: string,
     important: bool,
 }
 
-export fn cstToLower(c: u8): u8;
-export fn cstIsSpace(c: u8): bool;
-export fn cstEqIgnoreCase(a: string, b: string): bool;
-export fn cstTrim(s: string): string;
 export fn cstSkipSpaceAndComments(s: string, pos: usize): usize;
 export fn cstStripTrailingComments(s: string): string;
 export class CstParsedValue {
@@ -18,7 +16,6 @@ export class CstParsedValue {
 }
 
 export fn cstExtractImportant(raw: string): CstParsedValue;
-export fn cstWriteBytes(out: []u8, pos: usize, src: string, lowercase: bool): usize;
 export class CssStyleDecl {
     props: [64]CssProp,
     count: usize,

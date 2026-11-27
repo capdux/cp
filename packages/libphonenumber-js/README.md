@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/phone` — 零分配国际电话号码解析、校验与格式化引擎
 
 <!-- cap-source-attribution -->

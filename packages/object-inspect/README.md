@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/object-inspect
 
 Zero-heap debug value inspector and pretty-formatter in pure CP supporting quoted strings with escape sequences and truncation, integers, booleans, `<Buffer ...>` hex previews, and string arrays.

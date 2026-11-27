@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/ordered-multimap
 
 Zero-heap insertion-ordered multimap (`OrderedMultiMap`) supporting multiple values per key in pure CP.

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **c++** [`onnxruntime`](https://github.com/microsoft/onnxruntime)（`MIT`）（原库名 `onnxruntime`，CP 包名 `@cap/onnx`）。
 

@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isDigit, eqIgnoreCase } from "cap:ascii";
+import { indexOfBytes } from "cap:bin";
 export enum PlatformType {
     Desktop,
     Mobile,
@@ -22,9 +24,7 @@ export class BwsPair {
     version: string,
 }
 
-export fn bwsToLower(c: u8): u8;
 export fn bwsIsVersionChar(c: u8): bool;
-export fn bwsFindSubstr(haystack: string, needle: string): usize?;
 export fn bwsFindSubstrCI(haystack: string, needle: string): usize?;
 export fn bwsContains(haystack: string, needle: string): bool;
 export fn bwsContainsCI(haystack: string, needle: string): bool;

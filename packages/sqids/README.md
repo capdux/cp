@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/sqids` — 零分配 YouTube 风格可逆无脏词短 ID 编码器 / Zero-Allocation Sqids Encoder & Decoder
 
 <!-- cap-source-attribution -->

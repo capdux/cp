@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/webpack-sources
 
 Zero-heap source concatenation and range replacement engine in pure CP.

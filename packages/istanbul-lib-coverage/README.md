@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/istanbul-lib-coverage
 
 Zero-heap code coverage metrics, summary aggregation, threshold checking, and LCOV codec in pure CP.

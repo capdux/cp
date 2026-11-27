@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/expr` — 零分配递归下降表达式求值引擎 / Zero-Allocation Expression Evaluation Engine
 
 <!-- cap-source-attribution -->

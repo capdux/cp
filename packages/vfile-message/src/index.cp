@@ -1,6 +1,8 @@
 // @cap/vfile-message — Structured lint/AST diagnostic messages & unist positions in pure CP
 // Clean-room MIT implementation of npm `vfile-message` (#556, 102.9M/wk) & `unist-util-position` (#669).
 
+import { writeStr, writeU64 } from "cap:fmt";
+
 pub struct Point {
     pub line: u32,   // 1-based line (0 = unset)
     pub column: u32, // 1-based column (0 = unset)
@@ -33,41 +35,6 @@ pub struct VFileMessage {
     pub fn hasPosition(): bool {
         return _.position.start.line > 0 && _.position.start.column > 0;
     }
-}
-
-fn vfmWriteStr(s: string, out: []u8, pos: usize): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
-fn vfmWriteU32(val: u32, out: []u8, pos: usize): usize {
-    let digits: [16]u8 = [0; 16];
-    let n: usize = 0;
-    let v = val;
-    if (v == 0) {
-        digits[0] = 48;
-        n = 1;
-    } else {
-        while (v > 0 && n < 16) {
-            digits[n] = ((v % 10) as u8) + 48;
-            v = v / 10;
-            n += 1;
-        }
-    }
-    let p = pos;
-    let k = n;
-    while (k > 0 && p < out.len) {
-        k -= 1;
-        out[p] = digits[k];
-        p += 1;
-    }
-    return p;
 }
 
 /// Creates a `Point` (1-based line and column, 0-based byte offset).
@@ -126,15 +93,15 @@ pub fn stringifyPosition(pos: Position, out: []u8): usize {
         return 0;
     }
     let p: usize = 0;
-    p = vfmWriteU32(pos.start.line, out, p);
-    p = vfmWriteStr(":", out, p);
-    p = vfmWriteU32(pos.start.column, out, p);
+    p = writeU64(pos.start.line as u64, out, p);
+    p = writeStr(":", out, p);
+    p = writeU64(pos.start.column as u64, out, p);
     if (pos.end.line > 0 && pos.end.column > 0 &&
         (pos.end.line != pos.start.line || pos.end.column != pos.start.column)) {
-        p = vfmWriteStr("-", out, p);
-        p = vfmWriteU32(pos.end.line, out, p);
-        p = vfmWriteStr(":", out, p);
-        p = vfmWriteU32(pos.end.column, out, p);
+        p = writeStr("-", out, p);
+        p = writeU64(pos.end.line as u64, out, p);
+        p = writeStr(":", out, p);
+        p = writeU64(pos.end.column as u64, out, p);
     }
     return p;
 }
@@ -143,9 +110,9 @@ pub fn stringifyPosition(pos: Position, out: []u8): usize {
 pub fn formatMessage(msg: VFileMessage, out: []u8): usize {
     let p: usize = 0;
     if (msg.file_path.len > 0) {
-        p = vfmWriteStr(msg.file_path, out, p);
+        p = writeStr(msg.file_path, out, p);
         if (msg.hasPosition()) {
-            p = vfmWriteStr(":", out, p);
+            p = writeStr(":", out, p);
         }
     }
     if (msg.hasPosition()) {
@@ -153,28 +120,28 @@ pub fn formatMessage(msg: VFileMessage, out: []u8): usize {
         p += written;
     }
     if (p > 0) {
-        p = vfmWriteStr(": ", out, p);
+        p = writeStr(": ", out, p);
     }
     if (msg.severity == .Error) {
-        p = vfmWriteStr("error: ", out, p);
+        p = writeStr("error: ", out, p);
     } else if (msg.severity == .Warning) {
-        p = vfmWriteStr("warning: ", out, p);
+        p = writeStr("warning: ", out, p);
     } else {
-        p = vfmWriteStr("info: ", out, p);
+        p = writeStr("info: ", out, p);
     }
-    p = vfmWriteStr(msg.reason, out, p);
+    p = writeStr(msg.reason, out, p);
     if (msg.source.len > 0 || msg.rule_id.len > 0) {
-        p = vfmWriteStr(" [", out, p);
+        p = writeStr(" [", out, p);
         if (msg.source.len > 0) {
-            p = vfmWriteStr(msg.source, out, p);
+            p = writeStr(msg.source, out, p);
             if (msg.rule_id.len > 0) {
-                p = vfmWriteStr(":", out, p);
+                p = writeStr(":", out, p);
             }
         }
         if (msg.rule_id.len > 0) {
-            p = vfmWriteStr(msg.rule_id, out, p);
+            p = writeStr(msg.rule_id, out, p);
         }
-        p = vfmWriteStr("]", out, p);
+        p = writeStr("]", out, p);
     }
     return p;
 }

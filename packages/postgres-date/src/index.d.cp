@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { strEq, isDigit, endsWith, findByte } from "cap:ascii";
 export enum PgDateKind {
     Invalid,
     Finite,
@@ -21,8 +22,6 @@ export class PgDateTime {
     fn isValid(): bool;
 }
 
-export fn pgdStrEq(a: string, b: string): bool;
-export fn pgdIsDigit(b: u8): bool;
 export fn pgdParseDigits(s: string): i32?;
 export fn pgdIsLeap(y: i32): bool;
 export fn pgdDaysInMonth(y: i32, m: u8): u8;

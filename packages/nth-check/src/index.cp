@@ -1,6 +1,8 @@
 // @cap/nth-check — CSS :nth-child(An+B) parser & matcher in pure CP
 // Clean-room implementation of npm `nth-check` (#544, 104M/wk).
 
+import { isSpace, isDigit, trim, eqIgnoreCase } from "cap:ascii";
+
 pub struct NthRule {
     pub a: i32,
     pub b: i32,
@@ -36,58 +38,17 @@ pub struct NthRule {
     }
 }
 
-fn ntcIsSpace(b: u8): bool {
-    return b == 32 || b == 9 || b == 10 || b == 13 || b == 12;
-}
-
-fn ntcToLower(b: u8): u8 {
-    if (b >= 65 && b <= 90) {
-        return b + 32;
-    }
-    return b;
-}
-
-fn ntcTrim(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && ntcIsSpace(s[start])) {
-        start += 1;
-    }
-    while (end > start && ntcIsSpace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
-}
-
-fn ntcEqLower(s: string, target: string): bool {
-    if (s.len != target.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < s.len) {
-        if (ntcToLower(s[i]) != target[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-fn ntcIsDigit(b: u8): bool {
-    return b >= 48 && b <= 57;
-}
-
 /// Parses a CSS `An+B` formula (`even`, `odd`, `2n+1`, `-n+3`, `5`, `3n-2`, etc.).
 pub fn parseNth(formula: string): NthRule {
     const inv = NthRule { a: 0, b: 0, valid: false };
-    const s = ntcTrim(formula);
+    const s = trim(formula);
     if (s.len == 0) {
         return inv;
     }
-    if (ntcEqLower(s, "even")) {
+    if (eqIgnoreCase(s, "even")) {
         return NthRule { a: 2, b: 0, valid: true };
     }
-    if (ntcEqLower(s, "odd")) {
+    if (eqIgnoreCase(s, "odd")) {
         return NthRule { a: 2, b: 1, valid: true };
     }
 
@@ -119,7 +80,7 @@ pub fn parseNth(formula: string): NthRule {
         }
         let val: i32 = 0;
         while (idx < s.len) {
-            if (!ntcIsDigit(s[idx])) {
+            if (!isDigit(s[idx])) {
                 return inv;
             }
             val = val * 10 + ((s[idx] - 48) as i32);
@@ -146,7 +107,7 @@ pub fn parseNth(formula: string): NthRule {
         } else {
             let acc: i32 = 0;
             while (idx < n_pos) {
-                if (!ntcIsDigit(s[idx])) {
+                if (!isDigit(s[idx])) {
                     return inv;
                 }
                 acc = acc * 10 + ((s[idx] - 48) as i32);
@@ -158,7 +119,7 @@ pub fn parseNth(formula: string): NthRule {
 
     // Parse optional ±B after 'n'
     let pos = n_pos + 1;
-    while (pos < s.len && ntcIsSpace(s[pos])) {
+    while (pos < s.len && isSpace(s[pos])) {
         pos += 1;
     }
     if (pos == s.len) {
@@ -176,7 +137,7 @@ pub fn parseNth(formula: string): NthRule {
         return inv;
     }
 
-    while (pos < s.len && ntcIsSpace(s[pos])) {
+    while (pos < s.len && isSpace(s[pos])) {
         pos += 1;
     }
     if (pos >= s.len) {
@@ -184,7 +145,7 @@ pub fn parseNth(formula: string): NthRule {
     }
     let b_acc: i32 = 0;
     while (pos < s.len) {
-        if (!ntcIsDigit(s[pos])) {
+        if (!isDigit(s[pos])) {
             return inv;
         }
         b_acc = b_acc * 10 + ((s[pos] - 48) as i32);

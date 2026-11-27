@@ -2,54 +2,9 @@
 // Clean-room MIT implementation of npm `character-entities` (#576, 99.1M/wk),
 // `decode-named-character-reference` (#642), `parse-entities` (#679), `stringify-entities` (#684).
 
-fn cenStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-/// Encodes a Unicode codepoint `cp` as UTF-8 into `out[pos..]`; returns new position.
-fn cenWriteUtf8(cp: u32, out: []u8, pos: usize): usize {
-    let p = pos;
-    let code = cp;
-    // Replace invalid / surrogate / NUL / >U+10FFFF with U+FFFD
-    if (code == 0 || (code >= 0xD800 && code <= 0xDFFF) || code > 0x10FFFF) {
-        code = 0xFFFD;
-    }
-    if (code < 0x80) {
-        if (p < out.len) { out[p] = code as u8; p += 1; }
-    } else if (code < 0x800) {
-        if (p + 1 < out.len) {
-            out[p] = (0xC0 | (code >> 6)) as u8;
-            out[p + 1] = (0x80 | (code & 0x3F)) as u8;
-            p += 2;
-        }
-    } else if (code < 0x10000) {
-        if (p + 2 < out.len) {
-            out[p] = (0xE0 | (code >> 12)) as u8;
-            out[p + 1] = (0x80 | ((code >> 6) & 0x3F)) as u8;
-            out[p + 2] = (0x80 | (code & 0x3F)) as u8;
-            p += 3;
-        }
-    } else {
-        if (p + 3 < out.len) {
-            out[p] = (0xF0 | (code >> 18)) as u8;
-            out[p + 1] = (0x80 | ((code >> 12) & 0x3F)) as u8;
-            out[p + 2] = (0x80 | ((code >> 6) & 0x3F)) as u8;
-            out[p + 3] = (0x80 | (code & 0x3F)) as u8;
-            p += 4;
-        }
-    }
-    return p;
-}
+import { strEq, hexVal } from "cap:ascii";
+import { writeStr } from "cap:fmt";
+import { encodeCodepointLossy } from "cap:utf8";
 
 /// Maps Windows-1252 C1 invalid numeric character references (0x80..0x9F) per WHATWG HTML5 spec.
 pub fn mapInvalidCharRef(cp: u32): u32 {
@@ -85,53 +40,53 @@ pub fn mapInvalidCharRef(cp: u32): u32 {
 
 /// Decodes a named HTML5 character reference (without `&` and `;`) to its Unicode codepoint.
 pub fn decodeNamedEntity(name: string): u32? {
-    if (cenStrEq(name, "amp") || cenStrEq(name, "AMP")) { return 0x0026; }
-    if (cenStrEq(name, "lt") || cenStrEq(name, "LT")) { return 0x003C; }
-    if (cenStrEq(name, "gt") || cenStrEq(name, "GT")) { return 0x003E; }
-    if (cenStrEq(name, "quot") || cenStrEq(name, "QUOT")) { return 0x0022; }
-    if (cenStrEq(name, "apos")) { return 0x0027; }
-    if (cenStrEq(name, "nbsp") || cenStrEq(name, "NonBreakingSpace")) { return 0x00A0; }
-    if (cenStrEq(name, "copy") || cenStrEq(name, "COPY")) { return 0x00A9; }
-    if (cenStrEq(name, "reg") || cenStrEq(name, "REG")) { return 0x00AE; }
-    if (cenStrEq(name, "trade") || cenStrEq(name, "TRADE")) { return 0x2122; }
-    if (cenStrEq(name, "euro")) { return 0x20AC; }
-    if (cenStrEq(name, "pound")) { return 0x00A3; }
-    if (cenStrEq(name, "yen")) { return 0x00A5; }
-    if (cenStrEq(name, "cent")) { return 0x00A2; }
-    if (cenStrEq(name, "sect")) { return 0x00A7; }
-    if (cenStrEq(name, "deg")) { return 0x00B0; }
-    if (cenStrEq(name, "plusmn")) { return 0x00B1; }
-    if (cenStrEq(name, "micro")) { return 0x00B5; }
-    if (cenStrEq(name, "middot")) { return 0x00B7; }
-    if (cenStrEq(name, "times")) { return 0x00D7; }
-    if (cenStrEq(name, "divide")) { return 0x00F7; }
-    if (cenStrEq(name, "ndash")) { return 0x2013; }
-    if (cenStrEq(name, "mdash")) { return 0x2014; }
-    if (cenStrEq(name, "lsquo")) { return 0x2018; }
-    if (cenStrEq(name, "rsquo")) { return 0x2019; }
-    if (cenStrEq(name, "ldquo")) { return 0x201C; }
-    if (cenStrEq(name, "rdquo")) { return 0x201D; }
-    if (cenStrEq(name, "bull")) { return 0x2022; }
-    if (cenStrEq(name, "hellip")) { return 0x2026; }
-    if (cenStrEq(name, "larr")) { return 0x2190; }
-    if (cenStrEq(name, "uarr")) { return 0x2191; }
-    if (cenStrEq(name, "rarr")) { return 0x2192; }
-    if (cenStrEq(name, "darr")) { return 0x2193; }
-    if (cenStrEq(name, "harr")) { return 0x2194; }
-    if (cenStrEq(name, "laquo")) { return 0x00AB; }
-    if (cenStrEq(name, "raquo")) { return 0x00BB; }
-    if (cenStrEq(name, "alpha")) { return 0x03B1; }
-    if (cenStrEq(name, "beta")) { return 0x03B2; }
-    if (cenStrEq(name, "gamma")) { return 0x03B3; }
-    if (cenStrEq(name, "delta")) { return 0x03B4; }
-    if (cenStrEq(name, "pi")) { return 0x03C0; }
-    if (cenStrEq(name, "omega")) { return 0x03C9; }
-    if (cenStrEq(name, "infin")) { return 0x221E; }
-    if (cenStrEq(name, "ne")) { return 0x2260; }
-    if (cenStrEq(name, "le")) { return 0x2264; }
-    if (cenStrEq(name, "ge")) { return 0x2265; }
-    if (cenStrEq(name, "tab") || cenStrEq(name, "Tab")) { return 0x0009; }
-    if (cenStrEq(name, "newline") || cenStrEq(name, "NewLine")) { return 0x000A; }
+    if (strEq(name, "amp") || strEq(name, "AMP")) { return 0x0026; }
+    if (strEq(name, "lt") || strEq(name, "LT")) { return 0x003C; }
+    if (strEq(name, "gt") || strEq(name, "GT")) { return 0x003E; }
+    if (strEq(name, "quot") || strEq(name, "QUOT")) { return 0x0022; }
+    if (strEq(name, "apos")) { return 0x0027; }
+    if (strEq(name, "nbsp") || strEq(name, "NonBreakingSpace")) { return 0x00A0; }
+    if (strEq(name, "copy") || strEq(name, "COPY")) { return 0x00A9; }
+    if (strEq(name, "reg") || strEq(name, "REG")) { return 0x00AE; }
+    if (strEq(name, "trade") || strEq(name, "TRADE")) { return 0x2122; }
+    if (strEq(name, "euro")) { return 0x20AC; }
+    if (strEq(name, "pound")) { return 0x00A3; }
+    if (strEq(name, "yen")) { return 0x00A5; }
+    if (strEq(name, "cent")) { return 0x00A2; }
+    if (strEq(name, "sect")) { return 0x00A7; }
+    if (strEq(name, "deg")) { return 0x00B0; }
+    if (strEq(name, "plusmn")) { return 0x00B1; }
+    if (strEq(name, "micro")) { return 0x00B5; }
+    if (strEq(name, "middot")) { return 0x00B7; }
+    if (strEq(name, "times")) { return 0x00D7; }
+    if (strEq(name, "divide")) { return 0x00F7; }
+    if (strEq(name, "ndash")) { return 0x2013; }
+    if (strEq(name, "mdash")) { return 0x2014; }
+    if (strEq(name, "lsquo")) { return 0x2018; }
+    if (strEq(name, "rsquo")) { return 0x2019; }
+    if (strEq(name, "ldquo")) { return 0x201C; }
+    if (strEq(name, "rdquo")) { return 0x201D; }
+    if (strEq(name, "bull")) { return 0x2022; }
+    if (strEq(name, "hellip")) { return 0x2026; }
+    if (strEq(name, "larr")) { return 0x2190; }
+    if (strEq(name, "uarr")) { return 0x2191; }
+    if (strEq(name, "rarr")) { return 0x2192; }
+    if (strEq(name, "darr")) { return 0x2193; }
+    if (strEq(name, "harr")) { return 0x2194; }
+    if (strEq(name, "laquo")) { return 0x00AB; }
+    if (strEq(name, "raquo")) { return 0x00BB; }
+    if (strEq(name, "alpha")) { return 0x03B1; }
+    if (strEq(name, "beta")) { return 0x03B2; }
+    if (strEq(name, "gamma")) { return 0x03B3; }
+    if (strEq(name, "delta")) { return 0x03B4; }
+    if (strEq(name, "pi")) { return 0x03C0; }
+    if (strEq(name, "omega")) { return 0x03C9; }
+    if (strEq(name, "infin")) { return 0x221E; }
+    if (strEq(name, "ne")) { return 0x2260; }
+    if (strEq(name, "le")) { return 0x2264; }
+    if (strEq(name, "ge")) { return 0x2265; }
+    if (strEq(name, "tab") || strEq(name, "Tab")) { return 0x0009; }
+    if (strEq(name, "newline") || strEq(name, "NewLine")) { return 0x000A; }
     return null;
 }
 
@@ -153,12 +108,14 @@ pub fn decodeNumericEntity(body: string): u32? {
     while (idx < body.len) {
         const b = body[idx];
         let d: u32 = 0;
-        if (b >= 48 && b <= 57) {
+        if (is_hex) {
+            if (hv := hexVal(b)) {
+                d = hv as u32;
+            } else {
+                return null;
+            }
+        } else if (b >= 48 && b <= 57) {
             d = (b - 48) as u32;
-        } else if (is_hex && b >= 65 && b <= 70) {
-            d = (b - 55) as u32;
-        } else if (is_hex && b >= 97 && b <= 102) {
-            d = (b - 87) as u32;
         } else {
             return null;
         }
@@ -210,7 +167,9 @@ pub fn decodeEntities(input: string, out: []u8): usize {
                     cp_opt = decodeNamedEntity(body);
                 }
                 if (cp_opt != null) {
-                    p = cenWriteUtf8(cp_opt ?? 0xFFFD, out, p);
+                    const cp = cp_opt ?? 0xFFFD;
+                    const safe_cp: u32 = if (cp == 0) 0xFFFD else cp;
+                    p += encodeCodepointLossy(safe_cp, out[p..out.len]);
                     i = semi + 1;
                     continue;
                 }
@@ -225,17 +184,6 @@ pub fn decodeEntities(input: string, out: []u8): usize {
     return p;
 }
 
-fn cenWriteStr(s: string, out: []u8, pos: usize): usize {
-    let p = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) {
-        out[p] = s[i];
-        p += 1;
-        i += 1;
-    }
-    return p;
-}
-
 /// Encodes HTML-special characters (`&`, `<`, `>`, `"`, `'`) into named entities in `out`.
 pub fn encodeEntities(input: string, out: []u8): usize {
     let i: usize = 0;
@@ -243,15 +191,15 @@ pub fn encodeEntities(input: string, out: []u8): usize {
     while (i < input.len) {
         const b = input[i];
         if (b == 38) {
-            p = cenWriteStr("&amp;", out, p);
+            p = writeStr("&amp;", out, p);
         } else if (b == 60) {
-            p = cenWriteStr("&lt;", out, p);
+            p = writeStr("&lt;", out, p);
         } else if (b == 62) {
-            p = cenWriteStr("&gt;", out, p);
+            p = writeStr("&gt;", out, p);
         } else if (b == 34) {
-            p = cenWriteStr("&quot;", out, p);
+            p = writeStr("&quot;", out, p);
         } else if (b == 39) {
-            p = cenWriteStr("&#x27;", out, p);
+            p = writeStr("&#x27;", out, p);
         } else {
             if (p < out.len) {
                 out[p] = b;

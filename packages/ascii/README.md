@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/ascii
 
 Zero-heap ASCII validation, byte classification, case conversion, trimming, and case-insensitive comparison in pure CP.

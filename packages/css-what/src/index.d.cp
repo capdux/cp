@@ -1,5 +1,7 @@
 // Type definitions for CP
 
+import { isSpace, isAlpha, isDigit } from "cap:ascii";
+import { writeStr } from "cap:fmt";
 export enum CssTokenKind {
     Tag,
     Universal,
@@ -39,10 +41,9 @@ export class CwhWriter {
     pos: usize,
     overflow: bool,
     fn writeByte(_: auto, b: u8);
-    fn writeStr(_: auto, s: string);
+    fn putStr(_: auto, s: string);
 }
 
-export fn cwhIsSpace(c: u8): bool;
 export fn cwhIsIdentStart(c: u8): bool;
 export fn cwhIsIdentChar(c: u8): bool;
 export fn cwhSkipSpace(s: string, start: usize): usize;

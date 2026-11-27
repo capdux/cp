@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/d3-interpolate
 
 Zero-allocation numeric, integer, discrete, RGB/HSL color, piecewise, and uniform cubic B-spline interpolators in pure CP.

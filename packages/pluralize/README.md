@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/pluralize` — Zero-Allocation English Pluralization & Ordinal Engine
 
 <!-- cap-source-attribution -->

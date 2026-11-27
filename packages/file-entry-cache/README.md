@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/file-entry-cache
 
 Zero-heap incremental build and lint file metadata cache in pure CP (also covers `flat-cache`). Tracks file paths, modification timestamps, byte sizes, content hashes, and cached payloads in a fixed 64-slot stack table.

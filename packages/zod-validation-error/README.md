@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/zod-validation-error
 
 Zero-heap human-readable validation error aggregator and formatter in pure CP.

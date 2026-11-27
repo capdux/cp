@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/diff` — 零分配 Myers O(ND) 文本与字符 Diff 引擎
 
 <!-- cap-source-attribution -->

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/trough
 
 Zero-heap middleware pipeline engine and tag dispatcher in pure CP (also covers `unified` pipeline composition and `zwitch` tag routing).

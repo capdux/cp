@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **npm** [`http-status-codes`](https://github.com/prettymuchbryce/http-status-codes)（`MIT`）（原库名 `http-status-codes`，CP 包名 `@cap/http-status`）。
 

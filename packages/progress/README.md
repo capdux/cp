@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/progress
 
 Zero-heap terminal progress bar renderer in pure CP supporting `:bar`, `:percent`, `:current`, `:total`, `:etas`, and `:elapseds` tokens.

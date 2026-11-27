@@ -1,0 +1,51 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI 智能体速查](./README_AGENT.md)
+
+# ezing
+
+> 版本：`1.0.0` | 许可证：`MIT` | 类型声明：[src/index.d.cp](./src/index.d.cp)
+
+Zero-allocation Robert Penner animation easing functions and CSS cubic-bezier solver (Rust ezing / keyframe / npm eases parity) for CP
+
+## 安装与导入
+
+```bash
+cap add ezing
+```
+
+```cp
+import { linear } from "ezing";
+```
+
+## 核心导出 API
+
+- `export fn linear(t: f64): f64;`
+- `export fn quadIn(t_in: f64): f64;`
+- `export fn quadOut(t_in: f64): f64;`
+- `export fn quadInOut(t_in: f64): f64;`
+- `export fn cubicIn(t_in: f64): f64;`
+- `export fn cubicOut(t_in: f64): f64;`
+- `export fn cubicInOut(t_in: f64): f64;`
+- `export fn quartIn(t_in: f64): f64;`
+- `export fn quartOut(t_in: f64): f64;`
+- `export fn quartInOut(t_in: f64): f64;`
+- `export fn quintIn(t_in: f64): f64;`
+- `export fn quintOut(t_in: f64): f64;`
+- `export fn quintInOut(t_in: f64): f64;`
+- `export fn sineIn(t_in: f64): f64;`
+- `export fn sineOut(t_in: f64): f64;`
+- `export fn sineInOut(t_in: f64): f64;`
+- `export fn circIn(t_in: f64): f64;`
+- `export fn circOut(t_in: f64): f64;`
+- `export fn circInOut(t_in: f64): f64;`
+- `export fn backIn(t_in: f64): f64;`
+- `export fn backOut(t_in: f64): f64;`
+- `export fn backInOut(t_in: f64): f64;`
+- `export fn bounceOut(t_in: f64): f64;`
+- `export fn bounceIn(t_in: f64): f64;`
+- `export fn bounceInOut(t_in: f64): f64;`
+- `export fn cubicBezier(x1: f64, y1: f64, x2: f64, y2: f64, x_in: f64): f64;`
+
+<!-- cap-source-attribution -->
+## 上游来源与许可证说明
+
+- **上游生态**：`crates.io` (`ezing@1.0.0`)，许可证：MIT

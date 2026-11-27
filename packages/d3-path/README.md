@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:d3-path` ([https://github.com/d3/d3-path](https://github.com/d3/d3-path)) | 许可：`ISC`
 

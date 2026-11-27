@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/semver`
 
 Unified zero-heap SemVer 2.0.0 engine for CP, combining **100% of npm `semver` (`node-semver`)** and **100% of Rust `crates.io/semver` (`Version` / `VersionReq`)** on top of a single shared zero-copy parser and range evaluator.

@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：`npm:trim-newlines` ([https://github.com/sindresorhus/trim-newlines](https://github.com/sindresorhus/trim-newlines)) | 许可：`MIT`
 

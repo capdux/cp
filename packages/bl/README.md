@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/bl
 
 Zero-heap segmented `BufferList` in pure CP for streaming byte buffers, cross-chunk `indexOf`, `copyRange`, `consume`, and big/little-endian integer reads.

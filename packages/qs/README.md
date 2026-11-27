@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # `@cap/qs` — 零分配嵌套查询字符串解析与序列化器
 
 <!-- cap-source-attribution -->

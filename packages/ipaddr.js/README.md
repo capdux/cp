@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 <!-- cap-source-attribution -->
 > **参考 / 吸收来源**：吸收自 **npm** [`ipaddr.js`](https://github.com/whitequark/ipaddr.js)（`MIT`）（原库名 `ipaddr.js`，CP 包名 `@cap/ipaddr`）。
 

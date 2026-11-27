@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { BufWriter } from "cap:fmt";
 export enum DiagSeverity {
     Bug,
     Error,
@@ -26,9 +27,6 @@ export class Diagnostic {
     note: string,
 }
 
-export fn csrWriteStr(s: string, out: []u8, pos: usize): usize;
-export fn csrWriteRepeat(ch: u8, count: usize, out: []u8, pos: usize): usize;
-export fn csrWriteUsize(val: usize, out: []u8, pos: usize): usize;
 export fn csrDigitWidth(val: usize): usize;
 export fn severityLabel(sev: DiagSeverity): string;
 export fn locateOffset(source: string, offset: usize): LineCol;

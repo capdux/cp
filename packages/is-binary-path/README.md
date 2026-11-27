@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/is-binary-path
 
 Zero-allocation check if a file path has a known binary file extension (images, audio/video, archives, native binaries, fonts, documents, ML weights, databases).

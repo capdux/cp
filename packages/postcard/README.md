@@ -1,3 +1,5 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [AI Agent Quickref](./README_AGENT.md)
+
 # @cap/postcard
 
 Zero-heap compact binary wire protocol codecs in pure CP implementing unsigned/signed LEB128 varints, ZigZag encoding, and COBS (Consistent Overhead Byte Stuffing) framing.
