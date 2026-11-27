@@ -112,7 +112,7 @@ pub struct FlameSymbolEntry {
 /// Aggregated call-stack sample entry (`frames[0]` = root, `frames[depth - 1]` = leaf).
 pub struct FlameStackEntry {
     sig_hash: u64 = 0;
-    frames: [FLAME_MAX_DEPTH]u32 = [0; FLAME_MAX_DEPTH];
+    frames: [FLAME_MAX_DEPTH]u32 = undefined;
     depth: u8 = 0;
     weight: u64 = 0;
     sample_count: u64 = 0;
@@ -178,7 +178,7 @@ fn isBiggerRegression(a: FlameHotspotDiff, b: FlameHotspotDiff): bool {
 /// Flamegraph exporter.
 pub struct FlameFoldProfiler {
     symbols: [FLAME_MAX_SYMBOLS]FlameSymbolEntry = [FlameSymbolEntry {}; FLAME_MAX_SYMBOLS];
-    symbol_pool: [FLAME_SYMBOL_POOL_BYTES]u8 = [0; FLAME_SYMBOL_POOL_BYTES];
+    symbol_pool: [FLAME_SYMBOL_POOL_BYTES]u8 = undefined;
     symbol_count: usize = 0;
     symbol_pool_used: usize = 0;
 
@@ -210,9 +210,8 @@ pub struct FlameFoldProfiler {
         }
 
         const off: usize = _.symbol_pool_used;
-        let k: usize = 0;
-        while (k < name.len) : (k += 1) {
-            _.symbol_pool[off + k] = name[k];
+        if (name.len > 0) {
+            @memcpy(_.symbol_pool[off .. off + name.len], name);
         }
         _.symbols[_.symbol_count] = FlameSymbolEntry {
             symbol_id: symbol_id,
@@ -319,7 +318,7 @@ pub struct FlameFoldProfiler {
             return 0;
         }
 
-        let table: [FLAME_MAX_SYMBOLS]FlameHotspot = [FlameHotspot {}; FLAME_MAX_SYMBOLS];
+        let table: [FLAME_MAX_SYMBOLS]FlameHotspot = undefined;
         let count: usize = 0;
 
         let s: usize = 0;
@@ -507,15 +506,15 @@ pub fn diffHotspots(
         return 0;
     }
 
-    let base_hot: [FLAME_MAX_SYMBOLS]FlameHotspot = [FlameHotspot {}; FLAME_MAX_SYMBOLS];
+    let base_hot: [FLAME_MAX_SYMBOLS]FlameHotspot = undefined;
     let base_s: []FlameHotspot = base_hot[0..];
     const base_n: usize = baseline.topHotspots(by_self, *base_s);
 
-    let cur_hot: [FLAME_MAX_SYMBOLS]FlameHotspot = [FlameHotspot {}; FLAME_MAX_SYMBOLS];
+    let cur_hot: [FLAME_MAX_SYMBOLS]FlameHotspot = undefined;
     let cur_s: []FlameHotspot = cur_hot[0..];
     const cur_n: usize = current.topHotspots(by_self, *cur_s);
 
-    let merged: [FLAME_MAX_SYMBOLS]FlameHotspotDiff = [FlameHotspotDiff {}; FLAME_MAX_SYMBOLS];
+    let merged: [FLAME_MAX_SYMBOLS]FlameHotspotDiff = undefined;
     let m_count: usize = 0;
 
     // Seed from baseline hotspots.

@@ -129,7 +129,7 @@ fn hitBetter(a: MultiVecHit, b: MultiVecHit): bool {
 pub struct MultiVecIndex {
     dim: usize = 0;
     docs: [MULTIVEC_MAX_DOCS]MultiVecDocSlot = [MultiVecDocSlot{}; MULTIVEC_MAX_DOCS];
-    arena: [MULTIVEC_ARENA_FLOATS]f32 = [0.0; MULTIVEC_ARENA_FLOATS];
+    arena: [MULTIVEC_ARENA_FLOATS]f32 = undefined;
     doc_count: usize = 0;
     total_tokens: usize = 0;
     arena_used: usize = 0;
@@ -204,10 +204,8 @@ pub struct MultiVecIndex {
         while (t < n_tokens) {
             const src_start: usize = t * _.dim;
             const dst_start: usize = base_off + src_start;
-            let d: usize = 0;
-            while (d < _.dim) {
-                _.arena[dst_start + d] = doc_tokens_flat[src_start + d];
-                d += 1;
+            if (_.dim > 0) {
+                @memcpy(_.arena[dst_start..(dst_start + _.dim)], doc_tokens_flat[src_start..(src_start + _.dim)]);
             }
             if (normalize_tokens) {
                 let tok_s: []f32 = _.arena[dst_start..(dst_start + _.dim)];
@@ -295,7 +293,7 @@ pub struct MultiVecIndex {
 
         // Stage 1: Score all docs by centroid dot product.
         const q_cent_ro: []const f32 = q_centroid[0.._.dim];
-        let coarse_cands: [MULTIVEC_MAX_DOCS]CoarseCandidate = [CoarseCandidate{}; MULTIVEC_MAX_DOCS];
+        let coarse_cands: [MULTIVEC_MAX_DOCS]CoarseCandidate = undefined;
         let c_n: usize = 0;
         let idx: usize = 0;
         while (idx < _.doc_count) {
@@ -327,7 +325,7 @@ pub struct MultiVecIndex {
         _.total_coarse_pruned += @as(u64, c_n - eff_coarse_k);
 
         // Stage 2: Exact late-interaction weighted MaxSim & Chamfer rescoring on Top-`eff_coarse_k`.
-        let hits: [MULTIVEC_MAX_DOCS]MultiVecHit = [MultiVecHit{}; MULTIVEC_MAX_DOCS];
+        let hits: [MULTIVEC_MAX_DOCS]MultiVecHit = undefined;
         let ci: usize = 0;
         while (ci < eff_coarse_k) {
             const cand = coarse_cands[ci];

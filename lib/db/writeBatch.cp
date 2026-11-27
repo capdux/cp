@@ -384,16 +384,18 @@ struct WriteBatchSavePoint {
 /// Zero-heap-allocation RocksDB-style atomic `WriteBatch` with 12-byte header,
 /// inline payload storage, nested savepoint rollback, and CRC32 framing.
 pub struct WriteBatch {
-    buf: [4096]u8 = [0; 4096],
+    buf: [4096]u8 = undefined,
     len: usize = WRITE_BATCH_HEADER_SIZE,
     seq: u64 = 0,
     count: u32 = 0,
-    savepoints: [16]WriteBatchSavePoint = [WriteBatchSavePoint{}; 16],
+    savepoints: [16]WriteBatchSavePoint = undefined,
     savepoint_depth: usize = 0;
 
     /// Initializes an empty `WriteBatch` with a zeroed 12-byte wire header.
     static fn init(): WriteBatch {
-        return WriteBatch{};
+        let b = WriteBatch{};
+        b.syncHeader();
+        return b;
     }
 
     /// Writes `seq` and `count` into the 12-byte little-endian header.
@@ -667,9 +669,9 @@ pub struct GroupCommitStats {
 /// framed `WriteBatch` block, assigning contiguous monotonic sequence ranges.
 pub struct GroupCommitCoordinator {
     cfg: GroupCommitConfig = GroupCommitConfig{},
-    merged_buf: [8192]u8 = [0; 8192],
+    merged_buf: [8192]u8 = undefined,
     merged_len: usize = WRITE_BATCH_HEADER_SIZE,
-    pending_receipts: [16]GroupCommitReceipt = [GroupCommitReceipt{}; 16],
+    pending_receipts: [16]GroupCommitReceipt = undefined,
     pending_count: usize = 0,
     pending_ops: u32 = 0,
     next_seq: u64 = 1,

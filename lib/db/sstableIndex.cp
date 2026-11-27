@@ -85,7 +85,7 @@ pub struct PrefixBlockStats {
 /// Single fence-key entry in `SstSparseIndex` describing one SSTable data block.
 pub struct SstIndexEntry {
     active: bool = false;
-    last_key_buf: [SST_INDEX_MAX_KEY_LEN]u8 = [0; SST_INDEX_MAX_KEY_LEN];
+    last_key_buf: [SST_INDEX_MAX_KEY_LEN]u8 = undefined;
     last_key_len: usize = 0;
     block_offset: u64 = 0;
     block_size: u32 = 0;
@@ -321,14 +321,14 @@ fn sstIdxDecodeEntryAt(data: []const u8, offset: usize, data_end: usize): SstIdx
 
 /// Zero-heap-allocation prefix-compressed SSTable data block builder.
 pub struct PrefixBlockBuilder {
-    buf: [PREFIX_BLOCK_MAX_BYTES]u8 = [0; PREFIX_BLOCK_MAX_BYTES];
+    buf: [PREFIX_BLOCK_MAX_BYTES]u8 = undefined;
     pos: usize = 0;
-    restarts: [PREFIX_BLOCK_MAX_RESTARTS]u32 = [0; PREFIX_BLOCK_MAX_RESTARTS];
+    restarts: [PREFIX_BLOCK_MAX_RESTARTS]u32 = undefined;
     restart_count: usize = 0;
     restart_interval: u32 = PREFIX_BLOCK_DEFAULT_RESTART_INTERVAL;
     since_restart: u32 = 0;
     entry_count: u32 = 0;
-    last_key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = [0; PREFIX_BLOCK_MAX_KEY_LEN];
+    last_key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = undefined;
     last_key_len: usize = 0;
     raw_key_bytes: u64 = 0;
     raw_val_bytes: u64 = 0;
@@ -490,7 +490,7 @@ pub struct PrefixBlockCursor {
     data_end: usize = 0;
     next_offset: usize = 0;
     valid: bool = false;
-    key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = [0; PREFIX_BLOCK_MAX_KEY_LEN];
+    key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = undefined;
     key_len: usize = 0;
     val_offset: usize = 0;
     val_len: usize = 0;
@@ -626,9 +626,9 @@ pub struct PrefixBlockReader {
         if (num_restarts == 0) {
             return data_end == 0 and data.len == 4;
         }
-        let prev_key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = [0; PREFIX_BLOCK_MAX_KEY_LEN];
+        let prev_key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = undefined;
         let prev_key_len: usize = 0;
-        let cur_key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = [0; PREFIX_BLOCK_MAX_KEY_LEN];
+        let cur_key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = undefined;
         let has_prev = false;
 
         let r_idx: usize = 0;
@@ -808,7 +808,7 @@ pub struct PrefixBlockReader {
         }
         const start_off = start_off_opt ?? 0;
 
-        let key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = [0; PREFIX_BLOCK_MAX_KEY_LEN];
+        let key_buf: [PREFIX_BLOCK_MAX_KEY_LEN]u8 = undefined;
         let cur_key_len: usize = 0;
         let off = start_off;
         let steps: u32 = 0;

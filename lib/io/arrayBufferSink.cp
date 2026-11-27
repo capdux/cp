@@ -26,7 +26,7 @@ pub struct SinkFlushResult {
 
 /// Zero-allocation incremental buffer sink aligned with `Bun.ArrayBufferSink`.
 pub struct ArrayBufferSink {
-    buf: [ARRAY_BUFFER_SINK_CAP]u8 = [0; ARRAY_BUFFER_SINK_CAP],
+    buf: [ARRAY_BUFFER_SINK_CAP]u8 = undefined,
     len: usize = 0,
     high_water_mark: usize = ARRAY_BUFFER_SINK_DEFAULT_HWM,
     streaming: bool = false,
@@ -99,10 +99,8 @@ pub struct ArrayBufferSink {
     fn write(*_, data: []const u8): usize! {
         if (_.ended) return ArrayBufferSinkError.SinkEnded;
         if (_.len + data.len > ARRAY_BUFFER_SINK_CAP) return ArrayBufferSinkError.BufferOverflow;
-        let i: usize = 0;
-        while (i < data.len) {
-            _.buf[_.len + i] = data[i];
-            i += 1;
+        if (data.len > 0) {
+            @memcpy(_.buf[_.len .. _.len + data.len], data);
         }
         _.len += data.len;
         _.total_written += data.len;
@@ -225,10 +223,8 @@ pub struct ArrayBufferSink {
             };
         }
         if (_.len > out.len) return ArrayBufferSinkError.OutputTooSmall;
-        let i: usize = 0;
-        while (i < _.len) {
-            out[i] = _.buf[i];
-            i += 1;
+        if (_.len > 0) {
+            @memcpy(out[0.._.len], _.buf[0.._.len]);
         }
         const n = _.len;
         _.len = 0;
@@ -243,10 +239,8 @@ pub struct ArrayBufferSink {
     /// Subsequent writes fail with `SinkEnded` until `start()` is called again.
     fn end(*_, out: []u8): usize! {
         if (_.len > out.len) return ArrayBufferSinkError.OutputTooSmall;
-        let i: usize = 0;
-        while (i < _.len) {
-            out[i] = _.buf[i];
-            i += 1;
+        if (_.len > 0) {
+            @memcpy(out[0.._.len], _.buf[0.._.len]);
         }
         const n = _.len;
         _.len = 0;

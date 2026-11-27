@@ -223,8 +223,8 @@ pub fn sq8CalibrateBatch(
     if (vecs_flat.len < n_vecs * dim) return null;
     if (!isFiniteF32(clip_quantile) || clip_quantile < 0.0 || clip_quantile > 0.25) return null;
 
-    let min_v: [64]f32 = [0.0; 64];
-    let max_v: [64]f32 = [0.0; 64];
+    let min_v: [64]f32 = undefined;
+    let max_v: [64]f32 = undefined;
 
     // Pass 1: exact per-dimension min/max + finiteness check.
     let i: usize = 0;
@@ -441,9 +441,9 @@ pub fn evaluateSq8Error(
     if (n_vecs > std.math.maxInt(usize) / dim) return null;
     if (orig_vecs.len < n_vecs * dim) return null;
 
-    let codes: [64]u8 = [0; 64];
+    let codes: [64]u8 = undefined;
     let codes_s: []u8 = codes[0..dim];
-    let recon: [64]f32 = [0.0; 64];
+    let recon: [64]f32 = undefined;
     let recon_s: []f32 = recon[0..dim];
 
     let sum_sq: f64 = 0.0;
@@ -512,8 +512,8 @@ pub struct Sq8IndexStats {
 /// Fixed-capacity zero-heap-allocation SQ8 vector index (up to 256 vectors × 64 dims).
 pub struct Sq8VectorIndex {
     cb: Sq8Codebook = Sq8Codebook{},
-    doc_ids: [256]u32 = [0; 256],
-    codes: [16384]u8 = [0; 16384], // 256 * 64 = 16 KiB
+    doc_ids: [256]u32 = undefined,
+    codes: [16384]u8 = undefined, // 256 * 64 = 16 KiB
     doc_count: usize = 0;
 
     /// Initializes an SQ8 index with a calibrated `Sq8Codebook`.
@@ -573,9 +573,8 @@ pub struct Sq8VectorIndex {
         const dim: usize = _.cb.dim;
         if (doc_id == 0 || _.doc_count >= SQ8_MAX_DOCS || q_codes.len != dim) return false;
         const off: usize = _.doc_count * dim;
-        let d: usize = 0;
-        while (d < dim) : (d += 1) {
-            _.codes[off + d] = q_codes[d];
+        if (dim > 0) {
+            @memcpy(_.codes[off .. off + dim], q_codes[0..dim]);
         }
         _.doc_ids[_.doc_count] = doc_id;
         _.doc_count += 1;
@@ -634,7 +633,7 @@ pub struct Sq8VectorIndex {
         if (coarse_k == 0 || final_k == 0 || out_hits.len == 0 || _.doc_count == 0) return 0;
 
         const eff_coarse: usize = if (coarse_k <= SQ8_RESCORE_CAP) coarse_k else SQ8_RESCORE_CAP;
-        let coarse_buf: [64]Sq8SearchHit = [Sq8SearchHit{}; 64];
+        let coarse_buf: [64]Sq8SearchHit = undefined;
         let coarse_s: []Sq8SearchHit = coarse_buf[0..eff_coarse];
         const n_coarse = _.searchTopK(query, metric, eff_coarse, *coarse_s) orelse return null;
 

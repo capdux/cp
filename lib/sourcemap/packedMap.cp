@@ -129,7 +129,7 @@ pub struct PackedMapEntry {
 /// payloads (VLQ mappings + pre-escaped source contents + end state).
 pub struct PackedMapArena {
     slots: [PACKED_MAP_MAX_SLOTS]PackedMapEntry = [PackedMapEntry{}; PACKED_MAP_MAX_SLOTS],
-    arena: [PACKED_MAP_ARENA_BYTES]u8 = [0; PACKED_MAP_ARENA_BYTES],
+    arena: [PACKED_MAP_ARENA_BYTES]u8 = undefined,
     arena_len: usize = 0,
     active_count: usize = 0,
 
@@ -172,17 +172,13 @@ pub struct PackedMapArena {
         }
 
         const vlq_off = _.arena_len;
-        let i: usize = 0;
-        while (i < vlq_bytes.len) {
-            _.arena[vlq_off + i] = vlq_bytes[i];
-            i += 1;
+        if (vlq_bytes.len > 0) {
+            @memcpy(_.arena[vlq_off .. vlq_off + vlq_bytes.len], vlq_bytes);
         }
 
         const escaped_off = vlq_off + vlq_bytes.len;
-        i = 0;
-        while (i < escaped_source.len) {
-            _.arena[escaped_off + i] = escaped_source[i];
-            i += 1;
+        if (escaped_source.len > 0) {
+            @memcpy(_.arena[escaped_off .. escaped_off + escaped_source.len], escaped_source);
         }
         _.arena_len = escaped_off + escaped_source.len;
 
@@ -290,10 +286,8 @@ pub struct PackedMapArena {
         const esc = _.escapedSourceSlice(handle) ?? return PackedMapError.InvalidHandle;
         if (esc.len + 2 > out.len) return PackedMapError.BufferTooSmall;
         out[0] = '"';
-        let i: usize = 0;
-        while (i < esc.len) {
-            out[1 + i] = esc[i];
-            i += 1;
+        if (esc.len > 0) {
+            @memcpy(out[1 .. 1 + esc.len], esc);
         }
         out[1 + esc.len] = '"';
         return esc.len + 2;

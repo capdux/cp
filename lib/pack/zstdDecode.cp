@@ -459,7 +459,7 @@ struct FseEntry {
 struct FseTable {
     accuracy_log: usize = 0;
     valid: bool = false;
-    entries: [FSE_MAX_TABLE_SIZE]FseEntry = [FseEntry{}; FSE_MAX_TABLE_SIZE];
+    entries: [FSE_MAX_TABLE_SIZE]FseEntry = undefined;
 
     fn buildFromNorm(*_, norm: []const i16, max_sym: usize, acc_log: usize): void ! ZstdDecodeError {
         if (acc_log > FSE_MAX_LOG) return ZstdDecodeError.CorruptFseTable;
@@ -600,8 +600,8 @@ fn decodeFseTable(src: []const u8, max_sym: usize, max_log: usize, tbl: *FseTabl
 struct HuffTable {
     max_bits: usize = 0;
     valid: bool = false;
-    syms: [HUFF_MAX_TABLE_SIZE]u8 = [0; HUFF_MAX_TABLE_SIZE];
-    nbits: [HUFF_MAX_TABLE_SIZE]u8 = [0; HUFF_MAX_TABLE_SIZE];
+    syms: [HUFF_MAX_TABLE_SIZE]u8 = undefined;
+    nbits: [HUFF_MAX_TABLE_SIZE]u8 = undefined;
 
     fn buildFromWeights(*_, weights: []const u8, num_weights: usize): void ! ZstdDecodeError {
         if (num_weights == 0 || num_weights > 255) return ZstdDecodeError.CorruptHuffmanTable;

@@ -112,11 +112,9 @@ pub fn fillYesChunk(args: []const ([]const u8), out: []u8): ShellYesError!usize 
         let i: usize = 0;
         while (i < args.len) {
             const arg = args[i];
-            let j: usize = 0;
-            while (j < arg.len) {
-                out[pos] = arg[j];
-                pos += 1;
-                j += 1;
+            if (arg.len > 0) {
+                @memcpy(out[pos .. pos + arg.len], arg);
+                pos += arg.len;
             }
             if (i + 1 < args.len) {
                 out[pos] = ' ';
@@ -133,10 +131,8 @@ pub fn fillYesChunk(args: []const ([]const u8), out: []u8): ShellYesError!usize 
     while (filled < layout.chunk_len) {
         const remaining = layout.chunk_len - filled;
         const to_copy = if (filled < remaining) filled else remaining;
-        let k: usize = 0;
-        while (k < to_copy) {
-            out[filled + k] = out[k];
-            k += 1;
+        if (to_copy > 0) {
+            @memcpy(out[filled .. filled + to_copy], out[0..to_copy]);
         }
         filled += to_copy;
     }
@@ -145,7 +141,7 @@ pub fn fillYesChunk(args: []const ([]const u8), out: []u8): ShellYesError!usize 
 
 /// 零堆分配 `yes` 内置命令流式块生成器与协同让出状态机
 pub struct YesStreamState {
-    buf: [YES_BUFSIZ]u8 = [0; YES_BUFSIZ],
+    buf: [YES_BUFSIZ]u8 = undefined,
     chunk_len: usize = 0,
     line_len: usize = 0,
     copies_per_chunk: usize = 0,

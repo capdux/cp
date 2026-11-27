@@ -73,7 +73,7 @@ pub struct IndexStringMap {
     buckets: [INDEX_STR_MAP_BUCKETS]IdxBucket = [IdxBucket{}; INDEX_STR_MAP_BUCKETS],
     len: usize = 0,
     tombstones: usize = 0,
-    arena: [INDEX_STR_MAP_ARENA_CAP]u8 = [0; INDEX_STR_MAP_ARENA_CAP],
+    arena: [INDEX_STR_MAP_ARENA_CAP]u8 = undefined,
     arena_used: usize = 0,
 
     static fn init(): IndexStringMap {
@@ -203,10 +203,8 @@ pub struct IndexStringMap {
         let existing = false;
         const slot = _.findInsertSlot(index, *existing)?;
         const off = _.arena_used;
-        let i: usize = 0;
-        while (i < value.len) {
-            _.arena[off + i] = value[i];
-            i += 1;
+        if (value.len > 0) {
+            @memcpy(_.arena[off .. off + value.len], value);
         }
         _.arena_used += value.len;
         if (!existing) {
