@@ -257,7 +257,7 @@ fn appendStr(out: []u8, pos: *usize, s: []const u8): bool {
 
 fn appendU64(out: []u8, pos: *usize, v_in: u64): bool {
     if (v_in == 0) return appendStr(out, pos, "0");
-    let buf: [24]u8 = [0; 24];
+    let buf: [24]u8 = undefined;
     let n: usize = 0;
     let v = v_in;
     while (v > 0) : (v /= 10) {

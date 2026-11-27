@@ -35,7 +35,7 @@ export struct NameMinifier {
 
     pub static fn default(): NameMinifier {
         let m = NameMinifier{
-            head: [0; 54],
+            head: undefined,
             tail: DEFAULT_TAIL,
         };
         let hi: usize = 0;
@@ -157,8 +157,8 @@ export struct CharFreq {
         }
 
         let m = NameMinifier{
-            head: [0; 54],
-            tail: [0; 64],
+            head: undefined,
+            tail: undefined,
         };
         let hi: usize = 0;
         let ti: usize = 0;

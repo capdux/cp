@@ -228,8 +228,8 @@ pub fn extractCodeOutline(src: string, out_symbols: *[]CodeSymbolSpan): usize {
     let awaiting_slot: usize = NO_SLOT;
     let awaiting_depth: u16 = 0;
 
-    let pending_slots: [MAX_SCOPE_STACK]usize = [NO_SLOT; MAX_SCOPE_STACK];
-    let pending_depths: [MAX_SCOPE_STACK]u16 = [0; MAX_SCOPE_STACK];
+    let pending_slots: [MAX_SCOPE_STACK]usize = undefined;
+    let pending_depths: [MAX_SCOPE_STACK]u16 = undefined;
     let pending_count: usize = 0;
 
     while (pos < src.len) {
@@ -569,7 +569,7 @@ fn appendStr(out_buf: *[]u8, pos: *usize, s: string): bool {
 }
 
 fn appendU32(out_buf: *[]u8, pos: *usize, value: u32): bool {
-    let digits: [10]u8 = [0; 10];
+    let digits: [10]u8 = undefined;
     let len: usize = 0;
     let v: u32 = value;
     if (v == 0) {

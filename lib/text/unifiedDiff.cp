@@ -520,7 +520,7 @@ fn splitTextForUnified(allocator: std.mem.Allocator, text: string): SplitTextLin
 }
 
 fn appendUsizeDecimal(allocator: std.mem.Allocator, buf: *std.ArrayList(u8), val: usize): DiffError!void {
-    let tmp: [24]u8 = [0; 24];
+    let tmp: [24]u8 = undefined;
     const rendered = std.fmt.bufPrint(&tmp, "{d}", .{val}) catch return error.OutOfMemory;
     buf.appendSlice(allocator, rendered) catch return error.OutOfMemory;
 }

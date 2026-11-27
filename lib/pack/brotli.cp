@@ -850,7 +850,7 @@ fn brDecodeContextMap(
 
     const imtf = br.readBit()?;
     if (imtf != 0) {
-        let mtf: [256]u8 = [0; 256];
+        let mtf: [256]u8 = undefined;
         let m: usize = 0;
         while (m < 256) : (m += 1) {
             mtf[m] = m as u8;
@@ -1264,7 +1264,7 @@ fn brDecodeCompressedMetaBlock(
                 return BrotliError.InvalidDistance;
             }
             const word = BROTLI_STATIC_DICT[base_off .. (base_off + copy_len)];
-            let word_buf: [64]u8 = [0; 64];
+            let word_buf: [64]u8 = undefined;
             const out_word_len = brApplyDictTransform(word_buf[0..], word, transform_id);
             if (out_word_len > target_out_len - sink.len()) {
                 return BrotliError.InvalidMetaBlock;

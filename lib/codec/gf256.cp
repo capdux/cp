@@ -6,6 +6,44 @@ pub const GF256_POLY_AES: u8 = 0x1B;
 /// Reed-Solomon / QR Code / RAID-6 primitive polynomial low 8 bits: x^8 + x^4 + x^3 + x^2 + 1 (0x11D).
 pub const GF256_POLY_RS: u8 = 0x1D;
 
+type Gf256Vec16 = @Vector(16, u8);
+
+fn gf256LoadVec16(data: []const u8, off: usize): Gf256Vec16 {
+    const v: Gf256Vec16 = [
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
+        data[off + 8], data[off + 9], data[off + 10], data[off + 11],
+        data[off + 12], data[off + 13], data[off + 14], data[off + 15],
+    ];
+    return v;
+}
+
+fn gf256XtimeVec16(v: Gf256Vec16, v_poly: Gf256Vec16): Gf256Vec16 {
+    const v_zero: Gf256Vec16 = @splat(0 as u8);
+    const v_one: @Vector(16, u3) = @splat(1 as u3);
+    const v_seven: @Vector(16, u3) = @splat(7 as u3);
+    const hi_bit: Gf256Vec16 = v >> v_seven;
+    const hi_mask: Gf256Vec16 = v_zero -% hi_bit;
+    return (v << v_one) ^ (hi_mask & v_poly);
+}
+
+fn gf256MulVec16(v_src: Gf256Vec16, coeff: u8, v_poly: Gf256Vec16): Gf256Vec16 {
+    let acc: Gf256Vec16 = @splat(0 as u8);
+    let x: Gf256Vec16 = v_src;
+    let c: u8 = coeff;
+    while (c != 0) {
+        if ((c & 1) != 0) {
+            acc = acc ^ x;
+        }
+        c >>= 1;
+        if (c == 0) {
+            break;
+        }
+        x = gf256XtimeVec16(x, v_poly);
+    }
+    return acc;
+}
+
 /// Constant-time, table-free GF(2^8) multiplication modulo `0x100 | poly_low8`.
 /// Executes 8 branchless iterations suitable for side-channel-resistant cryptography.
 pub fn gf256MulConstTime(a: u8, b: u8, poly_low8: u8): u8 {
@@ -36,7 +74,7 @@ pub struct Gf256Field {
         let field: Gf256Field = Gf256Field {
             poly_low8: poly_low8,
             generator: generator,
-            exp_table: [0; 512],
+            exp_table: undefined,
             log_table: [0; 256],
         };
 
@@ -118,44 +156,68 @@ pub struct Gf256Field {
     }
 
     /// Fused multiply-accumulate on byte slices: `dst[i] ^= mul(src[i], coeff)`.
+    /// Accelerated with 16-lane `@Vector(16, u8)` SIMD vector arithmetic.
     /// Returns `false` if `dst.len != src.len`.
     fn mulAddSlice(dst: *[]u8, src: []const u8, coeff: u8): bool {
-        if (dst.*.len != src.len) {
+        if (dst.len != src.len) {
             return false;
         }
         if (coeff == 0) {
             return true;
         }
+        const n = src.len;
         let i: usize = 0;
         if (coeff == 1) {
-            while (i < src.len) {
-                dst.*[i] ^= src[i];
+            while (i + 16 <= n) {
+                const vd = gf256LoadVec16(dst, i);
+                const vs = gf256LoadVec16(src, i);
+                const xr: [16]u8 = vd ^ vs;
+                @memcpy(dst[i .. i + 16], xr[0..16]);
+                i += 16;
+            }
+            while (i < n) {
+                dst[i] ^= src[i];
                 i += 1;
             }
             return true;
         }
-        while (i < src.len) {
-            dst.*[i] ^= _.mul(src[i], coeff);
+        const v_poly: Gf256Vec16 = @splat(_.poly_low8);
+        while (i + 16 <= n) {
+            const vd = gf256LoadVec16(dst, i);
+            const vs = gf256LoadVec16(src, i);
+            const prod = gf256MulVec16(vs, coeff, v_poly);
+            const xr: [16]u8 = vd ^ prod;
+            @memcpy(dst[i .. i + 16], xr[0..16]);
+            i += 16;
+        }
+        while (i < n) {
+            dst[i] ^= _.mul(src[i], coeff);
             i += 1;
         }
         return true;
     }
 
     /// Scales every byte in `dst` in-place: `dst[i] = mul(dst[i], coeff)`.
+    /// Accelerated with 16-lane `@Vector(16, u8)` SIMD vector arithmetic.
     fn scaleSlice(dst: *[]u8, coeff: u8) {
         if (coeff == 1) {
             return;
         }
-        let i: usize = 0;
+        const n = dst.len;
         if (coeff == 0) {
-            while (i < dst.*.len) {
-                dst.*[i] = 0;
-                i += 1;
-            }
+            @memset(dst, 0);
             return;
         }
-        while (i < dst.*.len) {
-            dst.*[i] = _.mul(dst.*[i], coeff);
+        let i: usize = 0;
+        const v_poly: Gf256Vec16 = @splat(_.poly_low8);
+        while (i + 16 <= n) {
+            const vd = gf256LoadVec16(dst, i);
+            const prod: [16]u8 = gf256MulVec16(vd, coeff, v_poly);
+            @memcpy(dst[i .. i + 16], prod[0..16]);
+            i += 16;
+        }
+        while (i < n) {
+            dst[i] = _.mul(dst[i], coeff);
             i += 1;
         }
     }
@@ -182,15 +244,11 @@ pub struct Gf256Field {
             return 0;
         }
         const out_len: usize = a.len + b.len - 1;
-        if (out.*.len < out_len) {
+        if (out.len < out_len) {
             return null;
         }
 
-        let z: usize = 0;
-        while (z < out_len) {
-            out.*[z] = 0;
-            z += 1;
-        }
+        @memset(out[0..out_len], 0);
 
         let i: usize = 0;
         while (i < a.len) {
@@ -198,7 +256,7 @@ pub struct Gf256Field {
             if (ai != 0) {
                 let j: usize = 0;
                 while (j < b.len) {
-                    out.*[i + j] ^= _.mul(ai, b[j]);
+                    out[i + j] ^= _.mul(ai, b[j]);
                     j += 1;
                 }
             }
@@ -262,7 +320,7 @@ pub struct Gf256Field {
             return false;
         }
         const total: usize = n * n;
-        if (work.*.len != total || inv_out.*.len != total) {
+        if (work.len != total || inv_out.len != total) {
             return false;
         }
 
@@ -272,9 +330,9 @@ pub struct Gf256Field {
             let c0: usize = 0;
             while (c0 < n) {
                 if (r0 == c0) {
-                    inv_out.*[r0 * n + c0] = 1;
+                    inv_out[r0 * n + c0] = 1;
                 } else {
-                    inv_out.*[r0 * n + c0] = 0;
+                    inv_out[r0 * n + c0] = 0;
                 }
                 c0 += 1;
             }
@@ -285,7 +343,7 @@ pub struct Gf256Field {
         while (col < n) {
             // Find non-zero pivot row.
             let pivot: usize = col;
-            while (pivot < n && work.*[pivot * n + col] == 0) {
+            while (pivot < n && work[pivot * n + col] == 0) {
                 pivot += 1;
             }
             if (pivot == n) {
@@ -296,25 +354,25 @@ pub struct Gf256Field {
             if (pivot != col) {
                 let s: usize = 0;
                 while (s < n) {
-                    const tmp_w: u8 = work.*[col * n + s];
-                    work.*[col * n + s] = work.*[pivot * n + s];
-                    work.*[pivot * n + s] = tmp_w;
+                    const tmp_w: u8 = work[col * n + s];
+                    work[col * n + s] = work[pivot * n + s];
+                    work[pivot * n + s] = tmp_w;
 
-                    const tmp_i: u8 = inv_out.*[col * n + s];
-                    inv_out.*[col * n + s] = inv_out.*[pivot * n + s];
-                    inv_out.*[pivot * n + s] = tmp_i;
+                    const tmp_i: u8 = inv_out[col * n + s];
+                    inv_out[col * n + s] = inv_out[pivot * n + s];
+                    inv_out[pivot * n + s] = tmp_i;
                     s += 1;
                 }
             }
 
             // Normalize pivot row.
-            const pv: u8 = work.*[col * n + col];
+            const pv: u8 = work[col * n + col];
             if (pv != 1) {
                 if (pv_inv := _.inv(pv)) {
                     let s: usize = 0;
                     while (s < n) {
-                        work.*[col * n + s] = _.mul(work.*[col * n + s], pv_inv);
-                        inv_out.*[col * n + s] = _.mul(inv_out.*[col * n + s], pv_inv);
+                        work[col * n + s] = _.mul(work[col * n + s], pv_inv);
+                        inv_out[col * n + s] = _.mul(inv_out[col * n + s], pv_inv);
                         s += 1;
                     }
                 } else {
@@ -326,12 +384,12 @@ pub struct Gf256Field {
             let row: usize = 0;
             while (row < n) {
                 if (row != col) {
-                    const factor: u8 = work.*[row * n + col];
+                    const factor: u8 = work[row * n + col];
                     if (factor != 0) {
                         let s: usize = 0;
                         while (s < n) {
-                            work.*[row * n + s] ^= _.mul(work.*[col * n + s], factor);
-                            inv_out.*[row * n + s] ^= _.mul(inv_out.*[col * n + s], factor);
+                            work[row * n + s] ^= _.mul(work[col * n + s], factor);
+                            inv_out[row * n + s] ^= _.mul(inv_out[col * n + s], factor);
                             s += 1;
                         }
                     }

@@ -114,7 +114,7 @@ fn writeSlice(out: []u8, pos: *usize, s: []const u8): bool {
 
 fn writeU64(out: []u8, pos: *usize, val: u64): bool {
     if (val == 0) return writeSlice(out, pos, "0");
-    let tmp: [24]u8 = [0; 24];
+    let tmp: [24]u8 = undefined;
     let n: usize = 0;
     let v = val;
     while (v > 0) {

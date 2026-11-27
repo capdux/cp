@@ -21,7 +21,7 @@ fn writeSlice(out: []u8, pos: *usize, s: []const u8): bool {
 
 /// Format an unsigned integer with 3-digit grouping separator (e.g. `1234567` + `','` -> `"1,234,567"`).
 export fn formatGroupedU64(val: u64, sep: u8, out: []u8): ([]const u8)? {
-    let digits: [24]u8 = [0; 24];
+    let digits: [24]u8 = undefined;
     let n: usize = 0;
     let v = val;
     if (v == 0) {
@@ -80,7 +80,7 @@ export fn ordinalSuffix(n: u64): []const u8 {
 
 /// Format English ordinal (e.g. `1` -> `"1st"`, `11` -> `"11th"`, `22` -> `"22nd"`).
 export fn formatOrdinal(n: u64, out: []u8): ([]const u8)? {
-    let digits: [24]u8 = [0; 24];
+    let digits: [24]u8 = undefined;
     let len: usize = 0;
     let v = n;
     if (v == 0) {
@@ -107,7 +107,7 @@ export fn formatOrdinal(n: u64, out: []u8): ([]const u8)? {
 export fn formatRadixU64(val: u64, radix: u8, uppercase: bool, out: []u8): ([]const u8)? {
     if (radix < 2 || radix > 36) return null;
     const base: u64 = @as(u64, radix);
-    let buf: [64]u8 = [0; 64];
+    let buf: [64]u8 = undefined;
     let n: usize = 0;
     let v = val;
     if (v == 0) {
@@ -166,7 +166,7 @@ export fn formatFixedPoint(scaled_val: i64, decimals: u8, sep: u8, out: []u8): (
 
     if (decimals > 0) {
         if (!writeByte(out, &pos, '.')) return null;
-        let fbuf: [16]u8 = [0; 16];
+        let fbuf: [16]u8 = undefined;
         let fv = frac;
         let idx: usize = @as(usize, decimals);
         while (idx > 0) {
