@@ -1,5 +1,6 @@
 // Type definitions for CP
 
+import { writeStr } from "cap:fmt";
 export enum FmtArgKind {
     Int,
     Uint,
@@ -26,7 +27,6 @@ export class FmtArg {
 }
 
 export fn spfPutByte(out: []u8, pos: usize, b: u8): usize;
-export fn spfPutBytes(out: []u8, pos: usize, s: &[]u8): usize;
 export fn spfPutRepeat(out: []u8, pos: usize, b: u8, count: usize): usize;
 export fn spfEmitPadded(out: []u8, pos: usize, sign: u8, body: &[]u8, width: usize, left_align: bool, zero_pad: bool): usize;
 export fn spfFormatUintRadix(val: u64, base: u64, upper: bool, buf: []u8): usize;

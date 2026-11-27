@@ -2,37 +2,13 @@
 // Zero-allocation stack-inline fixed-capacity ASCII strings in pure CP.
 // Clean-room MIT implementation (ICU4X tinystr v0.7/v0.8 parity).
 
+import { toLowerByte, toUpperByte, isAlpha, isDigit, isAlnum, eqIgnoreCase } from "cap:ascii";
+import { bytesEq } from "cap:bin";
+
 pub const TINYSTR_OK: i64 = 0;
 pub const TINYSTR_ERR_TOO_LONG: i64 = -1;
 pub const TINYSTR_ERR_NON_ASCII: i64 = -2;
 pub const TINYSTR_ERR_CONTAINS_NUL: i64 = -3;
-
-fn tsToLowerByte(b: u8): u8 {
-    if (b >= ('A' as u8) && b <= ('Z' as u8)) {
-        return b + (32 as u8);
-    }
-    return b;
-}
-
-fn tsToUpperByte(b: u8): u8 {
-    if (b >= ('a' as u8) && b <= ('z' as u8)) {
-        return b - (32 as u8);
-    }
-    return b;
-}
-
-fn tsIsAlpha(b: u8): bool {
-    return (b >= ('A' as u8) && b <= ('Z' as u8))
-        || (b >= ('a' as u8) && b <= ('z' as u8));
-}
-
-fn tsIsDigit(b: u8): bool {
-    return b >= ('0' as u8) && b <= ('9' as u8);
-}
-
-fn tsIsAlnum(b: u8): bool {
-    return tsIsAlpha(b) || tsIsDigit(b);
-}
 
 fn tsIsLower(b: u8): bool {
     return b >= ('a' as u8) && b <= ('z' as u8);
@@ -101,20 +77,6 @@ fn tsCopyOut(src: []const u8, n: usize, out: []u8): usize {
     return take;
 }
 
-fn tsSliceEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn tsSliceCmp(a: []const u8, b: []const u8): i32 {
     let n = a.len;
     if (b.len < n) {
@@ -139,24 +101,10 @@ fn tsSliceCmp(a: []const u8, b: []const u8): i32 {
     return 0 as i32;
 }
 
-fn tsSliceEqIgnoreCase(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (tsToLowerByte(a[i]) != tsToLowerByte(b[i])) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn tsAllAlpha(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!tsIsAlpha(buf[i])) {
+        if (!isAlpha(buf[i])) {
             return false;
         }
         i = i + 1;
@@ -167,7 +115,7 @@ fn tsAllAlpha(buf: []const u8, n: usize): bool {
 fn tsAllAlnum(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!tsIsAlnum(buf[i])) {
+        if (!isAlnum(buf[i])) {
             return false;
         }
         i = i + 1;
@@ -178,7 +126,7 @@ fn tsAllAlnum(buf: []const u8, n: usize): bool {
 fn tsAllDigit(buf: []const u8, n: usize): bool {
     let i: usize = 0;
     while (i < n) {
-        if (!tsIsDigit(buf[i])) {
+        if (!isDigit(buf[i])) {
             return false;
         }
         i = i + 1;
@@ -275,7 +223,7 @@ pub struct TinyAsciiStr4 {
     }
 
     pub fn eq(other: TinyAsciiStr4): bool {
-        return tsSliceEq(_.bytes[0..4], other.bytes[0..4]);
+        return bytesEq(_.bytes[0..4], other.bytes[0..4]);
     }
 
     pub fn cmp(other: TinyAsciiStr4): i32 {
@@ -283,35 +231,35 @@ pub struct TinyAsciiStr4 {
     }
 
     pub fn eqIgnoreAsciiCase(other: TinyAsciiStr4): bool {
-        return tsSliceEqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+        return eqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
     }
 
     pub fn toAsciiLowercase(): TinyAsciiStr4 {
-        let b: [4]u8 = [0; 4];
+        let b: [4]u8 = undefined;
         let i: usize = 0;
         while (i < 4) {
-            b[i] = tsToLowerByte(_.bytes[i]);
+            b[i] = toLowerByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr4 { bytes: b };
     }
 
     pub fn toAsciiUppercase(): TinyAsciiStr4 {
-        let b: [4]u8 = [0; 4];
+        let b: [4]u8 = undefined;
         let i: usize = 0;
         while (i < 4) {
-            b[i] = tsToUpperByte(_.bytes[i]);
+            b[i] = toUpperByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr4 { bytes: b };
     }
 
     pub fn toAsciiTitlecase(): TinyAsciiStr4 {
-        let b: [4]u8 = [0; 4];
-        b[0] = tsToUpperByte(_.bytes[0]);
+        let b: [4]u8 = undefined;
+        b[0] = toUpperByte(_.bytes[0]);
         let i: usize = 1;
         while (i < 4) {
-            b[i] = tsToLowerByte(_.bytes[i]);
+            b[i] = toLowerByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr4 { bytes: b };
@@ -419,7 +367,7 @@ pub struct TinyAsciiStr8 {
     }
 
     pub fn eq(other: TinyAsciiStr8): bool {
-        return tsSliceEq(_.bytes[0..8], other.bytes[0..8]);
+        return bytesEq(_.bytes[0..8], other.bytes[0..8]);
     }
 
     pub fn cmp(other: TinyAsciiStr8): i32 {
@@ -427,35 +375,35 @@ pub struct TinyAsciiStr8 {
     }
 
     pub fn eqIgnoreAsciiCase(other: TinyAsciiStr8): bool {
-        return tsSliceEqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+        return eqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
     }
 
     pub fn toAsciiLowercase(): TinyAsciiStr8 {
-        let b: [8]u8 = [0; 8];
+        let b: [8]u8 = undefined;
         let i: usize = 0;
         while (i < 8) {
-            b[i] = tsToLowerByte(_.bytes[i]);
+            b[i] = toLowerByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr8 { bytes: b };
     }
 
     pub fn toAsciiUppercase(): TinyAsciiStr8 {
-        let b: [8]u8 = [0; 8];
+        let b: [8]u8 = undefined;
         let i: usize = 0;
         while (i < 8) {
-            b[i] = tsToUpperByte(_.bytes[i]);
+            b[i] = toUpperByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr8 { bytes: b };
     }
 
     pub fn toAsciiTitlecase(): TinyAsciiStr8 {
-        let b: [8]u8 = [0; 8];
-        b[0] = tsToUpperByte(_.bytes[0]);
+        let b: [8]u8 = undefined;
+        b[0] = toUpperByte(_.bytes[0]);
         let i: usize = 1;
         while (i < 8) {
-            b[i] = tsToLowerByte(_.bytes[i]);
+            b[i] = toLowerByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr8 { bytes: b };
@@ -534,7 +482,7 @@ pub struct TinyAsciiStr16 {
     }
 
     pub fn eq(other: TinyAsciiStr16): bool {
-        return tsSliceEq(_.bytes[0..16], other.bytes[0..16]);
+        return bytesEq(_.bytes[0..16], other.bytes[0..16]);
     }
 
     pub fn cmp(other: TinyAsciiStr16): i32 {
@@ -542,35 +490,35 @@ pub struct TinyAsciiStr16 {
     }
 
     pub fn eqIgnoreAsciiCase(other: TinyAsciiStr16): bool {
-        return tsSliceEqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
+        return eqIgnoreCase(_.bytes[0.._.len()], other.bytes[0..other.len()]);
     }
 
     pub fn toAsciiLowercase(): TinyAsciiStr16 {
-        let b: [16]u8 = [0; 16];
+        let b: [16]u8 = undefined;
         let i: usize = 0;
         while (i < 16) {
-            b[i] = tsToLowerByte(_.bytes[i]);
+            b[i] = toLowerByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr16 { bytes: b };
     }
 
     pub fn toAsciiUppercase(): TinyAsciiStr16 {
-        let b: [16]u8 = [0; 16];
+        let b: [16]u8 = undefined;
         let i: usize = 0;
         while (i < 16) {
-            b[i] = tsToUpperByte(_.bytes[i]);
+            b[i] = toUpperByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr16 { bytes: b };
     }
 
     pub fn toAsciiTitlecase(): TinyAsciiStr16 {
-        let b: [16]u8 = [0; 16];
-        b[0] = tsToUpperByte(_.bytes[0]);
+        let b: [16]u8 = undefined;
+        b[0] = toUpperByte(_.bytes[0]);
         let i: usize = 1;
         while (i < 16) {
-            b[i] = tsToLowerByte(_.bytes[i]);
+            b[i] = toLowerByte(_.bytes[i]);
             i = i + 1;
         }
         return TinyAsciiStr16 { bytes: b };

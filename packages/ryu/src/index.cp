@@ -173,14 +173,14 @@ fn ryuPushByte(dst: []u8, pos: *usize, b: u8): bool {
 }
 
 fn ryuRenderDecimal(neg: bool, dec_val: RyuDecimal, out: []u8): usize {
-    let tmp: [48]u8 = [0; 48];
+    let tmp: [48]u8 = undefined;
     let pos: usize = 0;
 
     if (neg) {
         * = ryuPushByte(tmp[0..48], &pos, 0x2D); // '-'
     }
 
-    let dbuf: [24]u8 = [0; 24];
+    let dbuf: [24]u8 = undefined;
     let nd = formatU64(dec_val.sig, dbuf[0..24]);
     let d = dec_val.exp10_msb;
 
@@ -199,7 +199,7 @@ fn ryuRenderDecimal(neg: bool, dec_val: RyuDecimal, out: []u8): usize {
         } else {
             abs_e = d as u64;
         }
-        let ebuf: [16]u8 = [0; 16];
+        let ebuf: [16]u8 = undefined;
         let en = formatU64(abs_e, ebuf[0..16]);
         * = ryuCopySlice(tmp[0..48], &pos, ebuf[0..en]);
     } else if (d >= 0) {
@@ -377,7 +377,7 @@ pub fn formatFixedF64(val: f64, decimals: u8, out: []u8): usize {
     }
     let dec_places: u8 = if (decimals > 12) { 12 } else { decimals };
     let neg = std.math.signbit(val);
-    let tmp: [64]u8 = [0; 64];
+    let tmp: [64]u8 = undefined;
     let pos: usize = 0;
 
     if (val == 0.0) {
@@ -401,7 +401,7 @@ pub fn formatFixedF64(val: f64, decimals: u8, out: []u8): usize {
 
     let abs_val = if (neg) { -val } else { val };
     let dec_val = ryuExtractShortestF64(abs_val);
-    let dbuf: [24]u8 = [0; 24];
+    let dbuf: [24]u8 = undefined;
     let nd = formatU64(dec_val.sig, dbuf[0..24]);
     let d = dec_val.exp10_msb;
 
@@ -441,7 +441,7 @@ pub fn formatFixedF64(val: f64, decimals: u8, out: []u8): usize {
     }
 
     let keep: usize = total_needed_i32 as usize;
-    let rounded: [48]u8 = [0; 48];
+    let rounded: [48]u8 = undefined;
     let carry = ryuRoundAsciiDigits(dbuf[0..nd], keep, rounded[0..48]);
 
     let int_count: i32 = d + 1 + (if (carry) { 1 as i32 } else { 0 as i32 });
@@ -497,7 +497,7 @@ pub fn formatExpF64(val: f64, precision: u8, out: []u8): usize {
     }
     let prec: u8 = if (precision > 16) { 16 } else { precision };
     let neg = std.math.signbit(val);
-    let tmp: [48]u8 = [0; 48];
+    let tmp: [48]u8 = undefined;
     let pos: usize = 0;
 
     if (neg) {
@@ -523,12 +523,12 @@ pub fn formatExpF64(val: f64, precision: u8, out: []u8): usize {
 
     let abs_val = if (neg) { -val } else { val };
     let dec_val = ryuExtractShortestF64(abs_val);
-    let dbuf: [24]u8 = [0; 24];
+    let dbuf: [24]u8 = undefined;
     let nd = formatU64(dec_val.sig, dbuf[0..24]);
     let exp = dec_val.exp10_msb;
 
     let keep: usize = (prec as usize) + 1;
-    let rounded: [24]u8 = [0; 24];
+    let rounded: [24]u8 = undefined;
     let carry = ryuRoundAsciiDigits(dbuf[0..nd], keep, rounded[0..24]);
     let final_exp = if (carry) { exp + 1 } else { exp };
 
@@ -554,7 +554,7 @@ pub fn formatExpF64(val: f64, precision: u8, out: []u8): usize {
     } else {
         abs_e = final_exp as u64;
     }
-    let ebuf: [16]u8 = [0; 16];
+    let ebuf: [16]u8 = undefined;
     let en = formatU64(abs_e, ebuf[0..16]);
     * = ryuCopySlice(tmp[0..48], &pos, ebuf[0..en]);
 

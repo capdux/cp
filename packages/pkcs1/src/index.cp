@@ -9,6 +9,7 @@
 import { TAG_INTEGER, DerReader, DerWriter } from "../../der/src/index.cp";
 import { encodePem, decodePem } from "../../pem-rfc7468/src/index.cp";
 import { zeroizeBytes } from "../../subtle/src/index.cp";
+import { bytesEq } from "cap:bin";
 
 pub const PK1_MAX_MODULUS_LEN: usize = 512;
 pub const PK1_MAX_PRIME_LEN: usize = 256;
@@ -28,20 +29,6 @@ pub const PK1_ERR_TRAILING_DATA: i64 = -7;
 pub const PK1_ERR_INVALID_PEM: i64 = -8;
 pub const PK1_ERR_INVALID_PEM_LABEL: i64 = -9;
 
-fn pk1StrEqBytes(s: string, b: []const u8): bool {
-    if (s.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn pk1WriteBigUint(w: *DerWriter, raw: []const u8): bool {
     // Strip leading zeros to obtain minimal unsigned magnitude
     let start: usize = 0;
@@ -58,7 +45,7 @@ fn pk1WriteBigUint(w: *DerWriter, raw: []const u8): bool {
     }
     // Prepend 0x00 if MSB has bit 7 set (sign-bit protection per X.690 §8.3)
     if ((raw[start] & (0x80 as u8)) != 0) {
-        let tmp: [513]u8 = [0; 513];
+        let tmp: [513]u8 = undefined;
         tmp[0] = 0 as u8;
         let i: usize = 0;
         while (i < mag_len) {
@@ -268,7 +255,7 @@ pub fn encodeRsaPublicKeyDer(pub_key: RsaPublicKey, out: []u8): i64 {
     if (pub_key.n_len == 0 || pub_key.n_len > PK1_MAX_MODULUS_LEN) {
         return PK1_ERR_KEY_TOO_LONG;
     }
-    let body_buf: [560]u8 = [0; 560];
+    let body_buf: [560]u8 = undefined;
     let body_w = DerWriter.new(body_buf[0..560]);
     if (!pk1WriteBigUint(&body_w, pub_key.n[0..pub_key.n_len])) {
         return PK1_ERR_BUFFER_TOO_SMALL;
@@ -286,28 +273,27 @@ pub fn encodeRsaPublicKeyDer(pub_key: RsaPublicKey, out: []u8): i64 {
 
 /// Decodes an RFC 8017 DER `RSAPublicKey` via `@cap/der-asn1`.
 pub fn decodeRsaPublicKeyDer(der: []const u8): RsaPublicKeyResult {
-    const empty = RsaPublicKey.empty();
     let outer_r = DerReader.new(der);
     const seq = outer_r.readSequence();
     if (!seq.ok) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_DER };
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: PK1_ERR_INVALID_DER };
     }
     if (!outer_r.isEmpty()) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: PK1_ERR_TRAILING_DATA };
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: PK1_ERR_TRAILING_DATA };
     }
 
     let sub = seq.reader;
     let key = RsaPublicKey.empty();
     const n_err = pk1ReadBigUint(&sub, key.n[0..PK1_MAX_MODULUS_LEN], &key.n_len);
     if (n_err != PK1_OK) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: n_err };
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: n_err };
     }
     const e_res = sub.readU64();
     if (!e_res.ok) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_INTEGER };
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: PK1_ERR_INVALID_INTEGER };
     }
     if (!sub.isEmpty()) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: PK1_ERR_TRAILING_DATA };
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: PK1_ERR_TRAILING_DATA };
     }
     key.e = e_res.value;
     return RsaPublicKeyResult { ok: true, key: key, err: PK1_OK };
@@ -315,7 +301,7 @@ pub fn decodeRsaPublicKeyDer(der: []const u8): RsaPublicKeyResult {
 
 /// Encodes an `RSAPublicKey` into RFC 7468 PEM (`-----BEGIN RSA PUBLIC KEY-----`).
 pub fn encodeRsaPublicKeyPem(pub_key: RsaPublicKey, crlf: bool, out: []u8): i64 {
-    let der_buf: [600]u8 = [0; 600];
+    let der_buf: [600]u8 = undefined;
     const dlen = encodeRsaPublicKeyDer(pub_key, der_buf[0..600]);
     if (dlen < 0) {
         return dlen;
@@ -326,17 +312,16 @@ pub fn encodeRsaPublicKeyPem(pub_key: RsaPublicKey, crlf: bool, out: []u8): i64 
 /// Decodes an RFC 7468 PEM `RSA PUBLIC KEY` block into `RsaPublicKey`.
 /// Strictly verifies that the PEM label is `"RSA PUBLIC KEY"`.
 pub fn decodeRsaPublicKeyPem(pem: string): RsaPublicKeyResult {
-    const empty = RsaPublicKey.empty();
-    let label_buf: [64]u8 = [0; 64];
+    let label_buf: [64]u8 = undefined;
     let label_len: usize = 0;
-    let der_buf: [600]u8 = [0; 600];
+    let der_buf: [600]u8 = undefined;
 
     const dlen = decodePem(pem, label_buf[0..64], &label_len, der_buf[0..600]);
     if (dlen < 0) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_PEM };
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: PK1_ERR_INVALID_PEM };
     }
-    if (!pk1StrEqBytes(PK1_PEM_PUBLIC_LABEL, label_buf[0..label_len])) {
-        return RsaPublicKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_PEM_LABEL };
+    if (!bytesEq(PK1_PEM_PUBLIC_LABEL, label_buf[0..label_len])) {
+        return RsaPublicKeyResult { ok: false, key: RsaPublicKey.empty(), err: PK1_ERR_INVALID_PEM_LABEL };
     }
     return decodeRsaPublicKeyDer(der_buf[0..(dlen as usize)]);
 }
@@ -357,7 +342,7 @@ pub fn encodeRsaPrivateKeyDer(priv_key: RsaPrivateKey, out: []u8): i64 {
         return PK1_ERR_KEY_TOO_LONG;
     }
 
-    let body_buf: [2560]u8 = [0; 2560];
+    let body_buf: [2560]u8 = undefined;
     let bw = DerWriter.new(body_buf[0..2560]);
 
     let ok = bw.writeU64(priv_key.version as u64)
@@ -386,20 +371,19 @@ pub fn encodeRsaPrivateKeyDer(priv_key: RsaPrivateKey, out: []u8): i64 {
 
 /// Decodes an RFC 8017 DER two-prime `RSAPrivateKey` (9 fields) via `@cap/der-asn1`.
 pub fn decodeRsaPrivateKeyDer(der: []const u8): RsaPrivateKeyResult {
-    const empty = RsaPrivateKey.empty();
     let outer_r = DerReader.new(der);
     const seq = outer_r.readSequence();
     if (!seq.ok) {
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_DER };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_INVALID_DER };
     }
     if (!outer_r.isEmpty()) {
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_TRAILING_DATA };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_TRAILING_DATA };
     }
 
     let sub = seq.reader;
     const ver_res = sub.readU64();
     if (!ver_res.ok || ver_res.value != (PK1_VERSION_TWO_PRIME as u64)) {
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_VERSION };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_INVALID_VERSION };
     }
 
     let key = RsaPrivateKey.empty();
@@ -408,55 +392,55 @@ pub fn decodeRsaPrivateKeyDer(der: []const u8): RsaPrivateKeyResult {
     const e_n = pk1ReadBigUint(&sub, key.n[0..PK1_MAX_MODULUS_LEN], &key.n_len);
     if (e_n != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_n };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_n };
     }
     const e_res = sub.readU64();
     if (!e_res.ok) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_INTEGER };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_INVALID_INTEGER };
     }
     key.e = e_res.value;
 
     const e_d = pk1ReadBigUint(&sub, key.d[0..PK1_MAX_MODULUS_LEN], &key.d_len);
     if (e_d != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_d };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_d };
     }
     const e_p = pk1ReadBigUint(&sub, key.p[0..PK1_MAX_PRIME_LEN], &key.p_len);
     if (e_p != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_p };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_p };
     }
     const e_q = pk1ReadBigUint(&sub, key.q[0..PK1_MAX_PRIME_LEN], &key.q_len);
     if (e_q != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_q };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_q };
     }
     const e_dp = pk1ReadBigUint(&sub, key.dp[0..PK1_MAX_PRIME_LEN], &key.dp_len);
     if (e_dp != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_dp };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_dp };
     }
     const e_dq = pk1ReadBigUint(&sub, key.dq[0..PK1_MAX_PRIME_LEN], &key.dq_len);
     if (e_dq != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_dq };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_dq };
     }
     const e_qi = pk1ReadBigUint(&sub, key.qinv[0..PK1_MAX_PRIME_LEN], &key.qinv_len);
     if (e_qi != PK1_OK) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: e_qi };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: e_qi };
     }
     if (!sub.isEmpty()) {
         key.zeroize();
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_TRAILING_DATA };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_TRAILING_DATA };
     }
     return RsaPrivateKeyResult { ok: true, key: key, err: PK1_OK };
 }
 
 /// Encodes an `RSAPrivateKey` into RFC 7468 PEM (`-----BEGIN RSA PRIVATE KEY-----`).
 pub fn encodeRsaPrivateKeyPem(priv_key: RsaPrivateKey, crlf: bool, out: []u8): i64 {
-    let der_buf: [2600]u8 = [0; 2600];
+    let der_buf: [2600]u8 = undefined;
     const dlen = encodeRsaPrivateKeyDer(priv_key, der_buf[0..2600]);
     if (dlen < 0) {
         zeroizeBytes(der_buf[0..2600]);
@@ -470,19 +454,18 @@ pub fn encodeRsaPrivateKeyPem(priv_key: RsaPrivateKey, crlf: bool, out: []u8): i
 /// Decodes an RFC 7468 PEM `RSA PRIVATE KEY` block into `RsaPrivateKey`.
 /// Strictly verifies that the PEM label is `"RSA PRIVATE KEY"`.
 pub fn decodeRsaPrivateKeyPem(pem: string): RsaPrivateKeyResult {
-    const empty = RsaPrivateKey.empty();
-    let label_buf: [64]u8 = [0; 64];
+    let label_buf: [64]u8 = undefined;
     let label_len: usize = 0;
-    let der_buf: [2600]u8 = [0; 2600];
+    let der_buf: [2600]u8 = undefined;
 
     const dlen = decodePem(pem, label_buf[0..64], &label_len, der_buf[0..2600]);
     if (dlen < 0) {
         zeroizeBytes(der_buf[0..2600]);
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_PEM };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_INVALID_PEM };
     }
-    if (!pk1StrEqBytes(PK1_PEM_PRIVATE_LABEL, label_buf[0..label_len])) {
+    if (!bytesEq(PK1_PEM_PRIVATE_LABEL, label_buf[0..label_len])) {
         zeroizeBytes(der_buf[0..2600]);
-        return RsaPrivateKeyResult { ok: false, key: empty, err: PK1_ERR_INVALID_PEM_LABEL };
+        return RsaPrivateKeyResult { ok: false, key: RsaPrivateKey.empty(), err: PK1_ERR_INVALID_PEM_LABEL };
     }
     const res = decodeRsaPrivateKeyDer(der_buf[0..(dlen as usize)]);
     zeroizeBytes(der_buf[0..2600]);

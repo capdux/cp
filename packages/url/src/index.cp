@@ -11,44 +11,11 @@ import {
     percentDecode
 } from "../../percent-encoding/src/index.cp";
 import { domainToAscii } from "../../idna/src/index.cp";
-
-fn wuToLowerAscii(ch: u8): u8 {
-    if (ch >= 65 && ch <= 90) {
-        return ch + 32;
-    }
-    return ch;
-}
-
-fn wuIsAlpha(ch: u8): bool {
-    return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
-}
-
-fn wuIsDigit(ch: u8): bool {
-    return ch >= 48 && ch <= 57;
-}
-
-fn wuIsHexDigit(ch: u8): bool {
-    return (ch >= 48 && ch <= 57)
-        || (ch >= 65 && ch <= 70)
-        || (ch >= 97 && ch <= 102);
-}
+import { toLowerByte, isAlpha, isDigit, isHexDigit } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 
 fn wuIsSchemeChar(ch: u8): bool {
-    return wuIsAlpha(ch) || wuIsDigit(ch) || ch == 0x2B || ch == 0x2D || ch == 0x2E;
-}
-
-fn wuSliceEq(a: []const u8, b: []const u8): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+    return isAlpha(ch) || isDigit(ch) || ch == 0x2B || ch == 0x2D || ch == 0x2E;
 }
 
 fn wuAppendBytes(out: []u8, pos: *usize, src: []const u8): bool {
@@ -74,7 +41,7 @@ fn wuAppendByte(out: []u8, pos: *usize, b: u8): bool {
 }
 
 fn wuAppendPort(out: []u8, pos: *usize, port: i32): bool {
-    let tmp: [8]u8 = [0; 8];
+    let tmp: [8]u8 = undefined;
     let n: usize = 0;
     let v: u32 = port as u32;
     if (v == 0) {
@@ -95,20 +62,20 @@ fn wuAppendPort(out: []u8, pos: *usize, port: i32): bool {
 }
 
 fn wuIsSpecialScheme(scheme: []const u8): bool {
-    return wuSliceEq(scheme, "http")
-        || wuSliceEq(scheme, "https")
-        || wuSliceEq(scheme, "ws")
-        || wuSliceEq(scheme, "wss")
-        || wuSliceEq(scheme, "ftp")
-        || wuSliceEq(scheme, "file");
+    return bytesEq(scheme, "http")
+        || bytesEq(scheme, "https")
+        || bytesEq(scheme, "ws")
+        || bytesEq(scheme, "wss")
+        || bytesEq(scheme, "ftp")
+        || bytesEq(scheme, "file");
 }
 
 fn wuIsOriginScheme(scheme: []const u8): bool {
-    return wuSliceEq(scheme, "http")
-        || wuSliceEq(scheme, "https")
-        || wuSliceEq(scheme, "ws")
-        || wuSliceEq(scheme, "wss")
-        || wuSliceEq(scheme, "ftp");
+    return bytesEq(scheme, "http")
+        || bytesEq(scheme, "https")
+        || bytesEq(scheme, "ws")
+        || bytesEq(scheme, "wss")
+        || bytesEq(scheme, "ftp");
 }
 
 fn wuIsForbiddenHostByte(b: u8): bool {
@@ -169,7 +136,7 @@ fn wuTrimBounds(input: string, out_start: *usize, out_end: *usize) {
 /// Checks if `s` starts with a valid URL scheme followed by ':'.
 /// Returns index of ':' if valid, or -1 otherwise.
 fn wuFindSchemeColon(s: []const u8): i64 {
-    if (s.len < 2 || !wuIsAlpha(s[0])) {
+    if (s.len < 2 || !isAlpha(s[0])) {
         return -1;
     }
     let i: usize = 1;
@@ -190,10 +157,10 @@ fn wuFindSchemeColon(s: []const u8): i64 {
 /// percent-encodes segments with WHATWG `pathSet()`.
 fn wuNormalizePath(raw: []const u8, is_special: bool, out: []u8): usize {
     let pset = pathSet();
-    let seg_starts: [64]usize = [0; 64];
-    let seg_lens: [64]usize = [0; 64];
+    let seg_starts: [64]usize = undefined;
+    let seg_lens: [64]usize = undefined;
     let seg_count: usize = 0;
-    let enc_pool: [512]u8 = [0; 512];
+    let enc_pool: [512]u8 = undefined;
     let pool_pos: usize = 0;
 
     let i: usize = 0;
@@ -271,7 +238,7 @@ fn wuParsePortStr(port_str: []const u8): i32 {
     let i: usize = 0;
     while (i < port_str.len) {
         let ch = port_str[i];
-        if (!wuIsDigit(ch)) {
+        if (!isDigit(ch)) {
             return -2;
         }
         val = val * 10 + ((ch - 48) as u32);
@@ -298,8 +265,8 @@ fn wuParseIpv6Host(inner: []const u8, out: []u8): i64 {
         if (ch == 0x3A) { // ':'
             has_colon = true;
             out[pos] = ch;
-        } else if (wuIsHexDigit(ch)) {
-            out[pos] = wuToLowerAscii(ch);
+        } else if (isHexDigit(ch)) {
+            out[pos] = toLowerByte(ch);
         } else if (ch == 0x2E) { // '.' (IPv4-mapped IPv6)
             out[pos] = ch;
         } else {
@@ -318,13 +285,13 @@ fn wuParseIpv6Host(inner: []const u8, out: []u8): i64 {
 
 /// Returns the WHATWG default port for `scheme`, or -1 if none.
 pub fn defaultPortForScheme(scheme: string): i32 {
-    if (wuSliceEq(scheme, "http") || wuSliceEq(scheme, "ws")) {
+    if (bytesEq(scheme, "http") || bytesEq(scheme, "ws")) {
         return 80;
     }
-    if (wuSliceEq(scheme, "https") || wuSliceEq(scheme, "wss")) {
+    if (bytesEq(scheme, "https") || bytesEq(scheme, "wss")) {
         return 443;
     }
-    if (wuSliceEq(scheme, "ftp")) {
+    if (bytesEq(scheme, "ftp")) {
         return 21;
     }
     return -1;
@@ -354,20 +321,20 @@ pub struct WhatwgUrl {
 
     pub static fn invalid(): WhatwgUrl {
         return WhatwgUrl {
-            scheme: [0; 32],
+            scheme: undefined,
             scheme_len: 0,
-            username: [0; 128],
+            username: undefined,
             username_len: 0,
-            password: [0; 128],
+            password: undefined,
             password_len: 0,
-            host: [0; 256],
+            host: undefined,
             host_len: 0,
             port: -1,
-            path: [0; 512],
+            path: undefined,
             path_len: 0,
-            query: [0; 512],
+            query: undefined,
             query_len: 0,
-            fragment: [0; 256],
+            fragment: undefined,
             fragment_len: 0,
             has_authority: false,
             has_query: false,
@@ -433,14 +400,14 @@ pub struct WhatwgUrl {
         }
         let si: usize = 0;
         while (si < colon_idx) {
-            url.scheme[si] = wuToLowerAscii(s[si]);
+            url.scheme[si] = toLowerByte(s[si]);
             si = si + 1;
         }
         url.scheme_len = colon_idx;
 
         let scheme_slice = url.scheme[0..url.scheme_len];
         let is_special = wuIsSpecialScheme(scheme_slice);
-        let is_file = wuSliceEq(scheme_slice, "file");
+        let is_file = bytesEq(scheme_slice, "file");
         let rest = s[(colon_idx + 1)..s.len];
 
         // 2. Authority
@@ -560,7 +527,7 @@ pub struct WhatwgUrl {
                         fi = fi + 1;
                     }
                     // Percent-decode host via @cap/percent-encoding, then IDNA UTS #46 via @cap/idna-uts46
-                    let dec_host: [256]u8 = [0; 256];
+                    let dec_host: [256]u8 = undefined;
                     let dec_len = percentDecode(raw_host, dec_host[0..256]);
                     let di: usize = 0;
                     while (di < dec_len) {
@@ -664,7 +631,7 @@ pub struct WhatwgUrl {
 
         // Protocol-relative URL (//host/path...)
         if (r.len >= 2 && r[0] == 0x2F && r[1] == 0x2F) {
-            let buf: [1024]u8 = [0; 1024];
+            let buf: [1024]u8 = undefined;
             let pos: usize = 0;
             if (!wuAppendBytes(buf[0..1024], &pos, base.scheme[0..base.scheme_len])) {
                 return WhatwgUrl.invalid();
@@ -761,7 +728,7 @@ pub struct WhatwgUrl {
         }
 
         // Merge relative path with base directory
-        let merged: [1024]u8 = [0; 1024];
+        let merged: [1024]u8 = undefined;
         let mpos: usize = 0;
         let last_slash: i64 = -1;
         let bi: usize = 0;

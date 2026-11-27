@@ -7,6 +7,8 @@ import {
     decodeLabel,
     decodePem,
 } from "../../pem-rfc7468/src/index.cp";
+import { isDigit, isAlpha, hexVal, eqIgnoreCase, toLower } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 
 // --- Status & Error Codes ---
 pub const PKI_OK: i64 = 0;
@@ -33,73 +35,34 @@ pub const PEM_CSR: u8 = 7;
 
 // --- Private Helper Functions (pki-prefixed to avoid Zig flattening collisions) ---
 
-fn pkiToLowerAscii(ch: u8): u8 {
-    if (ch >= ('A' as u8) && ch <= ('Z' as u8)) {
-        return ch + (32 as u8);
-    }
-    return ch;
-}
-
-fn pkiIsAsciiDigit(ch: u8): bool {
-    return ch >= ('0' as u8) && ch <= ('9' as u8);
-}
-
-fn pkiIsAsciiAlpha(ch: u8): bool {
-    return (ch >= ('a' as u8) && ch <= ('z' as u8))
-        || (ch >= ('A' as u8) && ch <= ('Z' as u8));
-}
-
 fn pkiIsDnsChar(ch: u8): bool {
-    return pkiIsAsciiAlpha(ch) || pkiIsAsciiDigit(ch) || ch == ('-' as u8);
+    return isAlpha(ch) || isDigit(ch) || ch == ('-' as u8);
 }
 
-fn pkiHexVal(ch: u8): i32 {
-    if (ch >= ('0' as u8) && ch <= ('9' as u8)) {
-        return (ch - ('0' as u8)) as i32;
-    }
-    if (ch >= ('a' as u8) && ch <= ('f' as u8)) {
-        return ((ch - ('a' as u8)) + (10 as u8)) as i32;
-    }
-    if (ch >= ('A' as u8) && ch <= ('F' as u8)) {
-        return ((ch - ('A' as u8)) + (10 as u8)) as i32;
-    }
-    return -1;
-}
-
-fn pkiBytesEqStr(buf: []const u8, expected: string): bool {
-    if (buf.len != expected.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < buf.len) {
-        if (buf[i] != expected[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
+fn pkiEqIgnoreCase(a: string, b: string): bool {
+    return eqIgnoreCase(a, b);
 }
 
 fn pkiClassifyPemLabel(label: []const u8): u8 {
-    if (pkiBytesEqStr(label, "CERTIFICATE")) {
+    if (bytesEq(label, "CERTIFICATE")) {
         return PEM_CERTIFICATE;
     }
-    if (pkiBytesEqStr(label, "PRIVATE KEY")) {
+    if (bytesEq(label, "PRIVATE KEY")) {
         return PEM_PKCS8_KEY;
     }
-    if (pkiBytesEqStr(label, "RSA PRIVATE KEY")) {
+    if (bytesEq(label, "RSA PRIVATE KEY")) {
         return PEM_PKCS1_KEY;
     }
-    if (pkiBytesEqStr(label, "EC PRIVATE KEY")) {
+    if (bytesEq(label, "EC PRIVATE KEY")) {
         return PEM_SEC1_KEY;
     }
-    if (pkiBytesEqStr(label, "PUBLIC KEY")) {
+    if (bytesEq(label, "PUBLIC KEY")) {
         return PEM_PUBLIC_KEY;
     }
-    if (pkiBytesEqStr(label, "X509 CRL")) {
+    if (bytesEq(label, "X509 CRL")) {
         return PEM_CRL;
     }
-    if (pkiBytesEqStr(label, "CERTIFICATE REQUEST")) {
+    if (bytesEq(label, "CERTIFICATE REQUEST")) {
         return PEM_CSR;
     }
     return PEM_UNKNOWN;
@@ -109,7 +72,7 @@ fn pkiParseIpv4Slice(s: string, start: usize, end: usize, out: *[4]u8): bool {
     if (start >= end) {
         return false;
     }
-    let octets: [4]u8 = [0; 4];
+    let octets: [4]u8 = undefined;
     let octet_idx: usize = 0;
     let pos: usize = start;
 
@@ -120,7 +83,7 @@ fn pkiParseIpv4Slice(s: string, start: usize, end: usize, out: *[4]u8): bool {
         let val: u32 = 0;
         let digits: usize = 0;
         const first_ch = s[pos];
-        while (pos < end && pkiIsAsciiDigit(s[pos])) {
+        while (pos < end && isDigit(s[pos])) {
             if (digits >= (3 as usize)) {
                 return false;
             }
@@ -180,9 +143,9 @@ fn pkiParseIpv6Slice(input: string, out: *[16]u8): bool {
         return false;
     }
 
-    let head: [8]u16 = [0; 8];
+    let head: [8]u16 = undefined;
     let head_len: usize = 0;
-    let tail: [8]u16 = [0; 8];
+    let tail: [8]u16 = undefined;
     let tail_len: usize = 0;
     let seen_compress = false;
     let pos: usize = start;
@@ -218,7 +181,7 @@ fn pkiParseIpv6Slice(input: string, out: *[16]u8): bool {
         }
 
         if (has_dot) {
-            let v4: [4]u8 = [0; 4];
+            let v4: [4]u8 = undefined;
             if (!pkiParseIpv4Slice(input, pos, end, &v4)) {
                 return false;
             }
@@ -247,13 +210,16 @@ fn pkiParseIpv6Slice(input: string, out: *[16]u8): bool {
         let group: u16 = 0;
         let digits: usize = 0;
         while (pos < end && input[pos] != (':' as u8)) {
-            const hv = pkiHexVal(input[pos]);
-            if (hv < 0 || digits >= (4 as usize)) {
+            if (hv := hexVal(input[pos])) {
+                if (digits >= (4 as usize)) {
+                    return false;
+                }
+                group = (group << 4) | (hv as u16);
+                digits = digits + 1;
+                pos = pos + 1;
+            } else {
                 return false;
             }
-            group = (group << 4) | (hv as u16);
-            digits = digits + 1;
-            pos = pos + 1;
         }
         if (digits == 0) {
             return false;
@@ -370,7 +336,7 @@ pub struct DnsName {
             return DnsName.invalid();
         }
 
-        let out_buf: [253]u8 = [0; 253];
+        let out_buf: [253]u8 = undefined;
         let label_len: usize = 0;
         let label_all_digits = true;
         let last_ch: u8 = 0;
@@ -396,7 +362,7 @@ pub struct DnsName {
                 if (label_len > (63 as usize)) {
                     return DnsName.invalid();
                 }
-                if (!pkiIsAsciiDigit(ch)) {
+                if (!isDigit(ch)) {
                     label_all_digits = false;
                 }
                 last_ch = ch;
@@ -422,17 +388,10 @@ pub struct DnsName {
     }
 
     pub fn eqIgnoreCase(other: DnsName): bool {
-        if (!_.valid || !other.valid || _.len != other.len) {
+        if (!_.valid || !other.valid) {
             return false;
         }
-        let i: usize = 0;
-        while (i < _.len) {
-            if (pkiToLowerAscii(_.buf[i]) != pkiToLowerAscii(other.buf[i])) {
-                return false;
-            }
-            i = i + 1;
-        }
-        return true;
+        return pkiEqIgnoreCase(_.buf[0.._.len], other.buf[0..other.len]);
     }
 
     pub fn eqIgnoreCaseStr(other: string): bool {
@@ -468,14 +427,7 @@ pub struct DnsName {
         if (_.buf[offset - 1] != ('.' as u8)) {
             return false;
         }
-        let i: usize = 0;
-        while (i < parent.len) {
-            if (pkiToLowerAscii(_.buf[offset + i]) != pkiToLowerAscii(parent.buf[i])) {
-                return false;
-            }
-            i = i + 1;
-        }
-        return true;
+        return pkiEqIgnoreCase(_.buf[offset.._.len], parent.buf[0..parent.len]);
     }
 
     /// Writes the canonical ASCII-lowercased DNS name into `out`.
@@ -484,12 +436,7 @@ pub struct DnsName {
         if (!_.valid || out.len < _.len) {
             return 0;
         }
-        let i: usize = 0;
-        while (i < _.len) {
-            out[i] = pkiToLowerAscii(_.buf[i]);
-            i = i + 1;
-        }
-        return _.len;
+        return toLower(_.buf[0.._.len], out);
     }
 }
 
@@ -554,11 +501,11 @@ pub struct ServerName {
         if (input.len == 0) {
             return ServerName.invalid();
         }
-        let v4: [4]u8 = [0; 4];
+        let v4: [4]u8 = undefined;
         if (pkiParseIpv4Slice(input, 0, input.len, &v4)) {
             return ServerName.fromIpv4(v4);
         }
-        let v6: [16]u8 = [0; 16];
+        let v6: [16]u8 = undefined;
         if (pkiParseIpv6Slice(input, &v6)) {
             return ServerName.fromIpv6(v6);
         }
@@ -669,7 +616,7 @@ pub struct PkiPemResult {
 /// `PEM_SEC1_KEY`, `PEM_PUBLIC_KEY`, `PEM_CRL`, `PEM_CSR`, or `PEM_UNKNOWN`)
 /// by delegating header label extraction to `@cap/pem-rfc7468::decodeLabel`.
 pub fn detectPemKind(pem: string): u8 {
-    let label_buf: [64]u8 = [0; 64];
+    let label_buf: [64]u8 = undefined;
     const n = decodeLabel(pem, label_buf[0..64]);
     if (n <= 0) {
         return PEM_UNKNOWN;
@@ -680,7 +627,7 @@ pub fn detectPemKind(pem: string): u8 {
 /// Decodes a PEM-encoded PKI object (Certificate, PKCS#8/PKCS#1/SEC1 private key,
 /// SPKI public key, CRL, or CSR) into `der_out` by delegating to `@cap/pem-rfc7468::decodePem`.
 pub fn decodePemDer(pem: string, der_out: []u8): PkiPemResult {
-    let label_buf: [64]u8 = [0; 64];
+    let label_buf: [64]u8 = undefined;
     let label_len: usize = 0;
     const decoded_len = decodePem(pem, label_buf[0..64], &label_len, der_out);
     if (decoded_len < 0) {

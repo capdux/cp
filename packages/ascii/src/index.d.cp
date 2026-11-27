@@ -1,7 +1,6 @@
 // Type definitions for CP
 
-export fn isAscii(s: &[]u8): bool;
-export fn firstNonAscii(s: &[]u8): usize?;
+import { isAscii, firstNonAscii, eqIgnoreCase, toLower, toUpper, trim } from "cap:ascii";
 export fn isAsciiAlpha(b: u8): bool;
 export fn isAsciiDigit(b: u8): bool;
 export fn isAsciiAlphanumeric(b: u8): bool;

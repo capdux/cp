@@ -1,29 +1,8 @@
-// @cap/ascii — Zero-heap ASCII validation, classification & case utilities in pure CP
+// @cap/ascii — Zero-heap 16-lane SIMD ASCII validation, classification & case utilities in pure CP
 // Clean-room MIT implementation of crates.io `ascii` (#844, 137.3M downloads).
+// Directly re-exports 16-lane hardware SIMD primitives from `cap:ascii`.
 
-/// Returns `true` if every byte in `s` is 7-bit ASCII (`<= 0x7F`).
-pub fn isAscii(s: []const u8): bool {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] > 0x7F) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-
-/// Returns the first non-ASCII byte offset in `s`, or `null` if all bytes are ASCII.
-pub fn firstNonAscii(s: []const u8): usize? {
-    let i: usize = 0;
-    while (i < s.len) {
-        if (s[i] > 0x7F) {
-            return i;
-        }
-        i += 1;
-    }
-    return null;
-}
+import { isAscii, firstNonAscii, eqIgnoreCase, toLower, toUpper, trim } from "cap:ascii";
 
 pub fn isAsciiAlpha(b: u8): bool {
     return (b >= 65 && b <= 90) || (b >= 97 && b <= 122);
@@ -63,56 +42,24 @@ pub fn toAsciiUpperByte(b: u8): u8 {
     return b;
 }
 
-/// ASCII case-insensitive equality check.
+/// ASCII case-insensitive equality check (16-lane SIMD via `cap:ascii`).
 pub fn eqIgnoreAsciiCase(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (toAsciiLowerByte(a[i]) != toAsciiLowerByte(b[i])) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
+    return eqIgnoreCase(a, b);
 }
 
 /// Copies `s` into `out` converting ASCII uppercase letters to lowercase; returns bytes written.
 pub fn toAsciiLower(s: string, out: []u8): usize {
-    let n = s.len;
-    if (n > out.len) { n = out.len; }
-    let i: usize = 0;
-    while (i < n) {
-        out[i] = toAsciiLowerByte(s[i]);
-        i += 1;
-    }
-    return n;
+    return toLower(s, out);
 }
 
 /// Copies `s` into `out` converting ASCII lowercase letters to uppercase; returns bytes written.
 pub fn toAsciiUpper(s: string, out: []u8): usize {
-    let n = s.len;
-    if (n > out.len) { n = out.len; }
-    let i: usize = 0;
-    while (i < n) {
-        out[i] = toAsciiUpperByte(s[i]);
-        i += 1;
-    }
-    return n;
+    return toUpper(s, out);
 }
 
 /// Trims leading and trailing ASCII whitespace bytes from `s` without allocating.
 pub fn trimAscii(s: string): string {
-    let start: usize = 0;
-    let end: usize = s.len;
-    while (start < end && isAsciiWhitespace(s[start])) {
-        start += 1;
-    }
-    while (end > start && isAsciiWhitespace(s[end - 1])) {
-        end -= 1;
-    }
-    return s[start..end];
+    return trim(s);
 }
 
 export {

@@ -1,9 +1,9 @@
 // Type definitions for CP
 
-import { TAG_INTEGER, DerReader, DerWriter } from "../../der-asn1/src/index.cp";
+import { TAG_INTEGER, DerReader, DerWriter } from "../../der/src/index.cp";
 import { encodePem, decodePem } from "../../pem-rfc7468/src/index.cp";
-import { zeroizeBytes } from "../../subtle-ct/src/index.cp";
-export fn pk1StrEqBytes(s: string, b: &[]u8): bool;
+import { zeroizeBytes } from "../../subtle/src/index.cp";
+import { bytesEq } from "cap:bin";
 export fn pk1WriteBigUint(w: &mut DerWriter, raw: &[]u8): bool;
 export fn pk1ReadBigUint(r: &mut DerReader, dst: []u8, len_out: &mut usize): i64;
 export class RsaPublicKey {

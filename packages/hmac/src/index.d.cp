@@ -1,7 +1,7 @@
 // Type definitions for CP
 
 import { Sha256State, sha256Init, sha256Update, sha256Final, sha256, ctEqual } from "../../cookie-signature/src/index.cp";
-export fn hmcHexDigit(n: u8): u8;
+import { hexCharLower } from "cap:ascii";
 export fn encodeHex32(digest: []u8, out64: []u8): usize;
 export class HmacSha256 {
     inner: Sha256State,

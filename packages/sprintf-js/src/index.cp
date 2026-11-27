@@ -1,6 +1,8 @@
 // @cap/sprintf-js — Zero-allocation C-style sprintf formatting engine
 // Inspired by npm:sprintf-js (https://github.com/alexei/sprintf.js)
 
+import { writeStr } from "cap:fmt";
+
 pub enum FmtArgKind {
     Int,
     Uint,
@@ -100,16 +102,6 @@ fn spfPutByte(out: []u8, pos: usize, b: u8): usize {
     return pos;
 }
 
-fn spfPutBytes(out: []u8, pos: usize, s: []const u8): usize {
-    let p: usize = pos;
-    let i: usize = 0;
-    while (i < s.len && p < out.len) : (i += 1) {
-        out[p] = s[i];
-        p += 1;
-    }
-    return p;
-}
-
 fn spfPutRepeat(out: []u8, pos: usize, b: u8, count: usize): usize {
     let p: usize = pos;
     let i: usize = 0;
@@ -138,7 +130,7 @@ fn spfEmitPadded(
         if (sign != 0) {
             p = spfPutByte(out, p, sign);
         }
-        p = spfPutBytes(out, p, body);
+        p = writeStr(body, out, p);
         p = spfPutRepeat(out, p, 0x20, pad);
         return p;
     }
@@ -148,7 +140,7 @@ fn spfEmitPadded(
             p = spfPutByte(out, p, sign);
         }
         p = spfPutRepeat(out, p, 0x30, pad);
-        p = spfPutBytes(out, p, body);
+        p = writeStr(body, out, p);
         return p;
     }
 
@@ -156,13 +148,13 @@ fn spfEmitPadded(
     if (sign != 0) {
         p = spfPutByte(out, p, sign);
     }
-    p = spfPutBytes(out, p, body);
+    p = writeStr(body, out, p);
     return p;
 }
 
 fn spfFormatUintRadix(val: u64, base: u64, upper: bool, buf: []u8): usize {
     const digits: string = if (upper) "0123456789ABCDEF" else "0123456789abcdef";
-    let tmp: [72]u8 = [0; 72];
+    let tmp: [72]u8 = undefined;
     let n: usize = 0;
     let v: u64 = val;
 
@@ -288,19 +280,19 @@ fn spfFormatFloat(
         frac_int -= scale;
     }
 
-    let body: [96]u8 = [0; 96];
-    let int_buf: [32]u8 = [0; 32];
+    let body: [96]u8 = undefined;
+    let int_buf: [32]u8 = undefined;
     const int_len: usize = spfFormatUintRadix(int_part, 10, false, int_buf[0..32]);
-    let blen: usize = spfPutBytes(body[0..96], 0, int_buf[0..int_len]);
+    let blen: usize = writeStr(int_buf[0..int_len], body[0..96], 0);
 
     if (p_clamped > 0) {
         blen = spfPutByte(body[0..96], blen, 0x2E);
-        let frac_buf: [32]u8 = [0; 32];
+        let frac_buf: [32]u8 = undefined;
         const flen: usize = spfFormatUintRadix(frac_int, 10, false, frac_buf[0..32]);
         if (flen < p_clamped) {
             blen = spfPutRepeat(body[0..96], blen, 0x30, p_clamped - flen);
         }
-        blen = spfPutBytes(body[0..96], blen, frac_buf[0..flen]);
+        blen = writeStr(frac_buf[0..flen], body[0..96], blen);
     }
 
     return spfEmitPadded(out, pos, sign, body[0..blen], width, left_align, zero_pad);
@@ -383,7 +375,7 @@ pub fn sprintf(fmt: string, args: []const FmtArg, out: []u8): usize {
 
         if (spec == 0x73) {
             // %s
-            let num_buf: [72]u8 = [0; 72];
+            let num_buf: [72]u8 = undefined;
             let s_slice: []const u8 = "";
             if (arg.kind == FmtArgKind.Str) {
                 s_slice = arg.str_val;
@@ -426,36 +418,36 @@ pub fn sprintf(fmt: string, args: []const FmtArg, out: []u8): usize {
                 }
                 mag = u64(v);
             }
-            let num_buf: [72]u8 = [0; 72];
+            let num_buf: [72]u8 = undefined;
             const n: usize = spfFormatUintRadix(mag, 10, false, num_buf[0..72]);
             pos = spfEmitPadded(out, pos, sign, num_buf[0..n], width, left_align, zero_pad);
         } else if (spec == 0x75) {
             // %u
             const v: u64 = spfArgAsUnsigned(arg);
-            let num_buf: [72]u8 = [0; 72];
+            let num_buf: [72]u8 = undefined;
             const n: usize = spfFormatUintRadix(v, 10, false, num_buf[0..72]);
             pos = spfEmitPadded(out, pos, 0, num_buf[0..n], width, left_align, zero_pad);
         } else if (spec == 0x78 || spec == 0x58) {
             // %x / %X
             const v: u64 = spfArgAsUnsigned(arg);
-            let num_buf: [72]u8 = [0; 72];
+            let num_buf: [72]u8 = undefined;
             const n: usize = spfFormatUintRadix(v, 16, spec == 0x58, num_buf[0..72]);
             pos = spfEmitPadded(out, pos, 0, num_buf[0..n], width, left_align, zero_pad);
         } else if (spec == 0x6F) {
             // %o
             const v: u64 = spfArgAsUnsigned(arg);
-            let num_buf: [72]u8 = [0; 72];
+            let num_buf: [72]u8 = undefined;
             const n: usize = spfFormatUintRadix(v, 8, false, num_buf[0..72]);
             pos = spfEmitPadded(out, pos, 0, num_buf[0..n], width, left_align, zero_pad);
         } else if (spec == 0x62) {
             // %b
             const v: u64 = spfArgAsUnsigned(arg);
-            let num_buf: [72]u8 = [0; 72];
+            let num_buf: [72]u8 = undefined;
             const n: usize = spfFormatUintRadix(v, 2, false, num_buf[0..72]);
             pos = spfEmitPadded(out, pos, 0, num_buf[0..n], width, left_align, zero_pad);
         } else if (spec == 0x63) {
             // %c
-            let ch_buf: [1]u8 = [0];
+            let ch_buf: [1]u8 = undefined;
             if (arg.kind == FmtArgKind.Char) {
                 ch_buf[0] = arg.char_val;
             } else {

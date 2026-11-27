@@ -6,6 +6,8 @@
 
 import { zEmail, zUrl, zUuid, zEnum } from "../../zod/src/index.cp";
 import { isValidIpv4, isValidIpv6 } from "../../ipaddr.js/src/index.cp";
+import { isDigit, strEq } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 
 // Error codes
 pub const AJV_ERR_INVALID_SCHEMA: i32 = 1;
@@ -40,38 +42,6 @@ fn ajvIsSpace(c: u8): bool {
     return c == 32 || c == 9 || c == 10 || c == 13;
 }
 
-fn ajvIsDigit(c: u8): bool {
-    return c >= 48 && c <= 57;
-}
-
-fn ajvStrEq(a: string, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
-fn ajvSliceEqStr(a: []const u8, b: string): bool {
-    if (a.len != b.len) {
-        return false;
-    }
-    let i: usize = 0;
-    while (i < a.len) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-        i = i + 1;
-    }
-    return true;
-}
-
 fn ajvTrimBounds(s: string, out_start: *usize, out_end: *usize) {
     let a: usize = 0;
     let b: usize = s.len;
@@ -98,18 +68,18 @@ fn ajvParseNumber(raw: string, out_val: *f64, out_is_int: *bool): bool {
         neg = true;
         i = i + 1;
     }
-    if (i >= b || !ajvIsDigit(raw[i])) {
+    if (i >= b || !isDigit(raw[i])) {
         return false;
     }
 
     let val: f64 = 0.0;
     if (raw[i] == 48) {
         i = i + 1;
-        if (i < b && ajvIsDigit(raw[i])) {
+        if (i < b && isDigit(raw[i])) {
             return false;
         }
     } else {
-        while (i < b && ajvIsDigit(raw[i])) {
+        while (i < b && isDigit(raw[i])) {
             val = val * 10.0 + ((raw[i] - 48) as f64);
             i = i + 1;
         }
@@ -118,11 +88,11 @@ fn ajvParseNumber(raw: string, out_val: *f64, out_is_int: *bool): bool {
     let has_nonzero_frac = false;
     if (i < b && raw[i] == 46) {
         i = i + 1;
-        if (i >= b || !ajvIsDigit(raw[i])) {
+        if (i >= b || !isDigit(raw[i])) {
             return false;
         }
         let scale: f64 = 0.1;
-        while (i < b && ajvIsDigit(raw[i])) {
+        while (i < b && isDigit(raw[i])) {
             const d = raw[i] - 48;
             if (d != 0) {
                 has_nonzero_frac = true;
@@ -145,10 +115,10 @@ fn ajvParseNumber(raw: string, out_val: *f64, out_is_int: *bool): bool {
         } else if (i < b && raw[i] == 43) {
             i = i + 1;
         }
-        if (i >= b || !ajvIsDigit(raw[i])) {
+        if (i >= b || !isDigit(raw[i])) {
             return false;
         }
-        while (i < b && ajvIsDigit(raw[i])) {
+        while (i < b && isDigit(raw[i])) {
             if (exp_val < 308) {
                 exp_val = exp_val * 10 + ((raw[i] - 48) as i32);
             }
@@ -328,12 +298,12 @@ fn ajvClassifyStrict(raw: string, depth: usize): u8 {
         return AJV_KIND_INVALID;
     }
     const s = raw[a..b];
-    if (ajvStrEq(s, "null")) { return AJV_KIND_NULL; }
-    if (ajvStrEq(s, "true") || ajvStrEq(s, "false")) { return AJV_KIND_BOOL; }
+    if (strEq(s, "null")) { return AJV_KIND_NULL; }
+    if (strEq(s, "true") || strEq(s, "false")) { return AJV_KIND_BOOL; }
 
     const first = s[0];
     if (first == 34) {
-        let tmp: [8]u8 = [0; 8];
+        let tmp: [8]u8 = undefined;
         let n: usize = 0;
         if (ajvDecodeJsonString(s, tmp[0..8], &n)) {
             return AJV_KIND_STRING;
@@ -378,7 +348,7 @@ fn ajvClassifyStrict(raw: string, depth: usize): u8 {
             if (i >= limit || s[i] != 34) { return AJV_KIND_INVALID; }
             let ke: usize = 0;
             if (!ajvScanValue(s, i, limit, &ke)) { return AJV_KIND_INVALID; }
-            let ktmp: [8]u8 = [0; 8];
+            let ktmp: [8]u8 = undefined;
             let klen: usize = 0;
             if (!ajvDecodeJsonString(s[i..ke], ktmp[0..8], &klen)) { return AJV_KIND_INVALID; }
             i = ke;
@@ -426,7 +396,7 @@ fn ajvFindObjectProp(obj: string, target_key: string, out_start: *usize, out_end
         if (i >= limit || obj[i] != 34) { return false; }
         let ke: usize = 0;
         if (!ajvScanValue(obj, i, limit, &ke)) { return false; }
-        let kbuf: [64]u8 = [0; 64];
+        let kbuf: [64]u8 = undefined;
         let klen: usize = 0;
         if (!ajvDecodeJsonString(obj[i..ke], kbuf[0..64], &klen)) { return false; }
         i = ke;
@@ -439,7 +409,7 @@ fn ajvFindObjectProp(obj: string, target_key: string, out_start: *usize, out_end
         let ve: usize = 0;
         if (!ajvScanValue(obj, i, limit, &ve)) { return false; }
 
-        if (klen <= 64 && ajvSliceEqStr(kbuf[0..klen], target_key)) {
+        if (klen <= 64 && bytesEq(kbuf[0..klen], target_key)) {
             out_start.* = i;
             out_end.* = ve;
             return true;
@@ -503,7 +473,7 @@ fn ajvJsonValuesEqual(raw_a: string, raw_b: string): bool {
         return false;
     }
     if (ka == AJV_KIND_NULL || ka == AJV_KIND_BOOL) {
-        return ajvStrEq(sa, sb);
+        return strEq(sa, sb);
     }
     if (ka == AJV_KIND_NUMBER) {
         let va: f64 = 0.0;
@@ -516,8 +486,8 @@ fn ajvJsonValuesEqual(raw_a: string, raw_b: string): bool {
         return va == vb;
     }
     if (ka == AJV_KIND_STRING) {
-        let ba: [256]u8 = [0; 256];
-        let bb: [256]u8 = [0; 256];
+        let ba: [256]u8 = undefined;
+        let bb: [256]u8 = undefined;
         let la: usize = 0;
         let lb: usize = 0;
         if (!ajvDecodeJsonString(sa, ba[0..256], &la) || !ajvDecodeJsonString(sb, bb[0..256], &lb)) {
@@ -525,14 +495,9 @@ fn ajvJsonValuesEqual(raw_a: string, raw_b: string): bool {
         }
         if (la != lb) { return false; }
         const n = if (la < 256) { la } else { 256 };
-        let i: usize = 0;
-        while (i < n) {
-            if (ba[i] != bb[i]) { return false; }
-            i = i + 1;
-        }
-        return true;
+        return bytesEq(ba[0..n], bb[0..n]);
     }
-    return ajvStrEq(sa, sb);
+    return strEq(sa, sb);
 }
 
 /// Validates RFC 3339 full-date `YYYY-MM-DD` (including leap-year day validation).
@@ -545,7 +510,7 @@ fn ajvIsIsoDate(s: string): bool {
     }
     let i: usize = 0;
     while (i < 10) {
-        if (i != 4 && i != 7 && !ajvIsDigit(s[i])) {
+        if (i != 4 && i != 7 && !isDigit(s[i])) {
             return false;
         }
         i = i + 1;
@@ -573,22 +538,22 @@ fn ajvIsIsoDate(s: string): bool {
 /// Validates JSON Schema `format` keywords by reusing `@cap/zod-schema` & `@cap/ipaddr`.
 /// Supported formats: `email`, `uri` (`url`), `uuid`, `ipv4`, `ipv6`, `date`.
 pub fn validateFormat(fmt: string, value: string): bool {
-    if (ajvStrEq(fmt, "email")) {
+    if (strEq(fmt, "email")) {
         return zEmail(value);
     }
-    if (ajvStrEq(fmt, "uri") || ajvStrEq(fmt, "url")) {
+    if (strEq(fmt, "uri") || strEq(fmt, "url")) {
         return zUrl(value);
     }
-    if (ajvStrEq(fmt, "uuid")) {
+    if (strEq(fmt, "uuid")) {
         return zUuid(value);
     }
-    if (ajvStrEq(fmt, "ipv4")) {
+    if (strEq(fmt, "ipv4")) {
         return isValidIpv4(value);
     }
-    if (ajvStrEq(fmt, "ipv6")) {
+    if (strEq(fmt, "ipv6")) {
         return isValidIpv6(value);
     }
-    if (ajvStrEq(fmt, "date")) {
+    if (strEq(fmt, "date")) {
         return ajvIsIsoDate(value);
     }
     return false;
@@ -598,13 +563,13 @@ fn ajvMatchSingleType(type_name: string, data_kind: u8, data_raw: string): bool 
     if (!zEnum(type_name, "string,number,integer,boolean,array,object,null")) {
         return false;
     }
-    if (ajvStrEq(type_name, "string")) { return data_kind == AJV_KIND_STRING; }
-    if (ajvStrEq(type_name, "boolean")) { return data_kind == AJV_KIND_BOOL; }
-    if (ajvStrEq(type_name, "array")) { return data_kind == AJV_KIND_ARRAY; }
-    if (ajvStrEq(type_name, "object")) { return data_kind == AJV_KIND_OBJECT; }
-    if (ajvStrEq(type_name, "null")) { return data_kind == AJV_KIND_NULL; }
-    if (ajvStrEq(type_name, "number")) { return data_kind == AJV_KIND_NUMBER; }
-    if (ajvStrEq(type_name, "integer")) {
+    if (strEq(type_name, "string")) { return data_kind == AJV_KIND_STRING; }
+    if (strEq(type_name, "boolean")) { return data_kind == AJV_KIND_BOOL; }
+    if (strEq(type_name, "array")) { return data_kind == AJV_KIND_ARRAY; }
+    if (strEq(type_name, "object")) { return data_kind == AJV_KIND_OBJECT; }
+    if (strEq(type_name, "null")) { return data_kind == AJV_KIND_NULL; }
+    if (strEq(type_name, "number")) { return data_kind == AJV_KIND_NUMBER; }
+    if (strEq(type_name, "integer")) {
         if (data_kind != AJV_KIND_NUMBER) {
             return false;
         }
@@ -668,16 +633,10 @@ pub struct AjvResult {
     pub errors: [16]AjvError,
 
     pub static fn ok(): AjvResult {
-        let errs: [16]AjvError = undefined;
-        let i: usize = 0;
-        while (i < AJV_MAX_ERRORS) {
-            errs[i] = AjvError.empty();
-            i = i + 1;
-        }
         return AjvResult {
             valid: true,
             error_count: 0,
-            errors: errs,
+            errors: undefined,
         };
     }
 
@@ -686,23 +645,26 @@ pub struct AjvResult {
         if (_.error_count >= AJV_MAX_ERRORS) {
             return;
         }
-        let err = AjvError.empty();
         const pn = if (path.len < 64) { path.len } else { 64 };
+        const kn = if (keyword.len < 32) { keyword.len } else { 32 };
+        let err = AjvError {
+            instance_path: undefined,
+            instance_path_len: pn,
+            keyword: undefined,
+            keyword_len: kn,
+            code: code,
+        };
         let i: usize = 0;
         while (i < pn) {
             err.instance_path[i] = path[i];
             i = i + 1;
         }
-        err.instance_path_len = pn;
 
-        const kn = if (keyword.len < 32) { keyword.len } else { 32 };
         i = 0;
         while (i < kn) {
             err.keyword[i] = keyword[i];
             i = i + 1;
         }
-        err.keyword_len = kn;
-        err.code = code;
 
         _.errors[_.error_count] = err;
         _.error_count = _.error_count + 1;
@@ -712,8 +674,8 @@ pub struct AjvResult {
         let i: usize = 0;
         while (i < _.error_count) {
             if (_.errors[i].code == code
-                && ajvSliceEqStr(_.errors[i].instance_path[0.._.errors[i].instance_path_len], path)
-                && ajvSliceEqStr(_.errors[i].keyword[0.._.errors[i].keyword_len], keyword)) {
+                && bytesEq(_.errors[i].instance_path[0.._.errors[i].instance_path_len], path)
+                && bytesEq(_.errors[i].keyword[0.._.errors[i].keyword_len], keyword)) {
                 return true;
             }
             i = i + 1;
@@ -751,7 +713,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
         const type_val = schema[vs..ve];
         const tk = ajvClassifyStrict(type_val, 0);
         if (tk == AJV_KIND_STRING) {
-            let tbuf: [32]u8 = [0; 32];
+            let tbuf: [32]u8 = undefined;
             let tlen: usize = 0;
             if (ajvDecodeJsonString(type_val, tbuf[0..32], &tlen) && tlen <= 32) {
                 if (!ajvMatchSingleType(tbuf[0..tlen], data_kind, data)) {
@@ -770,7 +732,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
                 if (i >= lim) { break; }
                 let ie: usize = 0;
                 if (!ajvScanValue(type_val, i, lim, &ie)) { break; }
-                let tbuf: [32]u8 = [0; 32];
+                let tbuf: [32]u8 = undefined;
                 let tlen: usize = 0;
                 if (ajvDecodeJsonString(type_val[i..ie], tbuf[0..32], &tlen) && tlen <= 32) {
                     if (ajvMatchSingleType(tbuf[0..tlen], data_kind, data)) {
@@ -826,7 +788,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
 
     // 4. String keywords (`minLength`, `maxLength`, `format`)
     if (data_kind == AJV_KIND_STRING) {
-        let sbuf: [256]u8 = [0; 256];
+        let sbuf: [256]u8 = undefined;
         let slen: usize = 0;
         if (ajvDecodeJsonString(data, sbuf[0..256], &slen)) {
             if (ajvFindObjectProp(schema, "minLength", &vs, &ve)) {
@@ -844,7 +806,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
                 }
             }
             if (ajvFindObjectProp(schema, "format", &vs, &ve)) {
-                let fbuf: [32]u8 = [0; 32];
+                let fbuf: [32]u8 = undefined;
                 let flen: usize = 0;
                 if (ajvDecodeJsonString(schema[vs..ve], fbuf[0..32], &flen) && flen <= 32) {
                     const cmp_len = if (slen < 256) { slen } else { 256 };
@@ -947,13 +909,13 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
                     if (i >= lim) { break; }
                     let ie: usize = 0;
                     if (!ajvScanValue(req_arr, i, lim, &ie)) { break; }
-                    let rbuf: [64]u8 = [0; 64];
+                    let rbuf: [64]u8 = undefined;
                     let rlen: usize = 0;
                     if (ajvDecodeJsonString(req_arr[i..ie], rbuf[0..64], &rlen) && rlen <= 64) {
                         let dummy_s: usize = 0;
                         let dummy_e: usize = 0;
                         if (!ajvFindObjectProp(data, rbuf[0..rlen], &dummy_s, &dummy_e)) {
-                            let pbuf: [64]u8 = [0; 64];
+                            let pbuf: [64]u8 = undefined;
                             const plen = ajvJoinPath(path, rbuf[0..rlen], pbuf[0..64]);
                             res.addError(pbuf[0..plen], "required", AJV_ERR_REQUIRED);
                         }
@@ -982,7 +944,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
             let t0: usize = 0;
             let t1: usize = 0;
             ajvTrimBounds(schema[ap_s..ap_e], &t0, &t1);
-            if (ajvStrEq(schema[ap_s + t0..ap_s + t1], "false")) {
+            if (strEq(schema[ap_s + t0..ap_s + t1], "false")) {
                 forbid_additional = true;
             }
         }
@@ -998,7 +960,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
                 if (i >= lim || data[i] != 34) { break; }
                 let ke: usize = 0;
                 if (!ajvScanValue(data, i, lim, &ke)) { break; }
-                let kbuf: [64]u8 = [0; 64];
+                let kbuf: [64]u8 = undefined;
                 let klen: usize = 0;
                 if (!ajvDecodeJsonString(data[i..ke], kbuf[0..64], &klen)) { break; }
                 i = ke;
@@ -1013,7 +975,7 @@ fn ajvValidateNode(schema: string, data: string, path: string, depth: usize, res
 
                 const key_slice_len = if (klen < 64) { klen } else { 64 };
                 const key_str: string = kbuf[0..key_slice_len];
-                let pbuf: [64]u8 = [0; 64];
+                let pbuf: [64]u8 = undefined;
                 const plen = ajvJoinPath(path, key_str, pbuf[0..64]);
 
                 let sub_s: usize = 0;

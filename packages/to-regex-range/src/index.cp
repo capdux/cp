@@ -1,15 +1,17 @@
 // @cap/to-regex-range — Zero-allocation numeric range to compact regex compiler
 // MIT License
 
+import { writeU64 } from "cap:fmt";
+
 const MAX_I64_POS_U64: u64 = ((0x7FFFFFFF as u64) << 32) | (0xFFFFFFFF as u64);
 const MAX_I64_NEG_U64: u64 = (1 as u64) << 63;
 
-struct BufWriter {
+struct TrrBufWriter {
     pos: usize,
     overflow: bool,
 }
 
-fn bwPush(w: *BufWriter, out: []u8, ch: u8) {
+fn bwPush(w: *TrrBufWriter, out: []u8, ch: u8) {
     if (w.*.overflow) {
         return;
     }
@@ -44,31 +46,9 @@ fn absI64ToU64(v: i64): u64 {
     return mag + 1;
 }
 
-fn formatU64Digits(v: u64, buf: []u8): usize {
-    if (v == 0) {
-        buf[0] = 48;
-        return 1;
-    }
-    let tmp: [24]u8 = [0; 24];
-    let n: usize = 0;
-    let cur: u64 = v;
-    while (cur > 0) {
-        let rem: u8 = (cur % 10) as u8;
-        tmp[n] = rem + 48;
-        cur = cur / 10;
-        n = n + 1;
-    }
-    let i: usize = 0;
-    while (i < n) {
-        buf[i] = tmp[n - 1 - i];
-        i = i + 1;
-    }
-    return n;
-}
-
-fn writeU64(w: *BufWriter, out: []u8, v: u64) {
-    let digits: [24]u8 = [0; 24];
-    let n: usize = formatU64Digits(v, digits[0..24]);
+fn trrWriteU64(w: *TrrBufWriter, out: []u8, v: u64) {
+    let digits: [24]u8 = undefined;
+    let n: usize = writeU64(v, digits[0..24], 0);
     let i: usize = 0;
     while (i < n) {
         bwPush(w, out, digits[i]);
@@ -77,10 +57,10 @@ fn writeU64(w: *BufWriter, out: []u8, v: u64) {
 }
 
 fn isSinglePattern(a: u64, b: u64): bool {
-    let da: [24]u8 = [0; 24];
-    let db: [24]u8 = [0; 24];
-    let na: usize = formatU64Digits(a, da[0..24]);
-    let nb: usize = formatU64Digits(b, db[0..24]);
+    let da: [24]u8 = undefined;
+    let db: [24]u8 = undefined;
+    let na: usize = writeU64(a, da[0..24], 0);
+    let nb: usize = writeU64(b, db[0..24], 0);
     if (na != nb) {
         return false;
     }
@@ -102,11 +82,11 @@ fn isSinglePattern(a: u64, b: u64): bool {
     return true;
 }
 
-fn emitSubRange(w: *BufWriter, out: []u8, a: u64, b: u64) {
-    let da: [24]u8 = [0; 24];
-    let db: [24]u8 = [0; 24];
-    let na: usize = formatU64Digits(a, da[0..24]);
-    * = formatU64Digits(b, db[0..24]);
+fn emitSubRange(w: *TrrBufWriter, out: []u8, a: u64, b: u64) {
+    let da: [24]u8 = undefined;
+    let db: [24]u8 = undefined;
+    let na: usize = writeU64(a, da[0..24], 0);
+    * = writeU64(b, db[0..24], 0);
     let i: usize = 0;
     while (i < na) {
         if (da[i] == db[i]) {
@@ -206,8 +186,8 @@ fn splitPositiveStops(a: u64, b: u64, stops: []u64): usize {
     return count;
 }
 
-fn emitPositiveRange(w: *BufWriter, out: []u8, a: u64, b: u64) {
-    let stops: [64]u64 = [0; 64];
+fn emitPositiveRange(w: *TrrBufWriter, out: []u8, a: u64, b: u64) {
+    let stops: [64]u64 = undefined;
     let count: usize = splitPositiveStops(a, b, stops[0..64]);
     let cur_lo: u64 = a;
     let i: usize = 0;
@@ -223,8 +203,8 @@ fn emitPositiveRange(w: *BufWriter, out: []u8, a: u64, b: u64) {
     }
 }
 
-fn emitNegativeRange(w: *BufWriter, out: []u8, mag_lo: u64, mag_hi: u64) {
-    let stops: [64]u64 = [0; 64];
+fn emitNegativeRange(w: *TrrBufWriter, out: []u8, mag_lo: u64, mag_hi: u64) {
+    let stops: [64]u64 = undefined;
     let count: usize = splitPositiveStops(mag_lo, mag_hi, stops[0..64]);
     bwPush(w, out, 45); // '-'
     if (count > 1) {
@@ -255,13 +235,13 @@ pub fn toRegexRange(min_val: i64, max_val: i64, out: []u8): usize {
         hi = min_val;
     }
 
-    let w: BufWriter = BufWriter { pos: 0, overflow: false };
+    let w: TrrBufWriter = TrrBufWriter { pos: 0, overflow: false };
 
     if (lo == hi) {
         if (lo < 0) {
             bwPush(&w, out, 45); // '-'
         }
-        writeU64(&w, out, absI64ToU64(lo));
+        trrWriteU64(&w, out, absI64ToU64(lo));
     } else if (lo >= 0) {
         emitPositiveRange(&w, out, lo as u64, hi as u64);
     } else if (hi < 0) {

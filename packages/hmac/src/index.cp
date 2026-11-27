@@ -1,22 +1,18 @@
 import {
     Sha256State, sha256Init, sha256Update, sha256Final, sha256, ctEqual
 } from "../../cookie-signature/src/index.cp";
+import { hexCharLower } from "cap:ascii";
 
 pub const HMAC_SHA256_LEN: usize = 32;
 pub const HMAC_BLOCK_SIZE: usize = 64;
-
-fn hmcHexDigit(n: u8): u8 {
-    if (n < 10) { return 48 + n; }
-    return 87 + n; // 'a'..'f'
-}
 
 pub fn encodeHex32(digest: []u8, out64: []u8): usize {
     if (digest.len < 32 || out64.len < 64) { return 0; }
     let i: usize = 0;
     while (i < 32) {
         let b = digest[i];
-        out64[i * 2] = hmcHexDigit((b >> 4) & 15);
-        out64[i * 2 + 1] = hmcHexDigit(b & 15);
+        out64[i * 2] = hexCharLower((b >> 4) & 15);
+        out64[i * 2 + 1] = hexCharLower(b & 15);
         i = i + 1;
     }
     return 64;
@@ -29,7 +25,7 @@ pub struct HmacSha256 {
     pub static fn newFromSlice(key: []u8): HmacSha256 {
         let kblock: [64]u8 = [0; 64];
         if (key.len > HMAC_BLOCK_SIZE) {
-            let hashed: [32]u8 = [0; 32];
+            let hashed: [32]u8 = undefined;
             sha256(key, hashed[0..32]);
             let i: usize = 0;
             while (i < 32) {
@@ -44,8 +40,8 @@ pub struct HmacSha256 {
             }
         }
 
-        let ipad: [64]u8 = [0; 64];
-        let opad: [64]u8 = [0; 64];
+        let ipad: [64]u8 = undefined;
+        let opad: [64]u8 = undefined;
         let j: usize = 0;
         while (j < HMAC_BLOCK_SIZE) {
             ipad[j] = kblock[j] ^ 54; // 0x36
@@ -62,7 +58,7 @@ pub struct HmacSha256 {
     }
 
     pub static fn newFromKey(key: string): HmacSha256 {
-        let buf: [256]u8 = [0; 256];
+        let buf: [256]u8 = undefined;
         let n = if (key.len > 256) { 256 } else { key.len };
         let i: usize = 0;
         while (i < n) {
@@ -77,7 +73,7 @@ pub struct HmacSha256 {
     }
 
     pub fn updateStr(*_, msg: string) {
-        let chunk: [64]u8 = [0; 64];
+        let chunk: [64]u8 = undefined;
         let pos: usize = 0;
         while (pos < msg.len) {
             let rem = msg.len - pos;
@@ -93,7 +89,7 @@ pub struct HmacSha256 {
     }
 
     pub fn finalize(*_, out32: []u8) {
-        let inner_hash: [32]u8 = [0; 32];
+        let inner_hash: [32]u8 = undefined;
         sha256Final(*_.inner, inner_hash[0..32]);
         let outer = sha256Init();
         sha256Update(*outer, _.o_key_pad[0..64]);
@@ -103,7 +99,7 @@ pub struct HmacSha256 {
 
     pub fn verifySlice(*_, expected: []u8): bool {
         if (expected.len != HMAC_SHA256_LEN) { return false; }
-        let actual: [32]u8 = [0; 32];
+        let actual: [32]u8 = undefined;
         _.finalize(actual[0..32]);
         return ctEqual(actual[0..32], expected);
     }
@@ -112,7 +108,7 @@ pub struct HmacSha256 {
 pub fn hmacSha256Hex(key: string, msg: string, out64: []u8): usize {
     let mac = HmacSha256.newFromKey(key);
     mac.updateStr(msg);
-    let digest: [32]u8 = [0; 32];
+    let digest: [32]u8 = undefined;
     mac.finalize(digest[0..32]);
     return encodeHex32(digest[0..32], out64);
 }

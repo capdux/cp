@@ -5,6 +5,7 @@
 
 import { normalizeNfc } from "../../icu_normalizer/src/index.cp";
 import { encodeLabel, decodeLabel, isAsciiOnly } from "../../punycode/src/index.cp";
+import { toLowerByte, isAlnum } from "cap:ascii";
 
 pub const IDNA_OK: i64 = 0;
 pub const IDNA_ERR_EMPTY: i64 = -1;
@@ -19,13 +20,6 @@ pub const IDNA_ERR_BUFFER_TOO_SMALL: i64 = -8;
 pub const IDNA_MAX_LABEL_LEN: usize = 63;
 pub const IDNA_MAX_DOMAIN_LEN: usize = 253;
 
-fn idnaToLowerAscii(ch: u8): u8 {
-    if (ch >= ('A' as u8) && ch <= ('Z' as u8)) {
-        return ch + (32 as u8);
-    }
-    return ch;
-}
-
 fn idnaIsLdhLower(ch: u8): bool {
     return (ch >= ('a' as u8) && ch <= ('z' as u8))
         || (ch >= ('0' as u8) && ch <= ('9' as u8))
@@ -33,10 +27,7 @@ fn idnaIsLdhLower(ch: u8): bool {
 }
 
 fn idnaIsLdhAnyCase(ch: u8): bool {
-    return (ch >= ('a' as u8) && ch <= ('z' as u8))
-        || (ch >= ('A' as u8) && ch <= ('Z' as u8))
-        || (ch >= ('0' as u8) && ch <= ('9' as u8))
-        || ch == ('-' as u8);
+    return isAlnum(ch) || ch == ('-' as u8);
 }
 
 /// Returns true if `label` starts with the RFC 3492 ACE prefix `"xn--"` (case-insensitive).
@@ -44,8 +35,8 @@ pub fn isPunycodeLabel(label: string): bool {
     if (label.len < 4) {
         return false;
     }
-    return idnaToLowerAscii(label[0]) == ('x' as u8)
-        && idnaToLowerAscii(label[1]) == ('n' as u8)
+    return toLowerByte(label[0]) == ('x' as u8)
+        && toLowerByte(label[1]) == ('n' as u8)
         && label[2] == ('-' as u8)
         && label[3] == ('-' as u8);
 }
@@ -77,7 +68,7 @@ fn idnaMapDomain(domain: string, out: []u8): i64 {
             }
         }
         if (b0 < (0x80 as u8)) {
-            out[out_pos] = idnaToLowerAscii(b0);
+            out[out_pos] = toLowerByte(b0);
         } else {
             out[out_pos] = b0;
         }
@@ -111,7 +102,7 @@ fn idnaValidateAsciiLabelLower(label: []const u8): i64 {
         if (label.len <= 4) {
             return IDNA_ERR_INVALID_PUNYCODE;
         }
-        let check_u8: [256]u8 = [0; 256];
+        let check_u8: [256]u8 = undefined;
         const decoded_len = decodeLabel(label[4..label.len], check_u8[0..256]);
         if (decoded_len <= (0 as i64)) {
             return IDNA_ERR_INVALID_PUNYCODE;
@@ -144,7 +135,7 @@ pub fn domainToAscii(domain: string, out: []u8): i64 {
         return IDNA_ERR_EMPTY;
     }
 
-    let mapped_buf: [512]u8 = [0; 512];
+    let mapped_buf: [512]u8 = undefined;
     const mapped_len_i64 = idnaMapDomain(domain, mapped_buf[0..512]);
     if (mapped_len_i64 < (0 as i64)) {
         return IDNA_ERR_DOMAIN_TOO_LONG;
@@ -175,7 +166,7 @@ pub fn domainToAscii(domain: string, out: []u8): i64 {
             }
         } else {
             // UTS #46: normalize non-ASCII label to NFC via @cap/icu-normalizer
-            let nfc_buf: [256]u8 = [0; 256];
+            let nfc_buf: [256]u8 = undefined;
             const nfc_len = normalizeNfc(label, nfc_buf[0..256]);
             if (nfc_len == 0) {
                 return IDNA_ERR_EMPTY_LABEL;
@@ -193,7 +184,7 @@ pub fn domainToAscii(domain: string, out: []u8): i64 {
                     return IDNA_ERR_BUFFER_TOO_SMALL;
                 }
             } else {
-                let ace_buf: [128]u8 = [0; 128];
+                let ace_buf: [128]u8 = undefined;
                 ace_buf[0] = 'x' as u8;
                 ace_buf[1] = 'n' as u8;
                 ace_buf[2] = '-' as u8;
@@ -248,7 +239,7 @@ pub fn domainToUnicode(domain: string, out: []u8): i64 {
         return IDNA_ERR_EMPTY;
     }
 
-    let mapped_buf: [512]u8 = [0; 512];
+    let mapped_buf: [512]u8 = undefined;
     const mapped_len_i64 = idnaMapDomain(domain, mapped_buf[0..512]);
     if (mapped_len_i64 < (0 as i64)) {
         return IDNA_ERR_DOMAIN_TOO_LONG;
@@ -272,12 +263,12 @@ pub fn domainToUnicode(domain: string, out: []u8): i64 {
             if (label.len <= 4 || label.len > IDNA_MAX_LABEL_LEN) {
                 return IDNA_ERR_INVALID_PUNYCODE;
             }
-            let u_buf: [256]u8 = [0; 256];
+            let u_buf: [256]u8 = undefined;
             const dec_len = decodeLabel(label[4..label.len], u_buf[0..256]);
             if (dec_len <= (0 as i64)) {
                 return IDNA_ERR_INVALID_PUNYCODE;
             }
-            let nfc_buf: [256]u8 = [0; 256];
+            let nfc_buf: [256]u8 = undefined;
             const nfc_len = normalizeNfc(u_buf[0..(dec_len as usize)], nfc_buf[0..256]);
             if (nfc_len == 0) {
                 return IDNA_ERR_INVALID_PUNYCODE;
@@ -294,7 +285,7 @@ pub fn domainToUnicode(domain: string, out: []u8): i64 {
                 return IDNA_ERR_BUFFER_TOO_SMALL;
             }
         } else {
-            let nfc_buf: [256]u8 = [0; 256];
+            let nfc_buf: [256]u8 = undefined;
             const nfc_len = normalizeNfc(label, nfc_buf[0..256]);
             if (nfc_len == 0) {
                 return IDNA_ERR_EMPTY_LABEL;
@@ -364,7 +355,7 @@ pub fn isValidIdnaAscii(domain: string): bool {
             if (label.len <= 4) {
                 return false;
             }
-            let tmp: [256]u8 = [0; 256];
+            let tmp: [256]u8 = undefined;
             if (decodeLabel(label[4..label.len], tmp[0..256]) <= (0 as i64)) {
                 return false;
             }

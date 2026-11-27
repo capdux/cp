@@ -1,13 +1,10 @@
 // Type definitions for CP
 
 import { userinfoSet, pathSet, querySet, fragmentSet, percentEncode, percentDecode } from "../../percent-encoding/src/index.cp";
-import { domainToAscii } from "../../idna-uts46/src/index.cp";
-export fn wuToLowerAscii(ch: u8): u8;
-export fn wuIsAlpha(ch: u8): bool;
-export fn wuIsDigit(ch: u8): bool;
-export fn wuIsHexDigit(ch: u8): bool;
+import { domainToAscii } from "../../idna/src/index.cp";
+import { toLowerByte, isAlpha, isDigit, isHexDigit } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 export fn wuIsSchemeChar(ch: u8): bool;
-export fn wuSliceEq(a: &[]u8, b: &[]u8): bool;
 export fn wuAppendBytes(out: []u8, pos: &mut usize, src: &[]u8): bool;
 export fn wuAppendByte(out: []u8, pos: &mut usize, b: u8): bool;
 export fn wuAppendPort(out: []u8, pos: &mut usize, port: i32): bool;

@@ -1,8 +1,8 @@
 // Type definitions for CP
 
-import { normalizeNfc } from "../../icu-normalizer/src/index.cp";
+import { normalizeNfc } from "../../icu_normalizer/src/index.cp";
 import { encodeLabel, decodeLabel, isAsciiOnly } from "../../punycode/src/index.cp";
-export fn idnaToLowerAscii(ch: u8): u8;
+import { toLowerByte, isAlnum } from "cap:ascii";
 export fn idnaIsLdhLower(ch: u8): bool;
 export fn idnaIsLdhAnyCase(ch: u8): bool;
 export fn isPunycodeLabel(label: string): bool;

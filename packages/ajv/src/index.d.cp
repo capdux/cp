@@ -1,11 +1,10 @@
 // Type definitions for CP
 
-import { zEmail, zUrl, zUuid, zEnum } from "../../zod-schema/src/index.cp";
-import { isValidIpv4, isValidIpv6 } from "../../ipaddr/src/index.cp";
+import { zEmail, zUrl, zUuid, zEnum } from "../../zod/src/index.cp";
+import { isValidIpv4, isValidIpv6 } from "../../ipaddr.js/src/index.cp";
+import { isDigit, strEq } from "cap:ascii";
+import { bytesEq } from "cap:bin";
 export fn ajvIsSpace(c: u8): bool;
-export fn ajvIsDigit(c: u8): bool;
-export fn ajvStrEq(a: string, b: string): bool;
-export fn ajvSliceEqStr(a: &[]u8, b: string): bool;
 export fn ajvTrimBounds(s: string, out_start: &mut usize, out_end: &mut usize);
 export fn ajvParseNumber(raw: string, out_val: &mut f64, out_is_int: &mut bool): bool;
 export fn ajvDecodeJsonString(raw: string, out: []u8, out_len: &mut usize): bool;
