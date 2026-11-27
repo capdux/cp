@@ -32,7 +32,7 @@ pub struct UkfParams {
     kappa: f64,
 
     /// Standard Merwe defaults (`alpha = 0.001, beta = 2.0, kappa = 0.0`).
-    fn default(): UkfParams {
+    static fn default(): UkfParams {
         return UkfParams {
             alpha: 0.001,
             beta: 2.0,

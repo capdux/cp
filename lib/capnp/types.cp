@@ -65,7 +65,7 @@ pub struct TraversalLimit {
         };
     }
 
-    pub fn defaultLimit(): TraversalLimit {
+    pub static fn defaultLimit(): TraversalLimit {
         return TraversalLimit{
             .words_remaining = DEFAULT_TRAVERSAL_LIMIT_WORDS,
             .nesting_limit = DEFAULT_NESTING_LIMIT,

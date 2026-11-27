@@ -16,7 +16,7 @@ pub struct BfgsConfig {
     max_line_search: usize,
 
     /// Standard Nocedal & Wright defaults (`grad_tol=1e-8`, `c1=1e-4`, `c2=0.9`).
-    fn default(): BfgsConfig {
+    static fn default(): BfgsConfig {
         return BfgsConfig {
             grad_tol: 1.0e-8,
             step_tol: 1.0e-12,

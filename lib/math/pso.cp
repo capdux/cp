@@ -26,7 +26,7 @@ pub struct PsoConfig {
     seed: u64,
 
     /// Standard balanced PSO defaults (`w: 0.9 -> 0.4`, `c1 = c2 = 1.5`, `max_iter = 500`, `tol = 1e-8`).
-    fn default(): PsoConfig {
+    static fn default(): PsoConfig {
         return PsoConfig {
             inertia_start: 0.9,
             inertia_end: 0.4,
@@ -58,7 +58,7 @@ pub struct DeConfig {
     seed: u64,
 
     /// Classic `DE/rand/1/bin` defaults (`F = 0.8`, `CR = 0.9`, `max_iter = 500`, `tol = 1e-8`).
-    fn default(): DeConfig {
+    static fn default(): DeConfig {
         return DeConfig {
             mutation_f: 0.8,
             crossover_cr: 0.9,

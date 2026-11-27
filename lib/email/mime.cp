@@ -503,7 +503,7 @@ pub struct EmailBuilder {
         _.custom_headers.append(_.alloc, EmailHeader{ name: name, value: value }) catch return EmailError.OutOfMemory;
     }
 
-    fn appendAddressHeader(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, header_name: string, list: []const EmailAddress): void ! EmailError {
+    static fn appendAddressHeader(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, header_name: string, list: []const EmailAddress): void ! EmailError {
         if (list.len > 0) {
             buf.appendSlice(alloc, header_name) catch return EmailError.OutOfMemory;
             buf.appendSlice(alloc, ": ") catch return EmailError.OutOfMemory;
@@ -520,7 +520,7 @@ pub struct EmailBuilder {
         }
     }
 
-    fn appendTextLeafPart(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, media_type: string, body: string, trailing_crlf: bool): void ! EmailError {
+    static fn appendTextLeafPart(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, media_type: string, body: string, trailing_crlf: bool): void ! EmailError {
         buf.appendSlice(alloc, "Content-Type: ") catch return EmailError.OutOfMemory;
         buf.appendSlice(alloc, media_type) catch return EmailError.OutOfMemory;
         buf.appendSlice(alloc, "; charset=UTF-8\r\n") catch return EmailError.OutOfMemory;
@@ -534,7 +534,7 @@ pub struct EmailBuilder {
         }
     }
 
-    fn appendAlternativeSection(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, boundary: string, text_body: string, html_body: string): void ! EmailError {
+    static fn appendAlternativeSection(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, boundary: string, text_body: string, html_body: string): void ! EmailError {
         buf.appendSlice(alloc, "Content-Type: multipart/alternative; boundary=\"") catch return EmailError.OutOfMemory;
         buf.appendSlice(alloc, boundary) catch return EmailError.OutOfMemory;
         buf.appendSlice(alloc, "\"\r\n\r\n") catch return EmailError.OutOfMemory;
@@ -554,7 +554,7 @@ pub struct EmailBuilder {
         buf.appendSlice(alloc, "--\r\n") catch return EmailError.OutOfMemory;
     }
 
-    fn appendQuotedParamValue(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, s: string): void ! EmailError {
+    static fn appendQuotedParamValue(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, s: string): void ! EmailError {
         let i: usize = 0;
         while (i < s.len) : (i += 1) {
             const ch = s[i];

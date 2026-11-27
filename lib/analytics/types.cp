@@ -72,19 +72,19 @@ pub struct EventProp {
     key: []const u8 = "",
     value: PropValue = PropValue{},
 
-    pub fn str(key: []const u8, val: []const u8): EventProp {
+    pub static fn str(key: []const u8, val: []const u8): EventProp {
         return EventProp{ key: key, value: PropValue.fromString(val) };
     }
 
-    pub fn int(key: []const u8, val: i64): EventProp {
+    pub static fn int(key: []const u8, val: i64): EventProp {
         return EventProp{ key: key, value: PropValue.fromInt(val) };
     }
 
-    pub fn float(key: []const u8, val: f64): EventProp {
+    pub static fn float(key: []const u8, val: f64): EventProp {
         return EventProp{ key: key, value: PropValue.fromFloat(val) };
     }
 
-    pub fn boolean(key: []const u8, val: bool): EventProp {
+    pub static fn boolean(key: []const u8, val: bool): EventProp {
         return EventProp{ key: key, value: PropValue.fromBool(val) };
     }
 }

@@ -326,7 +326,7 @@ pub struct BdfGlyphIter {
     }
 
     /// Initializes glyph iteration directly from a parsed `BdfHeader.chars_offset`.
-    fn initFromHeader(data: []const u8, hdr: BdfHeader): BdfGlyphIter {
+    static fn initFromHeader(data: []const u8, hdr: BdfHeader): BdfGlyphIter {
         const start = if (hdr.chars_offset <= data.len) hdr.chars_offset else data.len;
         return BdfGlyphIter {
             src: data,

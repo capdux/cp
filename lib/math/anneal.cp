@@ -29,7 +29,7 @@ pub struct AnnealConfig {
     seed: u64,
 
     /// Balanced defaults (`t_init=10.0`, `t_min=1e-5`, `cooling_rate=0.995`, `step_scale=0.25`, `max_steps=5000`).
-    fn default(): AnnealConfig {
+    static fn default(): AnnealConfig {
         return AnnealConfig {
             t_init: 10.0,
             t_min: 1.0e-5,

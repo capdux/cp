@@ -97,12 +97,12 @@ pub struct CanId {
     raw: u32,
 
     /// Constructs a standard 11-bit CAN 2.0A identifier.
-    fn standard(id_11: u32): CanId {
+    static fn standard(id_11: u32): CanId {
         return CanId { raw: id_11 & CAN_SFF_MASK };
     }
 
     /// Constructs an extended 29-bit CAN 2.0B identifier with `CAN_EFF_FLAG` set.
-    fn extended(id_29: u32): CanId {
+    static fn extended(id_29: u32): CanId {
         return CanId { raw: (id_29 & CAN_EFF_MASK) | CAN_EFF_FLAG };
     }
 

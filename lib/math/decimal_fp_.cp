@@ -161,14 +161,14 @@ pub struct Decimal {
     mantissa: i128,
     scale: u8,
 
-    pub fn fromInt(v: i64): Decimal {
+    pub static fn fromInt(v: i64): Decimal {
         return Decimal{
             .mantissa = @as(i128, v),
             .scale = 0,
         };
     }
 
-    pub fn fromParts(mantissa: i128, scale: u8): DecimalError!Decimal {
+    pub static fn fromParts(mantissa: i128, scale: u8): DecimalError!Decimal {
         if (scale > MAX_SCALE) {
             return DecimalError.ScaleOutOfRange;
         }
@@ -178,7 +178,7 @@ pub struct Decimal {
         };
     }
 
-    pub fn parse(s: []const u8): DecimalError!Decimal {
+    pub static fn parse(s: []const u8): DecimalError!Decimal {
         if (s.len == 0) {
             return DecimalError.InvalidFormat;
         }

@@ -61,7 +61,7 @@ pub struct PerlinNoise {
     perm: [512]u8,
 
     /// Initializes with Ken Perlin's classic 2002 reference permutation table.
-    fn classic(): PerlinNoise {
+    static fn classic(): PerlinNoise {
         let p: [512]u8 = [0; 512];
         let i: usize = 0;
         while (i < 256) {
@@ -74,7 +74,7 @@ pub struct PerlinNoise {
 
     /// Deterministically initializes a permutation table from a 64-bit `seed`
     /// using overflow-free xorshift64 + Fisher-Yates shuffle.
-    fn fromSeed(seed: u64): PerlinNoise {
+    static fn fromSeed(seed: u64): PerlinNoise {
         let p: [512]u8 = [0; 512];
         let i: usize = 0;
         while (i < 256) {

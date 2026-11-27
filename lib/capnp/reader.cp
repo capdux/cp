@@ -413,7 +413,7 @@ pub struct MessageReader {
         };
     }
 
-    pub fn initDefault(alloc: std.mem.Allocator, frame_bytes: []const u8): CapnpError!MessageReader {
+    pub static fn initDefault(alloc: std.mem.Allocator, frame_bytes: []const u8): CapnpError!MessageReader {
         return MessageReader.init(alloc, frame_bytes, TraversalLimit.defaultLimit());
     }
 
