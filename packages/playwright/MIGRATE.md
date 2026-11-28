@@ -65,3 +65,7 @@
 ```bash
 python3 scripts/sync_upstream_pkg.py --pkg playwright --upstream _ref/playwright/packages/playwright-core
 ```
+
+## 6. 全量 WebKit `protocol.d.ts` 强类型与 Recorder / Dispatchers 补齐
+- 已通过 [scripts/gen_protocol_cp.py](../../scripts/gen_protocol_cp.py) 全量吸收 `_ref/playwright/packages/playwright-core/src/server/webkit/protocol.d.ts`（10,243 行）至 `src/wk_protocol/`（8 文件、4,493 行、33 Domain、963 Struct/Type、132 Event、311 Command，`cpc check` 8/8 全过）。
+- 已吸收 `src/recorder.cp`（交互式操作录制器 + CP/TS/Python 三语代码生成）与 `src/dispatchers.cp`（14 类全量跨语言 JSON-RPC 调度器与 GUID 级联作用域）。

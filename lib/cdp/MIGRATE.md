@@ -32,3 +32,8 @@ python3 scripts/sync_upstream_pkg.py --pkg cap:cdp --stamp
 cpc check lib/cdp/*.cp
 cap test -m cap/test/test_cdp_production_deep.cp
 ```
+
+## 4. 全量 Chromium CDP `protocol.d.ts` 强类型生成 (`lib/cdp/protocol_types/`)
+- 已通过 [scripts/gen_protocol_cp.py](../../scripts/gen_protocol_cp.py) 全量吸收 `_ref/playwright/packages/playwright-core/src/server/chromium/protocol.d.ts`（24,886 行）：
+  - 生成 **13 个模块化 `.cp` 文件**（10,502 行，单文件均 < 1,100 行）；
+  - 完整覆盖 **59 个 CDP Domain**、**2,197 个强类型 Struct/Type**、**232 个 Event 名常量**、**677 个 Command 名常量**，`cpc check` 与 `zig ast-check` 13/13 全过。
