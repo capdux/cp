@@ -338,3 +338,115 @@ pub struct HarRecorder {
         return JSON.stringifyValue(alloc, root) catch return PlaywrightError.OutOfMemory;
     }
 }
+
+pub struct Video {
+    allocator: std.mem.Allocator = undefined,
+    endpoint: (*CdpEndpoint)? = null,
+    session_id: []const u8 = "",
+    pub save_path: []const u8 = "",
+    pub recording: bool = false,
+    frames: std.ArrayList([]u8) = .empty,
+    owned_strings: std.ArrayList([]u8) = .empty,
+
+    pub static fn init(
+        alloc: std.mem.Allocator,
+        endpoint: (*CdpEndpoint)?,
+        session_id: []const u8,
+        save_path: []const u8,
+    ): Video {
+        return Video{
+            allocator: alloc,
+            endpoint: endpoint,
+            session_id: session_id,
+            save_path: save_path,
+            recording: false,
+            frames: .empty,
+            owned_strings: .empty,
+        };
+    }
+
+    pub fn deinit(*_) {
+        _.recording = false;
+        for (f of _.frames.items) {
+            _.allocator.free(f);
+        }
+        _.frames.deinit(_.allocator);
+        _.frames = .empty;
+        for (s of _.owned_strings.items) {
+            _.allocator.free(s);
+        }
+        _.owned_strings.deinit(_.allocator);
+        _.owned_strings = .empty;
+    }
+
+    ~init() {
+        _.deinit();
+    }
+
+    pub fn start(*_, format: []const u8, quality: u8): void!PlaywrightError {
+        _.recording = true;
+        if (ep := _.endpoint) {
+            if (ep.state == CdpConnectionState.Connected) {
+                let params_buf: [256]u8 = undefined;
+                let frame_buf: [512]u8 = undefined;
+                const fmt = if (format.len > 0) format else "jpeg";
+                const p = std.fmt.bufPrint(&params_buf, "{{\"format\":\"{s}\",\"quality\":{d}}}", .{ fmt, quality }) catch return PlaywrightError.BufferTooSmall;
+                const cmd_id = ep.sendCommand(_.session_id, "Page.startScreencast", p, &frame_buf) catch return PlaywrightError.ProtocolError;
+                const resp = ep.takeResponse(cmd_id);
+                * = resp;
+            }
+        }
+    }
+
+    pub fn recordFrame(*_, base64_data: []const u8, ack_session_id: i64): void!PlaywrightError {
+        if (!_.recording) return PlaywrightError.ProtocolError;
+        const duped = _.allocator.dupe(u8, base64_data) catch return PlaywrightError.OutOfMemory;
+        _.frames.append(_.allocator, duped) catch {
+            _.allocator.free(duped);
+            return PlaywrightError.OutOfMemory;
+        };
+
+        if (ep := _.endpoint) {
+            if (ep.state == CdpConnectionState.Connected && ack_session_id > 0) {
+                let params_buf: [128]u8 = undefined;
+                let frame_buf: [256]u8 = undefined;
+                const p = std.fmt.bufPrint(&params_buf, "{{\"sessionId\":{d}}}", .{ack_session_id}) catch return PlaywrightError.BufferTooSmall;
+                const cmd_id = ep.sendCommand(_.session_id, "Page.screencastFrameAck", p, &frame_buf) catch return PlaywrightError.ProtocolError;
+                const resp = ep.takeResponse(cmd_id);
+                * = resp;
+            }
+        }
+    }
+
+    pub fn stop(*_): void!PlaywrightError {
+        if (!_.recording) return;
+        _.recording = false;
+        if (ep := _.endpoint) {
+            if (ep.state == CdpConnectionState.Connected) {
+                let frame_buf: [256]u8 = undefined;
+                const cmd_id = ep.sendCommand(_.session_id, "Page.stopScreencast", "{}", &frame_buf) catch return PlaywrightError.ProtocolError;
+                const resp = ep.takeResponse(cmd_id);
+                * = resp;
+            }
+        }
+    }
+
+    pub fn frameCount(): usize {
+        return _.frames.items.len;
+    }
+
+    pub fn path(): ([]const u8)? {
+        if (_.save_path.len == 0) return null;
+        return _.save_path;
+    }
+
+    pub fn saveAs(*_, dest_path: []const u8): void!PlaywrightError {
+        if (dest_path.len == 0) return PlaywrightError.InvalidUrl;
+        const duped = _.allocator.dupe(u8, dest_path) catch return PlaywrightError.OutOfMemory;
+        _.owned_strings.append(_.allocator, duped) catch {
+            _.allocator.free(duped);
+            return PlaywrightError.OutOfMemory;
+        };
+        _.save_path = duped;
+    }
+}

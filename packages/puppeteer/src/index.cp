@@ -74,6 +74,18 @@ export {
 } from "./network";
 export { JSHandle, ElementHandle } from "./handles";
 export { Frame } from "./frame";
+export { TracingOptions, Tracing } from "./tracing";
+export {
+    CoverageRange,
+    CoverageEntry,
+    CoverageReport,
+    JSCoverageOptions,
+    CSSCoverageOptions,
+    JSCoverage,
+    CSSCoverage,
+    Coverage,
+    convertToDisjointRanges,
+} from "./coverage";
 export { Page } from "./page";
 export { BrowserContext, Browser } from "./browser";
 export {

@@ -14,6 +14,7 @@ import {
     UrlMatcher,
 } from "./network";
 import { Page } from "./page";
+import { Tracing } from "./tracing";
 
 pub struct Cookie {
     pub name: []const u8 = "",
@@ -99,6 +100,7 @@ pub struct BrowserContext {
     cookies_list: std.ArrayList(Cookie) = .empty,
     routes: std.ArrayList(RouteEntry) = .empty,
     owned_strings: std.ArrayList([]u8) = .empty,
+    tracing_state: Tracing = undefined,
 
     pub static fn init(
         alloc: std.mem.Allocator,
@@ -117,11 +119,13 @@ pub struct BrowserContext {
             cookies_list: .empty,
             routes: .empty,
             owned_strings: .empty,
+            tracing_state: Tracing.init(alloc, endpoint, context_id),
         };
     }
 
     pub fn deinit(*_) {
         _.close();
+        _.tracing_state.deinit();
         for (p of _.pages_list.items) {
             p.deinit();
             _.allocator.destroy(p);
@@ -196,6 +200,10 @@ pub struct BrowserContext {
 
     pub fn pages(): []*Page {
         return _.pages_list.items;
+    }
+
+    pub fn tracing(*_): *Tracing {
+        return &_.tracing_state;
     }
 
     pub fn cookies(): []const Cookie {

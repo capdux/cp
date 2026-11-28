@@ -9,6 +9,7 @@ import {
     CdpSendTransportFn,
     CdpWsEndpoint,
     CdpBrowserLauncher,
+    CdpNativeWsTransport,
 } from "cap:cdp";
 import {
     PuppeteerError,
@@ -65,13 +66,23 @@ pub struct Puppeteer {
         };
         defer alloc.free(exe);
 
-        const args = Puppeteer.buildLaunchArgs(alloc, options)?;
-        let browser = Browser.init(alloc, "ws://127.0.0.1:9222/devtools/browser/default", exe) catch |e| {
-            CdpBrowserLauncher.freeLaunchArgs(alloc, args);
+        let wt = alloc.create(CdpNativeWsTransport) catch return PuppeteerError.OutOfMemory;
+        wt.* = CdpNativeWsTransport.init(alloc);
+
+        let cdp_opts = options.toCdpOptions();
+        cdp_opts.executable_path = exe;
+        wt.launchAndConnect(cdp_opts) catch |e| {
+            wt.close();
+            alloc.destroy(wt);
+            return mapCdpError(e);
+        };
+
+        let browser = Browser.init(alloc, wt.wsUrl(), exe) catch |e| {
+            wt.close();
+            alloc.destroy(wt);
             return e;
         };
-        browser.launch_args = args;
-        browser.endpoint.beginConnect();
+        browser.attachNativeTransport(wt);
         return browser;
     }
 
@@ -93,8 +104,21 @@ pub struct Puppeteer {
         if (browser_ws_url.len == 0) {
             return PuppeteerError.InvalidArgument;
         }
-        let browser = Browser.init(alloc, browser_ws_url, "")?;
-        browser.endpoint.beginConnect();
+        let wt = alloc.create(CdpNativeWsTransport) catch return PuppeteerError.OutOfMemory;
+        wt.* = CdpNativeWsTransport.init(alloc);
+
+        wt.connectWs(browser_ws_url) catch |e| {
+            wt.close();
+            alloc.destroy(wt);
+            return mapCdpError(e);
+        };
+
+        let browser = Browser.init(alloc, browser_ws_url, "") catch |e| {
+            wt.close();
+            alloc.destroy(wt);
+            return e;
+        };
+        browser.attachNativeTransport(wt);
         return browser;
     }
 }

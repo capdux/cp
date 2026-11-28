@@ -57,6 +57,13 @@ import {
     ConsoleMessage,
     SecurityDetails,
     TimeoutSettings,
+    Tracing,
+    TracingOptions,
+    Coverage,
+    JSCoverageOptions,
+    CSSCoverageOptions,
+    CoverageRange,
+    convertToDisjointRanges,
 } from "../../packages/puppeteer/src/index.cp";
 
 struct MockCdpServer {
@@ -136,6 +143,12 @@ struct MockCdpServer {
             result_json = "{\"data\":\"JVBERi0xLjQK\"}";
         } else if (std.mem.eql(u8, method, "Accessibility.getFullAXTree")) {
             result_json = "{\"nodes\":[{\"nodeId\":\"ax1\",\"ignored\":false,\"role\":{\"value\":\"RootWebArea\"},\"name\":{\"value\":\"Example\"},\"backendDOMNodeId\":1},{\"nodeId\":\"ax2\",\"ignored\":true,\"role\":{\"value\":\"generic\"},\"name\":{\"value\":\"\"},\"backendDOMNodeId\":2},{\"nodeId\":\"ax3\",\"ignored\":false,\"role\":{\"value\":\"button\"},\"name\":{\"value\":\"Submit\"},\"backendDOMNodeId\":77}]}";
+        } else if (std.mem.eql(u8, method, "Tracing.end")) {
+            result_json = "{\"data\":\"[{\\\"cat\\\":\\\"devtools.timeline\\\",\\\"name\\\":\\\"RunTask\\\"}]\"}";
+        } else if (std.mem.eql(u8, method, "Profiler.takePreciseCoverage")) {
+            result_json = "{\"url\":\"https://example.com/app.js\",\"result\":[{\"scriptId\":\"1\",\"functions\":[{\"ranges\":[{\"startOffset\":0,\"endOffset\":100,\"count\":1},{\"startOffset\":20,\"endOffset\":50,\"count\":0}]}]}]}";
+        } else if (std.mem.eql(u8, method, "CSS.stopRuleUsageTracking")) {
+            result_json = "{\"url\":\"https://example.com/style.css\",\"ruleUsage\":[{\"styleSheetId\":\"ss-1\",\"startOffset\":0,\"endOffset\":40,\"used\":true},{\"styleSheetId\":\"ss-1\",\"startOffset\":40,\"endOffset\":80,\"used\":false}]}";
         }
 
         const resp = if (sid.len > 0)
@@ -534,7 +547,15 @@ fn onPageTestEvent(event_name: []const u8, payload: []const u8, ctx: usize) {
 }
 
 fn testKnownDevicesAndEmulate(): !void {
-    expect_eq(KnownDevices.count() >= 26, true);
+    expect_eq(KnownDevices.count(), @as(usize, 155));
+    expect_eq(KnownDevices.get("Blackberry PlayBook") != null, true);
+    expect_eq(KnownDevices.get("BlackBerry Z30") != null, true);
+    expect_eq(KnownDevices.get("Kindle Fire HDX") != null, true);
+    expect_eq(KnownDevices.get("Nexus 6P") != null, true);
+    expect_eq(KnownDevices.get("Moto G4") != null, true);
+    expect_eq(KnownDevices.get("Galaxy S9+") != null, true);
+    expect_eq(KnownDevices.get("iPhone 17 Pro Max") != null, true);
+
     const iphone15 = KnownDevices.get("iPhone 15 Pro") orelse unreachable;
     expect_eq(iphone15.viewport.width, @as(u32, 393));
     expect_eq(iphone15.viewport.height, @as(u32, 659));
@@ -698,6 +719,70 @@ fn testEventsAndExtras(): !void {
     expect_eq(std.mem.eql(u8, srv.lastMethod(), "DOM.setFileInputFiles"), true);
 }
 
+fn testTracingAndCoverage(): !void {
+    // 1. Disjoint ranges scanline algorithm
+    const starts: [3]usize = [0, 20, 60];
+    const ends: [3]usize = [100, 50, 80];
+    const counts: [3]usize = [1, 0, 2];
+    let disjoint: [8]CoverageRange = undefined;
+    const dlen = convertToDisjointRanges(&starts, &ends, &counts, &disjoint);
+    expect_eq(dlen, @as(usize, 2));
+    expect_eq(disjoint[0].start, @as(usize, 0));
+    expect_eq(disjoint[0].end, @as(usize, 20));
+    expect_eq(disjoint[1].start, @as(usize, 50));
+    expect_eq(disjoint[1].end, @as(usize, 100));
+
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/tc",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+
+    const page = browser.newPage()?;
+
+    // 2. Page.tracing().start / stop
+    const tr = page.tracing();
+    tr.start(TracingOptions{ screenshots: true, buffer_size: 4096 })?;
+    expect_eq(tr.isRecording(), true);
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Tracing.start"), true);
+    let tbuf: [1024]u8 = undefined;
+    const trace_out = tr.stop(&tbuf)?;
+    expect_eq(tr.isRecording(), false);
+    expect_eq(std.mem.indexOf(u8, trace_out, "devtools.timeline") != null, true);
+
+    // 3. Page.coverage().startJSCoverage / stopJSCoverage
+    const cov = page.coverage();
+    cov.startJSCoverage(JSCoverageOptions{})?;
+    const js_report = cov.stopJSCoverage()?;
+    const js_entries = js_report.slice();
+    expect_eq(js_entries.len, @as(usize, 1));
+    expect_eq(std.mem.eql(u8, js_entries[0].url(), "https://example.com/app.js"), true);
+    const js_ranges = js_entries[0].rangeSlice();
+    expect_eq(js_ranges.len, @as(usize, 2));
+    expect_eq(js_ranges[0].start, @as(usize, 0));
+    expect_eq(js_ranges[0].end, @as(usize, 20));
+    expect_eq(js_ranges[1].start, @as(usize, 50));
+    expect_eq(js_ranges[1].end, @as(usize, 100));
+
+    // 4. Page.coverage().startCSSCoverage / stopCSSCoverage
+    cov.startCSSCoverage(CSSCoverageOptions{})?;
+    const css_report = cov.stopCSSCoverage()?;
+    const css_entries = css_report.slice();
+    expect_eq(css_entries.len, @as(usize, 1));
+    expect_eq(std.mem.eql(u8, css_entries[0].url(), "https://example.com/style.css"), true);
+    const css_ranges = css_entries[0].rangeSlice();
+    expect_eq(css_ranges.len, @as(usize, 1));
+    expect_eq(css_ranges[0].start, @as(usize, 0));
+    expect_eq(css_ranges[0].end, @as(usize, 40));
+}
+
 pub fn main() {
     test("1. Launch Args Builder, Executable Probing & WsUrl Parser", () => {
         testLaunchArgsAndExecutableProbing() catch unreachable;
@@ -740,5 +825,8 @@ pub fn main() {
     });
     test("14. PuppeteerEventEmitter, FileChooser, ConsoleMessage, SecurityDetails & TimeoutSettings", () => {
         testEventsAndExtras() catch unreachable;
+    });
+    test("15. Tracing, Coverage (JS/CSS) & Disjoint Range Scanline", () => {
+        testTracingAndCoverage() catch unreachable;
     });
 }

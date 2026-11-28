@@ -14,6 +14,9 @@ export {
     Route,
     RouteHandlerFn,
     RouteEntry,
+    WebSocketRoute,
+    WebSocketRouteHandlerFn,
+    WebSocketRouteEntry,
     UrlMatcher,
 } from "./network";
 
@@ -44,6 +47,7 @@ export {
     HarRecordOptions,
     HarEntry,
     HarRecorder,
+    Video,
 } from "./artifacts";
 
 export {
@@ -94,3 +98,29 @@ export {
     CliResult,
     PlaywrightCli,
 } from "./cli";
+
+export {
+    Frame,
+} from "./frames";
+
+export {
+    TracingOptions,
+    TraceEvent,
+    Tracing,
+} from "./tracing";
+
+export {
+    JSCoverageOptions,
+    CSSCoverageOptions,
+    CoverageRange,
+    JSCoverageEntry,
+    CSSCoverageEntry,
+    Coverage,
+} from "./coverage";
+
+export {
+    APIRequestOptions,
+    APIRequestFetchOptions,
+    APIResponse,
+    APIRequestContext,
+} from "./request_context";

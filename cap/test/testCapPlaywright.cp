@@ -51,6 +51,12 @@ import {
     PlaywrightRemoteClient,
     CliCommand,
     PlaywrightCli,
+    Frame,
+    Tracing,
+    Coverage,
+    APIRequestContext,
+    WebSocketRoute,
+    Video,
 } from "../../packages/playwright/src/index.cp";
 
 struct MockCdpTransport {
@@ -707,6 +713,206 @@ fn testPlaywrightCliActions(): !void {
     expect_eq(gpa.deinit() == .ok, true);
 }
 
+struct WsRouteTestState {
+    handled: bool = false,
+}
+
+fn testWsRouteHandler(ctx: usize, ws: *WebSocketRoute) {
+    const st = unsafe { ctx as *WsRouteTestState! };
+    st.handled = true;
+    ws.connectToServer();
+    ws.send("hello-from-mock") catch {};
+    ws.sendToServer("ping") catch {};
+}
+
+fn testFrameTreeManagement(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const page = browser.newPage()?;
+
+    const mf = page.mainFrame()?;
+    expect_eq(mf.parentFrame() == null, true);
+    expect_eq(std.mem.eql(u8, mf.url(), "about:blank"), true);
+
+    const child1 = mf.addChildFrame("frame-1", "sidebar", "https://example.com/sidebar")?;
+    const nested = child1.addChildFrame("frame-2", "widget", "https://cdn.other.com/widget")?;
+    expect_eq(mf.childFrames().len, 1);
+    expect_eq(child1.parentFrame() != null, true);
+    expect_eq(nested.parentFrame() != null, true);
+
+    const found_name = page.frameByName("widget");
+    expect_eq(found_name != null, true);
+    expect_eq(std.mem.eql(u8, found_name.?.id(), "frame-2"), true);
+
+    const found_url = page.frameByUrl("*cdn.other.com*");
+    expect_eq(found_url != null, true);
+    expect_eq(std.mem.eql(u8, found_url.?.name(), "widget"), true);
+
+    const all_frames = page.frames(alloc)?;
+    expect_eq(all_frames.len, 3);
+    alloc.free(all_frames);
+
+    const loc = child1.locator("button.nav");
+    expect_eq(std.mem.eql(u8, loc.selector(), "button.nav"), true);
+
+    const resp = child1.goto("https://example.com/nav2", "")?;
+    expect_eq(resp.isOk(), true);
+    expect_eq(std.mem.eql(u8, child1.url(), "https://example.com/nav2"), true);
+
+    const eval_res = nested.evaluate("1 + 1")?;
+    * = eval_res;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.evaluate"), true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testTracingAndZipArchive(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const ctx = browser.newContext(.{})?;
+
+    let tr = ctx.tracing();
+    expect_eq(tr.isRecording(), false);
+    tr.start(.{ name: "e2e", title: "chunk1", screenshots: true, snapshots: true })?;
+    expect_eq(tr.isRecording(), true);
+
+    tr.recordEvent("action", "Page.goto", "page-1", "{\"url\":\"https://example.com\"}")?;
+    expect_eq(tr.eventCount() >= 2, true);
+
+    const zip1 = tr.stopChunk("")?;
+    expect_eq(zip1.len > 22, true);
+    expect_eq(zip1[0] == 'P' && zip1[1] == 'K', true);
+    alloc.free(zip1);
+
+    tr.startChunk("chunk2")?;
+    tr.recordEvent("action", "Locator.click", "page-1", "{}")?;
+    const zip2 = tr.stop("")?;
+    expect_eq(zip2.len > 22, true);
+    expect_eq(tr.isRecording(), false);
+    alloc.free(zip2);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testCoverageRecorder(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const page = browser.newPage()?;
+
+    let cov = page.coverage();
+    expect_eq(cov.isJSCoverageActive(), false);
+    expect_eq(cov.isCSSCoverageActive(), false);
+
+    cov.startJSCoverage(.{ call_count: true, detailed: true })?;
+    expect_eq(cov.isJSCoverageActive(), true);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Profiler.startPreciseCoverage"), true);
+
+    const js_entries = cov.stopJSCoverage(alloc)?;
+    alloc.free(js_entries);
+    expect_eq(cov.isJSCoverageActive(), false);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Profiler.stopPreciseCoverage"), true);
+
+    cov.startCSSCoverage(.{})?;
+    expect_eq(cov.isCSSCoverageActive(), true);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "CSS.startRuleUsageTracking"), true);
+
+    const css_entries = cov.stopCSSCoverage(alloc)?;
+    alloc.free(css_entries);
+    expect_eq(cov.isCSSCoverageActive(), false);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "CSS.stopRuleUsageTracking"), true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testApiRequestContextAndCookieSync(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const ctx = browser.newContext(.{})?;
+
+    const c: [1]Cookie = .{ Cookie{ name: "auth", value: "token-999", domain: "api.example.com", path: "/" } };
+    ctx.addCookies(&c)?;
+
+    let req_ctx = APIRequestContext.init(alloc, .{ base_url: "https://api.example.com" });
+    req_ctx.syncCookiesFromContext(ctx)?;
+    expect_eq(req_ctx.cookies().len, 1);
+    expect_eq(std.mem.eql(u8, req_ctx.cookies()[0].value, "token-999"), true);
+
+    const get_res = req_ctx.get("/v1/users", .{})?;
+    expect_eq(get_res.isOk(), true);
+    expect_eq(std.mem.eql(u8, get_res.url, "https://api.example.com/v1/users"), true);
+    expect_eq(std.mem.indexOf(u8, get_res.raw_request, "GET /v1/users HTTP/1.1") != null, true);
+
+    const post_res = req_ctx.post("/v1/items", .{ data: "{\"id\":42}" })?;
+    expect_eq(post_res.statusCode(), 200);
+    expect_eq(std.mem.indexOf(u8, post_res.raw_request, "POST /v1/items HTTP/1.1") != null, true);
+
+    const put_res = req_ctx.put("/v1/items/42", .{ data: "{\"id\":42}" })?;
+    expect_eq(std.mem.indexOf(u8, put_res.raw_request, "PUT /v1/items/42 HTTP/1.1") != null, true);
+
+    const del_res = req_ctx.delete("/v1/items/42", .{})?;
+    expect_eq(std.mem.indexOf(u8, del_res.raw_request, "DELETE /v1/items/42 HTTP/1.1") != null, true);
+
+    req_ctx.addCookie(Cookie{ name: "csrf", value: "abc", domain: "api.example.com", path: "/" })?;
+    req_ctx.syncCookiesToContext(ctx)?;
+    expect_eq(ctx.cookies().len >= 2, true);
+
+    req_ctx.deinit();
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testWebSocketRouteAndVideoScreencast(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const page = browser.newPage()?;
+
+    let ws_state = WsRouteTestState{};
+    page.routeWebSocket("wss://echo.example.com/*", testWsRouteHandler, unsafe { @intFromPtr(&ws_state) })?;
+
+    let ws_route = WebSocketRoute.init(alloc, "wss://echo.example.com/chat");
+    const matched = page.dispatchWebSocketRoute(&ws_route);
+    expect_eq(matched, true);
+    expect_eq(ws_state.handled, true);
+    expect_eq(ws_route.connected_to_server, true);
+    expect_eq(ws_route.sent_to_page.items.len, 1);
+    expect_eq(ws_route.sent_to_server.items.len, 1);
+    ws_route.close(1000, "done");
+    expect_eq(ws_route.isClosed(), true);
+    ws_route.deinit();
+
+    const vid = page.video()?;
+    vid.start("jpeg", 80)?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.startScreencast"), true);
+    vid.recordFrame("AQID", 7)?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.screencastFrameAck"), true);
+    expect_eq(vid.frameCount(), 1);
+    vid.saveAs("/tmp/test-video.webm")?;
+    expect_eq(vid.path() != null, true);
+    vid.stop()?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.stopScreencast"), true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
 fn main() {
     test("1. Chromium Launch, Args Builder & Executable Probing", () => {
         testChromiumLaunchAndLauncherProbe() catch unreachable;
@@ -743,5 +949,20 @@ fn main() {
     });
     test("12. Playwright CLI Actions (screenshot/pdf/codegen)", () => {
         testPlaywrightCliActions() catch unreachable;
+    });
+    test("13. Frame Tree Management (mainFrame/childFrames/frameByName/frameByUrl)", () => {
+        testFrameTreeManagement() catch unreachable;
+    });
+    test("14. Tracing & ZIP Archive Output (cap:pack ZipWriter)", () => {
+        testTracingAndZipArchive() catch unreachable;
+    });
+    test("15. Coverage Recorder (JS & CSS Precise Coverage)", () => {
+        testCoverageRecorder() catch unreachable;
+    });
+    test("16. APIRequestContext & BrowserContext Cookie Jar Sync", () => {
+        testApiRequestContextAndCookieSync() catch unreachable;
+    });
+    test("17. WebSocketRoute & Video Screencast Handle", () => {
+        testWebSocketRouteAndVideoScreencast() catch unreachable;
     });
 }

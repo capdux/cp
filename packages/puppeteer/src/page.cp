@@ -39,6 +39,8 @@ import { Device } from "./devices";
 import { WaitForFunctionOptions } from "./selectors";
 import { PuppeteerEventEmitter, EventHandlerFn } from "./events";
 import { TimeoutSettings } from "./extras";
+import { Tracing } from "./tracing";
+import { Coverage } from "./coverage";
 
 pub struct Page {
     session: CDPSession = .{},
@@ -46,6 +48,8 @@ pub struct Page {
     kb: Keyboard = .{},
     mouse_ctrl: Mouse = .{},
     touch_ctrl: Touchscreen = .{},
+    tracing_ctrl: Tracing = .{},
+    coverage_ctrl: Coverage = .{},
     current_viewport: Viewport = .{},
     extra_headers: [16]HttpHeader = undefined,
     extra_headers_len: usize = 0,
@@ -69,6 +73,8 @@ pub struct Page {
         p.kb = Keyboard.init(&p.session);
         p.mouse_ctrl = Mouse.init(&p.session);
         p.touch_ctrl = Touchscreen.init(&p.session);
+        p.tracing_ctrl = Tracing.init(&p.session);
+        p.coverage_ctrl = Coverage.init(&p.session);
         return p;
     }
 
@@ -78,6 +84,8 @@ pub struct Page {
         _.kb.session = &_.session;
         _.mouse_ctrl.session = &_.session;
         _.touch_ctrl.session = &_.session;
+        _.tracing_ctrl.session = &_.session;
+        _.coverage_ctrl.bindSession(&_.session);
     }
 
     pub fn deinit(*_) {
@@ -464,6 +472,16 @@ pub struct Page {
     pub fn accessibilitySnapshot(*_, options: AccessibilitySnapshotOptions): AccessibilitySnapshot!PuppeteerError {
         _.bindSelf();
         return _.main_frame.accessibilitySnapshot(options);
+    }
+
+    pub fn tracing(*_): *Tracing {
+        _.bindSelf();
+        return &_.tracing_ctrl;
+    }
+
+    pub fn coverage(*_): *Coverage {
+        _.bindSelf();
+        return &_.coverage_ctrl;
     }
 
     pub fn setDefaultTimeout(*_, timeout_ms: u32) {

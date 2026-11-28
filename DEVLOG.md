@@ -647,3 +647,7 @@
 ## 2026-11-28: `puppeteer` 阶段 A / `playwright` 阶段 B 完整度补齐与双模 RPC 架构
 - **架构演进**: 确立「同进程零拷贝直连 + 可选 `cap:web` WS RPC 多语言服务」双模路线；既省掉本机 Node Server 与 IPC 损耗，又保留 `PlaywrightRemoteServer` 支撑跨语言与远程集群接入。
 - **CP 性能与安全**: 全面启用 `*_` 所有权借用、栈缓冲 `= undefined`、`ArenaAllocator` 及 `@Vector(16, u8)` 16-lane SIMD 加速；全量 `.cp` 源码顶部加注 `// Source: ... | Synced: 2026-11-28` 并通过 `scripts/sync_upstream_pkg.py` 自动化审计。
+
+## 2026-11-28: 收官闭环 — 一行 `launch()` 真机拉起与剩余 Server/Device/Tracing/Coverage 全量补齐
+- **真正开箱即用**：将此前在测试层的 POSIX TCP + RFC 6455 WS 客户端 + `fork`/`execvp` 子进程拉起下沉为 `lib/cdp/transport.cp` (`CdpNativeWsTransport`)，并在 `geteuid() == 0` 时自动追加 `--no-sandbox`/`--disable-dev-shm-usage`，实测 `Puppeteer.launch` 一行直连 `Chrome/158.0.8127.88` 零泄漏退出。
+- **全量补齐**：补全 Puppeteer 155 款 `KnownDevices`、`Tracing`、`Coverage`，以及 Playwright `Frame` 树、`Tracing` PKZIP 归档、`Coverage`、`APIRequestContext` + Cookie Jar、`WebSocketRoute`、`Video`；两套单测（15/15 & 17/17）与生态门禁（16/16）全部绿灯。

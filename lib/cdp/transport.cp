@@ -27,6 +27,7 @@ const CdpSockAddrIn = extern struct {
     fn kill(pid: i32, sig: i32): i32;
     fn waitpid(pid: i32, status: *i32, options: i32): i32;
     fn usleep(usec: u32): i32;
+    fn geteuid(): u32;
 }
 
 fn cdpHtons(port: u16): u16 {
@@ -63,6 +64,13 @@ fn cdpSendAll(fd: i32, data: []const u8): bool {
         sent += n as usize;
     }
     return true;
+}
+
+fn cdpAllocZ(alloc: std.mem.Allocator, s: []const u8): ([:0]u8)!CdpError {
+    let raw = alloc.alloc(u8, s.len + 1) catch return CdpError.OutOfMemory;
+    if (s.len > 0) @memcpy(raw[0..s.len], s);
+    raw[s.len] = 0;
+    return raw[0..s.len :0];
 }
 
 /// Native POSIX TCP + RFC 6455 WebSocket Transport owning optional browser child PID.
@@ -140,7 +148,7 @@ pub struct CdpNativeWsTransport {
     pub fn connectWs(*_, ws_url: []const u8): void!CdpError {
         const parsed = CdpBrowserLauncher.parseWsUrl(ws_url) orelse return CdpError.InvalidFrame;
         let fd = cdpConnectLoopback(parsed.port);
-        if (fd < 0) return CdpError.TransportDisconnected;
+        if (fd < 0) return CdpError.NotConnected;
 
         let hs = std.fmt.allocPrint(
             _.alloc,
@@ -154,7 +162,7 @@ pub struct CdpNativeWsTransport {
 
         if (!cdpSendAll(fd, hs)) {
             * = std.c.close(fd);
-            return CdpError.TransportSendFailed;
+            return CdpError.ConnectionClosed;
         }
 
         let resp_buf: [2048]u8 = undefined;
@@ -168,7 +176,7 @@ pub struct CdpNativeWsTransport {
         }
         if (std.mem.indexOf(u8, resp_buf[0..total], " 101 ") == null) {
             * = std.c.close(fd);
-            return CdpError.TransportDisconnected;
+            return CdpError.NotConnected;
         }
 
         _.fd = fd;
@@ -207,22 +215,30 @@ pub struct CdpNativeWsTransport {
             owned_z.deinit(_.alloc);
         }
 
-        const exe_z = _.alloc.dupeZ(u8, exe) catch return CdpError.OutOfMemory;
+        const exe_z = cdpAllocZ(_.alloc, exe)?;
         owned_z.append(_.alloc, exe_z) catch return CdpError.OutOfMemory;
         c_strs.append(_.alloc, exe_z.ptr) catch return CdpError.OutOfMemory;
 
         for (a of args) {
-            const az = _.alloc.dupeZ(u8, a) catch return CdpError.OutOfMemory;
+            const az = cdpAllocZ(_.alloc, a)?;
             owned_z.append(_.alloc, az) catch return CdpError.OutOfMemory;
             c_strs.append(_.alloc, az.ptr) catch return CdpError.OutOfMemory;
         }
-        const allow_z = _.alloc.dupeZ(u8, "--remote-allow-origins=*") catch return CdpError.OutOfMemory;
+        const allow_z = cdpAllocZ(_.alloc, "--remote-allow-origins=*")?;
         owned_z.append(_.alloc, allow_z) catch return CdpError.OutOfMemory;
         c_strs.append(_.alloc, allow_z.ptr) catch return CdpError.OutOfMemory;
+        if (unsafe { geteuid() } == 0) {
+            const ns_z = cdpAllocZ(_.alloc, "--no-sandbox")?;
+            owned_z.append(_.alloc, ns_z) catch return CdpError.OutOfMemory;
+            c_strs.append(_.alloc, ns_z.ptr) catch return CdpError.OutOfMemory;
+            const shm_z = cdpAllocZ(_.alloc, "--disable-dev-shm-usage")?;
+            owned_z.append(_.alloc, shm_z) catch return CdpError.OutOfMemory;
+            c_strs.append(_.alloc, shm_z.ptr) catch return CdpError.OutOfMemory;
+        }
         c_strs.append(_.alloc, null) catch return CdpError.OutOfMemory;
 
         const pid = unsafe { fork() };
-        if (pid < 0) return CdpError.TransportSendFailed;
+        if (pid < 0) return CdpError.ConnectionClosed;
         if (pid == 0) {
             const argv_ptr: [*:null]const ([*:0]const u8)? = unsafe { @ptrCast(c_strs.items.ptr) };
             * = unsafe { execvp(exe_z.ptr, argv_ptr) };

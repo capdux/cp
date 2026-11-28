@@ -11,6 +11,7 @@ import {
     CdpBrowserLauncher,
     CdpWsEndpoint,
     CdpSendTransportFn,
+    CdpNativeWsTransport,
 } from "cap:cdp";
 import { PlaywrightError } from "./network";
 import { Browser } from "./browser";
@@ -78,10 +79,49 @@ pub struct ChromiumBrowserType {
         if (cb := opts.transport_fn) {
             browser.setTransport(cb, opts.transport_ctx);
         } else {
-            browser.endpoint.markConnected();
+            let tr = alloc.create(CdpNativeWsTransport) catch return PlaywrightError.OutOfMemory;
+            tr.* = CdpNativeWsTransport.init(alloc);
+            tr.launchAndConnect(cdp_opts) catch |e| {
+                tr.deinit();
+                alloc.destroy(tr);
+                return switch (e) {
+                    error.OutOfMemory => PlaywrightError.OutOfMemory,
+                    error.Timeout => PlaywrightError.Timeout,
+                    error.InvalidFrame => PlaywrightError.InvalidUrl,
+                    error.NotConnected => PlaywrightError.NotConnected,
+                    else => PlaywrightError.ExecutableNotFound,
+                };
+            };
+            browser.attachNativeTransport(tr);
+            if (tr.wsUrl().len > 0) {
+                browser.setWsEndpoint(tr.wsUrl())?;
+            }
         }
 
         return browser;
+    }
+
+    /// Launch with an explicit custom transport callback (for Mock unit tests).
+    pub static fn launchWithTransport(
+        alloc: std.mem.Allocator,
+        opts: LaunchOptions,
+        cb: CdpSendTransportFn,
+        ctx: usize,
+    ): Browser!PlaywrightError {
+        return ChromiumBrowserType.launch(alloc, LaunchOptions{
+            headless: opts.headless,
+            executable_path: opts.executable_path,
+            user_data_dir: opts.user_data_dir,
+            args: opts.args,
+            viewport_width: opts.viewport_width,
+            viewport_height: opts.viewport_height,
+            timeout_ms: opts.timeout_ms,
+            remote_debugging_port: opts.remote_debugging_port,
+            ignore_https_errors: opts.ignore_https_errors,
+            require_executable: opts.require_executable,
+            transport_fn: cb,
+            transport_ctx: ctx,
+        });
     }
 
     /// Connect to an existing browser over Chrome DevTools Protocol (`ws://...` or `wss://...`).
@@ -100,9 +140,36 @@ pub struct ChromiumBrowserType {
         if (cb := opts.transport_fn) {
             browser.setTransport(cb, opts.transport_ctx);
         } else {
-            browser.endpoint.markConnected();
+            let tr = alloc.create(CdpNativeWsTransport) catch return PlaywrightError.OutOfMemory;
+            tr.* = CdpNativeWsTransport.init(alloc);
+            tr.connectWs(parsed.url) catch |e| {
+                tr.deinit();
+                alloc.destroy(tr);
+                return switch (e) {
+                    error.OutOfMemory => PlaywrightError.OutOfMemory,
+                    error.InvalidFrame => PlaywrightError.InvalidUrl,
+                    error.NotConnected => PlaywrightError.NotConnected,
+                    else => PlaywrightError.ProtocolError,
+                };
+            };
+            browser.attachNativeTransport(tr);
         }
         return browser;
+    }
+
+    /// Connect over CDP with an explicit custom transport callback (for Mock unit tests).
+    pub static fn connectOverCDPWithTransport(
+        alloc: std.mem.Allocator,
+        endpoint_url: []const u8,
+        opts: ConnectOverCdpOptions,
+        cb: CdpSendTransportFn,
+        ctx: usize,
+    ): Browser!PlaywrightError {
+        return ChromiumBrowserType.connectOverCDP(alloc, endpoint_url, ConnectOverCdpOptions{
+            timeout_ms: opts.timeout_ms,
+            transport_fn: cb,
+            transport_ctx: ctx,
+        });
     }
 }
 

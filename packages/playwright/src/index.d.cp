@@ -132,12 +132,22 @@ export struct Page {
     fn ariaSnapshot(*_, alloc: std.mem.Allocator): AriaSnapshot!PlaywrightError;
     fn screenshot(*_, opts: ScreenshotOptions): ([]const u8)!PlaywrightError;
     fn pdf(*_, opts: PdfOptions): ([]const u8)!PlaywrightError;
+    fn clock(*_): Clock;
+    fn coverage(*_): Coverage;
+    fn mainFrame(*_): (*Frame)!PlaywrightError;
+    fn frames(*_, alloc: std.mem.Allocator): ([]*Frame)!PlaywrightError;
+    fn frameByName(*_, target_name: []const u8): (*Frame)?;
+    fn frameByUrl(*_, url_pattern: []const u8): (*Frame)?;
+    fn routeWebSocket(*_, pattern: []const u8, handler: WebSocketRouteHandlerFn, ctx: usize): void!PlaywrightError;
+    fn unrouteWebSocket(*_, pattern: []const u8);
+    fn video(*_): (*Video)!PlaywrightError;
     fn close(*_);
 }
 
 export struct BrowserContext {
     fn newPage(*_): (*Page)!PlaywrightError;
     fn pages(): []*Page;
+    fn tracing(*_): *Tracing;
     fn cookies(): []const Cookie;
     fn addCookies(*_, new_cookies: []const Cookie): void!PlaywrightError;
     fn clearCookies(*_);
@@ -160,7 +170,9 @@ export struct ChromiumBrowserType {
     static fn name(): []const u8;
     static fn executablePath(alloc: std.mem.Allocator, preferred: []const u8): ([]u8)?;
     static fn launch(alloc: std.mem.Allocator, opts: LaunchOptions): Browser!PlaywrightError;
+    static fn launchWithTransport(alloc: std.mem.Allocator, opts: LaunchOptions, cb: CdpSendTransportFn, ctx: usize): Browser!PlaywrightError;
     static fn connectOverCDP(alloc: std.mem.Allocator, endpoint_url: []const u8, opts: ConnectOverCdpOptions): Browser!PlaywrightError;
+    static fn connectOverCDPWithTransport(alloc: std.mem.Allocator, endpoint_url: []const u8, opts: ConnectOverCdpOptions, cb: CdpSendTransportFn, ctx: usize): Browser!PlaywrightError;
 }
 
 export const chromium = ChromiumBrowserType;
@@ -261,4 +273,70 @@ export struct PlaywrightRemoteServer {
 export struct PlaywrightCli {
     static fn parseArgs(args: []const []const u8): CliOptions!PlaywrightError;
     static fn generateCodegenSkeleton(alloc: std.mem.Allocator, opts: CliOptions): ([]u8)!PlaywrightError;
+}
+
+export struct Frame {
+    fn id(): []const u8;
+    fn name(): []const u8;
+    fn url(): []const u8;
+    fn isDetached(): bool;
+    fn parentFrame(): (*Frame)?;
+    fn childFrames(): []*Frame;
+    fn addChildFrame(*_, child_frame_id: []const u8, child_name: []const u8, child_url: []const u8): (*Frame)!PlaywrightError;
+    fn frameByName(*_, target_name: []const u8): (*Frame)?;
+    fn frameByUrl(*_, url_pattern: []const u8): (*Frame)?;
+    fn locator(selector: []const u8): Locator;
+    fn goto(*_, target_url: []const u8, referer: []const u8): Response!PlaywrightError;
+    fn evaluate(*_, expression: []const u8): ([]const u8)!PlaywrightError;
+}
+
+export struct Tracing {
+    fn isRecording(): bool;
+    fn eventCount(): usize;
+    fn start(*_, opts: TracingOptions): void!PlaywrightError;
+    fn startChunk(*_, title: []const u8): void!PlaywrightError;
+    fn recordEvent(*_, event_type: []const u8, method: []const u8, page_id: []const u8, detail_json: []const u8): void!PlaywrightError;
+    fn stopChunk(*_, out_path: []const u8): ([]u8)!PlaywrightError;
+    fn stop(*_, out_path: []const u8): ([]u8)!PlaywrightError;
+}
+
+export struct Coverage {
+    fn isJSCoverageActive(): bool;
+    fn isCSSCoverageActive(): bool;
+    fn startJSCoverage(*_, opts: JSCoverageOptions): void!PlaywrightError;
+    fn stopJSCoverage(*_, alloc: std.mem.Allocator): ([]JSCoverageEntry)!PlaywrightError;
+    fn startCSSCoverage(*_, opts: CSSCoverageOptions): void!PlaywrightError;
+    fn stopCSSCoverage(*_, alloc: std.mem.Allocator): ([]CSSCoverageEntry)!PlaywrightError;
+}
+
+export struct APIRequestContext {
+    static fn init(alloc: std.mem.Allocator, opts: APIRequestOptions): APIRequestContext;
+    fn deinit(*_);
+    fn dispose(*_);
+    fn addCookie(*_, c: Cookie): void!PlaywrightError;
+    fn cookies(): []const Cookie;
+    fn syncCookiesFromContext(*_, ctx: *BrowserContext): void!PlaywrightError;
+    fn syncCookiesToContext(*_, ctx: *BrowserContext): void!PlaywrightError;
+    fn fetch(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
+    fn get(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
+    fn post(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
+    fn put(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
+    fn delete(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
+}
+
+export struct WebSocketRoute {
+    fn connectToServer(*_);
+    fn send(*_, message: []const u8): void!PlaywrightError;
+    fn sendToServer(*_, message: []const u8): void!PlaywrightError;
+    fn close(*_, code: u16, reason: []const u8);
+    fn isClosed(): bool;
+}
+
+export struct Video {
+    fn start(*_, format: []const u8, quality: u8): void!PlaywrightError;
+    fn recordFrame(*_, base64_data: []const u8, ack_session_id: i64): void!PlaywrightError;
+    fn stop(*_): void!PlaywrightError;
+    fn frameCount(): usize;
+    fn path(): ([]const u8)?;
+    fn saveAs(*_, dest_path: []const u8): void!PlaywrightError;
 }

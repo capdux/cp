@@ -10,6 +10,7 @@ import {
     CdpConnectionState,
     CdpBrowserLauncher,
     CdpSendTransportFn,
+    CdpNativeWsTransport,
 } from "cap:cdp";
 import { PlaywrightError } from "./network";
 import { Page } from "./page";
@@ -27,6 +28,7 @@ pub struct Browser {
 
     contexts_list: std.ArrayList(*BrowserContext) = .empty,
     owned_strings: std.ArrayList([]u8) = .empty,
+    native_transport: (*CdpNativeWsTransport)? = null,
 
     pub static fn init(alloc: std.mem.Allocator): Browser {
         return Browser{
@@ -40,11 +42,17 @@ pub struct Browser {
             next_ctx_num: 1,
             contexts_list: .empty,
             owned_strings: .empty,
+            native_transport: null,
         };
     }
 
     pub fn deinit(*_) {
         _.close();
+        if (tr := _.native_transport) {
+            tr.deinit();
+            _.allocator.destroy(tr);
+            _.native_transport = null;
+        }
         for (ctx of _.contexts_list.items) {
             ctx.deinit();
             _.allocator.destroy(ctx);
@@ -73,6 +81,11 @@ pub struct Browser {
     pub fn setTransport(*_, cb: CdpSendTransportFn, ctx: usize) {
         _.endpoint.setTransport(cb, ctx);
         _.endpoint.markConnected();
+    }
+
+    pub fn attachNativeTransport(*_, tr: *CdpNativeWsTransport) {
+        _.native_transport = tr;
+        tr.attachEndpoint(&_.endpoint);
     }
 
     pub fn setWsEndpoint(*_, url: []const u8): void!PlaywrightError {
@@ -143,5 +156,8 @@ pub struct Browser {
             ctx.close();
         }
         _.endpoint.close();
+        if (tr := _.native_transport) {
+            tr.close();
+        }
     }
 }

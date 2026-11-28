@@ -11,6 +11,7 @@ import {
     CdpSendTransportFn,
     CdpBrowserLauncher,
     CdpFrameScanner,
+    CdpNativeWsTransport,
 } from "cap:cdp";
 import {
     PuppeteerError,
@@ -93,6 +94,7 @@ pub struct Browser {
     targets_list: std.ArrayList(TargetInfo) = .empty,
     owned_strings: std.ArrayList([]u8) = .empty,
     launch_args: ([][]u8)? = null,
+    ws_transport: (*CdpNativeWsTransport)? = null,
     next_seq: u64 = 1,
     closed: bool = false,
 
@@ -174,6 +176,12 @@ pub struct Browser {
         _.endpoint.close();
         _.endpoint.deinit();
         _.allocator.destroy(_.endpoint);
+
+        if (wt := _.ws_transport) {
+            wt.close();
+            _.allocator.destroy(wt);
+            _.ws_transport = null;
+        }
     }
 
     ~init() {
@@ -192,6 +200,17 @@ pub struct Browser {
     pub fn setTransport(*_, cb: CdpSendTransportFn, ctx: usize) {
         _.endpoint.setTransport(cb, ctx);
         _.endpoint.markConnected();
+    }
+
+    pub fn attachNativeTransport(*_, wt: *CdpNativeWsTransport) {
+        _.ws_transport = wt;
+        wt.attachEndpoint(_.endpoint);
+        const ws_url = wt.wsUrl();
+        if (ws_url.len > 0) {
+            const wn = if (ws_url.len <= 512) ws_url.len else 512;
+            @memcpy(_.ws_endpoint_buf[0..wn], ws_url[0..wn]);
+            _.ws_endpoint_len = wn;
+        }
     }
 
     pub fn feedIncoming(*_, payload: []const u8): void!PuppeteerError {

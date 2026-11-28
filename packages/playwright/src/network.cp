@@ -178,3 +178,85 @@ pub struct UrlMatcher {
         return pi == pat.len;
     }
 }
+
+pub struct WebSocketRoute {
+    allocator: std.mem.Allocator = undefined,
+    pub url: []const u8 = "",
+    pub closed: bool = false,
+    pub close_code: u16 = 1000,
+    pub close_reason: []const u8 = "",
+    pub connected_to_server: bool = false,
+    pub sent_to_page: std.ArrayList([]u8) = .empty,
+    pub sent_to_server: std.ArrayList([]u8) = .empty,
+
+    pub static fn init(alloc: std.mem.Allocator, ws_url: []const u8): WebSocketRoute {
+        return WebSocketRoute{
+            allocator: alloc,
+            url: ws_url,
+            closed: false,
+            close_code: 1000,
+            close_reason: "",
+            connected_to_server: false,
+            sent_to_page: .empty,
+            sent_to_server: .empty,
+        };
+    }
+
+    pub fn deinit(*_) {
+        for (m of _.sent_to_page.items) {
+            _.allocator.free(m);
+        }
+        _.sent_to_page.deinit(_.allocator);
+        _.sent_to_page = .empty;
+
+        for (m of _.sent_to_server.items) {
+            _.allocator.free(m);
+        }
+        _.sent_to_server.deinit(_.allocator);
+        _.sent_to_server = .empty;
+    }
+
+    ~init() {
+        _.deinit();
+    }
+
+    pub fn connectToServer(*_) {
+        _.connected_to_server = true;
+    }
+
+    pub fn send(*_, message: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.ConnectionClosed;
+        const duped = _.allocator.dupe(u8, message) catch return PlaywrightError.OutOfMemory;
+        _.sent_to_page.append(_.allocator, duped) catch {
+            _.allocator.free(duped);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    pub fn sendToServer(*_, message: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.ConnectionClosed;
+        const duped = _.allocator.dupe(u8, message) catch return PlaywrightError.OutOfMemory;
+        _.sent_to_server.append(_.allocator, duped) catch {
+            _.allocator.free(duped);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    pub fn close(*_, code: u16, reason: []const u8) {
+        _.closed = true;
+        _.close_code = code;
+        _.close_reason = reason;
+    }
+
+    pub fn isClosed(): bool {
+        return _.closed;
+    }
+}
+
+pub type WebSocketRouteHandlerFn = fn(ctx: usize, ws_route: *WebSocketRoute): void;
+
+pub struct WebSocketRouteEntry {
+    pub pattern: []const u8 = "",
+    pub handler: WebSocketRouteHandlerFn = undefined,
+    pub ctx: usize = 0,
+}

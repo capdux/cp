@@ -18,14 +18,16 @@
 | :--- | :--- | :--- |
 | `index.cp` / `index.d.cp` | `index.ts` | 统一包入口导出与类型声明 |
 | `types.cp` | `common/types.ts`, `common/Errors.ts` | `PuppeteerError`、`Viewport`、`LaunchOptions`、`Cookie` 等核心类型与错误映射 |
-| `puppeteer.cp` | `node/PuppeteerNode.ts` | `launch` / `connect` / `launchWithTransport` / `connectWithTransport` / `defaultExecutablePath` |
-| `browser.cp` | `cdp/Browser.ts`, `cdp/BrowserContext.ts` | `Browser` 与 `BrowserContext` 生命周期、多上下文隔离、目标管理 |
+| `puppeteer.cp` | `node/PuppeteerNode.ts` | `launch` / `connect`（原生 `CdpNativeWsTransport` 零胶水闭环） / `launchWithTransport` / `connectWithTransport` / `defaultExecutablePath` |
+| `browser.cp` | `cdp/Browser.ts`, `cdp/BrowserContext.ts` | `Browser`（可选持有 `*CdpNativeWsTransport`，`close` / `deinit` 自动关闭连接与回收浏览器子进程）与 `BrowserContext` 生命周期、多上下文隔离、目标管理 |
 | `cdp_session.cp` | `cdp/CDPSession.ts` | 多目标 CDP 会话复用、命令收发与事件过滤 |
 | `page.cp` | `cdp/Page.ts` | `Page` 全量 API（导航、截图、PDF、`emulate`、`waitForFunction`、事件、超时设置） |
 | `frame.cp` | `cdp/Frame.ts` | `Frame` 导航、JS 求值、P-Selector 与 `waitForFunction`、无障碍树快照 |
 | `handles.cp` | `cdp/JSHandle.ts`, `cdp/ElementHandle.ts` | `JSHandle` / `ElementHandle` DOM 交互、盒模型、截图与释放 |
 | `network.cp` | `cdp/HTTPRequest.ts`, `cdp/HTTPResponse.ts`, `cdp/Dialog.ts` | 请求拦截、`HTTPResponse` 元数据与 `Dialog` 处理 |
-| `devices.cp` | `common/Device.ts` | 高频 `KnownDevices` 设备字典（iPhone/iPad/Pixel/Galaxy/Desktop）与 `page.emulate(device)` |
+| `devices.cp` | `common/Device.ts` | 完整 `KnownDevices` 全量表（155 款设备：全系 iPhone / iPad / Pixel / Galaxy / Nexus / Kindle / Blackberry / Moto / Desktop）与 `page.emulate(device)` |
+| `tracing.cp` | `cdp/Tracing.ts` | `Page.tracing().start` / `stop`（复用 `cap:cdp` `TracingDomain`，支持 `screenshots`、`categories`、`buffer_size` 与文件输出） |
+| `coverage.cp` | `cdp/Coverage.ts` | `Page.coverage().startJSCoverage` / `stopJSCoverage` / `startCSSCoverage` / `stopCSSCoverage`（复用 `ProfilerDomain` / `CSSDomain` 与 `convertToDisjointRanges` 扫描线合并） |
 | `keyboard_layout.cp` | `common/USKeyboardLayout.ts` | 完整美式键盘 `KeyCode` / `Code` / `Text` / `Location` 与 Shift 解析表 |
 | `input.cp` | `cdp/Input.ts` | `Keyboard` / `Mouse` / `Touchscreen` 控制器（集成 `USKeyboardLayout` 精确派发） |
 | `selectors.cp` | `common/PSelectorParser.ts`, `common/WaitTask.ts`, `injected/*.ts` | P-Selector 解析（`::-p-text`/`::-p-xpath`/`::-p-aria`/`pierce/`/`>>>`）、注入脚本与 `WaitTask` / `Poller` |

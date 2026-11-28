@@ -25,6 +25,9 @@ import {
     Route,
     RouteEntry,
     RouteHandlerFn,
+    WebSocketRoute,
+    WebSocketRouteEntry,
+    WebSocketRouteHandlerFn,
     UrlMatcher,
 } from "./network";
 import { AriaSnapshot } from "./aria";
@@ -35,6 +38,9 @@ import {
     SelectorCompiler,
 } from "./locator";
 import { Clock } from "./clock";
+import { Frame } from "./frames";
+import { Coverage } from "./coverage";
+import { Video } from "./artifacts";
 
 pub struct GotoOptions {
     referer: []const u8 = "",
@@ -72,7 +78,10 @@ pub struct Page {
     history: std.ArrayList([]u8) = .empty,
     history_idx: usize = 0,
     routes: std.ArrayList(RouteEntry) = .empty,
+    ws_routes: std.ArrayList(WebSocketRouteEntry) = .empty,
     owned_strings: std.ArrayList([]u8) = .empty,
+    main_frame_ptr: (*Frame)? = null,
+    video_ptr: (*Video)? = null,
 
     pub static fn init(
         alloc: std.mem.Allocator,
@@ -93,7 +102,10 @@ pub struct Page {
             history: .empty,
             history_idx: 0,
             routes: .empty,
+            ws_routes: .empty,
             owned_strings: .empty,
+            main_frame_ptr: null,
+            video_ptr: null,
         };
         p.setUrlInternal("about:blank");
         return p;
@@ -101,6 +113,16 @@ pub struct Page {
 
     pub fn deinit(*_) {
         _.closed = true;
+        if (mf := _.main_frame_ptr) {
+            mf.deinit();
+            _.allocator.destroy(mf);
+            _.main_frame_ptr = null;
+        }
+        if (vp := _.video_ptr) {
+            vp.deinit();
+            _.allocator.destroy(vp);
+            _.video_ptr = null;
+        }
         _.html_content.deinit(_.allocator);
         _.html_content = .empty;
         for (h of _.history.items) {
@@ -110,6 +132,8 @@ pub struct Page {
         _.history = .empty;
         _.routes.deinit(_.allocator);
         _.routes = .empty;
+        _.ws_routes.deinit(_.allocator);
+        _.ws_routes = .empty;
         for (s of _.owned_strings.items) {
             _.allocator.free(s);
         }
@@ -433,6 +457,86 @@ pub struct Page {
 
     pub fn clock(*_): Clock {
         return Clock.init(_.endpoint, _.session_id);
+    }
+
+    pub fn coverage(*_): Coverage {
+        return Coverage.init(_.allocator, _.endpoint, _.session_id);
+    }
+
+    pub fn mainFrame(*_): (*Frame)!PlaywrightError {
+        if (mf := _.main_frame_ptr) {
+            return mf;
+        }
+        let mf = _.allocator.create(Frame) catch return PlaywrightError.OutOfMemory;
+        mf.* = Frame.init(_.allocator, _.endpoint, _.session_id, _.target_id, "", _.url(), null);
+        mf.default_timeout_ms = _.default_timeout_ms;
+        _.main_frame_ptr = mf;
+        return mf;
+    }
+
+    pub fn frames(*_, alloc: std.mem.Allocator): ([]*Frame)!PlaywrightError {
+        const mf = _.mainFrame()?;
+        let out: std.ArrayList(*Frame) = .empty;
+        errdefer out.deinit(alloc);
+        mf.collectFrames(&out)?;
+        return out.toOwnedSlice(alloc) catch return PlaywrightError.OutOfMemory;
+    }
+
+    pub fn frameByName(*_, target_name: []const u8): (*Frame)? {
+        const mf = _.mainFrame() catch return null;
+        return mf.frameByName(target_name);
+    }
+
+    pub fn frameByUrl(*_, url_pattern: []const u8): (*Frame)? {
+        const mf = _.mainFrame() catch return null;
+        return mf.frameByUrl(url_pattern);
+    }
+
+    pub fn routeWebSocket(*_, pattern: []const u8, handler: WebSocketRouteHandlerFn, ctx: usize): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const pat = _.allocator.dupe(u8, pattern) catch return PlaywrightError.OutOfMemory;
+        _.owned_strings.append(_.allocator, pat) catch {
+            _.allocator.free(pat);
+            return PlaywrightError.OutOfMemory;
+        };
+        _.ws_routes.append(_.allocator, WebSocketRouteEntry{
+            pattern: pat,
+            handler: handler,
+            ctx: ctx,
+        }) catch return PlaywrightError.OutOfMemory;
+    }
+
+    pub fn unrouteWebSocket(*_, pattern: []const u8) {
+        let i: usize = _.ws_routes.items.len;
+        while (i > 0) {
+            i -= 1;
+            if (std.mem.eql(u8, _.ws_routes.items[i].pattern, pattern)) {
+                * = _.ws_routes.orderedRemove(i);
+            }
+        }
+    }
+
+    pub fn dispatchWebSocketRoute(*_, ws_route: *WebSocketRoute): bool {
+        let i: usize = _.ws_routes.items.len;
+        while (i > 0) {
+            i -= 1;
+            const entry = _.ws_routes.items[i];
+            if (UrlMatcher.matches(entry.pattern, ws_route.url)) {
+                entry.handler(entry.ctx, ws_route);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    pub fn video(*_): (*Video)!PlaywrightError {
+        if (vp := _.video_ptr) {
+            return vp;
+        }
+        let vp = _.allocator.create(Video) catch return PlaywrightError.OutOfMemory;
+        vp.* = Video.init(_.allocator, _.endpoint, _.session_id, "");
+        _.video_ptr = vp;
+        return vp;
     }
 
     pub fn close(*_) {

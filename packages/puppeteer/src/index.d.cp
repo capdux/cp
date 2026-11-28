@@ -253,6 +253,8 @@ export struct Frame {
     pub fn addScriptTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError;
     pub fn addStyleTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError;
     pub fn accessibilitySnapshot(*_, options: AccessibilitySnapshotOptions): AccessibilitySnapshot!PuppeteerError;
+    pub fn tracing(*_): *Tracing;
+    pub fn coverage(*_): *Coverage;
 }
 
 export struct Page {
@@ -294,6 +296,8 @@ export struct Page {
     pub fn cookies(*_): []const Cookie;
     pub fn deleteCookie(*_, name: []const u8, domain: []const u8): void!PuppeteerError;
     pub fn accessibilitySnapshot(*_, options: AccessibilitySnapshotOptions): AccessibilitySnapshot!PuppeteerError;
+    pub fn tracing(*_): *Tracing;
+    pub fn coverage(*_): *Coverage;
     pub fn setDefaultTimeout(*_, timeout_ms: u32);
     pub fn setDefaultNavigationTimeout(*_, timeout_ms: u32);
     pub fn getDefaultTimeout(): u32;
@@ -456,3 +460,55 @@ export struct TimeoutSettings {
     pub fn navigationTimeout(): u32;
     pub fn timeout(): u32;
 }
+
+export struct TracingOptions {
+    path: []const u8,
+    screenshots: bool,
+    categories: []const []const u8,
+    buffer_size: u32,
+}
+export struct Tracing {
+    pub static fn init(session: *CDPSession): Tracing;
+    pub fn isRecording(): bool;
+    pub fn start(*_, options: TracingOptions): void!PuppeteerError;
+    pub fn stop(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
+}
+
+export struct CoverageRange { start: usize, end: usize }
+export struct CoverageEntry {
+    pub fn url(): []const u8;
+    pub fn text(): []const u8;
+    pub fn rangeSlice(): []const CoverageRange;
+}
+export struct CoverageReport {
+    pub fn slice(): []const CoverageEntry;
+}
+export struct JSCoverageOptions {
+    reset_on_navigation: bool,
+    report_anonymous_scripts: bool,
+    include_raw_script_coverage: bool,
+    use_block_coverage: bool,
+}
+export struct CSSCoverageOptions {
+    reset_on_navigation: bool,
+}
+export struct JSCoverage {
+    pub static fn init(session: *CDPSession): JSCoverage;
+    pub fn isEnabled(): bool;
+    pub fn start(*_, options: JSCoverageOptions): void!PuppeteerError;
+    pub fn stop(*_): CoverageReport!PuppeteerError;
+}
+export struct CSSCoverage {
+    pub static fn init(session: *CDPSession): CSSCoverage;
+    pub fn isEnabled(): bool;
+    pub fn start(*_, options: CSSCoverageOptions): void!PuppeteerError;
+    pub fn stop(*_): CoverageReport!PuppeteerError;
+}
+export struct Coverage {
+    pub static fn init(session: *CDPSession): Coverage;
+    pub fn startJSCoverage(*_, options: JSCoverageOptions): void!PuppeteerError;
+    pub fn stopJSCoverage(*_): CoverageReport!PuppeteerError;
+    pub fn startCSSCoverage(*_, options: CSSCoverageOptions): void!PuppeteerError;
+    pub fn stopCSSCoverage(*_): CoverageReport!PuppeteerError;
+}
+export fn convertToDisjointRanges(starts: []const usize, ends: []const usize, counts: []const usize, out_ranges: []CoverageRange): usize;
