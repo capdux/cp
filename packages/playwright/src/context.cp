@@ -5,7 +5,7 @@
 // ============================================================================
 
 const std = @import("std");
-import { CdpEndpoint, CdpConnectionState } from "cap:cdp";
+import { CdpEndpoint, CdpConnectionState, CdpFrameScanner } from "cap:cdp";
 import {
     PlaywrightError,
     Route,
@@ -174,7 +174,8 @@ pub struct BrowserContext {
             return PlaywrightError.OutOfMemory;
         };
 
-        _.endpoint.createSession(sid_raw, "page", tid_raw, "") catch return PlaywrightError.OutOfMemory;
+        let actual_tid: []const u8 = tid_raw;
+        let actual_sid: []const u8 = sid_raw;
 
         if (_.endpoint.state == CdpConnectionState.Connected) {
             let params_buf: [256]u8 = undefined;
@@ -182,12 +183,33 @@ pub struct BrowserContext {
             const p = std.fmt.bufPrint(&params_buf, "{{\"url\":\"about:blank\"}}", .{}) catch "{}";
             const cmd_id = _.endpoint.sendCommand("", "Target.createTarget", p, &frame_buf) catch 0;
             if (cmd_id > 0) {
-                * = _.endpoint.takeResponse(cmd_id);
+                if (resp := _.endpoint.takeResponse(cmd_id)) {
+                    if (tid := CdpFrameScanner.extractTopLevelField(resp.result_json, "targetId", true)) {
+                        if (tid.len > 0) {
+                            actual_tid = _.intern(tid) catch tid_raw;
+                        }
+                    }
+                    let ap_buf: [256]u8 = undefined;
+                    let af_buf: [512]u8 = undefined;
+                    const ap = std.fmt.bufPrint(&ap_buf, "{{\"targetId\":\"{s}\",\"flatten\":true}}", .{actual_tid}) catch "{}";
+                    const attach_id = _.endpoint.sendCommand("", "Target.attachToTarget", ap, &af_buf) catch 0;
+                    if (attach_id > 0) {
+                        if (aresp := _.endpoint.takeResponse(attach_id)) {
+                            if (sid := CdpFrameScanner.extractTopLevelField(aresp.result_json, "sessionId", true)) {
+                                if (sid.len > 0) {
+                                    actual_sid = _.intern(sid) catch sid_raw;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
+        _.endpoint.createSession(actual_sid, "page", actual_tid, "") catch return PlaywrightError.OutOfMemory;
+
         let page_ptr = _.allocator.create(Page) catch return PlaywrightError.OutOfMemory;
-        page_ptr.* = Page.init(_.allocator, _.endpoint, sid_raw, tid_raw);
+        page_ptr.* = Page.init(_.allocator, _.endpoint, actual_sid, actual_tid);
         page_ptr.default_timeout_ms = _.options.default_timeout_ms;
 
         _.pages_list.append(_.allocator, page_ptr) catch {

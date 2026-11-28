@@ -144,3 +144,28 @@ export {
     APIResponse,
     APIRequestContext,
 } from "./request_context";
+
+export {
+    RecordedActionKind,
+    RecordedAction,
+    CodegenLang,
+    RECORDER_INJECTED_SCRIPT,
+    ActionRecorder,
+    simdScanEscapeIndex,
+    writeEscapedString,
+    escapeJsonIntoBuf,
+    escapeJsonString,
+} from "./recorder";
+
+export {
+    RpcObjectKind,
+    rpcObjectKindName,
+    RpcErrorCode,
+    DispatcherScope,
+    RpcDispatcher,
+    simdScanJsonStringEnd,
+    simdFindJsonStructural,
+    simdExtractJsonField,
+    simdExtractJsonInt,
+    simdExtractJsonBool,
+} from "./dispatchers";

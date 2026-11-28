@@ -6,12 +6,15 @@ End-to-end automated regression test suite for CP AI-First CLI toolchain:
                  dependencies/devDependencies dedup & stdlib pruning, non-import
                  literal preservation, idempotency)
   - `cap brief` (bare packages, native @cap/*, @web/*, built-in cap:* stdlib,
+                 browser ecosystem puppeteer/playwright/cap:cdp & cap:test,
                  missing-package error handling)
   - `cap check` (valid .cp file, syntax error with AI-First diagnostics,
                  type/borrow error, directory summary mode)
   - `cap from` / `cpc from` (`--npm` bare-name package absorption, doc/d.cp
                  generation, duplicate registry detection, `--ts` constructor/
-                 #privateField/Symbol/multiline if-else -> `cpc check`)
+                 #privateField/Symbol/multiline if-else -> `cpc check`,
+                 `--ts --test` test inclusion & vitest/node:assert -> cap:test)
+  - `scripts/sync_upstream_pkg.py` (upstream source provenance header audit)
 
 Usage:
   python3 scripts/test_cap_ai_toolchain.py
@@ -324,6 +327,10 @@ def test_cap_brief(t: TestRunner) -> None:
         ("cap:ascii", "doc/lib/ascii.md", ["cap:ascii"]),
         ("cap:json", "doc/lib/json.md", ["cap:json"]),
         ("cap:http", "doc/lib/http.md", ["cap:http"]),
+        ("puppeteer", "packages/puppeteer", ["puppeteer", "README_AGENT.md", "index.d.cp"]),
+        ("playwright", "packages/playwright", ["playwright", "README_AGENT.md", "index.d.cp"]),
+        ("cap:cdp", "doc/lib/cdp.md", ["cap:cdp"]),
+        ("cap:test", "doc/lib/test.md", ["cap:test"]),
     ]
 
     for pkg, expected_loc, markers in cases:
@@ -597,6 +604,98 @@ export const TAG = Symbol("k");
         t.check("cpc check passes on transpiled TS->CP output without E0130", False, "missing src/index.cp")
 
 
+def test_cpc_from_ts_test_flag(t: TestRunner) -> None:
+    print("\n=== 6. Testing `cpc from --ts --test` & test framework mapping ===")
+    base_dir = SANDBOX_DIR / "from_ts_test"
+    src_proj = base_dir / "src_proj"
+    out_default = base_dir / "out_default"
+    out_with_test = base_dir / "out_with_test"
+    (src_proj / "src").mkdir(parents=True, exist_ok=True)
+    (src_proj / "tests").mkdir(parents=True, exist_ok=True)
+
+    (src_proj / "src" / "index.ts").write_text(
+        """\
+export function add(a: number, b: number): number {
+  return a + b;
+}
+""",
+        encoding="utf-8",
+    )
+
+    (src_proj / "tests" / "sample.test.ts").write_text(
+        """\
+import { describe, expect, test } from "vitest";
+import assert from "node:assert";
+import { add } from "../src/index";
+
+describe("add", () => {
+  test("adds two numbers", () => {
+    expect(add(1, 2)).toBe(3);
+    assert(add(2, 3) === 5);
+  });
+});
+""",
+        encoding="utf-8",
+    )
+
+    # 6a. Default `cpc from --ts` skips tests/sample.test.ts
+    r_def = run_cpc(["from", "--ts", str(src_proj), "-o", str(out_default)])
+    t.check(
+        "cpc from --ts (default) exits 0 and skips tests/sample.test.ts",
+        r_def.returncode == 0
+        and (out_default / "src" / "index.cp").is_file()
+        and not (out_default / "tests" / "sample.test.cp").exists(),
+        f"rc={r_def.returncode}, src_exists={(out_default / 'src' / 'index.cp').exists()}, "
+        f"test_exists={(out_default / 'tests' / 'sample.test.cp').exists()}, stderr={r_def.stderr!r}",
+    )
+
+    # 6b. `cpc from --ts --test` includes tests/sample.test.cp and rewrites vitest & node:assert -> cap:test
+    r_tst = run_cpc(["from", "--ts", "--test", str(src_proj), "-o", str(out_with_test)])
+    out_test_cp = out_with_test / "tests" / "sample.test.cp"
+    t.check(
+        "cpc from --ts --test exits 0 and generates tests/sample.test.cp",
+        r_tst.returncode == 0 and out_test_cp.is_file(),
+        f"rc={r_tst.returncode}, stdout={r_tst.stdout!r}, stderr={r_tst.stderr!r}",
+    )
+
+    if out_test_cp.is_file():
+        test_cp_text = out_test_cp.read_text(encoding="utf-8")
+        cap_test_imports = re.findall(r'from\s+"cap:test"', test_cp_text)
+        t.check(
+            'cpc from --ts --test rewrites "vitest" & "node:assert" imports to "cap:test"',
+            '"vitest"' not in test_cp_text
+            and '"node:assert"' not in test_cp_text
+            and len(cap_test_imports) >= 1,
+            test_cp_text,
+        )
+    else:
+        t.check(
+            'cpc from --ts --test rewrites "vitest" & "node:assert" imports to "cap:test"',
+            False,
+            "missing tests/sample.test.cp",
+        )
+
+
+def test_sync_upstream_pkg(t: TestRunner) -> None:
+    print("\n=== 7. Testing `scripts/sync_upstream_pkg.py` provenance audit ===")
+    script_path = REPO_ROOT / "scripts" / "sync_upstream_pkg.py"
+    for pkg in ("cap:cdp", "puppeteer", "playwright"):
+        res = subprocess.run(
+            [sys.executable, str(script_path), "--pkg", pkg],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        t.check(
+            f"sync_upstream_pkg.py --pkg {pkg} exits 0 with 0 missing header",
+            res.returncode == 0
+            and f"=== Sync Audit: {pkg}" in res.stdout
+            and "0 missing header" in res.stdout,
+            f"rc={res.returncode}, stdout={res.stdout!r}, stderr={res.stderr!r}",
+        )
+
+
 def main() -> int:
     if not CAP_BIN.exists():
         print(f"ERROR: cap binary not found at {CAP_BIN}", file=sys.stderr)
@@ -616,6 +715,8 @@ def main() -> int:
         test_cap_check(runner)
         test_cap_from_npm(runner)
         test_cpc_from_ts(runner)
+        test_cpc_from_ts_test_flag(runner)
+        test_sync_upstream_pkg(runner)
     finally:
         if SANDBOX_DIR.exists():
             shutil.rmtree(SANDBOX_DIR)

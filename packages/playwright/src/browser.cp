@@ -110,6 +110,9 @@ pub struct Browser {
 
     pub fn newContext(*_, opts: BrowserContextOptions): (*BrowserContext)!PlaywrightError {
         if (_.closed) return PlaywrightError.BrowserClosed;
+        if (tr := _.native_transport) {
+            tr.endpoint = &_.endpoint;
+        }
 
         const n = _.next_ctx_num;
         _.next_ctx_num += 1;
