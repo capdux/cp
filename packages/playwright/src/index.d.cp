@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/index.ts | Synced: 2026-11-28
 // Type definitions for CP (`playwright` / `playwright-core` / `playwright-chromium`)
 
 export err PlaywrightError {
@@ -163,3 +164,101 @@ export struct ChromiumBrowserType {
 }
 
 export const chromium = ChromiumBrowserType;
+
+export enum ActionabilityState {
+    Pending,
+    Visible,
+    Hidden,
+    Stable,
+    Enabled,
+    Editable,
+    InViewport,
+    HitTargetVerified,
+    Done,
+    Timeout,
+    NotConnected,
+}
+
+export enum ActionabilityCheckKind {
+    Visible,
+    Hidden,
+    Stable,
+    Enabled,
+    Editable,
+    Attached,
+    Detached,
+}
+
+export struct ActionabilityOptions {
+    timeout_ms: u32,
+    force: bool,
+    trial: bool,
+    scroll_into_view: bool,
+    check_hit_target: bool,
+    position_x: f64,
+    position_y: f64,
+}
+
+export struct ActionabilityReport {
+    state: ActionabilityState,
+    attempts: u32,
+    scrolled: bool,
+    hit_target_ok: bool,
+    trial_only: bool,
+    error_message: []const u8,
+}
+
+export enum ClockMode {
+    Real,
+    Installed,
+    Paused,
+    Fixed,
+}
+
+export struct Clock {
+    fn now(): i64;
+    fn install(*_, time_ms: i64?): void!PlaywrightError;
+    fn fastForward(*_, ticks_ms: i64): void!PlaywrightError;
+    fn fastForwardStr(*_, ticks_str: []const u8): void!PlaywrightError;
+    fn runFor(*_, ticks_ms: i64): void!PlaywrightError;
+    fn pauseAt(*_, time_ms: i64): void!PlaywrightError;
+    fn resume_(*_): void!PlaywrightError;
+    fn setFixedTime(*_, time_ms: i64): void!PlaywrightError;
+    fn setSystemTime(*_, time_ms: i64): void!PlaywrightError;
+    fn uninstall(*_);
+}
+
+export struct Download {
+    fn suggestedFilename(): []const u8;
+    fn saveAs(*_, dest_path: []const u8): void!PlaywrightError;
+    fn path(): ([]const u8)?;
+    fn cancel(*_);
+}
+
+export struct FileChooser {
+    fn isMultiple(): bool;
+    fn setFiles(*_, file_paths: []const []const u8): void!PlaywrightError;
+}
+
+export struct HarRecorder {
+    static fn init(alloc: std.mem.Allocator, opts: HarRecordOptions): HarRecorder;
+    fn deinit(*_);
+    fn recordEntry(*_, entry: HarEntry): bool!PlaywrightError;
+    fn entryCount(): usize;
+    fn toJson(*_, alloc: std.mem.Allocator): ([]u8)!PlaywrightError;
+}
+
+export struct PlaywrightRemoteServer {
+    static fn init(alloc: std.mem.Allocator, config: PlaywrightRemoteConfig): PlaywrightRemoteServer;
+    fn deinit(*_);
+    fn start(*_): void!PlaywrightError;
+    fn stop(*_);
+    fn isListening(): bool;
+    fn wsEndpoint(out_buf: []u8): ([]const u8)!PlaywrightError;
+    fn handleRpcMessage(*_, alloc: std.mem.Allocator, msg_json: []const u8): ([]u8)!PlaywrightError;
+}
+
+export struct PlaywrightCli {
+    static fn parseArgs(args: []const []const u8): CliOptions!PlaywrightError;
+    static fn generateCodegenSkeleton(alloc: std.mem.Allocator, opts: CliOptions): ([]u8)!PlaywrightError;
+}

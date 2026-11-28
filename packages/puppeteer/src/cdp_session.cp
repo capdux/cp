@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/CDPSession.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/cdp_session.cp — CDPSession Wrapper over cap:cdp
 // Provides multi-target session multiplexing, command send/correlate & detach.

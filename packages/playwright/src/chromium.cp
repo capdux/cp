@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/server/chromium/chromium.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/chromium.cp — Chromium BrowserType Launcher & CDP Connect
 // Zero-copy reuses cap:cdp CdpBrowserLauncher (chromium/google-chrome/

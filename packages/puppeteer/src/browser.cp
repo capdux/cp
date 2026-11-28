@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/Browser.ts & BrowserContext.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/browser.cp — Browser & BrowserContext
 // Manages CdpEndpoint lifecycle, multi-context isolation, Page creation & RAII

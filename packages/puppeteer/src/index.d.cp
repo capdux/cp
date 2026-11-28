@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/index.ts | Synced: 2026-11-28
 // Type definitions for puppeteer (CP 25.19.0)
 
 export error PuppeteerError {
@@ -242,6 +243,8 @@ export struct Frame {
     pub fn querySelector(*_, selector: []const u8): (ElementHandle?)!PuppeteerError;
     pub fn querySelectorAll(*_, selector: []const u8, out_handles: []ElementHandle): usize!PuppeteerError;
     pub fn waitForSelector(*_, selector: []const u8, options: WaitForSelectorOptions): ElementHandle!PuppeteerError;
+    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
     pub fn click(*_, selector: []const u8, options: ClickOptions): void!PuppeteerError;
     pub fn focus(*_, selector: []const u8): void!PuppeteerError;
     pub fn hover(*_, selector: []const u8): void!PuppeteerError;
@@ -271,11 +274,14 @@ export struct Page {
     pub fn evaluateOnNewDocument(*_, script: []const u8): void!PuppeteerError;
     pub fn setViewport(*_, vp: Viewport): void!PuppeteerError;
     pub fn viewport(): Viewport;
+    pub fn emulate(*_, device: Device): void!PuppeteerError;
     pub fn screenshot(*_, options: ScreenshotOptions, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn pdf(*_, options: PdfOptions, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn querySelector(*_, selector: []const u8): (ElementHandle?)!PuppeteerError;
     pub fn querySelectorAll(*_, selector: []const u8, out_handles: []ElementHandle): usize!PuppeteerError;
     pub fn waitForSelector(*_, selector: []const u8, options: WaitForSelectorOptions): ElementHandle!PuppeteerError;
+    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
     pub fn click(*_, selector: []const u8, options: ClickOptions): void!PuppeteerError;
     pub fn typeText(*_, selector: []const u8, text: []const u8, options: TypeOptions): void!PuppeteerError;
     pub fn focus(*_, selector: []const u8): void!PuppeteerError;
@@ -288,6 +294,14 @@ export struct Page {
     pub fn cookies(*_): []const Cookie;
     pub fn deleteCookie(*_, name: []const u8, domain: []const u8): void!PuppeteerError;
     pub fn accessibilitySnapshot(*_, options: AccessibilitySnapshotOptions): AccessibilitySnapshot!PuppeteerError;
+    pub fn setDefaultTimeout(*_, timeout_ms: u32);
+    pub fn setDefaultNavigationTimeout(*_, timeout_ms: u32);
+    pub fn getDefaultTimeout(): u32;
+    pub fn getDefaultNavigationTimeout(): u32;
+    pub fn on(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn once(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn off(*_, event_name: []const u8, handler: EventHandlerFn);
+    pub fn emit(*_, event_name: []const u8, payload: []const u8): bool;
     pub fn close(*_): void!PuppeteerError;
 }
 
@@ -323,3 +337,122 @@ export fn launchWithTransport(alloc: std.mem.Allocator, options: LaunchOptions, 
 export fn connect(alloc: std.mem.Allocator, browser_ws_url: []const u8): Browser!PuppeteerError;
 export fn connectWithTransport(alloc: std.mem.Allocator, options: ConnectOptions, transport_fn: CdpSendTransportFn, transport_ctx: usize): Browser!PuppeteerError;
 export fn defaultExecutablePath(alloc: std.mem.Allocator): ([]u8)?;
+
+// --- Devices, Keyboard Layout, P-Selectors, Events & Extras ---
+export struct Device {
+    name: []const u8,
+    user_agent: []const u8,
+    viewport: Viewport,
+}
+export struct KnownDevices {
+    pub static fn count(): usize;
+    pub static fn all(): []const Device;
+    pub static fn get(name: []const u8): Device?;
+    pub static fn iPhone12(): Device;
+    pub static fn iPhone13(): Device;
+    pub static fn iPhone14(): Device;
+    pub static fn iPhone15Pro(): Device;
+    pub static fn iPhone16Pro(): Device;
+    pub static fn iPhone17Pro(): Device;
+    pub static fn iPad(): Device;
+    pub static fn iPadPro(): Device;
+    pub static fn pixel5(): Device;
+    pub static fn desktop1080p(): Device;
+}
+
+export struct KeyDefinition {
+    name: []const u8,
+    key_code: u16,
+    shift_key_code: u16,
+    key: []const u8,
+    shift_key: []const u8,
+    code: []const u8,
+    text: []const u8,
+    shift_text: []const u8,
+    location: u8,
+}
+export struct USKeyboardLayout {
+    pub static fn count(): usize;
+    pub static fn get(key_input: []const u8): KeyDefinition?;
+    pub static fn resolve(key_input: []const u8, shift_down: bool): KeyDefinition;
+}
+
+export enum PSelectorKind { Css, Text, XPath, Aria, Pierce, Custom }
+export enum PCombinator { None, Descendent, Child }
+export enum WaitTaskPolling { Raf, Mutation, Interval }
+export struct PSelectorSegment {
+    kind: PSelectorKind,
+    combinator: PCombinator,
+    name: []const u8,
+    value: []const u8,
+}
+export struct ParsedPSelector {
+    segments: [16]PSelectorSegment,
+    count: usize,
+    is_pure_css: bool,
+    has_aria: bool,
+    has_pierce: bool,
+    pub fn slice(): []const PSelectorSegment;
+}
+export struct SimdSelectorScanner {
+    pub static fn needsPSelectorParsing(selector: []const u8): bool;
+    pub static fn indexOfByteSimd(haystack: []const u8, needle: u8): usize?;
+}
+export struct PSelectorParser {
+    pub static fn parse(selector: []const u8): ParsedPSelector;
+}
+export struct WaitForFunctionOptions {
+    polling: WaitTaskPolling,
+    polling_ms: u32,
+    timeout_ms: u32,
+}
+export struct WaitTask {
+    pub static fn init(expression: []const u8, options: WaitForFunctionOptions): WaitTask;
+    pub fn buildPollerExpression(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
+}
+
+export enum PageEvent { Console, Dialog, Request, Response, Load, DomContentLoaded, Close, Error, FrameAttached, FrameDetached, FileChooser, Wildcard }
+export struct PuppeteerEventEmitter {
+    pub static fn init(): PuppeteerEventEmitter;
+    pub fn on(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn once(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn off(*_, event_name: []const u8, handler: EventHandlerFn);
+    pub fn removeAllListeners(*_, event_name: []const u8);
+    pub fn listenerCount(event_name: []const u8): usize;
+    pub fn emit(*_, event_name: []const u8, payload: []const u8): bool;
+}
+
+export struct FileChooser {
+    pub static fn init(element: ElementHandle, multiple: bool): FileChooser;
+    pub fn isMultiple(): bool;
+    pub fn isHandled(): bool;
+    pub fn accept(*_, paths: []const []const u8): void!PuppeteerError;
+    pub fn cancel(*_): void!PuppeteerError;
+}
+export enum ConsoleMessageType { Log, Debug, Info, Error, Warn, Dir, Table, Trace, Assert, Verbose }
+export struct ConsoleMessageLocation { url: []const u8, line_number: u32, column_number: u32, script_id: []const u8 }
+export struct ConsoleMessage {
+    pub static fn init(msg_type: ConsoleMessageType, text_val: []const u8, loc: ConsoleMessageLocation, args_count: usize): ConsoleMessage;
+    pub static fn fromCdpPayload(params_json: []const u8): ConsoleMessage;
+    pub fn kind(): ConsoleMessageType;
+    pub fn text(): []const u8;
+    pub fn location(): ConsoleMessageLocation;
+    pub fn argsCount(): usize;
+}
+export struct SecurityDetails {
+    pub static fn init(subject_name: []const u8, issuer_val: []const u8, valid_from: f64, valid_to: f64, protocol_val: []const u8): SecurityDetails;
+    pub static fn fromCdpPayload(security_json: []const u8): SecurityDetails;
+    pub fn issuer(): []const u8;
+    pub fn validFrom(): f64;
+    pub fn validTo(): f64;
+    pub fn protocol(): []const u8;
+    pub fn subjectName(): []const u8;
+    pub fn subjectAlternativeNames(): []const []const u8;
+}
+export struct TimeoutSettings {
+    pub static fn init(): TimeoutSettings;
+    pub fn setDefaultTimeout(*_, timeout_ms: u32);
+    pub fn setDefaultNavigationTimeout(*_, timeout_ms: u32);
+    pub fn navigationTimeout(): u32;
+    pub fn timeout(): u32;
+}

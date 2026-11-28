@@ -41,6 +41,22 @@ import {
     connect,
     connectWithTransport,
     defaultExecutablePath,
+    Device,
+    KnownDevices,
+    USKeyboardLayout,
+    PSelectorKind,
+    PCombinator,
+    SimdSelectorScanner,
+    PSelectorParser,
+    WaitTaskPolling,
+    WaitForFunctionOptions,
+    WaitTask,
+    PuppeteerEventEmitter,
+    FileChooser,
+    ConsoleMessageType,
+    ConsoleMessage,
+    SecurityDetails,
+    TimeoutSettings,
 } from "../../packages/puppeteer/src/index.cp";
 
 struct MockCdpServer {
@@ -502,6 +518,186 @@ fn testCdpSessionIsolationEventsAndIdempotentClose(): !void {
     expect_eq(browser.isConnected(), false);
 }
 
+struct PageEventCounter {
+    count: usize = 0,
+    wild_count: usize = 0,
+}
+
+fn onPageTestEvent(event_name: []const u8, payload: []const u8, ctx: usize) {
+    const _ign = payload;
+    * = _ign;
+    let rec: *PageEventCounter = unsafe { @ptrFromInt(ctx) };
+    if (std.mem.eql(u8, event_name, "console")) {
+        rec.count += 1;
+    }
+    rec.wild_count += 1;
+}
+
+fn testKnownDevicesAndEmulate(): !void {
+    expect_eq(KnownDevices.count() >= 26, true);
+    const iphone15 = KnownDevices.get("iPhone 15 Pro") orelse unreachable;
+    expect_eq(iphone15.viewport.width, @as(u32, 393));
+    expect_eq(iphone15.viewport.height, @as(u32, 659));
+    expect_eq(iphone15.viewport.is_mobile, true);
+    expect_eq(iphone15.viewport.has_touch, true);
+
+    const iphone17 = KnownDevices.iPhone17Pro();
+    expect_eq(iphone17.viewport.width, @as(u32, 402));
+    const desktop = KnownDevices.desktop1080p();
+    expect_eq(desktop.viewport.width, @as(u32, 1920));
+    expect_eq(desktop.viewport.is_mobile, false);
+
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/dev",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+
+    const page = browser.newPage()?;
+    page.emulate(iphone15)?;
+    expect_eq(page.viewport().width, @as(u32, 393));
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setUserAgentOverride"), true);
+}
+
+fn testUSKeyboardLayoutAndInput(): !void {
+    const k_a = USKeyboardLayout.get("a") orelse unreachable;
+    expect_eq(k_a.key_code, @as(u16, 65));
+    expect_eq(std.mem.eql(u8, k_a.code, "KeyA"), true);
+
+    const k_enter = USKeyboardLayout.get("NumpadEnter") orelse unreachable;
+    expect_eq(k_enter.key_code, @as(u16, 13));
+    expect_eq(k_enter.location, @as(u8, 3));
+
+    const k_arrow = USKeyboardLayout.get("ArrowLeft") orelse unreachable;
+    expect_eq(k_arrow.key_code, @as(u16, 37));
+
+    const shifted = USKeyboardLayout.resolve("KeyA", true);
+    expect_eq(std.mem.eql(u8, shifted.key, "A"), true);
+    expect_eq(std.mem.eql(u8, shifted.text, "A"), true);
+
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/kb",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+
+    const page = browser.newPage()?;
+    let kb = page.keyboard();
+    kb.down("Shift")?;
+    expect_eq(kb.modifiers, @as(i32, 8));
+    kb.press("a", TypeOptions{})?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Input.dispatchKeyEvent"), true);
+    kb.up("Shift")?;
+    expect_eq(kb.modifiers, @as(i32, 0));
+}
+
+fn testPSelectorsSimdAndWaitTask(): !void {
+    expect_eq(SimdSelectorScanner.needsPSelectorParsing("div.container > span#title"), false);
+    expect_eq(SimdSelectorScanner.needsPSelectorParsing("button::-p-text(Submit)"), true);
+    expect_eq(SimdSelectorScanner.needsPSelectorParsing("div >>> .inner"), true);
+    expect_eq(SimdSelectorScanner.indexOfByteSimd("0123456789abcdef:target", ':') orelse 0, @as(usize, 16));
+
+    const pure = PSelectorParser.parse("div.main > ul li.active");
+    expect_eq(pure.is_pure_css, true);
+    expect_eq(pure.count, @as(usize, 1));
+
+    const p_text = PSelectorParser.parse("button::-p-text('Click Me')");
+    expect_eq(p_text.is_pure_css, false);
+    expect_eq(p_text.count, @as(usize, 2));
+    expect_eq(p_text.segments[0].kind == PSelectorKind.Css, true);
+    expect_eq(p_text.segments[1].kind == PSelectorKind.Text, true);
+    expect_eq(std.mem.eql(u8, p_text.segments[1].value, "Click Me"), true);
+
+    const p_aria = PSelectorParser.parse("::-p-aria(Submit[role=\"button\"])");
+    expect_eq(p_aria.has_aria, true);
+    expect_eq(p_aria.segments[0].kind == PSelectorKind.Aria, true);
+
+    const p_pierce = PSelectorParser.parse("my-app >>>> .item ::-p-xpath(.//span)");
+    expect_eq(p_pierce.has_pierce, true);
+    expect_eq(p_pierce.segments[1].combinator == PCombinator.Child, true);
+    expect_eq(p_pierce.segments[3].kind == PSelectorKind.XPath, true);
+
+    let wt = WaitTask.init("document.readyState === 'complete'", WaitForFunctionOptions{ polling: WaitTaskPolling.Interval, polling_ms: 50, timeout_ms: 5000 });
+    let wbuf: [4096]u8 = undefined;
+    const expr = wt.buildPollerExpression(&wbuf)?;
+    expect_eq(std.mem.indexOf(u8, expr, "pollInterval") != null, true);
+}
+
+fn testEventsAndExtras(): !void {
+    let emitter = PuppeteerEventEmitter.init();
+    let rec = PageEventCounter{};
+    let rec_ptr = unsafe { @intFromPtr(&rec) };
+    expect_eq(emitter.on("console", onPageTestEvent, rec_ptr), true);
+    expect_eq(emitter.once("*", onPageTestEvent, rec_ptr), true);
+    expect_eq(emitter.listenerCount(""), @as(usize, 2));
+
+    expect_eq(emitter.emit("console", "hello"), true);
+    expect_eq(rec.count, @as(usize, 2));
+    expect_eq(rec.wild_count, @as(usize, 2));
+
+    // Second emit: wildcard 'once' should not fire again
+    expect_eq(emitter.emit("console", "world"), true);
+    expect_eq(rec.count, @as(usize, 3));
+    expect_eq(rec.wild_count, @as(usize, 3));
+
+    emitter.removeAllListeners("console");
+    expect_eq(emitter.listenerCount("console"), @as(usize, 0));
+
+    // ConsoleMessage, SecurityDetails & TimeoutSettings
+    const cmsg = ConsoleMessage.fromCdpPayload("{\"type\":\"warning\",\"text\":\"deprecated API\",\"url\":\"https://example.com/app.js\"}");
+    expect_eq(cmsg.kind() == ConsoleMessageType.Warn, true);
+    expect_eq(std.mem.eql(u8, cmsg.text(), "deprecated API"), true);
+
+    const sec = SecurityDetails.fromCdpPayload("{\"subjectName\":\"example.com\",\"issuer\":\"DigiCert\",\"validFrom\":1700000000,\"validTo\":1730000000,\"protocol\":\"TLS 1.3\"}");
+    expect_eq(std.mem.eql(u8, sec.subjectName(), "example.com"), true);
+    expect_eq(std.mem.eql(u8, sec.protocol(), "TLS 1.3"), true);
+
+    let ts = TimeoutSettings.init();
+    expect_eq(ts.timeout(), @as(u32, 30000));
+    expect_eq(ts.navigationTimeout(), @as(u32, 30000));
+    ts.setDefaultTimeout(15000);
+    expect_eq(ts.timeout(), @as(u32, 15000));
+    expect_eq(ts.navigationTimeout(), @as(u32, 15000));
+    ts.setDefaultNavigationTimeout(45000);
+    expect_eq(ts.navigationTimeout(), @as(u32, 45000));
+
+    // FileChooser single-use guard
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/fc",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+    const page = browser.newPage()?;
+    const el = page.querySelector("#upload")?;
+    let fc = FileChooser.init(el, true);
+    expect_eq(fc.isMultiple(), true);
+    const files: [1][]const u8 = .{"/tmp/demo.txt"};
+    fc.accept(&files)?;
+    expect_eq(fc.isHandled(), true);
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "DOM.setFileInputFiles"), true);
+}
+
 pub fn main() {
     test("1. Launch Args Builder, Executable Probing & WsUrl Parser", () => {
         testLaunchArgsAndExecutableProbing() catch unreachable;
@@ -532,5 +728,17 @@ pub fn main() {
     });
     test("10. CDPSession Multi-Target Isolation, Events & Idempotent Close", () => {
         testCdpSessionIsolationEventsAndIdempotentClose() catch unreachable;
+    });
+    test("11. KnownDevices Dictionary & Page.emulate()", () => {
+        testKnownDevicesAndEmulate() catch unreachable;
+    });
+    test("12. USKeyboardLayout Table & Keyboard Precision", () => {
+        testUSKeyboardLayoutAndInput() catch unreachable;
+    });
+    test("13. PSelectorParser, @Vector(16, u8) SIMD & WaitTask", () => {
+        testPSelectorsSimdAndWaitTask() catch unreachable;
+    });
+    test("14. PuppeteerEventEmitter, FileChooser, ConsoleMessage, SecurityDetails & TimeoutSettings", () => {
+        testEventsAndExtras() catch unreachable;
     });
 }

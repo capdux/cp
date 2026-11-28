@@ -5,6 +5,9 @@
   "license": "MIT",
   "main": "src/index.cp",
   "types": "src/index.d.cp",
+  "bin": {
+    "playwright": "src/cli.cp"
+  },
   "keywords": [
     "playwright",
     "playwright-core",

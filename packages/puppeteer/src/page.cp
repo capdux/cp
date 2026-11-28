@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/Page.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/page.cp — Page API Implementation
 // Composes CDPSession, Frame, Keyboard, Mouse, Touchscreen, Cookies & Network
@@ -34,6 +35,10 @@ import { CDPSession } from "./cdp_session";
 import { Keyboard, Mouse, Touchscreen } from "./input";
 import { ElementHandle } from "./handles";
 import { Frame } from "./frame";
+import { Device } from "./devices";
+import { WaitForFunctionOptions } from "./selectors";
+import { PuppeteerEventEmitter, EventHandlerFn } from "./events";
+import { TimeoutSettings } from "./extras";
 
 pub struct Page {
     session: CDPSession = .{},
@@ -47,6 +52,8 @@ pub struct Page {
     request_interception_enabled: bool = false,
     cookies_store: [32]Cookie = undefined,
     cookies_len: usize = 0,
+    timeout_settings: TimeoutSettings = .{},
+    emitter: PuppeteerEventEmitter = .{},
     closed: bool = false,
 
     pub static fn init(
@@ -206,6 +213,14 @@ pub struct Page {
         return _.current_viewport;
     }
 
+    pub fn emulate(*_, device: Device): void!PuppeteerError {
+        if (_.isClosed()) return PuppeteerError.SessionClosed;
+        _.setViewport(device.viewport)?;
+        if (device.user_agent.len > 0) {
+            _.setUserAgent(device.user_agent)?;
+        }
+    }
+
     pub fn screenshot(*_, options: ScreenshotOptions, out_buf: []u8): ([]const u8)!PuppeteerError {
         if (_.isClosed()) return PuppeteerError.SessionClosed;
         let pbuf: [512]u8 = undefined;
@@ -276,6 +291,11 @@ pub struct Page {
     pub fn waitForSelector(*_, selector: []const u8, options: WaitForSelectorOptions): ElementHandle!PuppeteerError {
         _.bindSelf();
         return _.main_frame.waitForSelector(selector, options);
+    }
+
+    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError {
+        _.bindSelf();
+        return _.main_frame.waitForFunction(expression, options, out_buf);
     }
 
     pub fn click(*_, selector: []const u8, options: ClickOptions): void!PuppeteerError {
@@ -444,6 +464,38 @@ pub struct Page {
     pub fn accessibilitySnapshot(*_, options: AccessibilitySnapshotOptions): AccessibilitySnapshot!PuppeteerError {
         _.bindSelf();
         return _.main_frame.accessibilitySnapshot(options);
+    }
+
+    pub fn setDefaultTimeout(*_, timeout_ms: u32) {
+        _.timeout_settings.setDefaultTimeout(timeout_ms);
+    }
+
+    pub fn setDefaultNavigationTimeout(*_, timeout_ms: u32) {
+        _.timeout_settings.setDefaultNavigationTimeout(timeout_ms);
+    }
+
+    pub fn getDefaultTimeout(): u32 {
+        return _.timeout_settings.timeout();
+    }
+
+    pub fn getDefaultNavigationTimeout(): u32 {
+        return _.timeout_settings.navigationTimeout();
+    }
+
+    pub fn on(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool {
+        return _.emitter.on(event_name, handler, ctx);
+    }
+
+    pub fn once(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool {
+        return _.emitter.once(event_name, handler, ctx);
+    }
+
+    pub fn off(*_, event_name: []const u8, handler: EventHandlerFn) {
+        _.emitter.off(event_name, handler);
+    }
+
+    pub fn emit(*_, event_name: []const u8, payload: []const u8): bool {
+        return _.emitter.emit(event_name, payload);
     }
 
     pub fn close(*_): void!PuppeteerError {

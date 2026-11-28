@@ -32,6 +32,25 @@ import {
     LaunchOptions,
     ConnectOverCdpOptions,
     chromium,
+    ActionabilityState,
+    ActionabilityCheckKind,
+    ActionabilityOptions,
+    ActionabilityEngine,
+    ClockMode,
+    Clock,
+    Download,
+    FileChooser,
+    ConsoleMessage,
+    HarRecordOptions,
+    HarEntry,
+    HarRecorder,
+    simdScanHarCleanSpan,
+    RemoteMode,
+    PlaywrightRemoteConfig,
+    PlaywrightRemoteServer,
+    PlaywrightRemoteClient,
+    CliCommand,
+    PlaywrightCli,
 } from "../../packages/playwright/src/index.cp";
 
 struct MockCdpTransport {
@@ -445,6 +464,249 @@ fn testAriaSnapshotAndCdpAXTree(): !void {
     expect_eq(gpa.deinit() == .ok, true);
 }
 
+fn testActionabilityEngineAndSimdSelectors(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    // SIMD selector & URL wildcard checks
+    expect_eq(Locator.hasComplexSelectorSimd("form.login >> button:first-child"), true);
+    expect_eq(Locator.hasComplexSelectorSimd("button_submit_plain"), false);
+    expect_eq(UrlMatcher.hasWildcardsSimd("https://example.com/api/**"), true);
+    expect_eq(UrlMatcher.hasWildcardsSimd("https://example.com/static/app.js"), false);
+    expect_eq(UrlMatcher.matches("https://example.com/static/app.js", "https://example.com/static/app.js"), true);
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launch(alloc, .{
+        transport_fn: mockTransportSend,
+        transport_ctx: unsafe { @intFromPtr(&transport) },
+    })?;
+    const page = browser.newPage()?;
+    const btn = page.locator("#submit-btn");
+
+    // 1. Force mode bypasses CDP wait and succeeds immediately
+    const force_rep = btn.checkActionability(&.{ ActionabilityCheckKind.Visible }, .{ force: true })?;
+    expect_eq(force_rep.state == ActionabilityState.Done, true);
+    expect_eq(force_rep.hit_target_ok, true);
+
+    // 2. Trial mode runs actionability check via Runtime.evaluate without clicking
+    const sent_before = transport.sent_count;
+    const trial_rep = btn.clickWithOptions(.{ trial: true })?;
+    expect_eq(trial_rep.state == ActionabilityState.Done, true);
+    expect_eq(trial_rep.trial_only, true);
+    expect_eq(transport.sent_count, sent_before + 1);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.evaluate"), true);
+
+    // 3. Normal clickWithOptions runs check + click
+    const full_rep = btn.clickWithOptions(.{})?;
+    expect_eq(full_rep.state == ActionabilityState.Done, true);
+    expect_eq(full_rep.scrolled, true);
+    expect_eq(transport.sent_count, sent_before + 3);
+
+    btn.scrollIntoViewIfNeeded()?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.evaluate"), true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testClockTimeControl(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launch(alloc, .{
+        transport_fn: mockTransportSend,
+        transport_ctx: unsafe { @intFromPtr(&transport) },
+    })?;
+    const page = browser.newPage()?;
+    let clk = page.clock();
+
+    expect_eq(clk.mode == ClockMode.Real, true);
+    clk.install(1700000000000)?;
+    expect_eq(clk.installed, true);
+    expect_eq(clk.mode == ClockMode.Installed, true);
+    expect_eq(clk.now(), 1700000000000);
+
+    clk.fastForward(5000)?;
+    expect_eq(clk.now(), 1700000005000);
+
+    clk.fastForwardStr("01:30")?;
+    expect_eq(clk.now(), 1700000095000);
+
+    clk.pauseAt(1700000100000)?;
+    expect_eq(clk.mode == ClockMode.Paused, true);
+    expect_eq(clk.now(), 1700000100000);
+
+    clk.resume_()?;
+    expect_eq(clk.mode == ClockMode.Installed, true);
+
+    clk.setFixedTime(1800000000000)?;
+    expect_eq(clk.mode == ClockMode.Fixed, true);
+    expect_eq(clk.now(), 1800000000000);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.evaluate"), true);
+
+    clk.uninstall();
+    expect_eq(clk.mode == ClockMode.Real, true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testArtifactsDownloadFileChooserConsoleAndHar(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    // Download
+    let dl = Download.init(alloc, "https://example.com/report.pdf", "dl-1", "report.pdf")?;
+    expect_eq(std.mem.eql(u8, dl.suggestedFilename(), "report.pdf"), true);
+    dl.saveAs("/tmp/report.pdf")?;
+    expect_eq(dl.path() != null, true);
+    dl.cancel();
+    expect_eq(dl.path() == null, true);
+    dl.deinit();
+
+    // FileChooser
+    let transport = MockCdpTransport{};
+    let browser = chromium.launch(alloc, .{
+        transport_fn: mockTransportSend,
+        transport_ctx: unsafe { @intFromPtr(&transport) },
+    })?;
+    const page = browser.newPage()?;
+    let fc = FileChooser.init(alloc, "input[type=file]", true, &browser.endpoint, page.session_id);
+    expect_eq(fc.isMultiple(), true);
+    const files: [2][]const u8 = .{ "/tmp/a.txt", "/tmp/b.txt" };
+    fc.setFiles(&files)?;
+    expect_eq(fc.files.items.len, 2);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "DOM.setFileInputFiles"), true);
+    fc.deinit();
+
+    // ConsoleMessage
+    const msg = ConsoleMessage{
+        msg_type: "warn",
+        text: "Deprecated API",
+        url: "https://example.com/app.js",
+        line_number: 42,
+    };
+    expect_eq(std.mem.eql(u8, msg.type_(), "warn"), true);
+
+    // SIMD HAR clean-span scan + HarRecorder with cap:json serialization
+    expect_eq(simdScanHarCleanSpan("clean_har_header_value_1234567890") == null, true);
+    expect_eq(simdScanHarCleanSpan("hello\"world") != null, true);
+
+    let har = HarRecorder.init(alloc, HarRecordOptions{
+        har_path: "out.har",
+        minimal: false,
+        url_glob: "https://api.example.com/**",
+    });
+    expect_eq(har.recordEntry(HarEntry{
+        method: "GET",
+        url: "https://api.example.com/v1/users",
+        status: 200,
+        mime_type: "application/json",
+        response_body: "{\"users\":[]}",
+        body_size: 12,
+    })?, true);
+    expect_eq(har.recordEntry(HarEntry{
+        method: "GET",
+        url: "https://cdn.example.com/logo.png",
+        status: 200,
+    })?, false);
+    expect_eq(har.entryCount(), 1);
+
+    const har_json = har.toJson(alloc)?;
+    expect_eq(std.mem.indexOf(u8, har_json, "\"version\":\"1.2\"") != null, true);
+    expect_eq(std.mem.indexOf(u8, har_json, "Playwright-CP") != null, true);
+    expect_eq(std.mem.indexOf(u8, har_json, "https://api.example.com/v1/users") != null, true);
+    alloc.free(har_json);
+    har.deinit();
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testRemoteServerAndClientRpc(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let srv = PlaywrightRemoteServer.init(alloc, PlaywrightRemoteConfig{
+        host: "127.0.0.1",
+        port: 9455,
+        path: "/pw",
+        mode: RemoteMode.LaunchServer,
+    });
+    srv.setTransport(mockTransportSend, unsafe { @intFromPtr(&transport) });
+
+    let ep_buf: [128]u8 = undefined;
+    const ep = srv.wsEndpoint(&ep_buf)?;
+    expect_eq(std.mem.eql(u8, ep, "ws://127.0.0.1:9455/pw"), true);
+
+    let client = PlaywrightRemoteClient.connect(alloc, ep)?;
+    expect_eq(client.connected, true);
+
+    let rpc_buf: [256]u8 = undefined;
+    const init_frame = client.buildRpcFrame("initialize", "", &rpc_buf)?;
+    const init_res = srv.handleRpcMessage(alloc, init_frame)?;
+    expect_eq(std.mem.indexOf(u8, init_res, "playwright-cp") != null, true);
+    alloc.free(init_res);
+
+    const launch_frame = client.buildRpcFrame("launch", "", &rpc_buf)?;
+    const launch_res = srv.handleRpcMessage(alloc, launch_frame)?;
+    expect_eq(std.mem.indexOf(u8, launch_res, "chromium-launched") != null, true);
+    alloc.free(launch_res);
+
+    const goto_frame = client.buildRpcFrame("goto", "https://example.com/rpc", &rpc_buf)?;
+    const goto_res = srv.handleRpcMessage(alloc, goto_frame)?;
+    expect_eq(std.mem.indexOf(u8, goto_res, "https://example.com/rpc") != null, true);
+    alloc.free(goto_res);
+
+    const close_frame = client.buildRpcFrame("close", "", &rpc_buf)?;
+    const close_res = srv.handleRpcMessage(alloc, close_frame)?;
+    expect_eq(std.mem.indexOf(u8, close_res, "closed") != null, true);
+    alloc.free(close_res);
+
+    client.deinit();
+    srv.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testPlaywrightCliActions(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+
+    // 1. screenshot action
+    const ss_args: [4][]const u8 = .{ "screenshot", "https://example.com", "out.png", "--full-page" };
+    const ss_opts = PlaywrightCli.parseArgs(&ss_args)?;
+    expect_eq(ss_opts.command == CliCommand.Screenshot, true);
+    expect_eq(ss_opts.full_page, true);
+    let ss_res = PlaywrightCli.execute(alloc, ss_opts, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    expect_eq(ss_res.ok, true);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.captureScreenshot"), true);
+    ss_res.deinit();
+
+    // 2. pdf action
+    const pdf_args: [3][]const u8 = .{ "pdf", "https://example.com", "--landscape" };
+    const pdf_opts = PlaywrightCli.parseArgs(&pdf_args)?;
+    expect_eq(pdf_opts.command == CliCommand.Pdf, true);
+    expect_eq(pdf_opts.landscape, true);
+    let pdf_res = PlaywrightCli.execute(alloc, pdf_opts, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    expect_eq(pdf_res.ok, true);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.printToPDF"), true);
+    pdf_res.deinit();
+
+    // 3. codegen action (CP & Python skeletons)
+    const cg_args: [3][]const u8 = .{ "codegen", "https://example.com/login", "--target=cp" };
+    const cg_opts = PlaywrightCli.parseArgs(&cg_args)?;
+    let cg_res = PlaywrightCli.execute(alloc, cg_opts, null, 0)?;
+    expect_eq(std.mem.indexOf(u8, cg_res.generated_code, "chromium.launch") != null, true);
+    expect_eq(std.mem.indexOf(u8, cg_res.generated_code, "https://example.com/login") != null, true);
+    cg_res.deinit();
+
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
 fn main() {
     test("1. Chromium Launch, Args Builder & Executable Probing", () => {
         testChromiumLaunchAndLauncherProbe() catch unreachable;
@@ -466,5 +728,20 @@ fn main() {
     });
     test("7. AriaSnapshot YAML & CDP Accessibility Tree", () => {
         testAriaSnapshotAndCdpAXTree() catch unreachable;
+    });
+    test("8. Actionability Engine & SIMD Selector/Glob Acceleration", () => {
+        testActionabilityEngineAndSimdSelectors() catch unreachable;
+    });
+    test("9. Clock Time Control (install/fastForward/pauseAt/setFixedTime)", () => {
+        testClockTimeControl() catch unreachable;
+    });
+    test("10. Download, FileChooser, ConsoleMessage & HarRecorder", () => {
+        testArtifactsDownloadFileChooserConsoleAndHar() catch unreachable;
+    });
+    test("11. PlaywrightRemoteServer & Client WS RPC Protocol", () => {
+        testRemoteServerAndClientRpc() catch unreachable;
+    });
+    test("12. Playwright CLI Actions (screenshot/pdf/codegen)", () => {
+        testPlaywrightCliActions() catch unreachable;
     });
 }

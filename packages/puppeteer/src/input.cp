@@ -1,6 +1,7 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/Input.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/input.cp — Keyboard, Mouse & Touchscreen Controllers
-// Built directly on cap:cdp InputDomain & CDPSession
+// Built directly on cap:cdp InputDomain & CDPSession with USKeyboardLayout
 // ============================================================================
 
 const std = @import("std");
@@ -13,6 +14,7 @@ import {
 } from "cap:cdp";
 import { PuppeteerError, ClickOptions, TypeOptions, mapCdpError } from "./types";
 import { CDPSession } from "./cdp_session";
+import { USKeyboardLayout, KeyDefinition } from "./keyboard_layout";
 
 pub struct Keyboard {
     session: *CDPSession = undefined,
@@ -47,20 +49,24 @@ pub struct Keyboard {
     }
 
     pub fn down(*_, key: []const u8): void!PuppeteerError {
-        if (std.mem.eql(u8, key, "Shift")) _.modifiers |= 8;
-        if (std.mem.eql(u8, key, "Control")) _.modifiers |= 2;
-        if (std.mem.eql(u8, key, "Alt")) _.modifiers |= 1;
-        if (std.mem.eql(u8, key, "Meta")) _.modifiers |= 4;
-        const text = if (key.len == 1) key else "";
-        _.dispatchKey("keyDown", key, key, text)?;
+        const shift_down = (_.modifiers & 8) != 0;
+        const def: KeyDefinition = USKeyboardLayout.resolve(key, shift_down);
+        if (std.mem.eql(u8, def.key, "Shift")) _.modifiers |= 8;
+        if (std.mem.eql(u8, def.key, "Control")) _.modifiers |= 2;
+        if (std.mem.eql(u8, def.key, "Alt")) _.modifiers |= 1;
+        if (std.mem.eql(u8, def.key, "Meta")) _.modifiers |= 4;
+        const text = if ((_.modifiers & (2 | 1 | 4)) != 0) "" else def.text;
+        _.dispatchKey("keyDown", def.key, def.code, text)?;
     }
 
     pub fn up(*_, key: []const u8): void!PuppeteerError {
-        if (std.mem.eql(u8, key, "Shift")) _.modifiers &= ~@as(i32, 8);
-        if (std.mem.eql(u8, key, "Control")) _.modifiers &= ~@as(i32, 2);
-        if (std.mem.eql(u8, key, "Alt")) _.modifiers &= ~@as(i32, 1);
-        if (std.mem.eql(u8, key, "Meta")) _.modifiers &= ~@as(i32, 4);
-        _.dispatchKey("keyUp", key, key, "")?;
+        const shift_down = (_.modifiers & 8) != 0;
+        const def: KeyDefinition = USKeyboardLayout.resolve(key, shift_down);
+        if (std.mem.eql(u8, def.key, "Shift")) _.modifiers &= ~@as(i32, 8);
+        if (std.mem.eql(u8, def.key, "Control")) _.modifiers &= ~@as(i32, 2);
+        if (std.mem.eql(u8, def.key, "Alt")) _.modifiers &= ~@as(i32, 1);
+        if (std.mem.eql(u8, def.key, "Meta")) _.modifiers &= ~@as(i32, 4);
+        _.dispatchKey("keyUp", def.key, def.code, "")?;
     }
 
     pub fn press(*_, key: []const u8, options: TypeOptions): void!PuppeteerError {

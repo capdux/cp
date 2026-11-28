@@ -1,7 +1,8 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/index.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/index.cp — Official CP Playwright Package Entry
 // Compatible with `playwright`, `playwright-core`, and `playwright-chromium`.
-// Zero-copy built on `cap:cdp` (`lib/cdp/`).
+// Zero-copy built on `cap:cdp` (`lib/cdp/`) with optional `cap:web` WS RPC.
 // ============================================================================
 
 export {
@@ -20,6 +21,30 @@ export {
     AriaRoleNode,
     AriaSnapshot,
 } from "./aria";
+
+export {
+    ActionabilityState,
+    ActionabilityCheckKind,
+    ActionabilityOptions,
+    ElementBox,
+    ActionabilityReport,
+    ActionabilityEngine,
+} from "./actionability";
+
+export {
+    ClockMode,
+    Clock,
+} from "./clock";
+
+export {
+    simdScanHarCleanSpan,
+    Download,
+    FileChooser,
+    ConsoleMessage,
+    HarRecordOptions,
+    HarEntry,
+    HarRecorder,
+} from "./artifacts";
 
 export {
     WaitForState,
@@ -55,3 +80,17 @@ export {
     ChromiumBrowserType,
     chromium,
 } from "./chromium";
+
+export {
+    RemoteMode,
+    PlaywrightRemoteConfig,
+    PlaywrightRemoteServer,
+    PlaywrightRemoteClient,
+} from "./remote";
+
+export {
+    CliCommand,
+    CliOptions,
+    CliResult,
+    PlaywrightCli,
+} from "./cli";

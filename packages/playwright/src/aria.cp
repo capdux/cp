@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/server/ariaSnapshot.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/aria.cp — AriaSnapshot & Accessibility Tree Model
 // Reuses cap:cdp AccessibilityDomain (AXNodeSummary) for zero-copy parsing.

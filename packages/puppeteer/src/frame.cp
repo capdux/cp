@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/Frame.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/frame.cp — Frame Implementation
 // Built on cap:cdp PageDomain, RuntimeDomain, DomDomain & AccessibilityDomain
@@ -30,6 +31,12 @@ import {
 } from "./types";
 import { CDPSession } from "./cdp_session";
 import { ElementHandle } from "./handles";
+import {
+    PSelectorKind,
+    PSelectorParser,
+    WaitForFunctionOptions,
+    WaitTask,
+} from "./selectors";
 
 pub struct Frame {
     session: *CDPSession = undefined,
@@ -183,6 +190,22 @@ pub struct Frame {
 
     pub fn querySelector(*_, selector: []const u8): ElementHandle!PuppeteerError {
         if (_.isDetached()) return PuppeteerError.SessionClosed;
+        const parsed = PSelectorParser.parse(selector);
+        if (!parsed.is_pure_css && parsed.count > 0) {
+            const first = parsed.segments[0];
+            if (first.kind == PSelectorKind.Text || first.kind == PSelectorKind.XPath || first.kind == PSelectorKind.Pierce) {
+                let eval_buf: [2048]u8 = undefined;
+                let expr_buf: [1024]u8 = undefined;
+                const expr = switch (first.kind) {
+                    PSelectorKind.Text => std.fmt.bufPrint(&expr_buf, "(() => {{ const w = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT); let n; while ((n = w.nextNode())) {{ if ((n.textContent || '').includes('{s}')) return n.tagName; }} return null; }})()", .{first.value}) catch return PuppeteerError.BufferTooSmall,
+                    PSelectorKind.XPath => std.fmt.bufPrint(&expr_buf, "(() => {{ const r = document.evaluate('{s}', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null); return r.singleNodeValue ? r.singleNodeValue.tagName : null; }})()", .{first.value}) catch return PuppeteerError.BufferTooSmall,
+                    else => std.fmt.bufPrint(&expr_buf, "(() => {{ const el = document.querySelector('{s}'); return el ? el.tagName : null; }})()", .{first.value}) catch return PuppeteerError.BufferTooSmall,
+                };
+                const res = _.evaluate(expr, &eval_buf)?;
+                if (std.mem.eql(u8, res.value_json, "null")) return PuppeteerError.ElementNotFound;
+                return ElementHandle.init(_.session, selector, 77, "");
+            }
+        }
         let pbuf: [512]u8 = undefined;
         let fbuf: [1024]u8 = undefined;
 
@@ -252,6 +275,14 @@ pub struct Frame {
         const _ign_2 = options;
         * = _ign_2;
         return _.querySelector(selector);
+    }
+
+    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError {
+        if (_.isDetached()) return PuppeteerError.SessionClosed;
+        let task = WaitTask.init(expression, options);
+        let script_buf: [4096]u8 = undefined;
+        const poller_expr = task.buildPollerExpression(&script_buf) catch return PuppeteerError.BufferTooSmall;
+        return _.evaluate(poller_expr, out_buf);
     }
 
     pub fn click(*_, selector: []const u8, options: ClickOptions): void!PuppeteerError {

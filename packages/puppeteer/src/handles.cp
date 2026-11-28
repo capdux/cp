@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/JSHandle.ts & ElementHandle.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/handles.cp — JSHandle & ElementHandle
 // Built on cap:cdp RuntimeDomain, DomDomain, InputDomain & PageDomain

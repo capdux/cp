@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/client/locator.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/locator.cp — Playwright Locator & Selector Engine
 // Supports role/text/label/placeholder/testId compilation, chaining,
@@ -16,6 +17,14 @@ import {
     InputKeyEventParams,
 } from "cap:cdp";
 import { PlaywrightError } from "./network";
+import {
+    ActionabilityCheckKind,
+    ActionabilityOptions,
+    ActionabilityReport,
+    ActionabilityEngine,
+} from "./actionability";
+
+type LocVec16 = @Vector(16, u8);
 
 pub enum WaitForState {
     Visible,
@@ -392,5 +401,50 @@ pub struct Locator {
             }
         }
         return 0;
+    }
+
+    /// 16-lane SIMD scan checking if selector contains combinator or pseudo markers (`>`, `:`, `[`).
+    pub static fn hasComplexSelectorSimd(sel: []const u8): bool {
+        let i: usize = 0;
+        const v_gt: LocVec16 = @splat('>');
+        const v_colon: LocVec16 = @splat(':');
+        const v_lbr: LocVec16 = @splat('[');
+        while (i + 16 <= sel.len) : (i += 16) {
+            const chunk: LocVec16 = sel[i..][0..16].*;
+            const mask = (chunk == v_gt) | (chunk == v_colon) | (chunk == v_lbr);
+            if (@reduce(.Or, mask)) return true;
+        }
+        while (i < sel.len) : (i += 1) {
+            const b = sel[i];
+            if (b == '>' || b == ':' || b == '[') return true;
+        }
+        return false;
+    }
+
+    pub fn checkActionability(
+        checks: []const ActionabilityCheckKind,
+        opts: ActionabilityOptions,
+    ): ActionabilityReport!PlaywrightError {
+        return ActionabilityEngine.waitForActionable(_.endpoint, _.session_id, _.selector(), checks, opts);
+    }
+
+    pub fn scrollIntoViewIfNeeded(): void!PlaywrightError {
+        let js_buf: [512]u8 = undefined;
+        const expr = ActionabilityEngine.buildScrollIntoViewScript(_.selector(), &js_buf)?;
+        * = expr;
+        * = _.evalSelectorAction("el.scrollIntoView({block:'center',inline:'center',behavior:'instant'}); return true;")?;
+    }
+
+    pub fn clickWithOptions(opts: ActionabilityOptions): ActionabilityReport!PlaywrightError {
+        const checks: [3]ActionabilityCheckKind = .{
+            ActionabilityCheckKind.Visible,
+            ActionabilityCheckKind.Stable,
+            ActionabilityCheckKind.Enabled,
+        };
+        const report = ActionabilityEngine.waitForActionable(_.endpoint, _.session_id, _.selector(), &checks, opts)?;
+        if (!opts.trial) {
+            * = _.evalSelectorAction("if (!el) return false; el.click(); return true;")?;
+        }
+        return report;
     }
 }

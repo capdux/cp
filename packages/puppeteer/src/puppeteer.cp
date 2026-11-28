@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/node/PuppeteerNode.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/puppeteer.cp — Top-Level Puppeteer Facade
 // launch, connect, defaultExecutablePath, buildLaunchArgs & parseDevToolsWsUrl

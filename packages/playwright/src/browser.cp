@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/server/browser.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/browser.cp — Playwright Browser Abstraction
 // Owns CdpEndpoint & BrowserContext lifecycle with zero-leak RAII cleanup.

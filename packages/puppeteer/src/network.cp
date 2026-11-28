@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/HTTPRequest.ts, HTTPResponse.ts & Dialog.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/network.cp — HTTPRequest, HTTPResponse & Dialog
 // ============================================================================

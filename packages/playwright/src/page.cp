@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/server/page.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/page.cp — Playwright Page Abstraction
 // Wraps a CDP target session via cap:cdp Domains (Page, Runtime, DOM, Input,
@@ -33,6 +34,7 @@ import {
     WaitForOptions,
     SelectorCompiler,
 } from "./locator";
+import { Clock } from "./clock";
 
 pub struct GotoOptions {
     referer: []const u8 = "",
@@ -427,6 +429,10 @@ pub struct Page {
             &params_buf,
         ) catch return PlaywrightError.BufferTooSmall;
         return _.sendCdp(req.method, req.params_json);
+    }
+
+    pub fn clock(*_): Clock {
+        return Clock.init(_.endpoint, _.session_id);
     }
 
     pub fn close(*_) {

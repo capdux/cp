@@ -1,9 +1,12 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/server/network.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/network.cp — Request, Response, Route & URL Router
 // Zero-copy models aligned with Playwright's network interception API.
 // ============================================================================
 
 const std = @import("std");
+
+type NetVec16 = @Vector(16, u8);
 
 pub err PlaywrightError {
     NotConnected,
@@ -114,10 +117,29 @@ pub struct RouteEntry {
 }
 
 pub struct UrlMatcher {
-    /// Glob matcher supporting `*` and `**` wildcards against URLs.
+    /// 16-lane SIMD scan to check if a glob pattern contains `*` or `?` wildcards.
+    pub static fn hasWildcardsSimd(pattern: []const u8): bool {
+        let i: usize = 0;
+        const v_star: NetVec16 = @splat('*');
+        const v_qmark: NetVec16 = @splat('?');
+        while (i + 16 <= pattern.len) : (i += 16) {
+            const chunk: NetVec16 = pattern[i..][0..16].*;
+            const mask = (chunk == v_star) | (chunk == v_qmark);
+            if (@reduce(.Or, mask)) return true;
+        }
+        while (i < pattern.len) : (i += 1) {
+            if (pattern[i] == '*' || pattern[i] == '?') return true;
+        }
+        return false;
+    }
+
+    /// Glob matcher supporting `*` and `**` wildcards against URLs (with SIMD literal fast-path).
     pub static fn matches(pattern: []const u8, url: []const u8): bool {
         if (pattern.len == 0 || std.mem.eql(u8, pattern, "*") || std.mem.eql(u8, pattern, "**")) {
             return true;
+        }
+        if (!UrlMatcher.hasWildcardsSimd(pattern)) {
+            return std.mem.eql(u8, pattern, url);
         }
         return UrlMatcher.globMatch(pattern, url);
     }

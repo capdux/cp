@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/common/types.ts & Errors.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/puppeteer/src/types.cp — Core Types, Options & Error Definitions
 // Pure CP Puppeteer API Model built on top of cap:cdp

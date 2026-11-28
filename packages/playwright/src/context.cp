@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/playwright/packages/playwright-core/src/server/browserContext.ts | Synced: 2026-11-28
 // ============================================================================
 // packages/playwright/src/context.cp — Playwright BrowserContext Abstraction
 // Manages isolated pages, cookies, storageState, and context-level routes.
