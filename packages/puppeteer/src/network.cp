@@ -11,8 +11,11 @@ import {
     HttpHeader,
     RemoteAddress,
     ResponseTiming,
+    RequestInitiator,
+    ContinueRequestOverrides,
 } from "./types";
 import { CDPSession } from "./cdp_session";
+import { SecurityDetails } from "./extras";
 
 pub enum InterceptResolutionAction {
     Abort,
@@ -42,6 +45,11 @@ pub struct HTTPRequest {
     resolution_handled: bool = false,
     resolution_action: InterceptResolutionAction = InterceptResolutionAction.None,
     failure_reason: []const u8 = "",
+    has_post_data_flag: bool = false,
+    initiator_info: RequestInitiator = .{},
+    redirect_chain_urls: [8][]const u8 = undefined,
+    redirect_chain_len: usize = 0,
+    response_ptr: (*HTTPResponse)? = null,
 
     pub static fn init(
         session: *CDPSession,
@@ -61,6 +69,8 @@ pub struct HTTPRequest {
             resource_type_val: resource_type,
             is_navigation: is_navigation,
             allow_interception: allow_interception,
+            redirect_chain_len: 0,
+            response_ptr: null,
         };
     }
 
@@ -76,8 +86,17 @@ pub struct HTTPRequest {
         return _.method_str;
     }
 
+    pub fn hasPostData(): bool {
+        return _.has_post_data_flag || _.post_data_str.len > 0;
+    }
+
     pub fn postData(): []const u8 {
         return _.post_data_str;
+    }
+
+    pub fn setPostData(*_, data: []const u8) {
+        _.post_data_str = data;
+        _.has_post_data_flag = data.len > 0;
     }
 
     pub fn resourceType(): ResourceType {
@@ -96,6 +115,38 @@ pub struct HTTPRequest {
         return _.headers_list[0.._.headers_len];
     }
 
+    pub fn redirectChain(): []const []const u8 {
+        return _.redirect_chain_urls[0.._.redirect_chain_len];
+    }
+
+    pub fn pushRedirectUrl(*_, redirect_url: []const u8) {
+        if (_.redirect_chain_len < 8) {
+            _.redirect_chain_urls[_.redirect_chain_len] = redirect_url;
+            _.redirect_chain_len += 1;
+        }
+    }
+
+    pub fn failure(): ([]const u8)? {
+        if (_.failure_reason.len == 0) return null;
+        return _.failure_reason;
+    }
+
+    pub fn initiator(): RequestInitiator {
+        return _.initiator_info;
+    }
+
+    pub fn setInitiator(*_, init_info: RequestInitiator) {
+        _.initiator_info = init_info;
+    }
+
+    pub fn response(): (*HTTPResponse)? {
+        return _.response_ptr;
+    }
+
+    pub fn setResponse(*_, resp: *HTTPResponse) {
+        _.response_ptr = resp;
+    }
+
     pub fn isInterceptResolutionHandled(): bool {
         return _.resolution_handled;
     }
@@ -105,6 +156,59 @@ pub struct HTTPRequest {
             action: _.resolution_action,
             priority: 0,
         };
+    }
+
+    pub fn continueWithOverrides(*_, overrides: ContinueRequestOverrides): void!PuppeteerError {
+        if (!_.allow_interception) return PuppeteerError.InvalidArgument;
+        if (_.resolution_handled) return PuppeteerError.InvalidArgument;
+        let pbuf: [2048]u8 = undefined;
+        let fbuf: [2560]u8 = undefined;
+        let pos: usize = 0;
+        const head = std.fmt.bufPrint(&pbuf, "{{\"requestId\":\"{s}\"", .{_.interception_id}) catch return PuppeteerError.BufferTooSmall;
+        pos = head.len;
+        if (overrides.url.len > 0) {
+            const s = std.fmt.bufPrint(pbuf[pos..], ",\"url\":\"{s}\"", .{overrides.url}) catch return PuppeteerError.BufferTooSmall;
+            pos += s.len;
+        }
+        if (overrides.method.len > 0) {
+            const s = std.fmt.bufPrint(pbuf[pos..], ",\"method\":\"{s}\"", .{overrides.method}) catch return PuppeteerError.BufferTooSmall;
+            pos += s.len;
+        }
+        if (overrides.post_data.len > 0) {
+            const s = std.fmt.bufPrint(pbuf[pos..], ",\"postData\":\"{s}\"", .{overrides.post_data}) catch return PuppeteerError.BufferTooSmall;
+            pos += s.len;
+        }
+        if (overrides.headers.len > 0) {
+            const hstart = ",\"headers\":[";
+            if (pos + hstart.len >= pbuf.len) return PuppeteerError.BufferTooSmall;
+            @memcpy(pbuf[pos .. pos + hstart.len], hstart);
+            pos += hstart.len;
+            let i: usize = 0;
+            while (i < overrides.headers.len) {
+                if (i > 0) {
+                    if (pos >= pbuf.len) return PuppeteerError.BufferTooSmall;
+                    pbuf[pos] = ',';
+                    pos += 1;
+                }
+                const hs = std.fmt.bufPrint(
+                    pbuf[pos..],
+                    "{{\"name\":\"{s}\",\"value\":\"{s}\"}}",
+                    .{ overrides.headers[i].name, overrides.headers[i].value },
+                ) catch return PuppeteerError.BufferTooSmall;
+                pos += hs.len;
+                i += 1;
+            }
+            if (pos >= pbuf.len) return PuppeteerError.BufferTooSmall;
+            pbuf[pos] = ']';
+            pos += 1;
+        }
+        if (pos >= pbuf.len) return PuppeteerError.BufferTooSmall;
+        pbuf[pos] = '}';
+        pos += 1;
+        const _ign_ovr = _.session.send("Fetch.continueRequest", pbuf[0..pos], &fbuf)?;
+        * = _ign_ovr;
+        _.resolution_handled = true;
+        _.resolution_action = InterceptResolutionAction.Continue;
     }
 
     pub fn continueRequest(*_, override_url: []const u8, override_method: []const u8): void!PuppeteerError {
@@ -186,6 +290,8 @@ pub struct HTTPResponse {
     headers_len: usize = 0,
     body_bytes: []const u8 = "",
     encoded_len: usize = 0,
+    security_details: SecurityDetails? = null,
+    request_ptr: (*HTTPRequest)? = null,
 
     pub static fn init(
         request_id: []const u8,
@@ -201,6 +307,8 @@ pub struct HTTPResponse {
             status_text_str: status_text,
             body_bytes: body,
             encoded_len: body.len,
+            security_details: null,
+            request_ptr: null,
         };
     }
 
@@ -240,6 +348,22 @@ pub struct HTTPResponse {
         return _.from_sw_flag;
     }
 
+    pub fn securityDetails(): SecurityDetails? {
+        return _.security_details;
+    }
+
+    pub fn setSecurityDetails(*_, details: SecurityDetails) {
+        _.security_details = details;
+    }
+
+    pub fn request(): (*HTTPRequest)? {
+        return _.request_ptr;
+    }
+
+    pub fn setRequest(*_, req: *HTTPRequest) {
+        _.request_ptr = req;
+    }
+
     pub fn encodedDataLength(): usize {
         return _.encoded_len;
     }
@@ -250,6 +374,17 @@ pub struct HTTPResponse {
 
     pub fn text(): []const u8 {
         return _.body_bytes;
+    }
+
+    pub fn json(): ([]const u8)!PuppeteerError {
+        const trimmed = std.mem.trim(u8, _.body_bytes, " \t\r\n");
+        if (trimmed.len == 0) return PuppeteerError.EvaluationFailed;
+        const first = trimmed[0];
+        const valid = (first == '{') || (first == '[') || (first == '"') ||
+            (first == 't') || (first == 'f') || (first == 'n') ||
+            (first == '-') || (first >= '0' && first <= '9');
+        if (!valid) return PuppeteerError.EvaluationFailed;
+        return trimmed;
     }
 }
 

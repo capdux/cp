@@ -24,6 +24,8 @@ import {
     TypeOptions,
     ScreenshotOptions,
     EvaluateResult,
+    LocatorVisibility,
+    LocatorScrollOptions,
     mapCdpError,
 } from "./types";
 import { CDPSession } from "./cdp_session";
@@ -330,5 +332,172 @@ pub struct ElementHandle {
 
     ~init() {
         _.dispose() catch {};
+    }
+}
+
+pub struct PuppeteerLocator {
+    session: *CDPSession = undefined,
+    selector_str: []const u8 = "",
+    timeout_ms: u32 = 30000,
+    ensure_in_viewport: bool = true,
+    visibility_opt: LocatorVisibility = LocatorVisibility.Visible,
+    wait_for_enabled: bool = true,
+    wait_for_stable_bounding_box: bool = true,
+    filter_predicate_js: []const u8 = "",
+
+    pub static fn init(session: *CDPSession, selector_expr: []const u8): PuppeteerLocator {
+        return PuppeteerLocator{
+            session: session,
+            selector_str: selector_expr,
+            timeout_ms: 30000,
+            ensure_in_viewport: true,
+            visibility_opt: LocatorVisibility.Visible,
+            wait_for_enabled: true,
+            wait_for_stable_bounding_box: true,
+            filter_predicate_js: "",
+        };
+    }
+
+    pub fn selector(): []const u8 {
+        return _.selector_str;
+    }
+
+    pub fn timeout(): u32 {
+        return _.timeout_ms;
+    }
+
+    pub fn ensureElementIsInTheViewport(): bool {
+        return _.ensure_in_viewport;
+    }
+
+    pub fn visibility(): LocatorVisibility {
+        return _.visibility_opt;
+    }
+
+    pub fn waitForEnabled(): bool {
+        return _.wait_for_enabled;
+    }
+
+    pub fn waitForStableBoundingBox(): bool {
+        return _.wait_for_stable_bounding_box;
+    }
+
+    pub fn filterExpression(): []const u8 {
+        return _.filter_predicate_js;
+    }
+
+    pub fn setTimeout(timeout_ms: u32): PuppeteerLocator {
+        let next = _.*;
+        next.timeout_ms = timeout_ms;
+        return next;
+    }
+
+    pub fn setEnsureElementIsInTheViewport(value: bool): PuppeteerLocator {
+        let next = _.*;
+        next.ensure_in_viewport = value;
+        return next;
+    }
+
+    pub fn setVisibility(vis: LocatorVisibility): PuppeteerLocator {
+        let next = _.*;
+        next.visibility_opt = vis;
+        return next;
+    }
+
+    pub fn setWaitForEnabled(value: bool): PuppeteerLocator {
+        let next = _.*;
+        next.wait_for_enabled = value;
+        return next;
+    }
+
+    pub fn setWaitForStableBoundingBox(value: bool): PuppeteerLocator {
+        let next = _.*;
+        next.wait_for_stable_bounding_box = value;
+        return next;
+    }
+
+    pub fn filter(predicate_js: []const u8): PuppeteerLocator {
+        let next = _.*;
+        next.filter_predicate_js = predicate_js;
+        return next;
+    }
+
+    pub fn wait(*_): ElementHandle!PuppeteerError {
+        if (_.session.detached()) return PuppeteerError.SessionClosed;
+        let pbuf: [1024]u8 = undefined;
+        let fbuf: [1536]u8 = undefined;
+
+        const req = DomDomain.querySelector(
+            _.session.endpoint.allocateId(),
+            _.session.id(),
+            DomQuerySelectorParams{ node_id: 1, selector: _.selector_str },
+            &pbuf,
+        ) catch |e| {
+            return mapCdpError(e);
+        };
+        const req_id = _.session.send(req.method, req.params_json, &fbuf)?;
+        let node_id: i64 = 2;
+        if (resp := _.session.endpoint.takeResponse(req_id)) {
+            if (resp.is_error) return PuppeteerError.ElementNotFound;
+            if (nid_str := CdpFrameScanner.extractTopLevelField(resp.result_json, "nodeId", false)) {
+                const parsed_id = std.fmt.parseInt(i64, nid_str, 10) catch 0;
+                if (parsed_id <= 0) return PuppeteerError.ElementNotFound;
+                node_id = parsed_id;
+            }
+        }
+
+        let el = ElementHandle.init(_.session, _.selector_str, node_id, "");
+        if (_.filter_predicate_js.len > 0) {
+            let expr_buf: [1024]u8 = undefined;
+            let eval_buf: [256]u8 = undefined;
+            const expr = std.fmt.bufPrint(
+                &expr_buf,
+                "(() => {{ const el = document.querySelector('{s}'); if (!el) return false; return Boolean(({s})(el)); }})()",
+                .{ _.selector_str, _.filter_predicate_js },
+            ) catch return PuppeteerError.BufferTooSmall;
+            const _ign_flt = el.evaluate(expr, &eval_buf)?;
+            * = _ign_flt;
+        }
+        if (_.ensure_in_viewport) {
+            el.scrollIntoViewIfNeeded()?;
+        }
+        return el;
+    }
+
+    pub fn click(*_, options: ClickOptions): void!PuppeteerError {
+        let el = _.wait()?;
+        el.click(options)?;
+    }
+
+    pub fn fill(*_, value: []const u8): void!PuppeteerError {
+        let el = _.wait()?;
+        el.focus()?;
+        let expr_buf: [1024]u8 = undefined;
+        let eval_buf: [256]u8 = undefined;
+        const expr = std.fmt.bufPrint(
+            &expr_buf,
+            "(() => {{ const el = document.querySelector('{s}'); if (el) {{ el.value = '{s}'; el.dispatchEvent(new Event('input', {{bubbles:true}})); el.dispatchEvent(new Event('change', {{bubbles:true}})); }} }})()",
+            .{ _.selector_str, value },
+        ) catch return PuppeteerError.BufferTooSmall;
+        const _ign_fill = el.evaluate(expr, &eval_buf)?;
+        * = _ign_fill;
+    }
+
+    pub fn hover(*_): void!PuppeteerError {
+        let el = _.wait()?;
+        el.hover()?;
+    }
+
+    pub fn scroll(*_, options: LocatorScrollOptions): void!PuppeteerError {
+        let el = _.wait()?;
+        let expr_buf: [1024]u8 = undefined;
+        let eval_buf: [256]u8 = undefined;
+        const expr = std.fmt.bufPrint(
+            &expr_buf,
+            "(() => {{ const el = document.querySelector('{s}'); if (el) {{ el.scrollTop = {d:.2}; el.scrollLeft = {d:.2}; }} }})()",
+            .{ _.selector_str, options.scroll_top, options.scroll_left },
+        ) catch return PuppeteerError.BufferTooSmall;
+        const _ign_scr = el.evaluate(expr, &eval_buf)?;
+        * = _ign_scr;
     }
 }

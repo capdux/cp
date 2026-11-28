@@ -30,7 +30,7 @@ import {
     mapCdpError,
 } from "./types";
 import { CDPSession } from "./cdp_session";
-import { ElementHandle } from "./handles";
+import { ElementHandle, PuppeteerLocator } from "./handles";
 import {
     PSelectorKind,
     PSelectorParser,
@@ -48,6 +48,9 @@ pub struct Frame {
     title_buf: [256]u8 = undefined,
     title_len: usize = 0,
     detached_flag: bool = false,
+    parent_frame: (*Frame)? = null,
+    child_frames: [16]*Frame = undefined,
+    child_frames_len: usize = 0,
 
     pub static fn init(session: *CDPSession, frame_id: []const u8, parent_frame_id: []const u8): Frame {
         let f = Frame{
@@ -58,6 +61,8 @@ pub struct Frame {
             url_len: 11,
             title_len: 0,
             detached_flag: false,
+            parent_frame: null,
+            child_frames_len: 0,
         };
         const init_url = "about:blank";
         @memcpy(f.url_buf[0..init_url.len], init_url);
@@ -72,8 +77,29 @@ pub struct Frame {
         return _.parent_frame_id;
     }
 
+    pub fn parentFrame(): (*Frame)? {
+        return _.parent_frame;
+    }
+
+    pub fn childFrames(): []const *Frame {
+        return _.child_frames[0.._.child_frames_len];
+    }
+
+    pub fn addChildFrame(*_, child: *Frame) {
+        if (_.child_frames_len < 16) {
+            child.parent_frame = _;
+            child.parent_frame_id = _.frame_id;
+            _.child_frames[_.child_frames_len] = child;
+            _.child_frames_len += 1;
+        }
+    }
+
     pub fn name(): []const u8 {
         return _.name_str;
+    }
+
+    pub fn setName(*_, new_name: []const u8) {
+        _.name_str = new_name;
     }
 
     pub fn url(): []const u8 {
@@ -308,6 +334,91 @@ pub struct Frame {
     pub fn typeText(*_, selector: []const u8, text: []const u8, options: TypeOptions): void!PuppeteerError {
         let el = _.waitForSelector(selector, .{})?;
         el.typeText(text, options)?;
+    }
+
+    pub fn evalOnSelector(
+        *_,
+        selector: []const u8,
+        page_function: []const u8,
+        out_buf: []u8,
+    ): EvaluateResult!PuppeteerError {
+        if (_.isDetached()) return PuppeteerError.SessionClosed;
+        const _el = _.querySelector(selector)?;
+        * = _el;
+        let expr_buf: [2048]u8 = undefined;
+        const expr = std.fmt.bufPrint(
+            &expr_buf,
+            "((fn) => {{ const el = document.querySelector('{s}'); if (!el) throw new Error('Element not found'); return fn(el); }})({s})",
+            .{ selector, page_function },
+        ) catch return PuppeteerError.BufferTooSmall;
+        return _.evaluate(expr, out_buf);
+    }
+
+    pub fn evalOnSelectorAll(
+        *_,
+        selector: []const u8,
+        page_function: []const u8,
+        out_buf: []u8,
+    ): EvaluateResult!PuppeteerError {
+        if (_.isDetached()) return PuppeteerError.SessionClosed;
+        let expr_buf: [2048]u8 = undefined;
+        const expr = std.fmt.bufPrint(
+            &expr_buf,
+            "((fn) => fn(Array.from(document.querySelectorAll('{s}'))))({s})",
+            .{ selector, page_function },
+        ) catch return PuppeteerError.BufferTooSmall;
+        return _.evaluate(expr, out_buf);
+    }
+
+    pub fn select(
+        *_,
+        selector: []const u8,
+        values: []const []const u8,
+        out_buf: []u8,
+    ): ([]const u8)!PuppeteerError {
+        if (_.isDetached()) return PuppeteerError.SessionClosed;
+        let el = _.waitForSelector(selector, .{})?;
+        * = el;
+        let arr_buf: [1024]u8 = undefined;
+        let pos: usize = 0;
+        arr_buf[0] = '[';
+        pos = 1;
+        let i: usize = 0;
+        while (i < values.len) {
+            if (i > 0) {
+                if (pos >= arr_buf.len) return PuppeteerError.BufferTooSmall;
+                arr_buf[pos] = ',';
+                pos += 1;
+            }
+            const item = std.fmt.bufPrint(arr_buf[pos..], "'{s}'", .{values[i]}) catch return PuppeteerError.BufferTooSmall;
+            pos += item.len;
+            i += 1;
+        }
+        if (pos >= arr_buf.len) return PuppeteerError.BufferTooSmall;
+        arr_buf[pos] = ']';
+        pos += 1;
+
+        let expr_buf: [2048]u8 = undefined;
+        const expr = std.fmt.bufPrint(
+            &expr_buf,
+            "(() => {{ const el = document.querySelector('{s}'); if (!el) return []; const vals = new Set({s}); const out = []; for (const opt of el.options || []) {{ opt.selected = vals.has(opt.value); if (opt.selected) out.push(opt.value); }} el.dispatchEvent(new Event('input', {{bubbles:true}})); el.dispatchEvent(new Event('change', {{bubbles:true}})); return JSON.stringify(out); }})()",
+            .{ selector, arr_buf[0..pos] },
+        ) catch return PuppeteerError.BufferTooSmall;
+        const res = _.evaluate(expr, out_buf)?;
+        return res.value_json;
+    }
+
+    pub fn waitForNavigation(*_, options: GoToOptions): void!PuppeteerError {
+        if (_.isDetached()) return PuppeteerError.SessionClosed;
+        const _ign_opt = options;
+        * = _ign_opt;
+        let buf: [128]u8 = undefined;
+        const _ign_nav = _.evaluate("document.readyState", &buf)?;
+        * = _ign_nav;
+    }
+
+    pub fn locator(*_, selector: []const u8): PuppeteerLocator {
+        return PuppeteerLocator.init(_.session, selector);
     }
 
     pub fn addScriptTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError {

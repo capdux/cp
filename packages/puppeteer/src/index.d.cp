@@ -126,6 +126,34 @@ export struct AccessibilitySnapshot {
     pub fn slice(): []const AXNodeSummary;
 }
 
+export struct MediaFeature { name: []const u8, value: []const u8 }
+export struct GeolocationOptions { latitude: f64, longitude: f64, accuracy: f64 }
+export struct NetworkConditions { offline: bool, download_throughput: f64, upload_throughput: f64, latency: f64 }
+export struct Credentials { username: []const u8, password: []const u8 }
+export struct PageMetrics {
+    timestamp: f64,
+    documents: f64,
+    frames: f64,
+    js_event_listeners: f64,
+    nodes: f64,
+    layout_count: f64,
+    recalc_style_count: f64,
+    layout_duration: f64,
+    recalc_style_duration: f64,
+    script_duration: f64,
+    task_duration: f64,
+    js_heap_used_size: f64,
+    js_heap_total_size: f64,
+}
+export struct WebWorkerInfo { url: []const u8, target_id: []const u8 }
+export struct WaitForNetworkIdleOptions { idle_time_ms: u32, concurrency: u32, timeout_ms: u32 }
+export struct WaitForTargetOptions { timeout_ms: u32 }
+export struct DebugInfo { pending_protocol_errors_count: usize, active_sessions_count: usize, connected: bool }
+export struct RequestInitiator { kind: []const u8, url: []const u8, line_number: u32, column_number: u32 }
+export struct ContinueRequestOverrides { url: []const u8, method: []const u8, post_data: []const u8, headers: []const HttpHeader }
+export enum LocatorVisibility { Any, Visible, Hidden }
+export struct LocatorScrollOptions { scroll_top: f64, scroll_left: f64 }
+
 export struct CDPSession {
     pub fn id(): []const u8;
     pub fn targetType(): []const u8;
@@ -167,13 +195,24 @@ export struct HTTPRequest {
     pub fn id(): []const u8;
     pub fn url(): []const u8;
     pub fn method(): []const u8;
+    pub fn hasPostData(): bool;
     pub fn postData(): []const u8;
+    pub fn setPostData(*_, data: []const u8);
     pub fn resourceType(): ResourceType;
     pub fn frameId(): []const u8;
     pub fn isNavigationRequest(): bool;
     pub fn headers(): []const HttpHeader;
+    pub fn redirectChain(): []const []const u8;
+    pub fn pushRedirectUrl(*_, redirect_url: []const u8);
+    pub fn failure(): ([]const u8)?;
+    pub fn initiator(): RequestInitiator;
+    pub fn setInitiator(*_, init_info: RequestInitiator);
+    pub fn response(): (*HTTPResponse)?;
+    pub fn setResponse(*_, resp: *HTTPResponse);
     pub fn isInterceptResolutionHandled(): bool;
+    pub fn interceptResolutionState(): InterceptResolutionState;
     pub fn continueRequest(*_, override_url: []const u8, override_method: []const u8): void!PuppeteerError;
+    pub fn continueWithOverrides(*_, overrides: ContinueRequestOverrides): void!PuppeteerError;
     pub fn respond(*_, status: u16, content_type: []const u8, body: []const u8): void!PuppeteerError;
     pub fn abort(*_, error_reason: []const u8): void!PuppeteerError;
 }
@@ -188,9 +227,14 @@ export struct HTTPResponse {
     pub fn timing(): ResponseTiming;
     pub fn fromCache(): bool;
     pub fn fromServiceWorker(): bool;
+    pub fn securityDetails(): SecurityDetails?;
+    pub fn setSecurityDetails(*_, details: SecurityDetails);
+    pub fn request(): (*HTTPRequest)?;
+    pub fn setRequest(*_, req: *HTTPRequest);
     pub fn encodedDataLength(): usize;
     pub fn buffer(): []const u8;
     pub fn text(): []const u8;
+    pub fn json(): ([]const u8)!PuppeteerError;
 }
 
 export struct Dialog {
@@ -229,37 +273,68 @@ export struct ElementHandle {
     pub fn dispose(*_): void!PuppeteerError;
 }
 
+export struct PuppeteerLocator {
+    pub static fn init(session: *CDPSession, selector_expr: []const u8): PuppeteerLocator;
+    pub fn selector(): []const u8;
+    pub fn timeout(): u32;
+    pub fn ensureElementIsInTheViewport(): bool;
+    pub fn visibility(): LocatorVisibility;
+    pub fn waitForEnabled(): bool;
+    pub fn waitForStableBoundingBox(): bool;
+    pub fn filterExpression(): []const u8;
+    pub fn setTimeout(timeout_ms: u32): PuppeteerLocator;
+    pub fn setEnsureElementIsInTheViewport(value: bool): PuppeteerLocator;
+    pub fn setVisibility(vis: LocatorVisibility): PuppeteerLocator;
+    pub fn setWaitForEnabled(value: bool): PuppeteerLocator;
+    pub fn setWaitForStableBoundingBox(value: bool): PuppeteerLocator;
+    pub fn filter(predicate_js: []const u8): PuppeteerLocator;
+    pub fn wait(*_): ElementHandle!PuppeteerError;
+    pub fn click(*_, options: ClickOptions): void!PuppeteerError;
+    pub fn fill(*_, value: []const u8): void!PuppeteerError;
+    pub fn hover(*_): void!PuppeteerError;
+    pub fn scroll(*_, options: LocatorScrollOptions): void!PuppeteerError;
+}
+
 export struct Frame {
     pub fn id(): []const u8;
     pub fn parentFrameId(): []const u8;
+    pub fn parentFrame(): (*Frame)?;
+    pub fn childFrames(): []const *Frame;
+    pub fn addChildFrame(*_, child: *Frame);
     pub fn name(): []const u8;
+    pub fn setName(*_, new_name: []const u8);
     pub fn url(): []const u8;
     pub fn isDetached(): bool;
     pub fn goto(*_, target_url: []const u8, options: GoToOptions): void!PuppeteerError;
     pub fn evaluate(*_, expression: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn evalOnSelector(*_, selector: []const u8, page_function: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn evalOnSelectorAll(*_, selector: []const u8, page_function: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
     pub fn title(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn content(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn setContent(*_, html: []const u8): void!PuppeteerError;
-    pub fn querySelector(*_, selector: []const u8): (ElementHandle?)!PuppeteerError;
+    pub fn querySelector(*_, selector: []const u8): ElementHandle!PuppeteerError;
     pub fn querySelectorAll(*_, selector: []const u8, out_handles: []ElementHandle): usize!PuppeteerError;
     pub fn waitForSelector(*_, selector: []const u8, options: WaitForSelectorOptions): ElementHandle!PuppeteerError;
     pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
-    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn waitForNavigation(*_, options: GoToOptions): void!PuppeteerError;
     pub fn click(*_, selector: []const u8, options: ClickOptions): void!PuppeteerError;
     pub fn focus(*_, selector: []const u8): void!PuppeteerError;
     pub fn hover(*_, selector: []const u8): void!PuppeteerError;
     pub fn tap(*_, selector: []const u8): void!PuppeteerError;
     pub fn typeText(*_, selector: []const u8, text: []const u8, options: TypeOptions): void!PuppeteerError;
+    pub fn select(*_, selector: []const u8, values: []const []const u8, out_buf: []u8): ([]const u8)!PuppeteerError;
+    pub fn locator(*_, selector: []const u8): PuppeteerLocator;
     pub fn addScriptTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError;
     pub fn addStyleTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError;
     pub fn accessibilitySnapshot(*_, options: AccessibilitySnapshotOptions): AccessibilitySnapshot!PuppeteerError;
-    pub fn tracing(*_): *Tracing;
-    pub fn coverage(*_): *Coverage;
 }
 
 export struct Page {
     pub fn isClosed(): bool;
     pub fn mainFrame(*_): *Frame;
+    pub fn frames(*_): []const *Frame;
+    pub fn workers(): []const WebWorkerInfo;
+    pub fn registerWorker(*_, info: WebWorkerInfo);
     pub fn keyboard(*_): *Keyboard;
     pub fn mouse(*_): *Mouse;
     pub fn touchscreen(*_): *Touchscreen;
@@ -269,26 +344,59 @@ export struct Page {
     pub fn content(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn setContent(*_, html: []const u8): void!PuppeteerError;
     pub fn goto(*_, target_url: []const u8, options: GoToOptions): void!PuppeteerError;
+    pub fn bringToFront(*_): void!PuppeteerError;
     pub fn goBack(*_): void!PuppeteerError;
     pub fn goForward(*_): void!PuppeteerError;
     pub fn reload(*_, ignore_cache: bool): void!PuppeteerError;
     pub fn evaluate(*_, expression: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn evalOnSelector(*_, selector: []const u8, page_function: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn evalOnSelectorAll(*_, selector: []const u8, page_function: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
     pub fn evaluateOnNewDocument(*_, script: []const u8): void!PuppeteerError;
     pub fn setViewport(*_, vp: Viewport): void!PuppeteerError;
     pub fn viewport(): Viewport;
     pub fn emulate(*_, device: Device): void!PuppeteerError;
+    pub fn emulateMediaType(*_, media_type: []const u8): void!PuppeteerError;
+    pub fn emulateMediaFeatures(*_, features: []const MediaFeature): void!PuppeteerError;
+    pub fn emulateTimezone(*_, timezone_id: []const u8): void!PuppeteerError;
+    pub fn emulateVisionDeficiency(*_, vision_type: []const u8): void!PuppeteerError;
+    pub fn emulateCPUThrottling(*_, factor: f64): void!PuppeteerError;
+    pub fn emulateNetworkConditions(*_, conditions: NetworkConditions): void!PuppeteerError;
+    pub fn setGeolocation(*_, options: GeolocationOptions): void!PuppeteerError;
+    pub fn setOfflineMode(*_, enabled: bool): void!PuppeteerError;
+    pub fn setCacheEnabled(*_, enabled: bool): void!PuppeteerError;
+    pub fn setBypassCSP(*_, enabled: bool): void!PuppeteerError;
+    pub fn setJavaScriptEnabled(*_, enabled: bool): void!PuppeteerError;
+    pub fn isJavaScriptEnabled(): bool;
+    pub fn setBypassServiceWorker(*_, bypass: bool): void!PuppeteerError;
+    pub fn isServiceWorkerBypassed(): bool;
+    pub fn setDragInterception(*_, enabled: bool): void!PuppeteerError;
+    pub fn authenticate(*_, credentials: Credentials?): void!PuppeteerError;
     pub fn screenshot(*_, options: ScreenshotOptions, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn pdf(*_, options: PdfOptions, out_buf: []u8): ([]const u8)!PuppeteerError;
-    pub fn querySelector(*_, selector: []const u8): (ElementHandle?)!PuppeteerError;
+    pub fn querySelector(*_, selector: []const u8): ElementHandle!PuppeteerError;
     pub fn querySelectorAll(*_, selector: []const u8, out_handles: []ElementHandle): usize!PuppeteerError;
     pub fn waitForSelector(*_, selector: []const u8, options: WaitForSelectorOptions): ElementHandle!PuppeteerError;
     pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
-    pub fn waitForFunction(*_, expression: []const u8, options: WaitForFunctionOptions, out_buf: []u8): EvaluateResult!PuppeteerError;
+    pub fn waitForNavigation(*_, options: GoToOptions): void!PuppeteerError;
+    pub fn waitForRequest(*_, url_pattern: []const u8, timeout_ms: u32): HTTPRequest!PuppeteerError;
+    pub fn waitForResponse(*_, url_pattern: []const u8, timeout_ms: u32): HTTPResponse!PuppeteerError;
+    pub fn waitForFrame(*_, url_or_name: []const u8, timeout_ms: u32): (*Frame)!PuppeteerError;
+    pub fn waitForNetworkIdle(*_, options: WaitForNetworkIdleOptions): void!PuppeteerError;
+    pub fn waitForFileChooser(*_, timeout_ms: u32): FileChooser!PuppeteerError;
+    pub fn recordRequest(*_, req: HTTPRequest);
+    pub fn recordResponse(*_, resp: HTTPResponse);
     pub fn click(*_, selector: []const u8, options: ClickOptions): void!PuppeteerError;
     pub fn typeText(*_, selector: []const u8, text: []const u8, options: TypeOptions): void!PuppeteerError;
     pub fn focus(*_, selector: []const u8): void!PuppeteerError;
     pub fn hover(*_, selector: []const u8): void!PuppeteerError;
     pub fn tap(*_, selector: []const u8): void!PuppeteerError;
+    pub fn select(*_, selector: []const u8, values: []const []const u8, out_buf: []u8): ([]const u8)!PuppeteerError;
+    pub fn addScriptTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError;
+    pub fn addStyleTag(*_, url_or_content: []const u8, is_url: bool): void!PuppeteerError;
+    pub fn exposeFunction(*_, name: []const u8): void!PuppeteerError;
+    pub fn removeExposedFunction(*_, name: []const u8): void!PuppeteerError;
+    pub fn metrics(*_): PageMetrics!PuppeteerError;
+    pub fn locator(*_, selector: []const u8): PuppeteerLocator;
     pub fn setExtraHttpHeaders(*_, headers: []const HttpHeader): void!PuppeteerError;
     pub fn setRequestInterception(*_, enabled: bool): void!PuppeteerError;
     pub fn setUserAgent(*_, user_agent: []const u8): void!PuppeteerError;
@@ -313,7 +421,13 @@ export struct BrowserContext {
     pub fn id(): []const u8;
     pub fn isIncognito(): bool;
     pub fn isClosed(): bool;
+    pub fn pages(): []const *Page;
+    pub fn targets(): []const TargetInfo;
+    pub fn cookies(): []const Cookie;
+    pub fn setCookie(*_, cookie_list: []const CookieParam): void!PuppeteerError;
+    pub fn deleteCookie(*_, name: []const u8, domain: []const u8): void!PuppeteerError;
     pub fn overridePermissions(*_, origin: []const u8, permissions_json: []const u8): void!PuppeteerError;
+    pub fn clearPermissionOverrides(*_): void!PuppeteerError;
     pub fn close(*_): void!PuppeteerError;
 }
 
@@ -323,6 +437,7 @@ export struct Browser {
     pub fn wsEndpoint(): []const u8;
     pub fn executablePath(): []const u8;
     pub fn isConnected(): bool;
+    pub fn connected(): bool;
     pub fn defaultBrowserContext(*_): *BrowserContext;
     pub fn browserContexts(): []const BrowserContext;
     pub fn createBrowserContext(*_): BrowserContext!PuppeteerError;
@@ -330,6 +445,11 @@ export struct Browser {
     pub fn pages(): []*Page;
     pub fn targets(): []const TargetInfo;
     pub fn target(): TargetInfo;
+    pub fn waitForTarget(*_, url_or_id_substr: []const u8, options: WaitForTargetOptions): TargetInfo!PuppeteerError;
+    pub fn debugInfo(): DebugInfo;
+    pub fn cookies(*_): []const Cookie;
+    pub fn setCookie(*_, cookie_list: []const CookieParam): void!PuppeteerError;
+    pub fn deleteCookie(*_, name: []const u8, domain: []const u8): void!PuppeteerError;
     pub fn version(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn userAgent(*_, out_buf: []u8): ([]const u8)!PuppeteerError;
     pub fn disconnect(*_);

@@ -264,3 +264,88 @@ pub struct AccessibilitySnapshot {
         return _.nodes[0.._.count];
     }
 }
+
+pub struct MediaFeature {
+    name: []const u8 = "",
+    value: []const u8 = "",
+}
+
+pub struct GeolocationOptions {
+    latitude: f64 = 0.0,
+    longitude: f64 = 0.0,
+    accuracy: f64 = 0.0,
+}
+
+pub struct NetworkConditions {
+    offline: bool = false,
+    download_throughput: f64 = -1.0,
+    upload_throughput: f64 = -1.0,
+    latency: f64 = 0.0,
+}
+
+pub struct Credentials {
+    username: []const u8 = "",
+    password: []const u8 = "",
+}
+
+pub struct PageMetrics {
+    timestamp: f64 = 0.0,
+    documents: f64 = 0.0,
+    frames: f64 = 0.0,
+    js_event_listeners: f64 = 0.0,
+    nodes: f64 = 0.0,
+    layout_count: f64 = 0.0,
+    recalc_style_count: f64 = 0.0,
+    layout_duration: f64 = 0.0,
+    recalc_style_duration: f64 = 0.0,
+    script_duration: f64 = 0.0,
+    task_duration: f64 = 0.0,
+    js_heap_used_size: f64 = 0.0,
+    js_heap_total_size: f64 = 0.0,
+}
+
+pub struct WebWorkerInfo {
+    url: []const u8 = "",
+    target_id: []const u8 = "",
+}
+
+pub struct WaitForNetworkIdleOptions {
+    idle_time_ms: u32 = 500,
+    concurrency: u32 = 0,
+    timeout_ms: u32 = 30000,
+}
+
+pub struct WaitForTargetOptions {
+    timeout_ms: u32 = 30000,
+}
+
+pub struct DebugInfo {
+    pending_protocol_errors_count: usize = 0,
+    active_sessions_count: usize = 0,
+    connected: bool = false,
+}
+
+pub struct RequestInitiator {
+    kind: []const u8 = "other",
+    url: []const u8 = "",
+    line_number: u32 = 0,
+    column_number: u32 = 0,
+}
+
+pub struct ContinueRequestOverrides {
+    url: []const u8 = "",
+    method: []const u8 = "",
+    post_data: []const u8 = "",
+    headers: []const HttpHeader = &.{},
+}
+
+pub enum LocatorVisibility {
+    Any,
+    Visible,
+    Hidden,
+}
+
+pub struct LocatorScrollOptions {
+    scroll_top: f64 = 0.0,
+    scroll_left: f64 = 0.0,
+}

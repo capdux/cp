@@ -19,6 +19,8 @@ import {
     TargetInfo,
     Cookie,
     CookieParam,
+    WaitForTargetOptions,
+    DebugInfo,
     mapCdpError,
 } from "./types";
 import { Page } from "./page";
@@ -28,6 +30,12 @@ pub struct BrowserContext {
     incognito: bool = false,
     closed_flag: bool = false,
     endpoint: *CdpEndpoint = undefined,
+    context_pages: [32]*Page = undefined,
+    context_pages_len: usize = 0,
+    context_targets: [32]TargetInfo = undefined,
+    context_targets_len: usize = 0,
+    cookies_store: [32]Cookie = undefined,
+    cookies_len: usize = 0,
 
     pub static fn init(endpoint: *CdpEndpoint, ctx_id: []const u8, incognito: bool): BrowserContext {
         return BrowserContext{
@@ -35,6 +43,9 @@ pub struct BrowserContext {
             incognito: incognito,
             closed_flag: false,
             endpoint: endpoint,
+            context_pages_len: 0,
+            context_targets_len: 0,
+            cookies_len: 0,
         };
     }
 
@@ -50,6 +61,92 @@ pub struct BrowserContext {
         return _.closed_flag;
     }
 
+    pub fn pages(): []const *Page {
+        return _.context_pages[0.._.context_pages_len];
+    }
+
+    pub fn targets(): []const TargetInfo {
+        return _.context_targets[0.._.context_targets_len];
+    }
+
+    pub fn registerPage(*_, page_ptr: *Page, target_info: TargetInfo) {
+        if (_.context_pages_len < 32) {
+            _.context_pages[_.context_pages_len] = page_ptr;
+            _.context_pages_len += 1;
+        }
+        if (_.context_targets_len < 32) {
+            _.context_targets[_.context_targets_len] = target_info;
+            _.context_targets_len += 1;
+        }
+    }
+
+    pub fn cookies(): []const Cookie {
+        return _.cookies_store[0.._.cookies_len];
+    }
+
+    pub fn setCookie(*_, cookie_list: []const CookieParam): void!PuppeteerError {
+        if (_.closed_flag) return PuppeteerError.SessionClosed;
+        let pbuf: [2048]u8 = undefined;
+        let fbuf: [2560]u8 = undefined;
+        for (c of cookie_list) {
+            const params = std.fmt.bufPrint(
+                &pbuf,
+                "{{\"browserContextId\":\"{s}\",\"cookies\":[{{\"name\":\"{s}\",\"value\":\"{s}\",\"domain\":\"{s}\",\"path\":\"{s}\",\"httpOnly\":{s},\"secure\":{s}}}]}}",
+                .{
+                    _.id_str,
+                    c.name,
+                    c.value,
+                    c.domain,
+                    c.path,
+                    if (c.http_only) "true" else "false",
+                    if (c.secure) "true" else "false",
+                },
+            ) catch return PuppeteerError.BufferTooSmall;
+            const _ign_sc = _.endpoint.sendCommand("", "Storage.setCookies", params, &fbuf) catch |e| {
+                return mapCdpError(e);
+            };
+            * = _ign_sc;
+            if (_.cookies_len < 32) {
+                _.cookies_store[_.cookies_len] = Cookie{
+                    name: c.name,
+                    value: c.value,
+                    domain: c.domain,
+                    path: c.path,
+                    http_only: c.http_only,
+                    secure: c.secure,
+                    same_site: c.same_site,
+                    expires: c.expires,
+                };
+                _.cookies_len += 1;
+            }
+        }
+    }
+
+    pub fn deleteCookie(*_, name: []const u8, domain: []const u8): void!PuppeteerError {
+        if (_.closed_flag) return PuppeteerError.SessionClosed;
+        let pbuf: [512]u8 = undefined;
+        let fbuf: [1024]u8 = undefined;
+        const params = std.fmt.bufPrint(
+            &pbuf,
+            "{{\"name\":\"{s}\",\"domain\":\"{s}\",\"browserContextId\":\"{s}\"}}",
+            .{ name, domain, _.id_str },
+        ) catch return PuppeteerError.BufferTooSmall;
+        const _ign_dc = _.endpoint.sendCommand("", "Network.deleteCookies", params, &fbuf) catch |e| {
+            return mapCdpError(e);
+        };
+        * = _ign_dc;
+        let write_idx: usize = 0;
+        let read_idx: usize = 0;
+        while (read_idx < _.cookies_len) {
+            if (!std.mem.eql(u8, _.cookies_store[read_idx].name, name)) {
+                _.cookies_store[write_idx] = _.cookies_store[read_idx];
+                write_idx += 1;
+            }
+            read_idx += 1;
+        }
+        _.cookies_len = write_idx;
+    }
+
     pub fn overridePermissions(*_, origin: []const u8, permissions_json: []const u8): void!PuppeteerError {
         if (_.closed_flag) return PuppeteerError.SessionClosed;
         let pbuf: [1024]u8 = undefined;
@@ -63,6 +160,21 @@ pub struct BrowserContext {
             return mapCdpError(e);
         };
         * = _ign_perm;
+    }
+
+    pub fn clearPermissionOverrides(*_): void!PuppeteerError {
+        if (_.closed_flag) return PuppeteerError.SessionClosed;
+        let pbuf: [256]u8 = undefined;
+        let fbuf: [512]u8 = undefined;
+        const params = std.fmt.bufPrint(
+            &pbuf,
+            "{{\"browserContextId\":\"{s}\"}}",
+            .{_.id_str},
+        ) catch return PuppeteerError.BufferTooSmall;
+        const _ign_clr = _.endpoint.sendCommand("", "Browser.resetPermissions", params, &fbuf) catch |e| {
+            return mapCdpError(e);
+        };
+        * = _ign_clr;
     }
 
     pub fn close(*_): void!PuppeteerError {
@@ -328,16 +440,24 @@ pub struct Browser {
             return PuppeteerError.OutOfMemory;
         };
 
-        _.targets_list.append(_.allocator, TargetInfo{
+        const page_target = TargetInfo{
             target_id: tid,
             target_type: TargetType.Page,
             title: "",
             url: "about:blank",
             attached: true,
             browser_context_id: "default",
-        }) catch {};
+        };
+        _.targets_list.append(_.allocator, page_target) catch {};
+        if (_.contexts_list.items.len > 0) {
+            _.contexts_list.items[0].registerPage(page_ptr, page_target);
+        }
 
         return page_ptr;
+    }
+
+    pub fn connected(): bool {
+        return _.isConnected();
     }
 
     pub fn pages(): []*Page {
@@ -350,6 +470,41 @@ pub struct Browser {
 
     pub fn target(): TargetInfo {
         return _.targets_list.items[0];
+    }
+
+    pub fn waitForTarget(*_, url_or_id_substr: []const u8, options: WaitForTargetOptions): TargetInfo!PuppeteerError {
+        if (!_.isConnected()) return PuppeteerError.NotConnected;
+        const _ign_opt = options;
+        * = _ign_opt;
+        for (t of _.targets_list.items) {
+            if (url_or_id_substr.len == 0) return t;
+            if (std.mem.indexOf(u8, t.url, url_or_id_substr) != null || std.mem.indexOf(u8, t.target_id, url_or_id_substr) != null) {
+                return t;
+            }
+        }
+        return PuppeteerError.Timeout;
+    }
+
+    pub fn debugInfo(): DebugInfo {
+        return DebugInfo{
+            pending_protocol_errors_count: 0,
+            active_sessions_count: _.pages_list.items.len,
+            connected: _.isConnected(),
+        };
+    }
+
+    pub fn cookies(*_): []const Cookie {
+        return _.defaultBrowserContext().cookies();
+    }
+
+    pub fn setCookie(*_, cookie_list: []const CookieParam): void!PuppeteerError {
+        if (!_.isConnected()) return PuppeteerError.NotConnected;
+        return _.defaultBrowserContext().setCookie(cookie_list);
+    }
+
+    pub fn deleteCookie(*_, name: []const u8, domain: []const u8): void!PuppeteerError {
+        if (!_.isConnected()) return PuppeteerError.NotConnected;
+        return _.defaultBrowserContext().deleteCookie(name, domain);
     }
 
     pub fn version(*_, out_buf: []u8): ([]const u8)!PuppeteerError {

@@ -14,6 +14,7 @@ import {
     Frame,
     ElementHandle,
     JSHandle,
+    PuppeteerLocator,
     CDPSession,
     Keyboard,
     Mouse,
@@ -64,6 +65,19 @@ import {
     CSSCoverageOptions,
     CoverageRange,
     convertToDisjointRanges,
+    MediaFeature,
+    GeolocationOptions,
+    NetworkConditions,
+    Credentials,
+    PageMetrics,
+    WebWorkerInfo,
+    WaitForNetworkIdleOptions,
+    WaitForTargetOptions,
+    DebugInfo,
+    RequestInitiator,
+    ContinueRequestOverrides,
+    LocatorVisibility,
+    LocatorScrollOptions,
 } from "../../packages/puppeteer/src/index.cp";
 
 struct MockCdpServer {
@@ -149,6 +163,8 @@ struct MockCdpServer {
             result_json = "{\"url\":\"https://example.com/app.js\",\"result\":[{\"scriptId\":\"1\",\"functions\":[{\"ranges\":[{\"startOffset\":0,\"endOffset\":100,\"count\":1},{\"startOffset\":20,\"endOffset\":50,\"count\":0}]}]}]}";
         } else if (std.mem.eql(u8, method, "CSS.stopRuleUsageTracking")) {
             result_json = "{\"url\":\"https://example.com/style.css\",\"ruleUsage\":[{\"styleSheetId\":\"ss-1\",\"startOffset\":0,\"endOffset\":40,\"used\":true},{\"styleSheetId\":\"ss-1\",\"startOffset\":40,\"endOffset\":80,\"used\":false}]}";
+        } else if (std.mem.eql(u8, method, "Performance.getMetrics")) {
+            result_json = "{\"metrics\":[{\"name\":\"Timestamp\",\"value\":1234.5},{\"name\":\"Documents\",\"value\":3},{\"name\":\"Frames\",\"value\":2},{\"name\":\"Nodes\",\"value\":128},{\"name\":\"LayoutCount\",\"value\":5},{\"name\":\"JSHeapUsedSize\",\"value\":2048000}]}";
         }
 
         const resp = if (sid.len > 0)
@@ -783,6 +799,264 @@ fn testTracingAndCoverage(): !void {
     expect_eq(css_ranges[0].end, @as(usize, 40));
 }
 
+fn testPageEmulationWaitersAndInteractions(): !void {
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/emul",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+
+    const page = browser.newPage()?;
+
+    // 1. Page Emulation & Environment
+    page.emulateMediaType("print")?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setEmulatedMedia"), true);
+
+    const features: [1]MediaFeature = .{MediaFeature{ name: "prefers-color-scheme", value: "dark" }};
+    page.emulateMediaFeatures(&features)?;
+    expect_eq(std.mem.indexOf(u8, srv.lastPayload(), "prefers-color-scheme") != null, true);
+
+    page.emulateTimezone("America/New_York")?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setTimezoneOverride"), true);
+
+    page.emulateVisionDeficiency("deuteranopia")?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setEmulatedVisionDeficiency"), true);
+
+    page.emulateCPUThrottling(4.0)?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setCPUThrottlingRate"), true);
+
+    page.emulateNetworkConditions(NetworkConditions{
+        offline: false,
+        download_throughput: 50000.0,
+        upload_throughput: 20000.0,
+        latency: 40.0,
+    })?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Network.emulateNetworkConditions"), true);
+
+    page.setGeolocation(GeolocationOptions{ latitude: 37.7749, longitude: -122.4194, accuracy: 10.0 })?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setGeolocationOverride"), true);
+
+    page.setOfflineMode(true)?;
+    expect_eq(std.mem.indexOf(u8, srv.lastPayload(), "\"offline\":true") != null, true);
+
+    page.setCacheEnabled(false)?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Network.setCacheDisabled"), true);
+
+    page.setBypassCSP(true)?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Page.setBypassCSP"), true);
+
+    expect_eq(page.isJavaScriptEnabled(), true);
+    page.setJavaScriptEnabled(false)?;
+    expect_eq(page.isJavaScriptEnabled(), false);
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Emulation.setScriptExecutionDisabled"), true);
+
+    expect_eq(page.isServiceWorkerBypassed(), false);
+    page.setBypassServiceWorker(true)?;
+    expect_eq(page.isServiceWorkerBypassed(), true);
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Network.setBypassServiceWorker"), true);
+
+    page.setDragInterception(true)?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Input.setInterceptDrags"), true);
+
+    page.authenticate(Credentials{ username: "alice", password: "secret" })?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Fetch.enable"), true);
+    page.authenticate(null)?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Fetch.disable"), true);
+
+    // 2. Interaction, Navigation, ExposeFunction, Metrics & Workers
+    page.bringToFront()?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Page.bringToFront"), true);
+
+    page.addScriptTag("https://example.com/a.js", true)?;
+    page.addStyleTag("body { color: red; }", false)?;
+
+    let sel_buf: [256]u8 = undefined;
+    const sel_res = page.select("#country", &.{"US"}, &sel_buf)?;
+    expect_eq(sel_res.len > 0, true);
+
+    page.exposeFunction("cpHostCallback")?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Runtime.addBinding"), true);
+    page.removeExposedFunction("cpHostCallback")?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Runtime.removeBinding"), true);
+
+    const m = page.metrics()?;
+    expect_eq(m.documents == 3.0, true);
+    expect_eq(m.nodes == 128.0, true);
+    expect_eq(m.js_heap_used_size == 2048000.0, true);
+
+    page.registerWorker(WebWorkerInfo{ url: "https://example.com/sw.js", target_id: "worker-1" });
+    expect_eq(page.workers().len, @as(usize, 1));
+    expect_eq(std.mem.eql(u8, page.workers()[0].target_id, "worker-1"), true);
+
+    // 3. Waiters
+    page.waitForNavigation(GoToOptions{})?;
+    page.waitForNetworkIdle(WaitForNetworkIdleOptions{ idle_time_ms: 100, concurrency: 0, timeout_ms: 1000 })?;
+
+    let req = HTTPRequest.init(&page.session, "req-w1", "https://api.example.com/v1/items", "GET", ResourceType.Fetch, false, false);
+    page.recordRequest(req);
+    const matched_req = page.waitForRequest("v1/items", 1000)?;
+    expect_eq(std.mem.eql(u8, matched_req.id(), "req-w1"), true);
+
+    let resp = HTTPResponse.init("req-w1", "https://api.example.com/v1/items", 200, "OK", "{\"ok\":true}");
+    page.recordResponse(resp);
+    const matched_resp = page.waitForResponse("v1/items", 1000)?;
+    expect_eq(matched_resp.status(), @as(u16, 200));
+
+    const fc = page.waitForFileChooser(1000)?;
+    expect_eq(fc.isHandled(), false);
+}
+
+fn testFrameTreeEvalAndBrowserContextFullApi(): !void {
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/ft",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+
+    expect_eq(browser.connected(), true);
+    const page = browser.newPage()?;
+
+    // 1. Frame tree & $eval / $$eval / waitForNavigation
+    let child_f = Frame.init(&page.session, "child-frame-1", "target-page-1");
+    child_f.setName("sidebar");
+    {
+        const main_f = page.mainFrame();
+        main_f.setName("root-frame");
+        expect_eq(std.mem.eql(u8, main_f.name(), "root-frame"), true);
+        expect_eq(main_f.parentFrame() == null, true);
+
+        main_f.addChildFrame(&child_f);
+        expect_eq(main_f.childFrames().len, @as(usize, 1));
+        expect_eq(child_f.parentFrame() != null, true);
+
+        let ebuf: [256]u8 = undefined;
+        const ev1 = main_f.evalOnSelector("#title", "el => el.textContent", &ebuf)?;
+        expect_eq(ev1.has_exception, false);
+        const ev2 = main_f.evalOnSelectorAll(".item", "els => els.length", &ebuf)?;
+        expect_eq(ev2.has_exception, false);
+        main_f.waitForNavigation(GoToOptions{})?;
+    }
+    expect_eq(page.frames().len, @as(usize, 2));
+    const found_frame = page.waitForFrame("sidebar", 1000)?;
+    expect_eq(std.mem.eql(u8, found_frame.id(), "child-frame-1"), true);
+
+    // 3. Browser: waitForTarget / debugInfo / cookies CRUD
+    const t_found = browser.waitForTarget("target-page-1", WaitForTargetOptions{ timeout_ms: 1000 })?;
+    expect_eq(std.mem.eql(u8, t_found.target_id, "target-page-1"), true);
+
+    const dbg = browser.debugInfo();
+    expect_eq(dbg.connected, true);
+    expect_eq(dbg.active_sessions_count, @as(usize, 1));
+
+    const b_cookies: [1]CookieParam = .{CookieParam{
+        name: "sid",
+        value: "xyz",
+        domain: "example.com",
+        path: "/",
+    }};
+    browser.setCookie(&b_cookies)?;
+    expect_eq(browser.cookies().len, @as(usize, 1));
+    browser.deleteCookie("sid", "example.com")?;
+    expect_eq(browser.cookies().len, @as(usize, 0));
+
+    // 4. BrowserContext: pages / targets / clearPermissionOverrides / cookies
+    const def_ctx = browser.defaultBrowserContext();
+    expect_eq(def_ctx.isIncognito(), false);
+    expect_eq(def_ctx.pages().len, @as(usize, 1));
+    expect_eq(def_ctx.targets().len, @as(usize, 1));
+
+    def_ctx.overridePermissions("https://example.com", "[\"geolocation\"]")?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Browser.grantPermissions"), true);
+    def_ctx.clearPermissionOverrides()?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Browser.resetPermissions"), true);
+}
+
+fn testNetworkFullApiAndPuppeteerLocator(): !void {
+    const alloc = std.heap.page_allocator;
+    let srv = MockCdpServer{};
+    let browser = launchWithTransport(
+        alloc,
+        LaunchOptions{},
+        "ws://127.0.0.1:9222/devtools/browser/loc",
+        mockTransportFn,
+        unsafe { @intFromPtr(&srv) },
+    )?;
+    defer browser.deinit();
+    srv.browser = &browser;
+    srv.has_browser = true;
+
+    const page = browser.newPage()?;
+
+    // 1. HTTPRequest & HTTPResponse full API
+    let req = HTTPRequest.init(&page.session, "req-99", "https://example.com/api", "POST", ResourceType.Fetch, false, true);
+    req.setPostData("{\"name\":\"cp\"}");
+    expect_eq(req.hasPostData(), true);
+    expect_eq(std.mem.eql(u8, req.postData(), "{\"name\":\"cp\"}"), true);
+    req.pushRedirectUrl("https://example.com/old");
+    expect_eq(req.redirectChain().len, @as(usize, 1));
+    req.setInitiator(RequestInitiator{ kind: "script", url: "https://example.com/app.js", line_number: 42, column_number: 8 });
+    expect_eq(std.mem.eql(u8, req.initiator().kind, "script"), true);
+    expect_eq(req.failure() == null, true);
+
+    let resp = HTTPResponse.init("req-99", "https://example.com/api", 200, "OK", "  {\"status\":\"ok\"}  ");
+    resp.setSecurityDetails(SecurityDetails.init("example.com", "DigiCert", 1700000000.0, 1730000000.0, "TLS 1.3"));
+    resp.setRequest(&req);
+    req.setResponse(&resp);
+    expect_eq(req.response() != null, true);
+    expect_eq(resp.request() != null, true);
+    expect_eq(resp.securityDetails() != null, true);
+    const json_slice = resp.json()?;
+    expect_eq(std.mem.eql(u8, json_slice, "{\"status\":\"ok\"}"), true);
+
+    const ovr_headers: [1]HttpHeader = .{HttpHeader{ name: "X-Custom", value: "1" }};
+    req.continueWithOverrides(ContinueRequestOverrides{
+        url: "https://example.com/api/v2",
+        method: "PUT",
+        post_data: "{\"v\":2}",
+        headers: &ovr_headers,
+    })?;
+    expect_eq(req.isInterceptResolutionHandled(), true);
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Fetch.continueRequest"), true);
+    expect_eq(std.mem.indexOf(u8, srv.lastPayload(), "X-Custom") != null, true);
+
+    // 2. PuppeteerLocator full fluent API
+    let loc = page.locator("#submit-btn")
+        .setTimeout(5000)
+        .setEnsureElementIsInTheViewport(true)
+        .setVisibility(LocatorVisibility.Visible)
+        .setWaitForEnabled(true)
+        .setWaitForStableBoundingBox(true)
+        .filter("el => !el.disabled");
+    expect_eq(loc.timeout(), @as(u32, 5000));
+    expect_eq(loc.ensureElementIsInTheViewport(), true);
+    expect_eq(loc.visibility() == LocatorVisibility.Visible, true);
+    expect_eq(loc.waitForEnabled(), true);
+    expect_eq(loc.waitForStableBoundingBox(), true);
+    expect_eq(std.mem.eql(u8, loc.filterExpression(), "el => !el.disabled"), true);
+
+    const waited_el = loc.wait()?;
+    expect_eq(waited_el.nodeId(), @as(i64, 77));
+    loc.hover()?;
+    loc.click(ClickOptions{})?;
+    loc.fill("hello-cp")?;
+    loc.scroll(LocatorScrollOptions{ scroll_top: 120.0, scroll_left: 0.0 })?;
+    expect_eq(std.mem.eql(u8, srv.lastMethod(), "Runtime.evaluate"), true);
+}
+
 pub fn main() {
     test("1. Launch Args Builder, Executable Probing & WsUrl Parser", () => {
         testLaunchArgsAndExecutableProbing() catch unreachable;
@@ -828,5 +1102,14 @@ pub fn main() {
     });
     test("15. Tracing, Coverage (JS/CSS) & Disjoint Range Scanline", () => {
         testTracingAndCoverage() catch unreachable;
+    });
+    test("16. Page Emulation, Environment, Waiters, Metrics & Workers", () => {
+        testPageEmulationWaitersAndInteractions() catch unreachable;
+    });
+    test("17. Frame Tree, $eval/$$eval & Browser/BrowserContext Full API", () => {
+        testFrameTreeEvalAndBrowserContextFullApi() catch unreachable;
+    });
+    test("18. HTTPRequest/HTTPResponse Full API & PuppeteerLocator", () => {
+        testNetworkFullApiAndPuppeteerLocator() catch unreachable;
     });
 }

@@ -30,6 +30,19 @@ export {
     ResponseTiming,
     TargetInfo,
     EvaluateResult,
+    MediaFeature,
+    GeolocationOptions,
+    NetworkConditions,
+    Credentials,
+    PageMetrics,
+    WebWorkerInfo,
+    WaitForNetworkIdleOptions,
+    WaitForTargetOptions,
+    DebugInfo,
+    RequestInitiator,
+    ContinueRequestOverrides,
+    LocatorVisibility,
+    LocatorScrollOptions,
     mapCdpError,
 } from "./types";
 
@@ -72,7 +85,7 @@ export {
     HTTPResponse,
     Dialog,
 } from "./network";
-export { JSHandle, ElementHandle } from "./handles";
+export { JSHandle, ElementHandle, PuppeteerLocator } from "./handles";
 export { Frame } from "./frame";
 export { TracingOptions, Tracing } from "./tracing";
 export {
