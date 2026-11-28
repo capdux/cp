@@ -125,6 +125,7 @@ pub struct Browser {
 
         let ctx_ptr = _.allocator.create(BrowserContext) catch return PlaywrightError.OutOfMemory;
         ctx_ptr.* = BrowserContext.init(_.allocator, &_.endpoint, cid, opts);
+        ctx_ptr.browser_handle = unsafe { @intFromPtr(_) };
 
         _.contexts_list.append(_.allocator, ctx_ptr) catch {
             ctx_ptr.deinit();

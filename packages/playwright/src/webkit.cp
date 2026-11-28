@@ -564,7 +564,7 @@ pub struct WebKitPage {
             status_text: "OK",
             ok: true,
             headers_json: "{}",
-            body: _.html_content.items,
+            body_bytes: _.html_content.items,
         };
     }
 

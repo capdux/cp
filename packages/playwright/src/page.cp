@@ -2,7 +2,7 @@
 // ============================================================================
 // packages/playwright/src/page.cp — Playwright Page Abstraction
 // Wraps a CDP target session via cap:cdp Domains (Page, Runtime, DOM, Input,
-// Network, Accessibility) and provides Locator factories & AriaSnapshot.
+// Network, Emulation, Accessibility) with full DOM, emulation & wait APIs.
 // ============================================================================
 
 const std = @import("std");
@@ -21,6 +21,7 @@ import {
 } from "cap:cdp";
 import {
     PlaywrightError,
+    Request,
     Response,
     Route,
     RouteEntry,
@@ -29,6 +30,12 @@ import {
     WebSocketRouteEntry,
     WebSocketRouteHandlerFn,
     UrlMatcher,
+    ScriptTagOptions,
+    StyleTagOptions,
+    WorkerInfo,
+    PageEventRecord,
+    ExposedBindingFn,
+    ExposedBindingEntry,
 } from "./network";
 import { AriaSnapshot } from "./aria";
 import {
@@ -62,6 +69,18 @@ pub struct PdfOptions {
     height: f64 = 11.0,
 }
 
+pub struct ViewportSize {
+    pub width: u32 = 1280,
+    pub height: u32 = 720,
+}
+
+pub struct EmulateMediaOptions {
+    pub media: []const u8 = "",
+    pub color_scheme: []const u8 = "",
+    pub reduced_motion: []const u8 = "",
+    pub forced_colors: []const u8 = "",
+}
+
 pub struct Page {
     allocator: std.mem.Allocator = undefined,
     pub endpoint: *CdpEndpoint = undefined,
@@ -69,6 +88,13 @@ pub struct Page {
     pub target_id: []const u8 = "",
     pub closed: bool = false,
     pub default_timeout_ms: u32 = 30000,
+    pub default_navigation_timeout_ms: u32 = 30000,
+    pub viewport_width: u32 = 1280,
+    pub viewport_height: u32 = 720,
+    pub paused: bool = false,
+    pub emulated_media: EmulateMediaOptions = .{},
+    pub extra_http_headers_json: []const u8 = "{}",
+    pub opener_ptr: (*Page)? = null,
 
     current_url_buf: [1024]u8 = undefined,
     current_url_len: usize = 0,
@@ -79,6 +105,12 @@ pub struct Page {
     history_idx: usize = 0,
     routes: std.ArrayList(RouteEntry) = .empty,
     ws_routes: std.ArrayList(WebSocketRouteEntry) = .empty,
+    init_scripts: std.ArrayList([]const u8) = .empty,
+    exposed_bindings: std.ArrayList(ExposedBindingEntry) = .empty,
+    workers_list: std.ArrayList(WorkerInfo) = .empty,
+    pending_events: std.ArrayList(PageEventRecord) = .empty,
+    recorded_requests: std.ArrayList(Request) = .empty,
+    recorded_responses: std.ArrayList(Response) = .empty,
     owned_strings: std.ArrayList([]u8) = .empty,
     main_frame_ptr: (*Frame)? = null,
     video_ptr: (*Video)? = null,
@@ -96,6 +128,13 @@ pub struct Page {
             target_id: target_id,
             closed: false,
             default_timeout_ms: 30000,
+            default_navigation_timeout_ms: 30000,
+            viewport_width: 1280,
+            viewport_height: 720,
+            paused: false,
+            emulated_media: .{},
+            extra_http_headers_json: "{}",
+            opener_ptr: null,
             current_url_len: 0,
             current_title_len: 0,
             html_content: .empty,
@@ -103,6 +142,12 @@ pub struct Page {
             history_idx: 0,
             routes: .empty,
             ws_routes: .empty,
+            init_scripts: .empty,
+            exposed_bindings: .empty,
+            workers_list: .empty,
+            pending_events: .empty,
+            recorded_requests: .empty,
+            recorded_responses: .empty,
             owned_strings: .empty,
             main_frame_ptr: null,
             video_ptr: null,
@@ -134,6 +179,18 @@ pub struct Page {
         _.routes = .empty;
         _.ws_routes.deinit(_.allocator);
         _.ws_routes = .empty;
+        _.init_scripts.deinit(_.allocator);
+        _.init_scripts = .empty;
+        _.exposed_bindings.deinit(_.allocator);
+        _.exposed_bindings = .empty;
+        _.workers_list.deinit(_.allocator);
+        _.workers_list = .empty;
+        _.pending_events.deinit(_.allocator);
+        _.pending_events = .empty;
+        _.recorded_requests.deinit(_.allocator);
+        _.recorded_requests = .empty;
+        _.recorded_responses.deinit(_.allocator);
+        _.recorded_responses = .empty;
         for (s of _.owned_strings.items) {
             _.allocator.free(s);
         }
@@ -143,6 +200,16 @@ pub struct Page {
 
     ~init() {
         _.deinit();
+    }
+
+    fn intern(*_, s: []const u8): ([]const u8)!PlaywrightError {
+        if (s.len == 0) return "";
+        const duped = _.allocator.dupe(u8, s) catch return PlaywrightError.OutOfMemory;
+        _.owned_strings.append(_.allocator, duped) catch {
+            _.allocator.free(duped);
+            return PlaywrightError.OutOfMemory;
+        };
+        return duped;
     }
 
     fn setUrlInternal(*_, u: []const u8) {
@@ -181,6 +248,32 @@ pub struct Page {
         return "{}";
     }
 
+    fn evalSelectorAction(*_, selector: []const u8, action_js: []const u8): ([]const u8)!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        if (selector.len == 0) return PlaywrightError.InvalidSelector;
+        let js_buf: [1536]u8 = undefined;
+        const expr = SelectorCompiler.toJsQueryExpression(selector, action_js, &js_buf)?;
+        return _.evaluate(expr);
+    }
+
+    static fn extractEvalString(alloc: std.mem.Allocator, res: []const u8): ([]u8)!PlaywrightError {
+        if (result_obj := CdpFrameScanner.extractTopLevelField(res, "result", false)) {
+            if (val := CdpFrameScanner.extractTopLevelField(result_obj, "value", true)) {
+                return alloc.dupe(u8, val) catch return PlaywrightError.OutOfMemory;
+            }
+        }
+        return alloc.dupe(u8, "") catch return PlaywrightError.OutOfMemory;
+    }
+
+    static fn extractEvalBool(res: []const u8, default_val: bool): bool {
+        if (result_obj := CdpFrameScanner.extractTopLevelField(res, "result", false)) {
+            if (val := CdpFrameScanner.extractTopLevelField(result_obj, "value", false)) {
+                return std.mem.eql(u8, val, "true");
+            }
+        }
+        return default_val;
+    }
+
     pub fn url(): []const u8 {
         return _.current_url_buf[0.._.current_url_len];
     }
@@ -191,6 +284,135 @@ pub struct Page {
 
     pub fn isClosed(): bool {
         return _.closed;
+    }
+
+    pub fn opener(): (*Page)? {
+        return _.opener_ptr;
+    }
+
+    pub fn workers(): []const WorkerInfo {
+        return _.workers_list.items;
+    }
+
+    pub fn registerWorker(*_, worker_url: []const u8, worker_target_id: []const u8): void!PlaywrightError {
+        const wu = _.intern(worker_url)?;
+        const wt = _.intern(worker_target_id)?;
+        _.workers_list.append(_.allocator, WorkerInfo{
+            url: wu,
+            target_id: wt,
+        }) catch return PlaywrightError.OutOfMemory;
+    }
+
+    pub fn viewportSize(): ViewportSize {
+        return ViewportSize{
+            width: _.viewport_width,
+            height: _.viewport_height,
+        };
+    }
+
+    pub fn setViewportSize(*_, width: u32, height: u32): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        _.viewport_width = width;
+        _.viewport_height = height;
+        let params_buf: [256]u8 = undefined;
+        const p = std.fmt.bufPrint(
+            &params_buf,
+            "{{\"width\":{d},\"height\":{d},\"deviceScaleFactor\":1,\"mobile\":false}}",
+            .{ width, height },
+        ) catch return PlaywrightError.BufferTooSmall;
+        const res = _.sendCdp("Emulation.setDeviceMetricsOverride", p)?;
+        * = res;
+    }
+
+    pub fn bringToFront(*_): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        * = _.sendCdp("Page.bringToFront", "{}")?;
+    }
+
+    pub fn emulateMedia(*_, opts: EmulateMediaOptions): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        _.emulated_media = opts;
+        let params_buf: [512]u8 = undefined;
+        const p = std.fmt.bufPrint(
+            &params_buf,
+            "{{\"media\":\"{s}\",\"features\":[{{\"name\":\"prefers-color-scheme\",\"value\":\"{s}\"}},{{\"name\":\"prefers-reduced-motion\",\"value\":\"{s}\"}},{{\"name\":\"forced-colors\",\"value\":\"{s}\"}}]}}",
+            .{ opts.media, opts.color_scheme, opts.reduced_motion, opts.forced_colors },
+        ) catch return PlaywrightError.BufferTooSmall;
+        const res = _.sendCdp("Emulation.setEmulatedMedia", p)?;
+        * = res;
+    }
+
+    pub fn setExtraHTTPHeaders(*_, headers_json: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const stored = _.intern(if (headers_json.len > 0) headers_json else "{}")?;
+        _.extra_http_headers_json = stored;
+        let params_buf: [1024]u8 = undefined;
+        const p = std.fmt.bufPrint(&params_buf, "{{\"headers\":{s}}}", .{stored}) catch return PlaywrightError.BufferTooSmall;
+        const res = _.sendCdp("Network.setExtraHTTPHeaders", p)?;
+        * = res;
+    }
+
+    pub fn pause(*_): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        _.paused = true;
+        * = _.sendCdp("Debugger.pause", "{}")?;
+    }
+
+    pub fn addInitScript(*_, script: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const stored = _.intern(script)?;
+        _.init_scripts.append(_.allocator, stored) catch return PlaywrightError.OutOfMemory;
+        let params_buf: [2048]u8 = undefined;
+        const p = std.fmt.bufPrint(&params_buf, "{{\"source\":\"{s}\"}}", .{script}) catch return PlaywrightError.BufferTooSmall;
+        const res = _.sendCdp("Page.addScriptToEvaluateOnNewDocument", p)?;
+        * = res;
+    }
+
+    pub fn addScriptTag(*_, opts: ScriptTagOptions): ([]const u8)!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        let js_buf: [1536]u8 = undefined;
+        const expr = if (opts.url.len > 0)
+            std.fmt.bufPrint(&js_buf, "(() => {{ const s = document.createElement('script'); s.src = '{s}'; if ('{s}') s.type = '{s}'; document.head.appendChild(s); return 'script'; }})()", .{ opts.url, opts.tag_type, opts.tag_type }) catch return PlaywrightError.BufferTooSmall
+        else
+            std.fmt.bufPrint(&js_buf, "(() => {{ const s = document.createElement('script'); s.textContent = '{s}'; if ('{s}') s.type = '{s}'; document.head.appendChild(s); return 'script'; }})()", .{ opts.content, opts.tag_type, opts.tag_type }) catch return PlaywrightError.BufferTooSmall;
+        return _.evaluate(expr);
+    }
+
+    pub fn addStyleTag(*_, opts: StyleTagOptions): ([]const u8)!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        let js_buf: [1536]u8 = undefined;
+        const expr = if (opts.url.len > 0)
+            std.fmt.bufPrint(&js_buf, "(() => {{ const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '{s}'; document.head.appendChild(l); return 'link'; }})()", .{opts.url}) catch return PlaywrightError.BufferTooSmall
+        else
+            std.fmt.bufPrint(&js_buf, "(() => {{ const s = document.createElement('style'); s.textContent = '{s}'; document.head.appendChild(s); return 'style'; }})()", .{opts.content}) catch return PlaywrightError.BufferTooSmall;
+        return _.evaluate(expr);
+    }
+
+    pub fn exposeBinding(*_, name: []const u8, callback: ExposedBindingFn, ctx: usize): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const stored_name = _.intern(name)?;
+        _.exposed_bindings.append(_.allocator, ExposedBindingEntry{
+            name: stored_name,
+            callback: callback,
+            ctx: ctx,
+        }) catch return PlaywrightError.OutOfMemory;
+        let params_buf: [256]u8 = undefined;
+        const p = std.fmt.bufPrint(&params_buf, "{{\"name\":\"{s}\"}}", .{stored_name}) catch return PlaywrightError.BufferTooSmall;
+        const res = _.sendCdp("Runtime.addBinding", p)?;
+        * = res;
+    }
+
+    pub fn exposeFunction(*_, name: []const u8, callback: ExposedBindingFn, ctx: usize): void!PlaywrightError {
+        return _.exposeBinding(name, callback, ctx);
+    }
+
+    pub fn invokeExposedBinding(*_, name: []const u8, args_json: []const u8): ([]const u8)? {
+        for (entry of _.exposed_bindings.items) {
+            if (std.mem.eql(u8, entry.name, name)) {
+                return entry.callback(entry.ctx, args_json);
+            }
+        }
+        return null;
     }
 
     pub fn goto(*_, target_url: []const u8, opts: GotoOptions): Response!PlaywrightError {
@@ -337,6 +559,18 @@ pub struct Page {
         loc.click()?;
     }
 
+    pub fn dblclick(*_, selector: []const u8): void!PlaywrightError {
+        * = _.evalSelectorAction(selector, "if (!el) return false; el.dispatchEvent(new MouseEvent('dblclick', {bubbles:true})); return true;")?;
+    }
+
+    pub fn hover(*_, selector: []const u8): void!PlaywrightError {
+        * = _.evalSelectorAction(selector, "if (!el) return false; el.dispatchEvent(new MouseEvent('mouseover', {bubbles:true})); el.dispatchEvent(new MouseEvent('mousemove', {bubbles:true})); return true;")?;
+    }
+
+    pub fn tap(*_, selector: []const u8): void!PlaywrightError {
+        * = _.evalSelectorAction(selector, "if (!el) return false; el.dispatchEvent(new Event('touchstart', {bubbles:true})); el.dispatchEvent(new Event('touchend', {bubbles:true})); el.click(); return true;")?;
+    }
+
     pub fn fill(*_, selector: []const u8, value: []const u8): void!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
         const loc = _.locator(selector);
@@ -355,6 +589,113 @@ pub struct Page {
         loc.press(key)?;
     }
 
+    pub fn check(*_, selector: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        loc.check()?;
+    }
+
+    pub fn uncheck(*_, selector: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        loc.uncheck()?;
+    }
+
+    pub fn selectOption(*_, selector: []const u8, value: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        loc.selectOption(value)?;
+    }
+
+    pub fn focus(*_, selector: []const u8): void!PlaywrightError {
+        * = _.evalSelectorAction(selector, "if (!el) return false; el.focus(); return true;")?;
+    }
+
+    pub fn dispatchEvent(*_, selector: []const u8, event_type: []const u8, event_init_json: []const u8): void!PlaywrightError {
+        let action_buf: [512]u8 = undefined;
+        const init_arg = if (event_init_json.len > 0) event_init_json else "{}";
+        const action = std.fmt.bufPrint(
+            &action_buf,
+            "if (!el) return false; el.dispatchEvent(new CustomEvent('{s}', {s})); return true;",
+            .{ event_type, init_arg },
+        ) catch return PlaywrightError.BufferTooSmall;
+        const res = _.evalSelectorAction(selector, action)?;
+        * = res;
+    }
+
+    pub fn dragAndDrop(*_, source_selector: []const u8, target_selector: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        if (source_selector.len == 0 || target_selector.len == 0) return PlaywrightError.InvalidSelector;
+        let js_buf: [1024]u8 = undefined;
+        const expr = std.fmt.bufPrint(
+            &js_buf,
+            "(() => {{ const s = document.querySelector('{s}'); const t = document.querySelector('{s}'); if (!s || !t) return false; s.dispatchEvent(new Event('dragstart', {{bubbles:true}})); t.dispatchEvent(new Event('drop', {{bubbles:true}})); s.dispatchEvent(new Event('dragend', {{bubbles:true}})); return true; }})()",
+            .{ source_selector, target_selector },
+        ) catch return PlaywrightError.BufferTooSmall;
+        const res = _.evaluate(expr)?;
+        * = res;
+    }
+
+    pub fn innerHTML(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError {
+        const res = _.evalSelectorAction(selector, "return el ? (el.innerHTML || '') : '';")?;
+        return Page.extractEvalString(alloc, res);
+    }
+
+    pub fn innerText(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        return loc.innerText(alloc);
+    }
+
+    pub fn textContent(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        return loc.textContent(alloc);
+    }
+
+    pub fn inputValue(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError {
+        const res = _.evalSelectorAction(selector, "return el ? (el.value || '') : '';")?;
+        return Page.extractEvalString(alloc, res);
+    }
+
+    pub fn getAttribute(*_, alloc: std.mem.Allocator, selector: []const u8, attr_name: []const u8): (([]u8)?)!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        return loc.getAttribute(alloc, attr_name);
+    }
+
+    pub fn isChecked(*_, selector: []const u8): bool!PlaywrightError {
+        const res = _.evalSelectorAction(selector, "return Boolean(el && el.checked);")?;
+        return Page.extractEvalBool(res, false);
+    }
+
+    pub fn isDisabled(*_, selector: []const u8): bool!PlaywrightError {
+        const res = _.evalSelectorAction(selector, "return Boolean(el && el.disabled);")?;
+        return Page.extractEvalBool(res, false);
+    }
+
+    pub fn isEditable(*_, selector: []const u8): bool!PlaywrightError {
+        const res = _.evalSelectorAction(selector, "return Boolean(el && !el.disabled && !el.readOnly);")?;
+        return Page.extractEvalBool(res, true);
+    }
+
+    pub fn isEnabled(*_, selector: []const u8): bool!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        return loc.isEnabled();
+    }
+
+    pub fn isHidden(*_, selector: []const u8): bool!PlaywrightError {
+        const visible = _.isVisible(selector)?;
+        return !visible;
+    }
+
+    pub fn isVisible(*_, selector: []const u8): bool!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        const loc = _.locator(selector);
+        return loc.isVisible();
+    }
+
     pub fn waitForSelector(*_, selector: []const u8, opts: WaitForOptions): Locator!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
         const loc = _.locator(selector);
@@ -362,13 +703,104 @@ pub struct Page {
         return loc;
     }
 
+    pub fn emitEvent(*_, event_name: []const u8, payload: []const u8): void!PlaywrightError {
+        const n = _.intern(event_name)?;
+        const p = _.intern(payload)?;
+        _.pending_events.append(_.allocator, PageEventRecord{
+            name: n,
+            payload: p,
+        }) catch return PlaywrightError.OutOfMemory;
+    }
+
+    pub fn waitForEvent(*_, event_name: []const u8, timeout_ms: u32): ([]const u8)!PlaywrightError {
+        * = timeout_ms;
+        if (_.closed) return PlaywrightError.PageClosed;
+        let i: usize = 0;
+        while (i < _.pending_events.items.len) {
+            if (std.mem.eql(u8, _.pending_events.items[i].name, event_name)) {
+                const payload = _.pending_events.items[i].payload;
+                * = _.pending_events.orderedRemove(i);
+                return payload;
+            }
+            i += 1;
+        }
+        return PlaywrightError.Timeout;
+    }
+
+    pub fn waitForFunction(*_, expression: []const u8, timeout_ms: u32): ([]const u8)!PlaywrightError {
+        * = timeout_ms;
+        if (_.closed) return PlaywrightError.PageClosed;
+        return _.evaluate(expression);
+    }
+
+    pub fn waitForLoadState(*_, state: []const u8): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        let js_buf: [256]u8 = undefined;
+        const target = if (state.len > 0) state else "load";
+        const expr = std.fmt.bufPrint(&js_buf, "(() => ({{ state: '{s}', readyState: document.readyState }}))()", .{target}) catch return PlaywrightError.BufferTooSmall;
+        const res = _.evaluate(expr)?;
+        * = res;
+    }
+
+    pub fn recordRequest(*_, req: Request): void!PlaywrightError {
+        _.recorded_requests.append(_.allocator, req) catch return PlaywrightError.OutOfMemory;
+    }
+
+    pub fn recordResponse(*_, resp: Response): void!PlaywrightError {
+        _.recorded_responses.append(_.allocator, resp) catch return PlaywrightError.OutOfMemory;
+    }
+
+    pub fn waitForRequest(*_, url_pattern: []const u8, timeout_ms: u32): Request!PlaywrightError {
+        * = timeout_ms;
+        if (_.closed) return PlaywrightError.PageClosed;
+        let i: usize = _.recorded_requests.items.len;
+        while (i > 0) {
+            i -= 1;
+            const req = _.recorded_requests.items[i];
+            if (UrlMatcher.matches(url_pattern, req.url)) {
+                return req;
+            }
+        }
+        return PlaywrightError.Timeout;
+    }
+
+    pub fn waitForResponse(*_, url_pattern: []const u8, timeout_ms: u32): Response!PlaywrightError {
+        * = timeout_ms;
+        if (_.closed) return PlaywrightError.PageClosed;
+        let i: usize = _.recorded_responses.items.len;
+        while (i > 0) {
+            i -= 1;
+            const resp = _.recorded_responses.items[i];
+            if (UrlMatcher.matches(url_pattern, resp.url)) {
+                return resp;
+            }
+        }
+        return PlaywrightError.Timeout;
+    }
+
+    pub fn waitForURL(*_, url_pattern: []const u8, timeout_ms: u32): void!PlaywrightError {
+        * = timeout_ms;
+        if (_.closed) return PlaywrightError.PageClosed;
+        if (!UrlMatcher.matches(url_pattern, _.url())) {
+            return PlaywrightError.Timeout;
+        }
+    }
+
+    pub fn waitForTimeout(*_, timeout_ms: u32): void!PlaywrightError {
+        if (_.closed) return PlaywrightError.PageClosed;
+        if (timeout_ms > 0) {
+            const ts: std.os.linux.timespec = .{
+                sec: (timeout_ms / 1000) as isize,
+                nsec: ((timeout_ms % 1000) as isize) * 1_000_000,
+            };
+            const r = std.os.linux.nanosleep(&ts, null);
+            * = r;
+        }
+    }
+
     pub fn route(*_, pattern: []const u8, handler: RouteHandlerFn, ctx: usize): void!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
-        const pat = _.allocator.dupe(u8, pattern) catch return PlaywrightError.OutOfMemory;
-        _.owned_strings.append(_.allocator, pat) catch {
-            _.allocator.free(pat);
-            return PlaywrightError.OutOfMemory;
-        };
+        const pat = _.intern(pattern)?;
         _.routes.append(_.allocator, RouteEntry{
             pattern: pat,
             handler: handler,
@@ -470,6 +902,7 @@ pub struct Page {
         let mf = _.allocator.create(Frame) catch return PlaywrightError.OutOfMemory;
         mf.* = Frame.init(_.allocator, _.endpoint, _.session_id, _.target_id, "", _.url(), null);
         mf.default_timeout_ms = _.default_timeout_ms;
+        mf.page_handle = unsafe { @intFromPtr(_) };
         _.main_frame_ptr = mf;
         return mf;
     }
@@ -494,11 +927,7 @@ pub struct Page {
 
     pub fn routeWebSocket(*_, pattern: []const u8, handler: WebSocketRouteHandlerFn, ctx: usize): void!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
-        const pat = _.allocator.dupe(u8, pattern) catch return PlaywrightError.OutOfMemory;
-        _.owned_strings.append(_.allocator, pat) catch {
-            _.allocator.free(pat);
-            return PlaywrightError.OutOfMemory;
-        };
+        const pat = _.intern(pattern)?;
         _.ws_routes.append(_.allocator, WebSocketRouteEntry{
             pattern: pat,
             handler: handler,

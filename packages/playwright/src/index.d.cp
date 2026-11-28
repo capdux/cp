@@ -26,11 +26,81 @@ export enum RouteAction {
     Fallback,
 }
 
+export struct NameValue {
+    name: []const u8,
+    value: []const u8,
+}
+
+export struct ResourceTiming {
+    start_time: f64,
+    domain_lookup_start: f64,
+    domain_lookup_end: f64,
+    connect_start: f64,
+    connect_end: f64,
+    secure_connection_start: f64,
+    response_start: f64,
+    response_end: f64,
+}
+
+export struct RequestSizes {
+    request_body_size: i64,
+    request_headers_size: i64,
+    response_body_size: i64,
+    response_headers_size: i64,
+}
+
+export struct RequestFailure {
+    error_text: []const u8,
+}
+
+export struct SecurityDetails {
+    issuer: []const u8,
+    protocol: []const u8,
+    subject_name: []const u8,
+    valid_from: i64,
+    valid_to: i64,
+}
+
+export struct RemoteAddr {
+    ip_address: []const u8,
+    port: u16,
+}
+
 export struct FulfillOptions {
     status: i32,
     content_type: []const u8,
     body: []const u8,
     headers_json: []const u8,
+}
+
+export struct RouteContinueOverrides {
+    url: []const u8,
+    method: []const u8,
+    headers_json: []const u8,
+    post_data: []const u8,
+}
+
+export struct ScriptTagOptions {
+    url: []const u8,
+    path: []const u8,
+    content: []const u8,
+    tag_type: []const u8,
+}
+
+export struct StyleTagOptions {
+    url: []const u8,
+    path: []const u8,
+    content: []const u8,
+}
+
+export struct WorkerInfo {
+    url: []const u8,
+    target_id: []const u8,
+}
+
+export struct PageEventRecord {
+    name: []const u8,
+    payload: []const u8,
 }
 
 export struct Request {
@@ -40,7 +110,21 @@ export struct Request {
     post_data: []const u8,
     headers_json: []const u8,
     is_navigation_request: bool,
+    frame_id: []const u8,
     fn isNavigationRequest(): bool;
+    fn resourceType(): []const u8;
+    fn allHeaders(): []const u8;
+    fn headersArray(alloc: std.mem.Allocator): ([]NameValue)!PlaywrightError;
+    fn headerValue(name: []const u8): ([]const u8)?;
+    fn postData(): ([]const u8)?;
+    fn postDataJSON(): ([]const u8)?;
+    fn redirectedFrom(): (*Request)?;
+    fn redirectedTo(): (*Request)?;
+    fn timing(): ResourceTiming;
+    fn sizes(): RequestSizes;
+    fn failure(): RequestFailure?;
+    fn response(): (*Response)?;
+    fn frame(): []const u8;
 }
 
 export struct Response {
@@ -49,8 +133,21 @@ export struct Response {
     status_text: []const u8,
     ok: bool,
     headers_json: []const u8,
-    body: []const u8,
+    body_bytes: []const u8,
+    from_service_worker: bool,
     fn isOk(): bool;
+    fn statusText(): []const u8;
+    fn allHeaders(): []const u8;
+    fn headersArray(alloc: std.mem.Allocator): ([]NameValue)!PlaywrightError;
+    fn headerValue(name: []const u8): ([]const u8)?;
+    fn body(): []const u8;
+    fn text(): []const u8;
+    fn json(): ([]const u8)!PlaywrightError;
+    fn finished(): ([]const u8)?;
+    fn fromServiceWorker(): bool;
+    fn securityDetails(): SecurityDetails?;
+    fn serverAddr(): RemoteAddr?;
+    fn request(): (*Request)?;
 }
 
 export struct Route {
@@ -60,7 +157,9 @@ export struct Route {
     fn fulfill(*_, opts: FulfillOptions): void!PlaywrightError;
     fn abort(*_, error_code: []const u8): void!PlaywrightError;
     fn continue_(*_, override_url: []const u8, override_method: []const u8): void!PlaywrightError;
+    fn continueWithOverrides(*_, overrides: RouteContinueOverrides): void!PlaywrightError;
     fn fallback(*_): void!PlaywrightError;
+    fn fetch(*_, overrides: RouteContinueOverrides): Response!PlaywrightError;
 }
 
 export struct AriaRoleNode {
@@ -105,10 +204,35 @@ export struct Locator {
     fn count(): usize!PlaywrightError;
 }
 
+export struct ViewportSize {
+    width: u32,
+    height: u32,
+}
+
+export struct EmulateMediaOptions {
+    media: []const u8,
+    color_scheme: []const u8,
+    reduced_motion: []const u8,
+    forced_colors: []const u8,
+}
+
 export struct Page {
     fn url(): []const u8;
     fn title(): []const u8;
     fn isClosed(): bool;
+    fn opener(): (*Page)?;
+    fn workers(): []const WorkerInfo;
+    fn viewportSize(): ViewportSize;
+    fn setViewportSize(*_, width: u32, height: u32): void!PlaywrightError;
+    fn bringToFront(*_): void!PlaywrightError;
+    fn emulateMedia(*_, opts: EmulateMediaOptions): void!PlaywrightError;
+    fn setExtraHTTPHeaders(*_, headers_json: []const u8): void!PlaywrightError;
+    fn pause(*_): void!PlaywrightError;
+    fn addInitScript(*_, script: []const u8): void!PlaywrightError;
+    fn addScriptTag(*_, opts: ScriptTagOptions): ([]const u8)!PlaywrightError;
+    fn addStyleTag(*_, opts: StyleTagOptions): ([]const u8)!PlaywrightError;
+    fn exposeBinding(*_, name: []const u8, callback: ExposedBindingFn, ctx: usize): void!PlaywrightError;
+    fn exposeFunction(*_, name: []const u8, callback: ExposedBindingFn, ctx: usize): void!PlaywrightError;
     fn goto(*_, target_url: []const u8, opts: GotoOptions): Response!PlaywrightError;
     fn reload(*_): Response!PlaywrightError;
     fn goBack(*_): Response?!PlaywrightError;
@@ -123,10 +247,37 @@ export struct Page {
     fn getByPlaceholder(text: []const u8, exact: bool): Locator;
     fn getByTestId(test_id: []const u8): Locator;
     fn click(*_, selector: []const u8): void!PlaywrightError;
+    fn dblclick(*_, selector: []const u8): void!PlaywrightError;
+    fn hover(*_, selector: []const u8): void!PlaywrightError;
+    fn tap(*_, selector: []const u8): void!PlaywrightError;
     fn fill(*_, selector: []const u8, value: []const u8): void!PlaywrightError;
     fn typeText(*_, selector: []const u8, text: []const u8): void!PlaywrightError;
     fn press(*_, selector: []const u8, key: []const u8): void!PlaywrightError;
+    fn check(*_, selector: []const u8): void!PlaywrightError;
+    fn uncheck(*_, selector: []const u8): void!PlaywrightError;
+    fn selectOption(*_, selector: []const u8, value: []const u8): void!PlaywrightError;
+    fn focus(*_, selector: []const u8): void!PlaywrightError;
+    fn dispatchEvent(*_, selector: []const u8, event_type: []const u8, event_init_json: []const u8): void!PlaywrightError;
+    fn dragAndDrop(*_, source_selector: []const u8, target_selector: []const u8): void!PlaywrightError;
+    fn innerHTML(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn innerText(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn textContent(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn inputValue(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn getAttribute(*_, alloc: std.mem.Allocator, selector: []const u8, attr_name: []const u8): (([]u8)?)!PlaywrightError;
+    fn isChecked(*_, selector: []const u8): bool!PlaywrightError;
+    fn isDisabled(*_, selector: []const u8): bool!PlaywrightError;
+    fn isEditable(*_, selector: []const u8): bool!PlaywrightError;
+    fn isEnabled(*_, selector: []const u8): bool!PlaywrightError;
+    fn isHidden(*_, selector: []const u8): bool!PlaywrightError;
+    fn isVisible(*_, selector: []const u8): bool!PlaywrightError;
     fn waitForSelector(*_, selector: []const u8, opts: WaitForOptions): Locator!PlaywrightError;
+    fn waitForEvent(*_, event_name: []const u8, timeout_ms: u32): ([]const u8)!PlaywrightError;
+    fn waitForFunction(*_, expression: []const u8, timeout_ms: u32): ([]const u8)!PlaywrightError;
+    fn waitForLoadState(*_, state: []const u8): void!PlaywrightError;
+    fn waitForRequest(*_, url_pattern: []const u8, timeout_ms: u32): Request!PlaywrightError;
+    fn waitForResponse(*_, url_pattern: []const u8, timeout_ms: u32): Response!PlaywrightError;
+    fn waitForURL(*_, url_pattern: []const u8, timeout_ms: u32): void!PlaywrightError;
+    fn waitForTimeout(*_, timeout_ms: u32): void!PlaywrightError;
     fn route(*_, pattern: []const u8, handler: RouteHandlerFn, ctx: usize): void!PlaywrightError;
     fn unroute(*_, pattern: []const u8);
     fn ariaSnapshot(*_, alloc: std.mem.Allocator): AriaSnapshot!PlaywrightError;
@@ -144,14 +295,49 @@ export struct Page {
     fn close(*_);
 }
 
+export struct Geolocation {
+    latitude: f64,
+    longitude: f64,
+    accuracy: f64,
+}
+
+export struct HTTPCredentials {
+    username: []const u8,
+    password: []const u8,
+    origin: []const u8,
+}
+
+export struct CDPSession {
+    fn sessionId(): []const u8;
+    fn send(*_, method: []const u8, params_json: []const u8): ([]const u8)!PlaywrightError;
+    fn detach(*_): void!PlaywrightError;
+}
+
 export struct BrowserContext {
+    fn browser(): usize;
     fn newPage(*_): (*Page)!PlaywrightError;
     fn pages(): []*Page;
+    fn backgroundPages(): []*Page;
+    fn serviceWorkers(): []const WorkerInfo;
     fn tracing(*_): *Tracing;
     fn cookies(): []const Cookie;
     fn addCookies(*_, new_cookies: []const Cookie): void!PlaywrightError;
     fn clearCookies(*_);
     fn storageState(alloc: std.mem.Allocator): StorageState!PlaywrightError;
+    fn addInitScript(*_, script: []const u8): void!PlaywrightError;
+    fn exposeBinding(*_, name: []const u8, callback: ExposedBindingFn, ctx: usize): void!PlaywrightError;
+    fn exposeFunction(*_, name: []const u8, callback: ExposedBindingFn, ctx: usize): void!PlaywrightError;
+    fn grantPermissions(*_, permissions: []const []const u8, origin: []const u8): void!PlaywrightError;
+    fn clearPermissions(*_): void!PlaywrightError;
+    fn setGeolocation(*_, geo: Geolocation?): void!PlaywrightError;
+    fn setExtraHTTPHeaders(*_, headers_json: []const u8): void!PlaywrightError;
+    fn setOffline(*_, offline: bool): void!PlaywrightError;
+    fn setHTTPCredentials(*_, creds: HTTPCredentials?): void!PlaywrightError;
+    fn setDefaultTimeout(*_, timeout_ms: u32);
+    fn setDefaultNavigationTimeout(*_, timeout_ms: u32);
+    fn routeFromHAR(*_, har_path: []const u8, url_pattern: []const u8): void!PlaywrightError;
+    fn waitForEvent(*_, event_name: []const u8, timeout_ms: u32): ([]const u8)!PlaywrightError;
+    fn newCDPSession(*_, page: *Page): CDPSession!PlaywrightError;
     fn route(*_, pattern: []const u8, handler: RouteHandlerFn, ctx: usize): void!PlaywrightError;
     fn unroute(*_, pattern: []const u8);
     fn close(*_);
@@ -367,15 +553,55 @@ export struct Frame {
     fn id(): []const u8;
     fn name(): []const u8;
     fn url(): []const u8;
+    fn title(): []const u8;
+    fn content(): []const u8;
+    fn setContent(*_, html: []const u8): void!PlaywrightError;
     fn isDetached(): bool;
+    fn page(): usize;
     fn parentFrame(): (*Frame)?;
     fn childFrames(): []*Frame;
     fn addChildFrame(*_, child_frame_id: []const u8, child_name: []const u8, child_url: []const u8): (*Frame)!PlaywrightError;
     fn frameByName(*_, target_name: []const u8): (*Frame)?;
     fn frameByUrl(*_, url_pattern: []const u8): (*Frame)?;
     fn locator(selector: []const u8): Locator;
+    fn getByRole(role: []const u8, opts: ByRoleOptions): Locator;
+    fn getByText(text: []const u8, exact: bool): Locator;
+    fn getByLabel(text: []const u8, exact: bool): Locator;
+    fn getByPlaceholder(text: []const u8, exact: bool): Locator;
+    fn getByTestId(test_id: []const u8): Locator;
     fn goto(*_, target_url: []const u8, referer: []const u8): Response!PlaywrightError;
     fn evaluate(*_, expression: []const u8): ([]const u8)!PlaywrightError;
+    fn addScriptTag(*_, opts: ScriptTagOptions): ([]const u8)!PlaywrightError;
+    fn addStyleTag(*_, opts: StyleTagOptions): ([]const u8)!PlaywrightError;
+    fn click(*_, selector: []const u8): void!PlaywrightError;
+    fn dblclick(*_, selector: []const u8): void!PlaywrightError;
+    fn fill(*_, selector: []const u8, value: []const u8): void!PlaywrightError;
+    fn typeText(*_, selector: []const u8, text: []const u8): void!PlaywrightError;
+    fn press(*_, selector: []const u8, key: []const u8): void!PlaywrightError;
+    fn hover(*_, selector: []const u8): void!PlaywrightError;
+    fn focus(*_, selector: []const u8): void!PlaywrightError;
+    fn check(*_, selector: []const u8): void!PlaywrightError;
+    fn uncheck(*_, selector: []const u8): void!PlaywrightError;
+    fn selectOption(*_, selector: []const u8, value: []const u8): void!PlaywrightError;
+    fn tap(*_, selector: []const u8): void!PlaywrightError;
+    fn dispatchEvent(*_, selector: []const u8, event_type: []const u8, event_init_json: []const u8): void!PlaywrightError;
+    fn dragAndDrop(*_, source_selector: []const u8, target_selector: []const u8): void!PlaywrightError;
+    fn innerHTML(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn innerText(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn textContent(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn inputValue(*_, alloc: std.mem.Allocator, selector: []const u8): ([]u8)!PlaywrightError;
+    fn getAttribute(*_, alloc: std.mem.Allocator, selector: []const u8, attr_name: []const u8): (([]u8)?)!PlaywrightError;
+    fn isChecked(*_, selector: []const u8): bool!PlaywrightError;
+    fn isDisabled(*_, selector: []const u8): bool!PlaywrightError;
+    fn isEditable(*_, selector: []const u8): bool!PlaywrightError;
+    fn isEnabled(*_, selector: []const u8): bool!PlaywrightError;
+    fn isHidden(*_, selector: []const u8): bool!PlaywrightError;
+    fn isVisible(*_, selector: []const u8): bool!PlaywrightError;
+    fn waitForSelector(*_, selector: []const u8, opts: WaitForOptions): Locator!PlaywrightError;
+    fn waitForFunction(*_, expression: []const u8, timeout_ms: u32): ([]const u8)!PlaywrightError;
+    fn waitForLoadState(*_, state: []const u8): void!PlaywrightError;
+    fn waitForURL(*_, url_pattern: []const u8, timeout_ms: u32): void!PlaywrightError;
+    fn frameElement(*_): ([]const u8)!PlaywrightError;
 }
 
 export struct Tracing {

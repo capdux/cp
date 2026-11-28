@@ -1516,3 +1516,7 @@
 ## [2026-11-28] - 全量吸收 Puppeteer W3C WebDriver BiDi 引擎 (`packages/puppeteer/src/bidi/`) 并收官浏览器自动化全栈
 - 新增 `packages/puppeteer/src/bidi/{protocol,connection,session,context,network,input,index}.cp`（7 模块 / 3,689 行）与 `cap/test/testCapPuppeteerBidi.cp`（530 行，5/5 PASS 零泄漏）。
 - 至此 `lib/cdp/`（20 文件 / 12,591 行，含 59 域全量 CDP 协议）+ `packages/puppeteer/`（25 文件 / 9,537 行，含 155 款全量设备 + BiDi）+ `packages/playwright/`（30 文件 / 13,758 行，含 33 域全量 WebKit 协议 + WebKit 驱动 + Recorder + Dispatchers + Trace Viewer）合计 **75 个纯 CP 模块 / 35,886 行**全部验收并推送。
+
+## [2026-11-28] - Puppeteer & Playwright 核心 API 全面补齐大收官（Puppeteer 18/18 PASS、Playwright 23/23 PASS）
+- **Puppeteer 补全**（`1705def6f`）：补齐 `Page`（仿真/环境/等待/指标/Worker）、`Frame`（树与 `$eval`/`$$eval`/`select`）、`Browser`/`BrowserContext`、`HTTPRequest`/`HTTPResponse` 完整元数据与 `PuppeteerLocator`，`testCapPuppeteer.cp` **18/18 PASS (919ms)**。
+- **Playwright 补全**：补齐 `Page`（40+ 交互/DOM/仿真/等待方法）、`BrowserContext`（15+ 权限/地理/离线/HAR/CDP 方法）、`Frame`（35+ 完整操作与选择器）、`Request`/`Response`/`Route` 全量网络方法，`testCapPlaywright.cp` **23/23 PASS**。

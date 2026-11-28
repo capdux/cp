@@ -7,7 +7,17 @@ import { CdpFrameScanner, CdpBrowserLauncher } from "cap:cdp";
 import {
     PlaywrightError,
     RouteAction,
+    NameValue,
+    ResourceTiming,
+    RequestSizes,
+    RequestFailure,
+    SecurityDetails,
+    RemoteAddr,
     FulfillOptions,
+    RouteContinueOverrides,
+    ScriptTagOptions,
+    StyleTagOptions,
+    WorkerInfo,
     Request,
     Response,
     Route,
@@ -23,8 +33,13 @@ import {
     GotoOptions,
     ScreenshotOptions,
     PdfOptions,
+    ViewportSize,
+    EmulateMediaOptions,
     Page,
     Cookie,
+    Geolocation,
+    HTTPCredentials,
+    CDPSession,
     StorageState,
     BrowserContextOptions,
     BrowserContext,
@@ -1106,6 +1121,375 @@ fn testWebKitEngineAndWkConnection(): !void {
     expect_eq(gpa.deinit() == .ok, true);
 }
 
+fn testBindingHandler(ctx: usize, args_json: []const u8): []const u8 {
+    * = ctx;
+    return if (args_json.len > 0) args_json else "ok";
+}
+
+fn testPageFullDomEmulationAndWaits(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const page = browser.newPage()?;
+
+    // Scripts, styles, bindings
+    page.addInitScript("window.__init = true;")?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.addScriptToEvaluateOnNewDocument"), true);
+    * = page.addScriptTag(.{ content: "window.__tag = 1;" })?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.evaluate"), true);
+    * = page.addStyleTag(.{ content: "body { color: red; }" })?;
+    page.exposeBinding("myBinding", testBindingHandler, 0)?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.addBinding"), true);
+    page.exposeFunction("myFunc", testBindingHandler, 0)?;
+    if (res := page.invokeExposedBinding("myFunc", "[42]")) {
+        expect_eq(std.mem.eql(u8, res, "[42]"), true);
+    } else {
+        expect_eq(true, false);
+    }
+
+    // Environment & viewport
+    page.bringToFront()?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Page.bringToFront"), true);
+    page.emulateMedia(.{ media: "print", color_scheme: "dark", reduced_motion: "reduce" })?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Emulation.setEmulatedMedia"), true);
+    page.setExtraHTTPHeaders("{\"X-Test\":\"cp\"}")?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Network.setExtraHTTPHeaders"), true);
+    page.setViewportSize(1440, 900)?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Emulation.setDeviceMetricsOverride"), true);
+    const vp = page.viewportSize();
+    expect_eq(vp.width, 1440);
+    expect_eq(vp.height, 900);
+    expect_eq(page.isClosed(), false);
+    expect_eq(page.opener() == null, true);
+    page.registerWorker("https://example.com/worker.js", "w-1")?;
+    expect_eq(page.workers().len, 1);
+    page.pause()?;
+    expect_eq(page.paused, true);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Debugger.pause"), true);
+
+    // Quick DOM actions & queries
+    page.hover("#btn")?;
+    page.dblclick("#btn")?;
+    page.tap("#btn")?;
+    page.check("#agree")?;
+    page.uncheck("#agree")?;
+    page.selectOption("#lang", "zh")?;
+    page.focus("#email")?;
+    page.dispatchEvent("#btn", "custom-click", "{\"detail\":1}")?;
+    page.dragAndDrop("#src", "#dst")?;
+
+    const ih = page.innerHTML(alloc, "#box")?;
+    alloc.free(ih);
+    const it = page.innerText(alloc, "#box")?;
+    alloc.free(it);
+    const tc = page.textContent(alloc, "#box")?;
+    alloc.free(tc);
+    const iv = page.inputValue(alloc, "#email")?;
+    alloc.free(iv);
+    if (attr := page.getAttribute(alloc, "#btn", "role")?) {
+        alloc.free(attr);
+    }
+    * = page.isChecked("#agree")?;
+    * = page.isDisabled("#btn")?;
+    * = page.isEditable("#email")?;
+    * = page.isEnabled("#btn")?;
+    const vis = page.isVisible("#btn")?;
+    const hid = page.isHidden("#btn")?;
+    expect_eq(vis != hid, true);
+
+    // Waits & events
+    * = page.goto("https://example.com/dashboard", .{})?;
+    page.waitForURL("**/dashboard", 1000)?;
+    page.waitForLoadState("networkidle")?;
+    * = page.waitForFunction("() => document.readyState === 'complete'", 1000)?;
+    page.waitForTimeout(1)?;
+
+    page.emitEvent("dialog", "confirm")?;
+    const ev_payload = page.waitForEvent("dialog", 1000)?;
+    expect_eq(std.mem.eql(u8, ev_payload, "confirm"), true);
+
+    page.recordRequest(Request{ url: "https://example.com/api/items", method: "GET" })?;
+    const matched_req = page.waitForRequest("**/api/items", 1000)?;
+    expect_eq(std.mem.eql(u8, matched_req.method, "GET"), true);
+
+    page.recordResponse(Response{ url: "https://example.com/api/items", status: 201, status_text: "Created", ok: true })?;
+    const matched_resp = page.waitForResponse("**/api/items", 1000)?;
+    expect_eq(matched_resp.status, 201);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testBrowserContextPermissionsGeoOfflineAndCdp(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const ctx = browser.newContext(.{})?;
+
+    expect_eq(ctx.browser() != 0, true);
+    expect_eq(ctx.backgroundPages().len, 0);
+    ctx.registerServiceWorker("https://example.com/sw.js", "sw-1")?;
+    expect_eq(ctx.serviceWorkers().len, 1);
+
+    ctx.addInitScript("window.__ctxInit = 1;")?;
+    ctx.exposeBinding("ctxBind", testBindingHandler, 0)?;
+    ctx.exposeFunction("ctxFn", testBindingHandler, 0)?;
+
+    const page = ctx.newPage()?;
+    expect_eq(page.invokeExposedBinding("ctxFn", "ok") != null, true);
+
+    const perms: [2][]const u8 = .{ "geolocation", "notifications" };
+    ctx.grantPermissions(&perms, "https://example.com")?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Browser.grantPermissions"), true);
+    ctx.clearPermissions()?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Browser.resetPermissions"), true);
+
+    ctx.setGeolocation(Geolocation{ latitude: 37.7749, longitude: -122.4194, accuracy: 10.0 })?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Emulation.setGeolocationOverride"), true);
+    ctx.setGeolocation(null)?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Emulation.clearGeolocationOverride"), true);
+
+    ctx.setExtraHTTPHeaders("{\"Authorization\":\"Bearer tok\"}")?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Network.setExtraHTTPHeaders"), true);
+
+    ctx.setOffline(true)?;
+    expect_eq(ctx.is_offline, true);
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Network.emulateNetworkConditions"), true);
+
+    ctx.setHTTPCredentials(HTTPCredentials{ username: "admin", password: "secret", origin: "https://example.com" })?;
+    expect_eq(ctx.http_credentials != null, true);
+
+    ctx.setDefaultTimeout(5000);
+    ctx.setDefaultNavigationTimeout(12000);
+    expect_eq(page.default_timeout_ms, 5000);
+    expect_eq(page.default_navigation_timeout_ms, 12000);
+
+    ctx.routeFromHAR("/tmp/mock.har", "**/api/**")?;
+    ctx.emitEvent("page", "page-2")?;
+    const ctx_ev = ctx.waitForEvent("page", 1000)?;
+    expect_eq(std.mem.eql(u8, ctx_ev, "page-2"), true);
+
+    let cdp = ctx.newCDPSession(page)?;
+    expect_eq(cdp.sessionId().len > 0, true);
+    * = cdp.send("Runtime.enable", "{}")?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "Runtime.enable"), true);
+    cdp.detach()?;
+    expect_eq(cdp.detached, true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testFrameFullActionsAndSelectors(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const page = browser.newPage()?;
+    const mf = page.mainFrame()?;
+
+    expect_eq(mf.isDetached(), false);
+    expect_eq(mf.page() != 0, true);
+    mf.setTitle("Main Frame");
+    expect_eq(std.mem.eql(u8, mf.title(), "Main Frame"), true);
+
+    mf.setContent("<div id='app'>Hello Frame</div>")?;
+    expect_eq(std.mem.eql(u8, mf.content(), "<div id='app'>Hello Frame</div>"), true);
+    * = mf.addScriptTag(.{ url: "https://example.com/a.js" })?;
+    * = mf.addStyleTag(.{ url: "https://example.com/a.css" })?;
+
+    // Selectors
+    const role_loc = mf.getByRole("button", .{ name: "Save" });
+    expect_eq(std.mem.indexOf(u8, role_loc.selector(), "internal:role=button") != null, true);
+    const text_loc = mf.getByText("Hello", true);
+    expect_eq(std.mem.indexOf(u8, text_loc.selector(), "internal:text=") != null, true);
+    const label_loc = mf.getByLabel("Email", false);
+    expect_eq(std.mem.indexOf(u8, label_loc.selector(), "internal:label=") != null, true);
+    const ph_loc = mf.getByPlaceholder("Search", false);
+    expect_eq(std.mem.indexOf(u8, ph_loc.selector(), "placeholder") != null, true);
+    const tid_loc = mf.getByTestId("submit-btn");
+    expect_eq(std.mem.indexOf(u8, tid_loc.selector(), "data-testid") != null, true);
+
+    // Actions & queries
+    mf.click("#go")?;
+    mf.dblclick("#go")?;
+    mf.fill("#input", "abc")?;
+    mf.typeText("#input", "xyz")?;
+    mf.press("#input", "Enter")?;
+    mf.hover("#go")?;
+    mf.focus("#input")?;
+    mf.check("#cb")?;
+    mf.uncheck("#cb")?;
+    mf.selectOption("#sel", "v1")?;
+    mf.tap("#go")?;
+    mf.dispatchEvent("#go", "ping", "{}")?;
+    mf.dragAndDrop("#a", "#b")?;
+
+    const ih = mf.innerHTML(alloc, "#app")?;
+    alloc.free(ih);
+    const it = mf.innerText(alloc, "#app")?;
+    alloc.free(it);
+    const tc = mf.textContent(alloc, "#app")?;
+    alloc.free(tc);
+    const iv = mf.inputValue(alloc, "#input")?;
+    alloc.free(iv);
+    if (attr := mf.getAttribute(alloc, "#go", "id")?) {
+        alloc.free(attr);
+    }
+    * = mf.isChecked("#cb")?;
+    * = mf.isDisabled("#go")?;
+    * = mf.isEditable("#input")?;
+    * = mf.isEnabled("#go")?;
+    * = mf.isVisible("#go")?;
+    * = mf.isHidden("#go")?;
+
+    * = mf.waitForSelector("#app", .{})?;
+    * = mf.waitForFunction("() => true", 1000)?;
+    mf.waitForLoadState("domcontentloaded")?;
+    * = mf.goto("https://example.com/frame-page", "")?;
+    mf.waitForURL("**/frame-page", 1000)?;
+    * = mf.frameElement()?;
+    expect_eq(std.mem.eql(u8, transport.lastMethod(), "DOM.getFrameOwner"), true);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
+fn testNetworkRequestResponseRouteFullApi(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let prev_req = Request{
+        url: "https://example.com/old",
+        method: "GET",
+        resource_type: "document",
+        is_navigation_request: true,
+        frame_id: "frame-main",
+    };
+
+    let req = Request{
+        url: "https://example.com/api/v1/users",
+        method: "POST",
+        resource_type: "fetch",
+        post_data: "{\"name\":\"alice\"}",
+        headers_json: "{\"Content-Type\":\"application/json\",\"X-Trace-Id\":\"abc-123\"}",
+        is_navigation_request: false,
+        frame_id: "frame-main",
+        failure_text: "net::ERR_ABORTED",
+        redirected_from: &prev_req,
+        resource_timing: ResourceTiming{
+            start_time: 100.0,
+            response_start: 120.0,
+            response_end: 135.0,
+        },
+    };
+    prev_req.redirected_to = &req;
+
+    let resp = Response{
+        url: "https://example.com/api/v1/users",
+        status: 201,
+        status_text: "Created",
+        ok: true,
+        headers_json: "{\"Content-Type\":\"application/json\",\"X-Rate\":\"60\"}",
+        body_bytes: "{\"id\":7,\"name\":\"alice\"}",
+        from_service_worker: true,
+        finish_error: null,
+        security_details: SecurityDetails{
+            issuer: "Let's Encrypt",
+            protocol: "TLS 1.3",
+            subject_name: "example.com",
+            valid_from: 1700000000,
+            valid_to: 1800000000,
+        },
+        server_addr: RemoteAddr{
+            ip_address: "93.184.216.34",
+            port: 443,
+        },
+        request_ptr: &req,
+    };
+    req.response_ptr = &resp;
+
+    // Request full API
+    expect_eq(std.mem.eql(u8, req.allHeaders(), req.headers_json), true);
+    const req_hdrs = req.headersArray(alloc)?;
+    expect_eq(req_hdrs.len, 2);
+    alloc.free(req_hdrs);
+    if (ct := req.headerValue("content-type")) {
+        expect_eq(std.mem.eql(u8, ct, "application/json"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    expect_eq(req.postData() != null, true);
+    expect_eq(req.postDataJSON() != null, true);
+    expect_eq(req.redirectedFrom() != null, true);
+    expect_eq(prev_req.redirectedTo() != null, true);
+    expect_eq(std.mem.eql(u8, req.resourceType(), "fetch"), true);
+    expect_eq(req.isNavigationRequest(), false);
+    expect_eq(req.timing().start_time == 100.0, true);
+    expect_eq(req.sizes().request_body_size > 0, true);
+    if (fail := req.failure()) {
+        expect_eq(std.mem.eql(u8, fail.error_text, "net::ERR_ABORTED"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    expect_eq(req.response() != null, true);
+    expect_eq(std.mem.eql(u8, req.frame(), "frame-main"), true);
+
+    // Response full API
+    expect_eq(std.mem.eql(u8, resp.allHeaders(), resp.headers_json), true);
+    const resp_hdrs = resp.headersArray(alloc)?;
+    expect_eq(resp_hdrs.len, 2);
+    alloc.free(resp_hdrs);
+    if (xr := resp.headerValue("x-rate")) {
+        expect_eq(std.mem.eql(u8, xr, "60"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    expect_eq(std.mem.eql(u8, resp.body(), "{\"id\":7,\"name\":\"alice\"}"), true);
+    expect_eq(std.mem.eql(u8, resp.text(), "{\"id\":7,\"name\":\"alice\"}"), true);
+    const rj = resp.json()?;
+    expect_eq(rj.len > 0 && rj[0] == '{', true);
+    expect_eq(resp.finished() == null, true);
+    expect_eq(resp.fromServiceWorker(), true);
+    if (sec := resp.securityDetails()) {
+        expect_eq(std.mem.eql(u8, sec.protocol, "TLS 1.3"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    if (addr := resp.serverAddr()) {
+        expect_eq(addr.port, 443);
+    } else {
+        expect_eq(true, false);
+    }
+    expect_eq(std.mem.eql(u8, resp.statusText(), "Created"), true);
+    expect_eq(resp.request() != null, true);
+
+    // Route full API (fallback, fetch, continueWithOverrides)
+    let r1 = Route{ request: req };
+    const fetched = r1.fetch(.{ url: "https://example.com/api/v2/users", headers_json: "{\"X-Override\":\"1\"}" })?;
+    expect_eq(r1.fetched, true);
+    expect_eq(std.mem.eql(u8, fetched.url, "https://example.com/api/v2/users"), true);
+    r1.continueWithOverrides(.{
+        url: "https://example.com/api/v2/users",
+        method: "PUT",
+        headers_json: "{\"X-Override\":\"1\"}",
+        post_data: "{\"updated\":true}",
+    })?;
+    expect_eq(r1.action == RouteAction.Continued, true);
+    expect_eq(std.mem.eql(u8, r1.override_method, "PUT"), true);
+
+    let r2 = Route{ request: req };
+    r2.fallback()?;
+    expect_eq(r2.action == RouteAction.Fallback, true);
+
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
 fn main() {
     test("1. Chromium Launch, Args Builder & Executable Probing", () => {
         testChromiumLaunchAndLauncherProbe() catch unreachable;
@@ -1163,5 +1547,17 @@ fn main() {
     });
     test("19. WebKit Engine, WkConnection, Args Builder & Executable Probing", () => {
         testWebKitEngineAndWkConnection() catch unreachable;
+    });
+    test("20. Page Full DOM Actions, Emulation, Bindings & Wait Primitives", () => {
+        testPageFullDomEmulationAndWaits() catch unreachable;
+    });
+    test("21. BrowserContext Permissions, Geolocation, Offline & CDPSession", () => {
+        testBrowserContextPermissionsGeoOfflineAndCdp() catch unreachable;
+    });
+    test("22. Frame Full DOM Actions, Queries, Selectors & Waits", () => {
+        testFrameFullActionsAndSelectors() catch unreachable;
+    });
+    test("23. Network Request, Response & Route Full API Surface", () => {
+        testNetworkRequestResponseRouteFullApi() catch unreachable;
     });
 }
