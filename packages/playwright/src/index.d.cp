@@ -658,19 +658,259 @@ export struct Coverage {
     fn stopCSSCoverage(*_, alloc: std.mem.Allocator): ([]CSSCoverageEntry)!PlaywrightError;
 }
 
+export struct ProxySettings {
+    server: []const u8,
+    bypass: []const u8,
+    username: []const u8,
+    password: []const u8,
+    fn shouldBypass(host: []const u8): bool;
+    fn buildProxyAuthHeader(out_buf: []u8): ([]const u8)!PlaywrightError;
+}
+
+export struct MultipartField {
+    name: []const u8,
+    value: []const u8,
+    filename: []const u8,
+    content_type: []const u8,
+}
+
+export struct MultipartFormData {
+    boundary: []const u8,
+    static fn init(alloc: std.mem.Allocator): MultipartFormData;
+    static fn initWithBoundary(alloc: std.mem.Allocator, seed: u64): MultipartFormData!PlaywrightError;
+    fn deinit(*_);
+    fn addField(*_, name: []const u8, value: []const u8): void!PlaywrightError;
+    fn addFile(*_, name: []const u8, filename: []const u8, content_type: []const u8, data: []const u8): void!PlaywrightError;
+    fn contentTypeHeader(out_buf: []u8): ([]const u8)!PlaywrightError;
+    fn encode(alloc: std.mem.Allocator): ([]u8)!PlaywrightError;
+}
+
+export struct RedirectHop {
+    from_url: []const u8,
+    to_url: []const u8,
+    status: i32,
+    method: []const u8,
+}
+
+export struct FetchTransportResult {
+    status: i32,
+    status_text: []const u8,
+    headers_json: []const u8,
+    body: []const u8,
+}
+
 export struct APIRequestContext {
     static fn init(alloc: std.mem.Allocator, opts: APIRequestOptions): APIRequestContext;
     fn deinit(*_);
     fn dispose(*_);
+    fn setTransport(*_, cb: FetchTransportFn, ctx: usize);
     fn addCookie(*_, c: Cookie): void!PlaywrightError;
     fn cookies(): []const Cookie;
     fn syncCookiesFromContext(*_, ctx: *BrowserContext): void!PlaywrightError;
     fn syncCookiesToContext(*_, ctx: *BrowserContext): void!PlaywrightError;
+    static fn isRedirectStatus(status: i32): bool;
+    static fn resolveRedirectMethod(status: i32, current_method: []const u8): []const u8;
+    fn resolveRedirectUrl(*_, current_url: []const u8, location: []const u8): ([]const u8)!PlaywrightError;
     fn fetch(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
     fn get(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
     fn post(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
     fn put(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
     fn delete(*_, url_or_path: []const u8, opts: APIRequestFetchOptions): APIResponse!PlaywrightError;
+}
+
+export enum FrameLifecycleState {
+    Commit,
+    DomContentLoaded,
+    Load,
+    NetworkIdle,
+}
+
+export struct ManagedFrame {
+    frame_id: []const u8,
+    parent_id: []const u8,
+    name: []const u8,
+    url: []const u8,
+    loader_id: []const u8,
+    detached: bool,
+    lifecycle_mask: u8,
+    inflight_requests: usize,
+    navigation_count: u32,
+    fn hasReached(state: FrameLifecycleState): bool;
+    fn isMainFrame(): bool;
+}
+
+export struct FrameManager {
+    static fn init(alloc: std.mem.Allocator): FrameManager;
+    fn deinit(*_);
+    fn onFrameAttached(*_, frame_id: []const u8, parent_frame_id: []const u8): (*ManagedFrame)!PlaywrightError;
+    fn onFrameNavigated(*_, frame_id: []const u8, parent_frame_id: []const u8, frame_name: []const u8, url: []const u8, loader_id: []const u8, now_ms: i64): (*ManagedFrame)!PlaywrightError;
+    fn onFrameDetached(*_, frame_id: []const u8): usize;
+    fn onLifecycleEvent(*_, frame_id: []const u8, loader_id: []const u8, event_name: []const u8, now_ms: i64): bool;
+    fn onRequestStarted(*_, frame_id: []const u8, now_ms: i64);
+    fn onRequestFinished(*_, frame_id: []const u8, now_ms: i64);
+    fn checkNetworkIdle(*_, frame_id: []const u8, now_ms: i64): bool;
+    fn handleCdpEvent(*_, method: []const u8, params_json: []const u8, now_ms: i64): bool!PlaywrightError;
+    fn mainFrame(*_): (*ManagedFrame)?;
+    fn findFrame(*_, frame_id: []const u8): (*ManagedFrame)?;
+    fn findFrameByName(*_, target_name: []const u8): (*ManagedFrame)?;
+    fn findFrameByUrl(*_, url_pattern: []const u8): (*ManagedFrame)?;
+    fn childFrameIds(alloc: std.mem.Allocator, parent_id: []const u8): ([][]const u8)!PlaywrightError;
+    fn activeFrameCount(): usize;
+    fn isLifecycleReached(frame_id: []const u8, state: FrameLifecycleState): bool;
+}
+
+export struct ActionabilityProbeSnapshot {
+    attached: bool,
+    visible: bool,
+    enabled: bool,
+    editable: bool,
+    in_viewport: bool,
+    hit_target_ok: bool,
+    box: ElementBox,
+    obscured_by: []const u8,
+}
+
+export struct DomActionabilityLoop {
+    static fn backoffDelayMs(attempt: u32): u32;
+    static fn run(selector: []const u8, checks: []const ActionabilityCheckKind, opts: ActionabilityOptions, probe_fn: ActionabilityProbeFn, probe_ctx: usize): ActionabilityReport!PlaywrightError;
+    static fn runOverCdp(endpoint: *CdpEndpoint, session_id: []const u8, selector: []const u8, checks: []const ActionabilityCheckKind, opts: ActionabilityOptions): ActionabilityReport!PlaywrightError;
+}
+
+export enum CrNetworkRequestState {
+    Pending,
+    Paused,
+    Continued,
+    Fulfilled,
+    Aborted,
+    ResponseReceived,
+    Finished,
+    Failed,
+}
+
+export enum CrAuthResponseAction {
+    Default,
+    CancelAuth,
+    ProvideCredentials,
+}
+
+export struct CrAuthChallenge {
+    source: []const u8,
+    origin: []const u8,
+    scheme: []const u8,
+    realm: []const u8,
+}
+
+export struct CrManagedRequest {
+    request_id: []const u8,
+    interception_id: []const u8,
+    frame_id: []const u8,
+    url: []const u8,
+    method: []const u8,
+    resource_type: []const u8,
+    status: i32,
+    state: CrNetworkRequestState,
+    redirected_from_id: []const u8,
+    redirected_to_id: []const u8,
+    redirect_count: u32,
+}
+
+export struct CrNetworkManager {
+    static fn init(alloc: std.mem.Allocator): CrNetworkManager;
+    static fn initWithEndpoint(alloc: std.mem.Allocator, endpoint: *CdpEndpoint, session_id: []const u8): CrNetworkManager;
+    fn deinit(*_);
+    fn enableInterception(*_): void!PlaywrightError;
+    fn addRoute(*_, pattern: []const u8, handler: RouteHandlerFn, ctx: usize): void!PlaywrightError;
+    fn removeRoute(*_, pattern: []const u8);
+    fn setHttpCredentials(*_, creds: HTTPCredentials?): void!PlaywrightError;
+    fn findRequest(*_, request_id: []const u8): (*CrManagedRequest)?;
+    fn requestCount(): usize;
+    fn onRequestWillBeSent(*_, request_id: []const u8, frame_id: []const u8, url: []const u8, method: []const u8, resource_type: []const u8, headers_json: []const u8, post_data: []const u8, redirect_status: i32): (*CrManagedRequest)!PlaywrightError;
+    fn onFetchRequestPaused(*_, interception_id: []const u8, request_id: []const u8, url: []const u8, method: []const u8, resource_type: []const u8, headers_json: []const u8, post_data: []const u8): RouteAction!PlaywrightError;
+    fn onFetchAuthRequired(*_, interception_id: []const u8, challenge: CrAuthChallenge): CrAuthResponseAction!PlaywrightError;
+    fn onResponseReceived(*_, request_id: []const u8, status: i32, status_text: []const u8, mime_type: []const u8, response_headers_json: []const u8, timing: ResourceTiming): bool!PlaywrightError;
+    fn onLoadingFinished(*_, request_id: []const u8, encoded_data_length: i64): bool;
+    fn onLoadingFailed(*_, request_id: []const u8, error_text: []const u8, canceled: bool): bool!PlaywrightError;
+    fn handleCdpEvent(*_, method: []const u8, params_json: []const u8): bool!PlaywrightError;
+}
+
+export struct SnapshotResource {
+    sha1_hex: [40]u8,
+    fnv64: u64,
+    content_type: []const u8,
+    body: []const u8,
+    ref_count: u32,
+}
+
+export struct FrameSnapshot {
+    snapshot_name: []const u8,
+    call_id: []const u8,
+    timestamp_ms: i64,
+    page_id: []const u8,
+    frame_id: []const u8,
+    frame_url: []const u8,
+    doctype: []const u8,
+    html_json: []const u8,
+    viewport_width: u32,
+    viewport_height: u32,
+}
+
+export struct Snapshotter {
+    static fn init(alloc: std.mem.Allocator): Snapshotter;
+    fn deinit(*_);
+    fn injectIntoEndpoint(*_, endpoint: *CdpEndpoint, session_id: []const u8): void!PlaywrightError;
+    fn addResource(*_, content_type: []const u8, body: []const u8): ([40]u8)!PlaywrightError;
+    fn captureSnapshot(*_, page_id: []const u8, frame_id: []const u8, frame_url: []const u8, snapshot_name: []const u8, call_id: []const u8, html_json: []const u8, viewport_w: u32, viewport_h: u32, timestamp_ms: i64): (*FrameSnapshot)!PlaywrightError;
+    fn exportToTracing(*_, tracing: *Tracing): usize!PlaywrightError;
+    fn snapshotCount(): usize;
+    fn uniqueResourceCount(): usize;
+    fn deduplicatedHits(): usize;
+}
+
+export struct HarTimings {
+    blocked: f64,
+    dns: f64,
+    connect: f64,
+    ssl: f64,
+    send: f64,
+    wait: f64,
+    receive: f64,
+    static fn fromResourceTiming(rt: ResourceTiming): HarTimings;
+    fn totalTimeMs(): f64;
+}
+
+export struct HarTracerOptions {
+    url_glob: []const u8,
+    minimal: bool,
+    omit_content: bool,
+    base64_binary_bodies: bool,
+}
+
+export struct HarTracerEntry {
+    started_date_time: []const u8,
+    page_ref: []const u8,
+    method: []const u8,
+    url: []const u8,
+    http_version: []const u8,
+    status: i32,
+    status_text: []const u8,
+    mime_type: []const u8,
+    request_headers_json: []const u8,
+    response_headers_json: []const u8,
+    post_data: []const u8,
+    response_body: []const u8,
+    response_is_binary: bool,
+    body_size: usize,
+    timings: HarTimings,
+    server_ip_address: []const u8,
+}
+
+export struct HarTracer {
+    static fn init(alloc: std.mem.Allocator, opts: HarTracerOptions): HarTracer;
+    fn deinit(*_);
+    fn recordExchange(*_, entry: HarTracerEntry): bool!PlaywrightError;
+    fn recordFromRequestResponse(*_, req: Request, resp: Response, started_date_time: []const u8): bool!PlaywrightError;
+    fn entryCount(): usize;
+    fn toJson(*_, alloc: std.mem.Allocator): ([]u8)!PlaywrightError;
 }
 
 export struct WebSocketRoute {

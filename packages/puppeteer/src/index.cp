@@ -85,8 +85,34 @@ export {
     HTTPResponse,
     Dialog,
 } from "./network";
+export {
+    NetworkSimdScanner,
+    NetworkEventKind,
+    InterceptDecision,
+    InterceptHandlerFn,
+    InterceptHandlerEntry,
+    ManagedRequestRecord,
+    NetworkManager,
+} from "./network_manager";
 export { JSHandle, ElementHandle, PuppeteerLocator } from "./handles";
 export { Frame } from "./frame";
+export {
+    FrameSimdScanner,
+    ExecutionContext,
+    IsolatedWorld,
+    ManagedFrame,
+    FrameManager,
+} from "./frame_manager";
+export {
+    TargetSimdScanner,
+    ManagedTargetKind,
+    parseManagedTargetKind,
+    ManagedTarget,
+    TargetManager,
+    SerializedAXNode,
+    AXRawNode,
+    AccessibilityTreeBuilder,
+} from "./target_manager";
 export { TracingOptions, Tracing } from "./tracing";
 export {
     CoverageRange,

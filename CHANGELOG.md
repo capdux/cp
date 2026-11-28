@@ -1520,3 +1520,7 @@
 ## [2026-11-28] - Puppeteer & Playwright 核心 API 全面补齐大收官（Puppeteer 18/18 PASS、Playwright 23/23 PASS）
 - **Puppeteer 补全**（`1705def6f`）：补齐 `Page`（仿真/环境/等待/指标/Worker）、`Frame`（树与 `$eval`/`$$eval`/`select`）、`Browser`/`BrowserContext`、`HTTPRequest`/`HTTPResponse` 完整元数据与 `PuppeteerLocator`，`testCapPuppeteer.cp` **18/18 PASS (919ms)**。
 - **Playwright 补全**：补齐 `Page`（40+ 交互/DOM/仿真/等待方法）、`BrowserContext`（15+ 权限/地理/离线/HAR/CDP 方法）、`Frame`（35+ 完整操作与选择器）、`Request`/`Response`/`Route` 全量网络方法，`testCapPlaywright.cp` **23/23 PASS**。
+
+## [2026-11-28] - 补齐 Puppeteer 5 大核心内部状态机 & Playwright 4 大底层引擎状态机（全量零泄漏绿灯）
+- **Puppeteer 5 大状态机**：新增 `network_manager.cp`、`frame_manager.cp`（含 `ExecutionContext`/`IsolatedWorld`）、`target_manager.cp`（含 `AccessibilityTreeBuilder` 递归折叠树）与 `cap/test/testCapPuppeteerManagers.cp`（**5/5 PASS, 840ms**）。
+- **Playwright 4 大引擎**：新增 `frame_manager.cp`（导航生命周期与 `DomActionabilityLoop`）、`cr_network_manager.cp`（Chromium Fetch/Network 事件路由与 Base64 响应体篡改）、`snapshotter.cp`（`SNAPSHOTTER_INJECTED_SCRIPT` + SHA-1 去重 + HAR 1.2 `HarTracer`）、升级 `request_context.cp`（自动重定向链 + `MultipartFormData` + `ProxySettings`）与 `cap/test/testCapPlaywrightEngines.cp`（**4/4 PASS, 930ms**）。

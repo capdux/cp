@@ -160,11 +160,54 @@ export {
 } from "./coverage";
 
 export {
+    simdHasHeaderUnsafeBytes,
+    ProxySettings,
+    MultipartField,
+    MultipartFormData,
+    RedirectHop,
+    FetchTransportResult,
+    FetchTransportFn,
     APIRequestOptions,
     APIRequestFetchOptions,
     APIResponse,
     APIRequestContext,
 } from "./request_context";
+
+export {
+    simdFindByteFrame,
+    FrameLifecycleState,
+    ManagedFrame,
+    FrameManager,
+    ActionabilityProbeSnapshot,
+    ActionabilityProbeFn,
+    DomActionabilityLoop,
+} from "./frame_manager";
+
+export {
+    simdScanNetEscape,
+    encodeBase64Alloc,
+    mapErrorReasonToCdp,
+    CrNetworkRequestState,
+    CrAuthResponseAction,
+    CrAuthChallenge,
+    CrManagedRequest,
+    CrNetworkManager,
+} from "./cr_network_manager";
+
+export {
+    simdHasBinaryBytes,
+    computeFnv1a64,
+    computeSha1Hex,
+    SNAPSHOTTER_INJECTED_SCRIPT,
+    SnapshotResource,
+    ResourceOverride,
+    FrameSnapshot,
+    Snapshotter,
+    HarTimings,
+    HarTracerOptions,
+    HarTracerEntry,
+    HarTracer,
+} from "./snapshotter";
 
 export {
     RecordedActionKind,

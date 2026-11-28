@@ -632,3 +632,209 @@ export struct Coverage {
     pub fn stopCSSCoverage(*_): CoverageReport!PuppeteerError;
 }
 export fn convertToDisjointRanges(starts: []const usize, ends: []const usize, counts: []const usize, out_ranges: []CoverageRange): usize;
+
+// --- Internal Event State Machine Managers (NetworkManager, FrameManager, ExecutionContext, TargetManager, AccessibilityTreeBuilder) ---
+
+export struct NetworkSimdScanner {
+    pub static fn indexOfByteSimd(haystack: []const u8, needle: u8): usize?;
+    pub static fn eqlIgnoreCaseSimd(a: []const u8, b: []const u8): bool;
+}
+export enum NetworkEventKind { Request, Response, RequestFinished, RequestFailed, RequestServedFromCache, AuthRequired }
+export struct InterceptDecision {
+    state: InterceptResolutionState,
+    abort_reason: []const u8,
+    respond_status: u16,
+    respond_content_type: []const u8,
+    respond_body: []const u8,
+    continue_overrides: ContinueRequestOverrides,
+    pub static fn none(): InterceptDecision;
+    pub static fn abort(reason: []const u8, priority: i32): InterceptDecision;
+    pub static fn respond(status: u16, content_type: []const u8, body: []const u8, priority: i32): InterceptDecision;
+    pub static fn continueWith(overrides: ContinueRequestOverrides, priority: i32): InterceptDecision;
+}
+export type InterceptHandlerFn = fn (req: *HTTPRequest, ctx: usize) InterceptDecision;
+export struct InterceptHandlerEntry {
+    handler: InterceptHandlerFn,
+    priority: i32,
+    ctx: usize,
+    active: bool,
+}
+export struct ManagedRequestRecord {
+    request: HTTPRequest,
+    response: HTTPResponse,
+    has_response: bool,
+    finished: bool,
+    failed: bool,
+    served_from_cache: bool,
+    auth_attempted: bool,
+    last_resolution_priority: i32,
+}
+export struct NetworkManager {
+    pub static fn init(alloc: std.mem.Allocator, session: *CDPSession): NetworkManager;
+    pub fn deinit(*_);
+    pub fn on(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn once(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn off(*_, event_name: []const u8, handler: EventHandlerFn);
+    pub fn addInterceptor(*_, handler: InterceptHandlerFn, priority: i32, ctx: usize): bool;
+    pub fn clearInterceptors(*_);
+    pub fn setRequestInterception(*_, enabled: bool): void!PuppeteerError;
+    pub fn authenticate(*_, creds: Credentials?): void!PuppeteerError;
+    pub fn setCacheEnabled(*_, enabled: bool): void!PuppeteerError;
+    pub fn isCacheEnabled(): bool;
+    pub fn setOfflineMode(*_, enabled: bool): void!PuppeteerError;
+    pub fn isOffline(): bool;
+    pub fn emulateNetworkConditions(*_, conditions: NetworkConditions): void!PuppeteerError;
+    pub fn setExtraHTTPHeaders(*_, headers: []const HttpHeader): void!PuppeteerError;
+    pub fn extraHTTPHeaders(): []const HttpHeader;
+    pub fn handleCdpEvent(*_, ev: CdpEvent): void!PuppeteerError;
+    pub fn onRequestWillBeSent(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onRequestPaused(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onAuthRequired(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onResponseReceived(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onRequestServedFromCache(*_, params_json: []const u8);
+    pub fn onLoadingFinished(*_, params_json: []const u8);
+    pub fn onLoadingFailed(*_, params_json: []const u8);
+    pub fn getRequestById(request_id: []const u8): (*HTTPRequest)?;
+    pub fn getResponseById(request_id: []const u8): (*HTTPResponse)?;
+    pub fn getRecordById(request_id: []const u8): (*ManagedRequestRecord)?;
+    pub fn inFlightCount(): usize;
+    pub fn requestCount(): usize;
+}
+
+export struct FrameSimdScanner {
+    pub static fn indexOfByteSimd(haystack: []const u8, needle: u8): usize?;
+    pub static fn stripFragment(url: []const u8): []const u8;
+}
+export struct ExecutionContext {
+    pub static fn init(session: *CDPSession, context_id: i64, frame_id_val: []const u8, origin_val: []const u8, name_val: []const u8, unique_id_val: []const u8, is_default_val: bool): ExecutionContext;
+    pub fn id(): i64;
+    pub fn frameId(): []const u8;
+    pub fn origin(): []const u8;
+    pub fn name(): []const u8;
+    pub fn uniqueId(): []const u8;
+    pub fn isDefault(): bool;
+    pub fn isDestroyed(): bool;
+    pub fn markDestroyed(*_);
+    pub fn evaluate(*_, expression: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
+}
+export struct IsolatedWorld {
+    pub static fn init(frame_id: []const u8, world_name: []const u8): IsolatedWorld;
+    pub fn frameId(): []const u8;
+    pub fn name(): []const u8;
+    pub fn hasContext(): bool;
+    pub fn executionContext(): (*ExecutionContext)?;
+    pub fn setContext(*_, ctx: *ExecutionContext);
+    pub fn clearContext(*_);
+    pub fn evaluate(*_, expression: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError;
+}
+export struct ManagedFrame {
+    pub static fn init(session: *CDPSession, frame_id: []const u8, parent_frame_id: []const u8): ManagedFrame;
+    pub fn id(): []const u8;
+    pub fn loaderId(): []const u8;
+    pub fn url(): []const u8;
+    pub fn name(): []const u8;
+    pub fn isDetached(): bool;
+    pub fn lifecycleEvents(): []const []const u8;
+    pub fn resetLifecycle(*_, new_loader_id: []const u8);
+    pub fn recordLifecycleEvent(*_, event_name: []const u8);
+    pub fn hasLifecycleEvent(event_name: []const u8): bool;
+    pub fn isWaitUntilSatisfied(wait_until: WaitUntil): bool;
+}
+export struct FrameManager {
+    pub static fn init(alloc: std.mem.Allocator, session: *CDPSession): FrameManager;
+    pub fn deinit(*_);
+    pub fn on(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn once(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn off(*_, event_name: []const u8, handler: EventHandlerFn);
+    pub fn findManagedFrame(frame_id: []const u8): (*ManagedFrame)?;
+    pub fn mainFrame(): (*ManagedFrame)?;
+    pub fn frames(): []const *ManagedFrame;
+    pub fn frameCount(): usize;
+    pub fn activeFrameCount(): usize;
+    pub fn contextById(context_id: i64): (*ExecutionContext)?;
+    pub fn contextCount(): usize;
+    pub fn activeContextCount(): usize;
+    pub fn handleCdpEvent(*_, ev: CdpEvent): void!PuppeteerError;
+    pub fn onFrameAttached(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onFrameNavigated(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onNavigatedWithinDocument(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onFrameDetached(*_, params_json: []const u8);
+    pub fn onLifecycleEvent(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onExecutionContextCreated(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onExecutionContextDestroyed(*_, params_json: []const u8);
+    pub fn onExecutionContextsCleared(*_);
+    pub fn isLifecycleSatisfied(frame_id: []const u8, wait_until: WaitUntil): bool;
+}
+
+export struct TargetSimdScanner {
+    pub static fn indexOfByteSimd(haystack: []const u8, needle: u8): usize?;
+    pub static fn hasNonWhitespaceSimd(input: []const u8): bool;
+}
+export enum ManagedTargetKind { Page, Iframe, Worker, ServiceWorker, SharedWorker, BackgroundPage, Browser, Webview, Other }
+export fn parseManagedTargetKind(raw: []const u8): ManagedTargetKind;
+export struct ManagedTarget {
+    pub fn id(): []const u8;
+    pub fn sessionId(): []const u8;
+    pub fn isAttached(): bool;
+    pub fn isOopif(): bool;
+}
+export struct TargetManager {
+    pub static fn init(alloc: std.mem.Allocator, session: *CDPSession): TargetManager;
+    pub fn deinit(*_);
+    pub fn on(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn once(*_, event_name: []const u8, handler: EventHandlerFn, ctx: usize): bool;
+    pub fn off(*_, event_name: []const u8, handler: EventHandlerFn);
+    pub fn setAutoAttach(*_, auto_attach: bool, wait_for_debugger_on_start: bool, flatten: bool): void!PuppeteerError;
+    pub fn setDiscoverTargets(*_, discover: bool): void!PuppeteerError;
+    pub fn isAutoAttachEnabled(): bool;
+    pub fn targetById(target_id: []const u8): (*ManagedTarget)?;
+    pub fn targetBySessionId(session_id: []const u8): (*ManagedTarget)?;
+    pub fn targets(): []const *ManagedTarget;
+    pub fn targetCount(): usize;
+    pub fn activeTargetCount(): usize;
+    pub fn attachedCount(): usize;
+    pub fn countByKind(kind: ManagedTargetKind): usize;
+    pub fn handleCdpEvent(*_, ev: CdpEvent): void!PuppeteerError;
+    pub fn onTargetCreated(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onTargetInfoChanged(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onTargetDestroyed(*_, params_json: []const u8);
+    pub fn onAttachedToTarget(*_, params_json: []const u8): void!PuppeteerError;
+    pub fn onDetachedFromTarget(*_, params_json: []const u8);
+}
+export struct SerializedAXNode {
+    node_id: []const u8,
+    role: []const u8,
+    name: []const u8,
+    value: []const u8,
+    description: []const u8,
+    roledescription: []const u8,
+    valuetext: []const u8,
+    backend_dom_node_id: i64,
+    disabled: bool,
+    expanded: bool,
+    focused: bool,
+    modal: bool,
+    multiline: bool,
+    multiselectable: bool,
+    readonly: bool,
+    required: bool,
+    selected: bool,
+    checked: []const u8,
+    pressed: []const u8,
+    level: i32,
+    has_level: bool,
+    pub fn childSlice(): []const *SerializedAXNode;
+}
+export struct AccessibilityTreeBuilder {
+    pub static fn init(alloc: std.mem.Allocator): AccessibilityTreeBuilder;
+    pub fn deinit(*_);
+    pub static fn normalizeAriaRole(raw_role: []const u8): []const u8;
+    pub static fn isControlRole(role: []const u8): bool;
+    pub static fn isLandmarkRole(role: []const u8): bool;
+    pub fn rawNodeCount(): usize;
+    pub fn addSummaryNode(*_, summary: AXNodeSummary, parent_id: []const u8): void!PuppeteerError;
+    pub fn parseAXNodesJson(*_, nodes_array_json: []const u8): usize!PuppeteerError;
+    pub fn buildTree(*_, interesting_only: bool): ((*SerializedAXNode)?)!PuppeteerError;
+    pub static fn destroyTree(alloc: std.mem.Allocator, node: *SerializedAXNode);
+    pub static fn countTreeNodes(node: *SerializedAXNode): usize;
+}
