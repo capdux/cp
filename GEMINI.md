@@ -862,3 +862,9 @@ git status --porcelain cpc_dev/src
    - 测试/图像/差异比对等**高价值通用工具依赖**（如 `diff`、`pixelmatch`、`jpeg-js`、`sinon`），优先检查 `cap:*` 内置库与 `packages/registry.json` 覆盖情况，确有缺口时再通过 `cap from -npm <pkg>` 按需吸收为独立裸包。
 3. **测试目录迁移统一参数 `--test`**：`cap from -ts/-rs` 默认仅迁移生产源码；需要一并迁移或评估测试集时，显式传入 `--test`（将扫描 `test/`、`tests/`、`__tests__/` 及 `*.test.*` / `*.spec.*`，自动把 `jest`/`@jest/globals`/`vitest`/`mocha`/`bun:test`/`node:test`/`assert` 映射至 `cap:test`，并自动联动 `cap fix` 修正导入）。
 4. **吸收后强制执行「行数差异与功能边界核查」**：当吸收后的 CP 代码量显著少于上游源码时，必须在结单或 `stats.md` 中明确核对并列出：**① 底层共享底座去重压缩**、**② 按架构决策刻意裁剪的引擎/协议/UI**、**③ 核心 API 覆盖清单及尚简化的边缘长尾能力**，严防功能静默遗漏。
+
+### 6.15 第 14 轮 3 小时效率与 Token 审计固化铁律（2026-11-28 14:18）
+
+1. **万行级 `.d.ts` / 协议规范优先脚本化按域分桶生成（单文件 < 1,200 行）**：吸收 2.5 万行 Chromium `protocol.d.ts` 与 1 万行 WebKit `protocol.d.ts` 时，严禁人工/智能体逐行手抄；应编写可复用生成器（如 `scripts/gen_protocol_cp.py`）自动处理跨 Domain `import`、关键字转义、非数组循环自引用转为 `(*const T)? = null` 并按域分桶输出（单文件 < 1,200 行），单轮即可产出 3,160+ 强类型且 `cpc check` / `zig ast-check` 100% 通过，节省 >95% Token。
+2. **值返回结构体严禁在构造期持久化栈内字段指针（防移动悬垂）**：当 `launch()` / `init()` 按值返回包含内嵌成员（如 `endpoint: CdpEndpoint`）的结构体时，禁止在返回前将局部 `&browser.endpoint` 持久化给外部回调上下文（返回值拷贝后原栈地址失效会触发 Segfault）；应改用堆分配或在使用入口刷新指针，且必须用真实进程 `cap run -m` + `DebugAllocator` 跑通端到端实测。
+3. **跨库吸收强制使用「去注释有效代码行数 + 公开方法数」脚本审计防遗漏**：评估吸收完整度时，先用只读 Python 脚本剔除 JSDoc/空行并统计模块级有效代码行数与公开方法数，精准定位缺失高频 API（如 `emulate*`/`waitFor*`/`grantPermissions`）后再双路并行补齐，做到差异透明、功能不漏。
