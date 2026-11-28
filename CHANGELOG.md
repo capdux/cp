@@ -1502,3 +1502,8 @@
 - 完善 [lib/cdp/transport.cp](file:///data/dev/cp/lib/cdp/transport.cp)（`CdpError`、`cdpAllocZ` 与 `geteuid() == 0` 自动补 `--no-sandbox`），通过 [one_line_launch_smoke.cp](file:///data/dev/cp/packages/puppeteer/test/one_line_launch_smoke.cp) 验证一行 `Puppeteer.launch()` 真机拉起 `Chrome/158.0.8127.88` 并零泄漏退出。
 - **`packages/puppeteer/`**：接入 `launch`/`connect` 原生闭环，补齐 155 款全量 `KnownDevices`、`tracing.cp` 与 `coverage.cp`；`testCapPuppeteer.cp` **15/15 PASS (815ms)**。
 - **`packages/playwright/`**：接入 `chromium.launch`/`connectOverCDP` 原生闭环，补齐 `frames.cp`、`tracing.cp`（`cap:pack` ZIP）、`coverage.cp`、`request_context.cp`（Cookie Jar 双向同步）、`WebSocketRoute` 与 `Video`；`testCapPlaywright.cp` **17/17 PASS (983ms)**。
+
+## [2026-11-28] - 补齐 Playwright 原生 Trace Viewer (`trace_viewer.cp`) 与 `show-trace` CLI
+- 新增 [packages/playwright/src/trace_viewer.cp](file:///data/dev/cp/packages/playwright/src/trace_viewer.cp)（基于 `cap:web` + `cap:pack` + `cap:json` + `cap:fs`，支持解析 `trace.zip` 与 `/`、`/contexts`、`/trace/events`、`/trace/file?path=...`、`/health` 路由与内置时间轴回放界面）。
+- 更新 [cli.cp](file:///data/dev/cp/packages/playwright/src/cli.cp) 增补 `show-trace <trace.zip> [--port=<N>]`，更新 `index.cp`、`index.d.cp` 与 `MIGRATE.md`。
+- `cap test -m cap/test/testCapPlaywright.cp` **18/18 PASS (915ms)**，`sync_upstream_pkg.py` **19/19** 溯源齐全，`check_ecosystem_health.py` **16/16 PASS**。

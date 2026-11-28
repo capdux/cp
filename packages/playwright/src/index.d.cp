@@ -300,6 +300,41 @@ export struct Tracing {
     fn stop(*_, out_path: []const u8): ([]u8)!PlaywrightError;
 }
 
+export struct TraceViewerOptions {
+    host: []const u8,
+    port: u16,
+    workers: usize,
+    headless: bool,
+    trace_path: []const u8,
+}
+
+export struct TraceEntryRecord {
+    name: []const u8,
+    data: []const u8,
+    mime_type: []const u8,
+    size: usize,
+}
+
+export struct TraceHttpResponse {
+    status: u16,
+    content_type: []const u8,
+    body: []u8,
+    fn deinit(*_);
+}
+
+export struct TraceViewerServer {
+    static fn init(alloc: std.mem.Allocator, opts: TraceViewerOptions): TraceViewerServer;
+    fn deinit(*_);
+    fn loadZipBytes(*_, raw_zip: []const u8): void!PlaywrightError;
+    fn loadTraceFile(*_, path: []const u8): void!PlaywrightError;
+    fn entryCount(): usize;
+    fn findEntry(path: []const u8): TraceEntryRecord?;
+    fn handleHttpRequest(*_, alloc: std.mem.Allocator, method: []const u8, path_and_query: []const u8): TraceHttpResponse!PlaywrightError;
+    fn startServer(*_): void!PlaywrightError;
+    fn url(out_buf: []u8): ([]const u8)!PlaywrightError;
+    fn stop(*_);
+}
+
 export struct Coverage {
     fn isJSCoverageActive(): bool;
     fn isCSSCoverageActive(): bool;

@@ -24,11 +24,12 @@
 | `network.cp` | `server/network.ts` | `Request`/`Response`/`Route`/`WebSocketRoute`（`page.routeWebSocket`）与 `@Vector(16, u8)` SIMD 加速的 `UrlMatcher` Glob 路由器 |
 | `frames.cp` | `server/frames.ts` | 多层嵌套与跨域 `Frame` 树管理（`mainFrame`、`childFrames`、`parentFrame`、`frameByName`、`frameByUrl`、`locator`、`goto`、`evaluate`） |
 | `tracing.cp` | `server/trace/recorder/tracing.ts` | `Tracing`（`start`、`startChunk`、`stopChunk`、`stop`）挂载至 `BrowserContext.tracing()`，复用 `cap:pack` (`ZipWriter`) 与 `cap:json` 写入 trace ZIP 归档 |
+| `trace_viewer.cp` | `server/trace/viewer/traceViewer.ts` | 原生 `TraceViewerServer`（基于 `cap:pack` `ZipReader`、`cap:json`、`cap:web` `WebServer`），提供 `/` HTML+JS 时间轴回放器、`/contexts`、`/trace/events`、`/trace/file?path=...` 与 `/health` 路由 |
 | `coverage.cp` | `server/coverageRecorder.ts` | `Coverage`（`startJSCoverage`/`stopJSCoverage`/`startCSSCoverage`/`stopCSSCoverage`）挂载至 `Page.coverage()`，复用 `cap:cdp` `ProfilerDomain`/`CSSDomain` |
 | `request_context.cp` | `server/fetch.ts` | `APIRequestContext`（`get`/`post`/`put`/`delete`/`fetch` + Cookie Jar 与 `BrowserContext` 双向同步），复用 `cap:http` 与 `cap:json` |
 | `aria.cp` | `server/ariaSnapshot.ts` | 无障碍树 `AriaSnapshot` 解析与 YAML 生成 |
 | `remote.cp` | `remote/playwrightServer.ts`, `remote/playwrightConnection.ts`, `remote/serverTransport.ts` | 双模远程网关：CP 同进程直连 + 可选原生 `cap:web` `WsServer` WS RPC 多语言服务 |
-| `cli.cp` | `cli/browserActions.ts` | Playwright CLI 动作解析与执行（`open`、`screenshot`、`pdf`、`codegen`） |
+| `cli.cp` | `cli/browserActions.ts` | Playwright CLI 动作解析与执行（`open`、`screenshot`、`pdf`、`codegen`、`show-trace`） |
 
 ---
 

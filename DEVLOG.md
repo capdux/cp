@@ -651,3 +651,6 @@
 ## 2026-11-28: 收官闭环 — 一行 `launch()` 真机拉起与剩余 Server/Device/Tracing/Coverage 全量补齐
 - **真正开箱即用**：将此前在测试层的 POSIX TCP + RFC 6455 WS 客户端 + `fork`/`execvp` 子进程拉起下沉为 `lib/cdp/transport.cp` (`CdpNativeWsTransport`)，并在 `geteuid() == 0` 时自动追加 `--no-sandbox`/`--disable-dev-shm-usage`，实测 `Puppeteer.launch` 一行直连 `Chrome/158.0.8127.88` 零泄漏退出。
 - **全量补齐**：补全 Puppeteer 155 款 `KnownDevices`、`Tracing`、`Coverage`，以及 Playwright `Frame` 树、`Tracing` PKZIP 归档、`Coverage`、`APIRequestContext` + Cookie Jar、`WebSocketRoute`、`Video`；两套单测（15/15 & 17/17）与生态门禁（16/16）全部绿灯。
+
+## 2026-11-28: 补齐 Playwright Trace Viewer 与 `show-trace` CLI
+- 吸收 `_ref/playwright/packages/playwright-core/src/server/trace/viewer/traceViewer.ts`，依托 `cap:pack` (`ZipReader`) 与 `cap:web` (`App` + `WebServer`) 实现纯 CP 原生 `TraceViewerServer`，无需外部依赖即可在浏览器中回放分析 `trace.zip` 时间轴与快照，全量 18/18 单测零泄漏通过。

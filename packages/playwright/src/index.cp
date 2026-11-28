@@ -110,6 +110,13 @@ export {
 } from "./tracing";
 
 export {
+    TraceViewerOptions,
+    TraceEntryRecord,
+    TraceHttpResponse,
+    TraceViewerServer,
+} from "./trace_viewer";
+
+export {
     JSCoverageOptions,
     CSSCoverageOptions,
     CoverageRange,

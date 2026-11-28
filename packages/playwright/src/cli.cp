@@ -10,12 +10,14 @@ import { CdpSendTransportFn } from "cap:cdp";
 import { PlaywrightError } from "./network";
 import { GotoOptions, ScreenshotOptions, PdfOptions } from "./page";
 import { ChromiumBrowserType, LaunchOptions } from "./chromium";
+import { TraceViewerOptions, TraceViewerServer } from "./trace_viewer";
 
 pub enum CliCommand {
     Open,
     Screenshot,
     Pdf,
     Codegen,
+    ShowTrace,
     Help,
     Unknown,
 }
@@ -24,6 +26,8 @@ pub struct CliOptions {
     pub command: CliCommand = CliCommand.Help,
     pub url: []const u8 = "about:blank",
     pub output_path: []const u8 = "",
+    pub trace_path: []const u8 = "",
+    pub port: u16 = 9323,
     pub browser: []const u8 = "chromium",
     pub headless: bool = true,
     pub full_page: bool = false,
@@ -71,6 +75,8 @@ pub struct PlaywrightCli {
         } else if (std.mem.eql(u8, cmd, "codegen")) {
             opts.command = CliCommand.Codegen;
             opts.headless = false;
+        } else if (std.mem.eql(u8, cmd, "show-trace")) {
+            opts.command = CliCommand.ShowTrace;
         } else if (std.mem.eql(u8, cmd, "help") || std.mem.eql(u8, cmd, "--help") || std.mem.eql(u8, cmd, "-h")) {
             opts.command = CliCommand.Help;
         } else {
@@ -93,9 +99,15 @@ pub struct PlaywrightCli {
                 opts.target_lang = a[9..];
             } else if (std.mem.startsWith(u8, a, "--browser=")) {
                 opts.browser = a[10..];
+            } else if (std.mem.startsWith(u8, a, "--port=")) {
+                opts.port = std.fmt.parseInt(u16, a[7..], 10) catch 9323;
             } else if (!std.mem.startsWith(u8, a, "-")) {
                 if (positional == 0) {
-                    opts.url = a;
+                    if (opts.command == CliCommand.ShowTrace) {
+                        opts.trace_path = a;
+                    } else {
+                        opts.url = a;
+                    }
                 } else if (positional == 1) {
                     opts.output_path = a;
                 }
@@ -151,6 +163,19 @@ pub struct PlaywrightCli {
         }
         if (opts.command == CliCommand.Codegen) {
             res.generated_code = PlaywrightCli.generateCodegenSkeleton(alloc, opts)?;
+            return res;
+        }
+        if (opts.command == CliCommand.ShowTrace) {
+            let viewer = TraceViewerServer.init(alloc, TraceViewerOptions{
+                port: opts.port,
+                trace_path: opts.trace_path,
+            });
+            defer viewer.deinit();
+            if (opts.trace_path.len > 0) {
+                viewer.loadTraceFile(opts.trace_path)?;
+                res.artifact_bytes = viewer.entryCount();
+            }
+            res.final_url = opts.trace_path;
             return res;
         }
 

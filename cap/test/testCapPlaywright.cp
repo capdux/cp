@@ -53,6 +53,8 @@ import {
     PlaywrightCli,
     Frame,
     Tracing,
+    TraceViewerOptions,
+    TraceViewerServer,
     Coverage,
     APIRequestContext,
     WebSocketRoute,
@@ -913,6 +915,73 @@ fn testWebSocketRouteAndVideoScreencast(): !void {
     expect_eq(gpa.deinit() == .ok, true);
 }
 
+fn testTraceViewerAndCliShowTrace(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    let transport = MockCdpTransport{};
+    let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
+    const ctx = browser.newContext(.{})?;
+
+    let tr = ctx.tracing();
+    tr.start(.{ name: "viewer-e2e", title: "viewer-chunk", screenshots: true, snapshots: true })?;
+    tr.recordEvent("action", "Page.goto", "page-1", "{\"url\":\"https://example.com\"}")?;
+    tr.recordEvent("action", "Locator.click", "page-1", "{\"selector\":\"button\"}")?;
+    const zip_bytes = tr.stop("")?;
+    expect_eq(zip_bytes.len > 22, true);
+    expect_eq(zip_bytes[0] == 'P' && zip_bytes[1] == 'K', true);
+
+    let viewer = TraceViewerServer.init(alloc, TraceViewerOptions{
+        host: "127.0.0.1",
+        port: 9323,
+    });
+    viewer.loadZipBytes(zip_bytes)?;
+    expect_eq(viewer.entryCount(), 3);
+    expect_eq(viewer.event_count >= 3, true);
+
+    let url_buf: [64]u8 = undefined;
+    const base_url = viewer.url(&url_buf)?;
+    expect_eq(std.mem.eql(u8, base_url, "http://127.0.0.1:9323"), true);
+
+    let root_resp = viewer.handleHttpRequest(alloc, "GET", "/")?;
+    expect_eq(root_resp.status, 200);
+    expect_eq(std.mem.indexOf(u8, root_resp.content_type, "text/html") != null, true);
+    expect_eq(std.mem.indexOf(u8, root_resp.body, "Playwright Trace Viewer (CP)") != null, true);
+    expect_eq(std.mem.indexOf(u8, root_resp.body, "/contexts") != null, true);
+    root_resp.deinit();
+
+    let ctx_resp = viewer.handleHttpRequest(alloc, "GET", "/contexts")?;
+    expect_eq(ctx_resp.status, 200);
+    expect_eq(std.mem.indexOf(u8, ctx_resp.content_type, "application/json") != null, true);
+    expect_eq(std.mem.indexOf(u8, ctx_resp.body, "\"eventCount\"") != null, true);
+    expect_eq(std.mem.indexOf(u8, ctx_resp.body, "\"trace.trace\"") != null, true);
+    ctx_resp.deinit();
+
+    let file_resp = viewer.handleHttpRequest(alloc, "GET", "/trace/file?path=trace.trace")?;
+    expect_eq(file_resp.status, 200);
+    expect_eq(std.mem.indexOf(u8, file_resp.content_type, "application/x-ndjson") != null, true);
+    expect_eq(std.mem.indexOf(u8, file_resp.body, "Page.goto") != null, true);
+    expect_eq(std.mem.indexOf(u8, file_resp.body, "Locator.click") != null, true);
+    file_resp.deinit();
+
+    let health_resp = viewer.handleHttpRequest(alloc, "GET", "/health")?;
+    expect_eq(health_resp.status, 200);
+    expect_eq(std.mem.indexOf(u8, health_resp.body, "ok") != null, true);
+    health_resp.deinit();
+
+    // CLI show-trace parsing verification
+    const st_args: [3][]const u8 = .{ "show-trace", "trace.zip", "--port=9444" };
+    const st_opts = PlaywrightCli.parseArgs(&st_args)?;
+    expect_eq(st_opts.command == CliCommand.ShowTrace, true);
+    expect_eq(std.mem.eql(u8, st_opts.trace_path, "trace.zip"), true);
+    expect_eq(st_opts.port, 9444);
+
+    viewer.deinit();
+    browser.deinit();
+    alloc.free(zip_bytes);
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
 fn main() {
     test("1. Chromium Launch, Args Builder & Executable Probing", () => {
         testChromiumLaunchAndLauncherProbe() catch unreachable;
@@ -964,5 +1033,8 @@ fn main() {
     });
     test("17. WebSocketRoute & Video Screencast Handle", () => {
         testWebSocketRouteAndVideoScreencast() catch unreachable;
+    });
+    test("18. TraceViewerServer & CLI show-trace (PKZIP + HTTP Routes)", () => {
+        testTraceViewerAndCliShowTrace() catch unreachable;
     });
 }
