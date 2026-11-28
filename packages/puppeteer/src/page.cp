@@ -213,15 +213,50 @@ pub struct Page {
 
     pub fn evaluateOnNewDocument(*_, script: []const u8): void!PuppeteerError {
         if (_.isClosed()) return PuppeteerError.SessionClosed;
-        let pbuf: [2048]u8 = undefined;
         let fbuf: [2560]u8 = undefined;
-        const params = std.fmt.bufPrint(
-            &pbuf,
-            "{{\"source\":\"{s}\"}}",
-            .{script},
-        ) catch return PuppeteerError.BufferTooSmall;
-        const _ign_4 = _.session.send("Page.addScriptToEvaluateOnNewDocument", params, &fbuf)?;
-        * = _ign_4;
+        const en_id = _.session.send("Page.enable", "{}", &fbuf)?;
+        const _en_resp = _.session.endpoint.takeResponse(en_id);
+        * = _en_resp;
+
+        let pbuf: [2048]u8 = undefined;
+        let pos: usize = 0;
+        const prefix = "{\"source\":\"";
+        @memcpy(pbuf[0..prefix.len], prefix);
+        pos = prefix.len;
+        for (b of script) {
+            if (b == '"' || b == '\\') {
+                if (pos + 2 > pbuf.len - 2) return PuppeteerError.BufferTooSmall;
+                pbuf[pos] = '\\';
+                pbuf[pos + 1] = b;
+                pos += 2;
+            } else if (b == '\n') {
+                if (pos + 2 > pbuf.len - 2) return PuppeteerError.BufferTooSmall;
+                pbuf[pos] = '\\';
+                pbuf[pos + 1] = 'n';
+                pos += 2;
+            } else if (b == '\r') {
+                if (pos + 2 > pbuf.len - 2) return PuppeteerError.BufferTooSmall;
+                pbuf[pos] = '\\';
+                pbuf[pos + 1] = 'r';
+                pos += 2;
+            } else if (b == '\t') {
+                if (pos + 2 > pbuf.len - 2) return PuppeteerError.BufferTooSmall;
+                pbuf[pos] = '\\';
+                pbuf[pos + 1] = 't';
+                pos += 2;
+            } else {
+                if (pos + 1 > pbuf.len - 2) return PuppeteerError.BufferTooSmall;
+                pbuf[pos] = b;
+                pos += 1;
+            }
+        }
+        pbuf[pos] = '"';
+        pbuf[pos + 1] = '}';
+        pos += 2;
+
+        const req_id = _.session.send("Page.addScriptToEvaluateOnNewDocument", pbuf[0..pos], &fbuf)?;
+        const _resp = _.session.endpoint.takeResponse(req_id);
+        * = _resp;
     }
 
     pub fn setViewport(*_, vp: Viewport): void!PuppeteerError {

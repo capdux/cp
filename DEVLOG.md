@@ -684,3 +684,6 @@
   - Playwright：含双引号 `data:` URL 导航无挂起，`title='T'`、`count=2`、`png_len=6420`、`testCapPlaywright` 24/24 PASS；
   - Puppeteer：JS `throw` 精确触发 `has_exception=true`（含堆栈）、`el.evaluate` 返回 `'HelloBtn'`、`hover`+`click` 精确命中按钮返回 `'1:1'`、`testCapPuppeteer` 18/18 PASS；
   - CDP：`test_cdp_production_deep` 11/11 PASS。
+
+## 2026-11-28: 结单 `capsurf_agy` 3 条真机工单（`pw-screenshot-proto`、`pptr-sub-el-eval`、`pptr-eval-new-doc`）
+- 3 处精准修复均在真实 Chromium `158.0.8127.88` 上一轮通过：`repro_pw_screenshot_protocol_err.cp` 输出 `s1_len=9552`、`evaluateOnNewDocument` 注入返回 `'99'`、子元素箭头函数 `sub.evaluate('el => el.textContent')` 返回 `'SubText42'`，`testCapPlaywright` 24/24 PASS、`testCapPuppeteer` 18/18 PASS。

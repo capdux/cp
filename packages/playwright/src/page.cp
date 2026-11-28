@@ -875,7 +875,13 @@ pub struct Page {
             },
             &params_buf,
         ) catch return PlaywrightError.BufferTooSmall;
-        const res = _.sendCdp(req.method, req.params_json)?;
+        let res = _.sendCdp(req.method, req.params_json) catch |e| blk: {
+            if (e == PlaywrightError.ProtocolError) {
+                * = _.evaluate("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))") catch "";
+                break :blk _.sendCdp(req.method, req.params_json)?;
+            }
+            return e;
+        };
         if (b64 := CdpFrameScanner.extractTopLevelField(res, "data", true)) {
             return b64;
         }

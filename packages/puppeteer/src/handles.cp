@@ -160,7 +160,9 @@ pub struct JSHandle {
             appendJsonEscaped(&pbuf, &pos, _.object_id)?;
             appendRaw(&pbuf, &pos, "\",\"functionDeclaration\":\"")?;
             appendJsonEscaped(&pbuf, &pos, expression)?;
-            appendRaw(&pbuf, &pos, "\",\"returnByValue\":true}")?;
+            appendRaw(&pbuf, &pos, "\",\"arguments\":[{\"objectId\":\"")?;
+            appendJsonEscaped(&pbuf, &pos, _.object_id)?;
+            appendRaw(&pbuf, &pos, "\"}],\"returnByValue\":true,\"awaitPromise\":true}")?;
             const params = pbuf[0..pos];
             const req_id = _.session.send("Runtime.callFunctionOn", params, &fbuf)?;
             if (resp := _.session.endpoint.takeResponse(req_id)) {
