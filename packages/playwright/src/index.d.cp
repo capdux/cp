@@ -177,6 +177,94 @@ export struct ChromiumBrowserType {
 
 export const chromium = ChromiumBrowserType;
 
+export struct WebKitLaunchOptions {
+    headless: bool,
+    executable_path: []const u8,
+    user_data_dir: []const u8,
+    args: []const []const u8,
+    viewport_width: u32,
+    viewport_height: u32,
+    timeout_ms: u32,
+    ignore_https_errors: bool,
+    require_executable: bool,
+    proxy_server: []const u8,
+    proxy_bypass: []const u8,
+    transport_fn: CdpSendTransportFn?,
+    transport_ctx: usize,
+}
+
+export struct WkPageProxySession {
+    page_proxy_id: []const u8,
+    target_id: []const u8,
+    crashed: bool,
+    disposed: bool,
+    messages_received: usize,
+    fn send(*_, method: []const u8, params_json: []const u8): i64!PlaywrightError;
+    fn sendToTarget(*_, inner_method: []const u8, inner_params_json: []const u8): i64!PlaywrightError;
+    fn markAsCrashed(*_);
+    fn isDisposed(): bool;
+    fn dispose(*_);
+}
+
+export struct WkConnection {
+    static fn init(alloc: std.mem.Allocator): WkConnection;
+    fn deinit(*_);
+    fn setTransport(*_, cb: CdpSendTransportFn, ctx: usize);
+    fn nextMessageId(*_): i64;
+    fn isClosed(): bool;
+    fn close(*_);
+    static fn encodeFrame(id: i64, method: []const u8, params_json: []const u8, page_proxy_id: []const u8, out_buf: []u8): usize!PlaywrightError;
+    static fn decodeFrame(raw: []const u8): WkMessage!PlaywrightError;
+    fn send(*_, method: []const u8, params_json: []const u8): i64!PlaywrightError;
+    fn sendWithProxy(*_, method: []const u8, params_json: []const u8, page_proxy_id: []const u8): i64!PlaywrightError;
+    fn dispatchMessage(*_, raw: []const u8): void!PlaywrightError;
+    fn sessionCount(): usize;
+}
+
+export struct WebKitPage {
+    fn url(): []const u8;
+    fn title(): []const u8;
+    fn content(): []const u8;
+    fn isClosed(): bool;
+    fn goto(*_, target_url: []const u8, opts: GotoOptions): Response!PlaywrightError;
+    fn setContent(*_, html: []const u8): void!PlaywrightError;
+    fn evaluate(*_, expression: []const u8): ([]const u8)!PlaywrightError;
+    fn setViewport(*_, width: u32, height: u32): void!PlaywrightError;
+    fn screenshot(*_, opts: ScreenshotOptions): ([]const u8)!PlaywrightError;
+    fn keyboardDown(*_, key: []const u8, modifiers: u32): void!PlaywrightError;
+    fn keyboardUp(*_, key: []const u8, modifiers: u32): void!PlaywrightError;
+    fn insertText(*_, text: []const u8): void!PlaywrightError;
+    fn mouseMove(*_, x: f64, y: f64): void!PlaywrightError;
+    fn mouseDown(*_, x: f64, y: f64, button: []const u8): void!PlaywrightError;
+    fn mouseUp(*_, x: f64, y: f64, button: []const u8): void!PlaywrightError;
+    fn click(*_, x: f64, y: f64): void!PlaywrightError;
+    fn route(*_, pattern: []const u8, handler: RouteHandlerFn, ctx: usize): void!PlaywrightError;
+    fn unroute(*_, pattern: []const u8);
+    fn close(*_);
+}
+
+export struct WebKitBrowser {
+    fn newContext(*_, opts: BrowserContextOptions): (*WebKitBrowserContext)!PlaywrightError;
+    fn newPage(*_): (*WebKitPage)!PlaywrightError;
+    fn contexts(): []*WebKitBrowserContext;
+    fn version(): []const u8;
+    fn isConnected(): bool;
+    fn close(*_);
+    fn deinit(*_);
+}
+
+export struct WebKitBrowserType {
+    static fn name(): []const u8;
+    static fn executablePath(alloc: std.mem.Allocator, preferred: []const u8): ([]u8)?;
+    static fn buildLaunchArgs(alloc: std.mem.Allocator, opts: WebKitLaunchOptions): ([]([]u8))!PlaywrightError;
+    static fn freeLaunchArgs(alloc: std.mem.Allocator, args: [][]u8);
+    static fn launch(alloc: std.mem.Allocator, opts: WebKitLaunchOptions): WebKitBrowser!PlaywrightError;
+    static fn launchWithTransport(alloc: std.mem.Allocator, opts: WebKitLaunchOptions, cb: CdpSendTransportFn, ctx: usize): WebKitBrowser!PlaywrightError;
+    static fn connectWithTransport(alloc: std.mem.Allocator, opts: WebKitLaunchOptions, cb: CdpSendTransportFn, ctx: usize): WebKitBrowser!PlaywrightError;
+}
+
+export const webkit = WebKitBrowserType;
+
 export enum ActionabilityState {
     Pending,
     Visible,

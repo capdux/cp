@@ -654,3 +654,6 @@
 
 ## 2026-11-28: 补齐 Playwright Trace Viewer 与 `show-trace` CLI
 - 吸收 `_ref/playwright/packages/playwright-core/src/server/trace/viewer/traceViewer.ts`，依托 `cap:pack` (`ZipReader`) 与 `cap:web` (`App` + `WebServer`) 实现纯 CP 原生 `TraceViewerServer`，无需外部依赖即可在浏览器中回放分析 `trace.zip` 时间轴与快照，全量 18/18 单测零泄漏通过。
+
+## 2026-11-28: 吸收 Playwright WebKit 协议驱动与独立二进制安装指南
+- 吸收 `_ref/playwright/packages/playwright-core/src/server/webkit/` 为纯 CP 驱动 `webkit.cp`，复用 `cap:cdp` 16-lane SIMD JSON 扫描解析 WebKit Inspector JSON-RPC 帧与 `pageProxyId` 多目标会话，并在三语 README 与 `MIGRATE.md` 给出开源 WebKit 二进制安装方式；19/19 单测零泄漏通过。

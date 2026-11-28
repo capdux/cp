@@ -1507,3 +1507,8 @@
 - 新增 [packages/playwright/src/trace_viewer.cp](file:///data/dev/cp/packages/playwright/src/trace_viewer.cp)（基于 `cap:web` + `cap:pack` + `cap:json` + `cap:fs`，支持解析 `trace.zip` 与 `/`、`/contexts`、`/trace/events`、`/trace/file?path=...`、`/health` 路由与内置时间轴回放界面）。
 - 更新 [cli.cp](file:///data/dev/cp/packages/playwright/src/cli.cp) 增补 `show-trace <trace.zip> [--port=<N>]`，更新 `index.cp`、`index.d.cp` 与 `MIGRATE.md`。
 - `cap test -m cap/test/testCapPlaywright.cp` **18/18 PASS (915ms)**，`sync_upstream_pkg.py` **19/19** 溯源齐全，`check_ecosystem_health.py` **16/16 PASS**。
+
+## [2026-11-28] - 吸收 Playwright WebKit 驱动 (`webkit.cp`) 并补充 README 开源 WebKit 二进制安装说明
+- 新增 [packages/playwright/src/webkit.cp](file:///data/dev/cp/packages/playwright/src/webkit.cp)（1,227 行，吸收 `_ref/playwright/packages/playwright-core/src/server/webkit/`）：实现 `webkit` / `WebKitBrowserType`、`WkConnection` / `WkPageProxySession`、`WebKitBrowser`、`WebKitBrowserContext`、`WebKitPage`（复用 `cap:cdp` 16-lane SIMD JSON 扫描）。
+- 更新 `packages/playwright/{README.md, README.zh-CN.md, README_AGENT.md, MIGRATE.md}` 明确标注当前项目不包含开源 WebKit 浏览器二进制，并提供 `npx playwright install webkit` / `PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH` 安装配置指南。
+- `cap test -m cap/test/testCapPlaywright.cp` **19/19 PASS (973ms)**，`sync_upstream_pkg.py` **20/20** 溯源完整，`check_ecosystem_health.py` **16/16 PASS**。

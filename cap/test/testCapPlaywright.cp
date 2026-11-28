@@ -32,6 +32,14 @@ import {
     LaunchOptions,
     ConnectOverCdpOptions,
     chromium,
+    WebKitLaunchOptions,
+    WkMessageKind,
+    WkPageProxySession,
+    WkConnection,
+    WebKitPage,
+    WebKitBrowser,
+    WebKitBrowserType,
+    webkit,
     ActionabilityState,
     ActionabilityCheckKind,
     ActionabilityOptions,
@@ -982,6 +990,122 @@ fn testTraceViewerAndCliShowTrace(): !void {
     expect_eq(gpa.deinit() == .ok, true);
 }
 
+fn testWebKitEngineAndWkConnection(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    // 1. BrowserType name & executablePath probing
+    expect_eq(std.mem.eql(u8, webkit.name(), "webkit"), true);
+    if (exe_missing := webkit.executablePath(alloc, "/nonexistent/webkit/bin")) {
+        alloc.free(exe_missing);
+    }
+    if (exe_sh := webkit.executablePath(alloc, "/bin/sh")) {
+        expect_eq(std.mem.eql(u8, exe_sh, "/bin/sh"), true);
+        alloc.free(exe_sh);
+    }
+
+    // 2. buildLaunchArgs (--inspector-pipe, --headless, --no-startup-window, --proxy)
+    const args1 = webkit.buildLaunchArgs(alloc, .{
+        headless: true,
+        proxy_server: "http://127.0.0.1:8080",
+        proxy_bypass: "localhost",
+    })?;
+    let found_pipe = false;
+    let found_headless = false;
+    let found_no_window = false;
+    let found_proxy = false;
+    let found_ignore = false;
+    for (a of args1) {
+        if (std.mem.eql(u8, a, "--inspector-pipe")) found_pipe = true;
+        if (std.mem.eql(u8, a, "--headless")) found_headless = true;
+        if (std.mem.eql(u8, a, "--no-startup-window")) found_no_window = true;
+        if (std.mem.eql(u8, a, "--proxy=http://127.0.0.1:8080")) found_proxy = true;
+        if (std.mem.eql(u8, a, "--ignore-host=localhost")) found_ignore = true;
+    }
+    expect_eq(found_pipe, true);
+    expect_eq(found_headless, true);
+    expect_eq(found_no_window, true);
+    expect_eq(found_proxy, true);
+    expect_eq(found_ignore, true);
+    webkit.freeLaunchArgs(alloc, args1);
+
+    // 3. WkConnection Inspector JSON-RPC frame encode/decode & pageProxyId routing
+    let enc_buf: [512]u8 = undefined;
+    const enc_len = WkConnection.encodeFrame(42, "Page.navigate", "{\"url\":\"https://webkit.org\"}", "pp-1", &enc_buf)?;
+    const decoded = WkConnection.decodeFrame(enc_buf[0..enc_len])?;
+    expect_eq(decoded.kind == WkMessageKind.Request, true);
+    expect_eq(decoded.id, 42);
+    expect_eq(std.mem.eql(u8, decoded.method, "Page.navigate"), true);
+    expect_eq(std.mem.eql(u8, decoded.page_proxy_id, "pp-1"), true);
+
+    let conn = WkConnection.init(alloc);
+    let mt = MockCdpTransport{};
+    conn.setTransport(mockTransportSend, unsafe { @intFromPtr(&mt) });
+    conn.dispatchMessage("{\"id\":-9999,\"result\":{}}")?;
+    expect_eq(conn.ignored_close_count, 1);
+
+    conn.dispatchMessage("{\"method\":\"Playwright.pageProxyCreated\",\"params\":{\"pageProxyId\":\"pp-1\"}}")?;
+    conn.dispatchMessage("{\"method\":\"Playwright.pageProxyCreated\",\"params\":{\"pageProxyId\":\"pp-2\"}}")?;
+    expect_eq(conn.sessionCount(), 2);
+
+    conn.dispatchMessage("{\"id\":1,\"result\":{\"value\":\"wk-ok\"},\"pageProxyId\":\"pp-1\",\"targetId\":\"target-1\"}")?;
+    conn.dispatchMessage("{\"id\":2,\"result\":{\"value\":\"wk-two\"},\"pageProxyId\":\"pp-2\",\"targetId\":\"target-2\"}")?;
+    const s1 = conn.getPageProxySession("pp-1") orelse return PlaywrightError.TargetNotFound;
+    const s2 = conn.getPageProxySession("pp-2") orelse return PlaywrightError.TargetNotFound;
+    expect_eq(std.mem.eql(u8, s1.last_result_json, "{\"value\":\"wk-ok\"}"), true);
+    expect_eq(std.mem.eql(u8, s2.last_result_json, "{\"value\":\"wk-two\"}"), true);
+    * = s1.sendToTarget("Runtime.evaluate", "{\"expression\":\"1+1\"}")?;
+    expect_eq(std.mem.eql(u8, mt.lastMethod(), "Target.sendMessageToTarget"), true);
+    conn.deinit();
+
+    // 4. WebKitBrowser launchWithTransport, Page, Input, Network Route & RAII cleanup
+    let mt2 = MockCdpTransport{};
+    let browser = webkit.launchWithTransport(alloc, .{
+        headless: true,
+        viewport_width: 1024,
+        viewport_height: 768,
+    }, mockTransportSend, unsafe { @intFromPtr(&mt2) })?;
+    expect_eq(browser.isConnected(), true);
+    expect_eq(std.mem.eql(u8, browser.version(), "27.2"), true);
+
+    const ctx = browser.newContext(.{ viewport_width: 1024, viewport_height: 768 })?;
+    const page = ctx.newPage()?;
+    const resp = page.goto("https://example.com/wk", .{})?;
+    expect_eq(resp.isOk(), true);
+    expect_eq(std.mem.eql(u8, page.url(), "https://example.com/wk"), true);
+
+    page.setContent("<h1>WebKit CP</h1>")?;
+    expect_eq(std.mem.eql(u8, page.content(), "<h1>WebKit CP</h1>"), true);
+    * = page.evaluate("document.title")?;
+    page.setViewport(1280, 800)?;
+    expect_eq(page.viewport_width, 1280);
+    expect_eq(page.viewport_height, 800);
+    * = page.screenshot(.{})?;
+
+    page.keyboardDown("Enter", 0)?;
+    page.keyboardUp("Enter", 0)?;
+    page.insertText("hello webkit")?;
+    page.click(10.0, 20.0)?;
+    expect_eq(std.mem.eql(u8, mt2.lastMethod(), "Input.dispatchMouseEvent"), true);
+
+    let rstate = RouteTestState{ mode: 0 };
+    page.route("**/api/*", testRouteHandler, unsafe { @intFromPtr(&rstate) })?;
+    const act = page.interceptRequest("https://example.com/api/ping", "GET", "fetch")?;
+    expect_eq(act == RouteAction.Fulfilled, true);
+    expect_eq(rstate.intercepted_count, 1);
+    page.unroute("**/api/*");
+
+    browser.deinit();
+
+    // 5. connectWithTransport
+    let mt3 = MockCdpTransport{};
+    let conn_browser = webkit.connectWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&mt3) })?;
+    expect_eq(conn_browser.isConnected(), true);
+    conn_browser.deinit();
+
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
 fn main() {
     test("1. Chromium Launch, Args Builder & Executable Probing", () => {
         testChromiumLaunchAndLauncherProbe() catch unreachable;
@@ -1036,5 +1160,8 @@ fn main() {
     });
     test("18. TraceViewerServer & CLI show-trace (PKZIP + HTTP Routes)", () => {
         testTraceViewerAndCliShowTrace() catch unreachable;
+    });
+    test("19. WebKit Engine, WkConnection, Args Builder & Executable Probing", () => {
+        testWebKitEngineAndWkConnection() catch unreachable;
     });
 }

@@ -86,6 +86,19 @@ export {
 } from "./chromium";
 
 export {
+    WebKitLaunchOptions,
+    WkMessageKind,
+    WkMessage,
+    WkPageProxySession,
+    WkConnection,
+    WebKitPage,
+    WebKitBrowserContext,
+    WebKitBrowser,
+    WebKitBrowserType,
+    webkit,
+} from "./webkit";
+
+export {
     RemoteMode,
     PlaywrightRemoteConfig,
     PlaywrightRemoteServer,

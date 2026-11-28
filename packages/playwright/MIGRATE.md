@@ -14,6 +14,7 @@
 | :--- | :--- | :--- |
 | `index.cp` / `index.d.cp` | `index.ts` | 统一导出 `chromium`、`Browser`、`BrowserContext`、`Page`、`Locator`、`Clock`、`ActionabilityEngine`、`HarRecorder`、`PlaywrightRemoteServer`、`PlaywrightCli` 等 |
 | `chromium.cp` | `server/chromium/chromium.ts` | Chromium / Capsurf 进程探测与 `connectOverCDP`，复用 `cap:cdp` `CdpBrowserLauncher` |
+| `webkit.cp` | `server/webkit/webkit.ts`, `wkConnection.ts`, `wkBrowser.ts`, `wkPage.ts`, `wkInput.ts`, `wkInterceptableRequest.ts` | 纯 CP WebKit Inspector 协议驱动（`WkConnection` / `WkPageProxySession` / `WebKitBrowser` / `WebKitPage` / `webkit` 导出），复用 `CdpFrameScanner` 16-lane SIMD JSON 扫描；不包含浏览器二进制 |
 | `browser.cp` | `server/browser.ts` | `Browser` 生命周期管理、`CdpEndpoint` 持有与 RAII `~init()`/`deinit()` |
 | `context.cp` | `server/browserContext.ts` | `BrowserContext` 多上下文隔离、Cookie、`StorageState`、Context 级路由拦截 |
 | `page.cp` | `server/page.ts` | `Page` 导航历史、内容注入、`screenshot`/`pdf`/`ariaSnapshot` 与 `page.clock()` |
