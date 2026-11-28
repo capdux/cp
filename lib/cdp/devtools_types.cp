@@ -145,3 +145,119 @@ pub struct TracingDomain {
         return CdpRequest{ id: id, method: "Tracing.end", params_json: "{}" };
     }
 }
+
+// ----------------------------------------------------------------------------
+// Extended DevTools Domains: Overlay, Audits, Profiler, HeapProfiler,
+// IndexedDB, CacheStorage, Security, Performance, ServiceWorker, CSS, Media
+// ----------------------------------------------------------------------------
+
+pub struct OverlayDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Overlay.enable", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn hideHighlight(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Overlay.hideHighlight", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct AuditsDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Audits.enable", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct ProfilerDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Profiler.enable", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn startPreciseCoverage(id: i64, session_id: []const u8, call_count: bool, detailed: bool, params_buf: []u8): CdpRequest!CdpError {
+        let s = std.fmt.bufPrint(params_buf, "{{\"callCount\":{},\"detailed\":{}}}", .{ call_count, detailed }) catch return CdpError.BufferTooSmall;
+        return CdpRequest{ id: id, method: "Profiler.startPreciseCoverage", params_json: s, session_id: session_id };
+    }
+
+    pub static fn takePreciseCoverage(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Profiler.takePreciseCoverage", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn stopPreciseCoverage(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Profiler.stopPreciseCoverage", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct HeapProfilerDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "HeapProfiler.enable", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn collectGarbage(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "HeapProfiler.collectGarbage", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct IndexedDBDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "IndexedDB.enable", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct CacheStorageDomain {
+    pub static fn requestCacheNames(id: i64, session_id: []const u8, security_origin: []const u8, params_buf: []u8): CdpRequest!CdpError {
+        let s = std.fmt.bufPrint(params_buf, "{{\"securityOrigin\":\"{s}\"}}", .{security_origin}) catch return CdpError.BufferTooSmall;
+        return CdpRequest{ id: id, method: "CacheStorage.requestCacheNames", params_json: s, session_id: session_id };
+    }
+}
+
+pub struct SecurityDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Security.enable", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn setIgnoreCertificateErrors(id: i64, ignore: bool, params_buf: []u8): CdpRequest!CdpError {
+        let s = std.fmt.bufPrint(params_buf, "{{\"ignore\":{}}}", .{ignore}) catch return CdpError.BufferTooSmall;
+        return CdpRequest{ id: id, method: "Security.setIgnoreCertificateErrors", params_json: s };
+    }
+}
+
+pub struct PerformanceDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Performance.enable", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn getMetrics(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Performance.getMetrics", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct ServiceWorkerDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "ServiceWorker.enable", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct CSSDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "CSS.enable", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn startRuleUsageTracking(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "CSS.startRuleUsageTracking", params_json: "{}", session_id: session_id };
+    }
+
+    pub static fn stopRuleUsageTracking(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "CSS.stopRuleUsageTracking", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct AnimationDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Animation.enable", params_json: "{}", session_id: session_id };
+    }
+}
+
+pub struct MediaDomain {
+    pub static fn enable(id: i64, session_id: []const u8): CdpRequest {
+        return CdpRequest{ id: id, method: "Media.enable", params_json: "{}", session_id: session_id };
+    }
+}

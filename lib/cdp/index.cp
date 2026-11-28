@@ -61,7 +61,21 @@ export {
     BrowserDomain,
     LogDomain,
     TracingDomain,
+    OverlayDomain,
+    AuditsDomain,
+    ProfilerDomain,
+    HeapProfilerDomain,
+    IndexedDBDomain,
+    CacheStorageDomain,
+    SecurityDomain,
+    PerformanceDomain,
+    ServiceWorkerDomain,
+    CSSDomain,
+    AnimationDomain,
+    MediaDomain,
 } from "./devtools_types";
+
+export { CdpNativeWsTransport } from "./transport";
 
 import { CdpFrameScanner } from "./protocol";
 import { CdpEndpoint, CdpSession } from "./session";

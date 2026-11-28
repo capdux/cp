@@ -11,6 +11,8 @@
 | `session.cp` | `CdpConnectionState`, `CdpSessionInfo`, `CdpPendingCall`, `CdpEventListener`, `CdpSession`, `CdpEndpoint` | 多 Target / SessionId 复用、请求回调挂起匹配与事件订阅 |
 | `launcher.cp` | `CdpBrowserLaunchOptions`, `CdpWsEndpoint`, `CdpBrowserLauncher` | 跨平台 Chromium/Chrome/Edge/Capsurf 二进制自动探测与启动参数构造 |
 | `domains.cp` | `PageDomain`, `RuntimeDomain`, `DomDomain`, `InputDomain`, `NetworkDomain`, `AccessibilityDomain` | 常用 CDP 域（Page/Runtime/DOM/Input/Network/Accessibility）参数与指令构造 |
+| `devtools_types.cp` | `TargetDomain`, `EmulationDomain`, `FetchDomain`, `StorageDomain`, `BrowserDomain`, `LogDomain`, `TracingDomain`, `OverlayDomain`, `AuditsDomain`, `ProfilerDomain`, `HeapProfilerDomain`, `IndexedDBDomain`, `CacheStorageDomain`, `SecurityDomain`, `PerformanceDomain`, `ServiceWorkerDomain`, `CSSDomain`, `AnimationDomain`, `MediaDomain` | 扩展 19 个强类型 CDP 协议域（合计 25 个强类型域） |
+| `transport.cp` | `CdpNativeWsTransport` | 内置 POSIX TCP + RFC 6455 WebSocket 客户端与 Chromium 进程拉起闭环 |
 | `index.cp` | `cdp` 命名空间及全量导出 | 统一对外入口 |
 
 ## 快速用法
