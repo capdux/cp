@@ -1512,3 +1512,7 @@
 - 新增 [packages/playwright/src/webkit.cp](file:///data/dev/cp/packages/playwright/src/webkit.cp)（1,227 行，吸收 `_ref/playwright/packages/playwright-core/src/server/webkit/`）：实现 `webkit` / `WebKitBrowserType`、`WkConnection` / `WkPageProxySession`、`WebKitBrowser`、`WebKitBrowserContext`、`WebKitPage`（复用 `cap:cdp` 16-lane SIMD JSON 扫描）。
 - 更新 `packages/playwright/{README.md, README.zh-CN.md, README_AGENT.md, MIGRATE.md}` 明确标注当前项目不包含开源 WebKit 浏览器二进制，并提供 `npx playwright install webkit` / `PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH` 安装配置指南。
 - `cap test -m cap/test/testCapPlaywright.cp` **19/19 PASS (973ms)**，`sync_upstream_pkg.py` **20/20** 溯源完整，`check_ecosystem_health.py` **16/16 PASS**。
+
+## [2026-11-28] - 全量吸收 Puppeteer W3C WebDriver BiDi 引擎 (`packages/puppeteer/src/bidi/`) 并收官浏览器自动化全栈
+- 新增 `packages/puppeteer/src/bidi/{protocol,connection,session,context,network,input,index}.cp`（7 模块 / 3,689 行）与 `cap/test/testCapPuppeteerBidi.cp`（530 行，5/5 PASS 零泄漏）。
+- 至此 `lib/cdp/`（20 文件 / 12,591 行，含 59 域全量 CDP 协议）+ `packages/puppeteer/`（25 文件 / 9,537 行，含 155 款全量设备 + BiDi）+ `packages/playwright/`（30 文件 / 13,758 行，含 33 域全量 WebKit 协议 + WebKit 驱动 + Recorder + Dispatchers + Trace Viewer）合计 **75 个纯 CP 模块 / 35,886 行**全部验收并推送。

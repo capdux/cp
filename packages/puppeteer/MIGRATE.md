@@ -54,3 +54,6 @@
 - **原生无 Node.js 依赖**：底层传输直接基于 `cap:cdp`（`CdpEndpoint` / `CdpBrowserLauncher`），不依赖 Node.js 事件循环或 WebSocket JS 垫片。
 - **固定池容量限制**：无堆分配路径下 `EventEmitter` 单实例上限 32 个监听器、`ParsedPSelector` 单选择器上限 16 段、`Page.cookies_store` 上限 32 条、`Page.extra_headers` 上限 16 项；若超出可通过外部缓冲区或切片扩展。
 - **`::-p-aria` 选择器**：解析器已完整识别 `aria/` 与 `::-p-aria(...)` 并标记 `has_aria`，页面端可结合 `AccessibilitySnapshot` 或注入脚本进一步匹配。
+
+## 5. W3C WebDriver BiDi 完整引擎 (`packages/puppeteer/src/bidi/`)
+- 已全量吸收 `_ref/puppeteer/packages/puppeteer-core/src/bidi/` 核心协议与引擎至独立可选子目录 `packages/puppeteer/src/bidi/`（7 模块、3,689 行：`protocol.cp`、`connection.cp`、`session.cp`、`context.cp`、`network.cp`、`input.cp`、`index.cp`），按需导入零默认开销，`cap test -m cap/test/testCapPuppeteerBidi.cp` 5/5 PASS（零泄漏）。
