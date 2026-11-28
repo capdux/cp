@@ -7,7 +7,8 @@
 // ============================================================================
 
 const std = @import("std");
-import { Method, HTTPClient } from "cap:http";
+import { Method } from "cap:http/method";
+import { HTTPClient } from "cap:http/client";
 import { JSON, JsonValue } from "cap:json";
 import { PlaywrightError, UrlMatcher, findHeaderInJson } from "./network";
 import { Cookie, BrowserContext } from "./context";

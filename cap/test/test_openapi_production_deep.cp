@@ -12,7 +12,7 @@ import { test, expect_eq } from "cap:test";
 import { JsonParser } from "cap:json";
 import {
     OpenApiError,
-    HttpMethod,
+    OpenApiHttpMethod,
     ParamIn,
     SecuritySchemeType,
     OpenApiInfo,
@@ -164,7 +164,7 @@ fn testSpecBuildAndJsonExport()! {
 fn expectAddOpError(
     doc: *OpenApiDoc,
     path: []const u8,
-    method: HttpMethod,
+    method: OpenApiHttpMethod,
     op: OpenApiOperation,
     expected_err: []const u8,
 ): ! {
@@ -217,7 +217,7 @@ fn testInvalidPathsStatusAndDuplicateOpId()! {
 fn checkMatchStatus(
     alloc: std.mem.Allocator,
     validator: OpenApiValidator,
-    method: HttpMethod,
+    method: OpenApiHttpMethod,
     path: []const u8,
 ): u16! {
     let rm = validator.matchRoute(alloc, method, path) catch e => {

@@ -701,7 +701,7 @@ fn usage() void {
 
 const RunOptions = struct {
     opt_mode: []const u8 = "Debug",
-    is_modular: bool = false,
+    is_modular: bool = true,
     parallel_obj: bool = false,
     force_rebuild: bool = false,
     watch: bool = false,
@@ -731,6 +731,9 @@ fn handleRun(allocator: std.mem.Allocator, args: []const []const u8) !bool {
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             run_opts.is_modular = true;
             run_opts.parallel_obj = true;
+        } else if (std.mem.eql(u8, arg, "--no-modular") or std.mem.eql(u8, arg, "--flatten")) {
+            run_opts.is_modular = false;
+            run_opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "--low") or std.mem.eql(u8, arg, "--no-parallel")) {
             run_opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "-B") or std.mem.eql(u8, arg, "--force")) {
@@ -2718,7 +2721,7 @@ const BuildOptions = struct {
     force_rebuild: bool = false,
     force_llvm: bool = false,
     emit_types: bool = false,
-    is_modular: bool = false,
+    is_modular: bool = true,
     parallel_obj: bool = false,
     timings: bool = false,
     explicit_cache_dir: ?[]const u8 = null,
@@ -3004,6 +3007,9 @@ fn buildPackage(allocator: std.mem.Allocator, args: []const []const u8) !void {
         } else if (std.mem.eql(u8, arg, "-m") or std.mem.eql(u8, arg, "--modular") or std.mem.eql(u8, arg, "-p") or std.mem.eql(u8, arg, "--parallel-obj")) {
             opts.is_modular = true;
             opts.parallel_obj = true;
+        } else if (std.mem.eql(u8, arg, "--no-modular") or std.mem.eql(u8, arg, "--flatten")) {
+            opts.is_modular = false;
+            opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "--low") or std.mem.eql(u8, arg, "--no-parallel")) {
             opts.parallel_obj = false;
         } else if (std.mem.eql(u8, arg, "--safe")) {

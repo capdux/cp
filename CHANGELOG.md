@@ -1537,3 +1537,9 @@
 - `cap/src/project/registry.zig` & `cap/src/project/installer.zig`：将默认远端注册表修正为 `https://registry.capdux.org`，无版本号 `cap add <pkg>` 默认解析为 `"latest"`（匹配 `dist-tags.latest`），发布 release 版 `/root/.cap/bin/cap`。
 - `capdux.org`（`/data/dev/cap`）：升级 Worker（新增 `registry.capdux.org/<pkg>` 标准 packument 端点、`handleSyncRegistry` 改为 100 条/批 `D1.batch()`）并部署至 Cloudflare（Version `1e960834`）；成功发布 `playwright@1.0.0`（1.93 MB）、`puppeteer@25.19.0`（239.3 KB）并同步全部 **1,265 / 1,265** 条 `packages/registry.json` 映射。
 - 端到端实测通过：`CAP_REGISTRY=https://registry.capdux.org cap add playwright` 与 `cap add puppeteer` 均从 `https://dl.capdux.org` 真实下载 `.cap` 归档、通过 SHA-256 校验并解压软链接至 `cap_modules/`。
+
+## [2026-11-28] - Hotfix 结单 `capsurf_agy` 2 条工单（`pw-httpmethod` & `pptr-connect`）
+- `lib/cdp/transport.cp`：移除 `socket`/`connect`/`send`/`recv`/`fork`/`_exit`/`kill`/`waitpid`/`usleep`/`geteuid` 顶层 `@c` 声明，改用 Zig 原生 `std.c.*`（含 `std.c.SIG.KILL` 与 `std.c.nanosleep`），彻底消除与 `puppeteer.connect` 等符号在单文件 `--flatten` 模式下的 `duplicate struct member name 'connect'` 冲突。
+- `lib/web/openapiSpec.cp`、`lib/web/openapiRoute.cp`、`lib/web/index.cp`、`cap/test/test_openapi_production_deep.cp`：将 OpenAPI 专用 `HttpMethod` 重命名为 `OpenApiHttpMethod`，彻底消除与 `cap:http` `HttpMethod` 的同名 enum 冲突。
+- `packages/playwright/src/{request_context,trace_viewer,remote}.cp`：改用精确子路径导入（`cap:http/method`、`cap:http/client`、`cap:web/app`、`cap:web/server`、`cap:web/wsServer`）。
+- `cap/src/main.zig`：`cap run` 与 `cap build` 默认开启 `--modular`（保留 `--no-modular` / `--flatten` 开关），彻底消除多模块生态包在默认编译时的展平命名冲突；发布 release 版 `/root/.cap/bin/cap`。

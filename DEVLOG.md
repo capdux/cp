@@ -667,3 +667,9 @@
 - **Worker 升级与部署**：在 `/data/dev/cap` 补齐 `registry.capdux.org/<encoded_pkg>` 标准 packument 路由（供 `cap add` 直接拉取），并将 `/v1/registry/sync` 升级为 `env.DB.batch()`（100 条/批）以规避 Cloudflare 1,000 subrequest 限制；通过 `wrangler deploy` 部署上线（保留线上既有 Ed25519 私钥）。
 - **包发布与全量索引同步**：升级 `seed_official.ts` 支持根目录裸包与 `packages/registry.json`，通过一次性临时 admin token（退出自动撤销）发布 `playwright@1.0.0`（1.93 MB）、`puppeteer@25.19.0`（239.3 KB）并同步全量 1,265 条映射至线上 D1/R2。
 - **客户端适配与实测**：将 `cap/src/project/registry.zig` 默认注册表更正为 `https://registry.capdux.org`，`cap/src/project/installer.zig` 无版本参数默认为 `latest`；外部客户端模拟实测 `CAP_REGISTRY=https://registry.capdux.org cap add playwright && cap add puppeteer` 100% 端到端通过。
+
+## 2026-11-28: 结单下游 `capsurf_agy` 工单（`task-capsurf-20261128-pw-httpmethod` & `task-capsurf-20261128-pptr-connect`）
+- **根因与修复**：
+  1. `pptr-connect`：`lib/cdp/transport.cp` 顶层 `@c { fn connect(...); }` 在单文件合并模式与 `puppeteer.connect` 撞名；改用 Zig 原生 `std.c.*`（零顶层 C 符号污染），`cap run` 与 `cap run --flatten` 均一次通过。
+  2. `pw-httpmethod`：`lib/web/openapiSpec.cp` 与 `lib/http/methodparse.cp` 同名 `HttpMethod` 冲突，且多模块生态包在默认 flatten 模式下会将所有传递依赖私有 helper 拍扁导致撞名；① 重命名 `lib/web` 为 `OpenApiHttpMethod`，② `playwright` 改用精确子路径导入，③ `cap run` / `cap build` 默认启用 `--modular`（保留 `--flatten` / `--no-modular` 选项）。
+- **回归全绿**：两复现脚本、`test_openapi` (5/5)、`test_http_method`、`test_cdp` (11/11)、`testCapPuppeteer` (18/18)、`testCapPlaywright` (24/24)、双真实 Chromium `158.0.8127.88` 一行启动烟雾测试及 `test_cap_ai_toolchain.py` (61/61) 全部 PASS。

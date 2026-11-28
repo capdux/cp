@@ -6,7 +6,7 @@ const std = @import("std");
 type Str = []const u8;
 import {
     OpenApiError,
-    HttpMethod,
+    OpenApiHttpMethod,
     ParamIn,
     OpenApiParam,
     OpenApiOperation,
@@ -28,7 +28,7 @@ pub enum MatchStatus: u8 {
 pub struct RouteMatch {
     allocator: std.mem.Allocator = undefined,
     path_template: []const u8 = "",
-    method: HttpMethod = .Get,
+    method: OpenApiHttpMethod = .Get,
     operation_id: []const u8 = "",
     operation: OpenApiOperation = OpenApiOperation{},
     path_params: []KeyValuePair = [],
@@ -58,7 +58,7 @@ pub struct RouteMatchResult {
     allocator: std.mem.Allocator = undefined,
     status: MatchStatus = .NotFound,
     route: RouteMatch? = null,
-    allowed_methods: []HttpMethod = [],
+    allowed_methods: []OpenApiHttpMethod = [],
 
     fn deinit(*_) {
         if (*r := _.route) {
@@ -85,7 +85,7 @@ pub struct ValidationReport {
     operation_id: []const u8 = "",
     path_template: []const u8 = "",
     path_params: []KeyValuePair = [],
-    allowed_methods: []HttpMethod = [],
+    allowed_methods: []OpenApiHttpMethod = [],
     errors: []ValidationErrorItem = [],
 
     fn errorCount(): usize {
@@ -274,7 +274,7 @@ pub struct OpenApiValidator {
         return true;
     }
 
-    fn matchRouteEx(alloc: std.mem.Allocator, method: HttpMethod, raw_path: []const u8): RouteMatchResult! {
+    fn matchRouteEx(alloc: std.mem.Allocator, method: OpenApiHttpMethod, raw_path: []const u8): RouteMatchResult! {
         const clean_path = OpenApiValidator.stripQueryAndFragment(raw_path);
         if (clean_path.len == 0 || clean_path[0] != '/') {
             return RouteMatchResult{
@@ -318,7 +318,7 @@ pub struct OpenApiValidator {
         }
 
         // Gather all methods registered on `best_path` and look for `method`
-        let allowed: std.ArrayList(HttpMethod) = .empty;
+        let allowed: std.ArrayList(OpenApiHttpMethod) = .empty;
         errdefer allowed.deinit(alloc);
 
         let matched_ep: OpenApiEndpoint? = null;
@@ -388,7 +388,7 @@ pub struct OpenApiValidator {
         };
     }
 
-    fn matchRoute(alloc: std.mem.Allocator, method: HttpMethod, raw_path: []const u8): RouteMatch! {
+    fn matchRoute(alloc: std.mem.Allocator, method: OpenApiHttpMethod, raw_path: []const u8): RouteMatch! {
         let res = _.matchRouteEx(alloc, method, raw_path)?;
         switch (res.status) {
             .Matched => {
@@ -408,7 +408,7 @@ pub struct OpenApiValidator {
         }
     }
 
-    fn allowedMethods(alloc: std.mem.Allocator, raw_path: []const u8): ([]HttpMethod)! {
+    fn allowedMethods(alloc: std.mem.Allocator, raw_path: []const u8): ([]OpenApiHttpMethod)! {
         let res = _.matchRouteEx(alloc, .Get, raw_path)?;
         switch (res.status) {
             .NotFound => {
@@ -532,7 +532,7 @@ pub struct OpenApiValidator {
 
     fn validateRequest(
         alloc: std.mem.Allocator,
-        method: HttpMethod,
+        method: OpenApiHttpMethod,
         raw_path: []const u8,
         query_params: []const KeyValuePair,
         headers: []const KeyValuePair,

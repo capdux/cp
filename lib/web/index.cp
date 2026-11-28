@@ -7,7 +7,7 @@
 // --- API Specification, RPC & Webhooks ---
 export {
     OpenApiError,
-    HttpMethod,
+    OpenApiHttpMethod,
     ParamIn,
     SecuritySchemeType,
     OpenApiInfo,

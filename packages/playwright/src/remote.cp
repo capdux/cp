@@ -8,7 +8,7 @@
 // ============================================================================
 
 const std = @import("std");
-import { WsServer, WsServerConfig } from "cap:web";
+import { WsServer, WsServerConfig } from "cap:web/wsServer";
 import { JSON, JsonValue, JsonField } from "cap:json";
 import { CdpFrameScanner, CdpSendTransportFn } from "cap:cdp";
 import { PlaywrightError } from "./network";

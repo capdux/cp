@@ -10,7 +10,8 @@ const std = @import("std");
 import { JSON, JsonValue, JsonField } from "cap:json";
 import { ZipReader } from "cap:pack";
 import { readFileSync, exists } from "cap:fs";
-import { App, Context, Response, WebServer, ServerConfig } from "cap:web";
+import { App, Context, Response } from "cap:web/app";
+import { WebServer, ServerConfig } from "cap:web/server";
 import { PlaywrightError } from "./network";
 
 pub struct TraceViewerOptions {

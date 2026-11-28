@@ -16,18 +16,13 @@ const CdpSockAddrIn = extern struct {
     sin_zero: [8]u8 = [0, 0, 0, 0, 0, 0, 0, 0],
 };
 
+const CdpTimespec = extern struct {
+    tv_sec: isize = 0,
+    tv_nsec: isize = 0,
+};
+
 @c {
-    fn socket(domain: i32, sock_type: i32, protocol: i32): i32;
-    fn connect(sockfd: i32, addr: *const CdpSockAddrIn, addrlen: u32): i32;
-    fn send(sockfd: i32, buf: [*]const u8, len: usize, flags: i32): isize;
-    fn recv(sockfd: i32, buf: [*]u8, len: usize, flags: i32): isize;
-    fn fork(): i32;
     fn execvp(file: [*:0]const u8, argv: [*:null]const ([*:0]const u8)?): i32;
-    fn _exit(status: i32);
-    fn kill(pid: i32, sig: i32): i32;
-    fn waitpid(pid: i32, status: *i32, options: i32): i32;
-    fn usleep(usec: u32): i32;
-    fn geteuid(): u32;
 }
 
 fn cdpHtons(port: u16): u16 {
@@ -42,14 +37,15 @@ fn cdpHtonl(ip: u32): u32 {
 }
 
 fn cdpConnectLoopback(port: u16): i32 {
-    let fd = unsafe { socket(2, 1, 0) };
+    let fd = std.c.socket(2, 1, 0);
     if (fd < 0) return -1;
     let addr = CdpSockAddrIn{
         sin_family: 2,
         sin_port: cdpHtons(port),
         sin_addr: cdpHtonl(0x7f000001),
     };
-    if (unsafe { connect(fd, &addr, 16) } < 0) {
+    const sa_ptr: *const std.c.sockaddr = unsafe { @ptrCast(&addr) };
+    if (std.c.connect(fd, sa_ptr, 16) < 0) {
         * = std.c.close(fd);
         return -1;
     }
@@ -59,7 +55,7 @@ fn cdpConnectLoopback(port: u16): i32 {
 fn cdpSendAll(fd: i32, data: []const u8): bool {
     let sent: usize = 0;
     while (sent < data.len) {
-        let n = unsafe { send(fd, data.ptr + sent, data.len - sent, 0) };
+        let n = std.c.send(fd, data.ptr + sent, data.len - sent, 0);
         if (n <= 0) return false;
         sent += n as usize;
     }
@@ -127,7 +123,7 @@ pub struct CdpNativeWsTransport {
         let tmp: [4096]u8 = undefined;
         let tmp_ptr: [*]u8 = unsafe { @ptrCast(&tmp[0]) };
         while (true) {
-            let n = unsafe { recv(fd, tmp_ptr, tmp.len, 0) };
+            let n = std.c.recv(fd, tmp_ptr, tmp.len, 0);
             if (n <= 0) break;
             buf.appendSlice(alloc, tmp[0..(n as usize)]) catch return null;
             if (hdr_end := std.mem.indexOf(u8, buf.items, "\r\n\r\n")) {
@@ -169,7 +165,7 @@ pub struct CdpNativeWsTransport {
         let resp_ptr: [*]u8 = unsafe { @ptrCast(&resp_buf[0]) };
         let total: usize = 0;
         while (total < resp_buf.len) {
-            let n = unsafe { recv(fd, resp_ptr + total, resp_buf.len - total, 0) };
+            let n = std.c.recv(fd, resp_ptr + total, resp_buf.len - total, 0);
             if (n <= 0) break;
             total += n as usize;
             if (std.mem.indexOf(u8, resp_buf[0..total], "\r\n\r\n") != null) break;
@@ -227,7 +223,7 @@ pub struct CdpNativeWsTransport {
         const allow_z = cdpAllocZ(_.alloc, "--remote-allow-origins=*")?;
         owned_z.append(_.alloc, allow_z) catch return CdpError.OutOfMemory;
         c_strs.append(_.alloc, allow_z.ptr) catch return CdpError.OutOfMemory;
-        if (unsafe { geteuid() } == 0) {
+        if (std.c.geteuid() == 0) {
             const ns_z = cdpAllocZ(_.alloc, "--no-sandbox")?;
             owned_z.append(_.alloc, ns_z) catch return CdpError.OutOfMemory;
             c_strs.append(_.alloc, ns_z.ptr) catch return CdpError.OutOfMemory;
@@ -237,12 +233,12 @@ pub struct CdpNativeWsTransport {
         }
         c_strs.append(_.alloc, null) catch return CdpError.OutOfMemory;
 
-        const pid = unsafe { fork() };
+        const pid = std.c.fork();
         if (pid < 0) return CdpError.ConnectionClosed;
         if (pid == 0) {
             const argv_ptr: [*:null]const ([*:0]const u8)? = unsafe { @ptrCast(c_strs.items.ptr) };
             * = unsafe { execvp(exe_z.ptr, argv_ptr) };
-            unsafe { _exit(127) }
+            std.c._exit(127);
         }
         _.child_pid = pid;
 
@@ -254,7 +250,9 @@ pub struct CdpNativeWsTransport {
                 discovered_ws = ws;
                 break;
             }
-            * = unsafe { usleep(50000) };
+            const ts = CdpTimespec{ tv_sec: 0, tv_nsec: 50_000_000 };
+            const ts_ptr: *const std.c.timespec = unsafe { @ptrCast(&ts) };
+            * = std.c.nanosleep(ts_ptr, null);
         }
         const ws_str = discovered_ws orelse {
             _.close();
@@ -298,7 +296,7 @@ pub struct CdpNativeWsTransport {
     fn recvExact(dst: []u8): bool {
         let got: usize = 0;
         while (got < dst.len) {
-            let n = unsafe { recv(_.fd, dst.ptr + got, dst.len - got, 0) };
+            let n = std.c.recv(_.fd, dst.ptr + got, dst.len - got, 0);
             if (n <= 0) return false;
             got += n as usize;
         }
@@ -372,9 +370,9 @@ pub struct CdpNativeWsTransport {
             _.fd = -1;
         }
         if (_.child_pid > 0) {
-            * = unsafe { kill(_.child_pid, 9) };
+            * = std.c.kill(_.child_pid, std.c.SIG.KILL);
             let st: i32 = 0;
-            * = unsafe { waitpid(_.child_pid, &st, 0) };
+            * = std.c.waitpid(_.child_pid, &st, 0);
             _.child_pid = -1;
         }
     }

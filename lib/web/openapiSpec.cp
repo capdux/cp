@@ -17,7 +17,7 @@ pub err OpenApiError {
     OutOfMemory,
 }
 
-pub enum HttpMethod: u8 {
+pub enum OpenApiHttpMethod: u8 {
     Get = 0,
     Post = 1,
     Put = 2,
@@ -50,7 +50,7 @@ pub enum HttpMethod: u8 {
         };
     }
 
-    static fn fromString(s: []const u8): HttpMethod? {
+    static fn fromString(s: []const u8): OpenApiHttpMethod? {
         if (std.ascii.eqlIgnoreCase(s, "GET")) return .Get;
         if (std.ascii.eqlIgnoreCase(s, "POST")) return .Post;
         if (std.ascii.eqlIgnoreCase(s, "PUT")) return .Put;
@@ -495,7 +495,7 @@ pub struct OpenApiComponentSchema {
 
 pub struct OpenApiEndpoint {
     path: []const u8 = "",
-    method: HttpMethod = .Get,
+    method: OpenApiHttpMethod = .Get,
     operation: OpenApiOperation = OpenApiOperation{},
 }
 
@@ -729,7 +729,7 @@ pub struct OpenApiDoc {
         };
     }
 
-    fn addOperation(*_, path: []const u8, method: HttpMethod, op: OpenApiOperation): ! {
+    fn addOperation(*_, path: []const u8, method: OpenApiHttpMethod, op: OpenApiOperation): ! {
         OpenApiDoc.validatePathTemplate(path)?;
 
         for (resp of op.responses) {
