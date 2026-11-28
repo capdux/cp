@@ -183,6 +183,45 @@ pub struct ElementHandle {
         return _.handle.isDisposed();
     }
 
+    static fn parseQuadToBox(quad_json: []const u8): BoundingBox? {
+        let coords: [8]f64 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let count: usize = 0;
+        let i: usize = 0;
+        while (i < quad_json.len && count < 8) {
+            while (i < quad_json.len && (quad_json[i] == '[' || quad_json[i] == ']' || quad_json[i] == ',' || quad_json[i] == ' ' || quad_json[i] == '\t' || quad_json[i] == '\r' || quad_json[i] == '\n')) {
+                i += 1;
+            }
+            if (i >= quad_json.len) break;
+            const start = i;
+            while (i < quad_json.len && quad_json[i] != ',' && quad_json[i] != ']' && quad_json[i] != ' ' && quad_json[i] != '\t' && quad_json[i] != '\r' && quad_json[i] != '\n') {
+                i += 1;
+            }
+            if (i > start) {
+                const v = std.fmt.parseFloat(f64, quad_json[start..i]) catch return null;
+                coords[count] = v;
+                count += 1;
+            }
+        }
+        if (count < 8) return null;
+        let min_x = coords[0];
+        let max_x = coords[0];
+        let min_y = coords[1];
+        let max_y = coords[1];
+        let k: usize = 2;
+        while (k < 8) : (k += 2) {
+            if (coords[k] < min_x) min_x = coords[k];
+            if (coords[k] > max_x) max_x = coords[k];
+            if (coords[k + 1] < min_y) min_y = coords[k + 1];
+            if (coords[k + 1] > max_y) max_y = coords[k + 1];
+        }
+        return BoundingBox{
+            x: min_x,
+            y: min_y,
+            width: max_x - min_x,
+            height: max_y - min_y,
+        };
+    }
+
     pub fn boundingBox(*_): BoundingBox? {
         if (_.handle.isDisposed()) return null;
         if (_.node_id > 0 && !_.handle.session.detached()) {
@@ -193,8 +232,26 @@ pub struct ElementHandle {
                 "{{\"nodeId\":{d}}}",
                 .{_.node_id},
             ) catch return _.box;
-            const _ign_6 = _.handle.session.send("DOM.getBoxModel", params, &fbuf) catch 0;
-            * = _ign_6;
+            const req_id = _.handle.session.send("DOM.getBoxModel", params, &fbuf) catch 0;
+            if (req_id > 0) {
+                if (resp := _.handle.session.endpoint.takeResponse(req_id)) {
+                    if (resp.is_error) return null;
+                    if (model_json := CdpFrameScanner.extractTopLevelField(resp.result_json, "model", false)) {
+                        if (border_json := CdpFrameScanner.extractTopLevelField(model_json, "border", false)) {
+                            if (parsed := ElementHandle.parseQuadToBox(border_json)) {
+                                _.box = parsed;
+                                return parsed;
+                            }
+                        }
+                        if (content_json := CdpFrameScanner.extractTopLevelField(model_json, "content", false)) {
+                            if (parsed := ElementHandle.parseQuadToBox(content_json)) {
+                                _.box = parsed;
+                                return parsed;
+                            }
+                        }
+                    }
+                }
+            }
         }
         return _.box;
     }

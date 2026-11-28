@@ -51,6 +51,7 @@ pub struct Frame {
     parent_frame: (*Frame)? = null,
     child_frames: [16]*Frame = undefined,
     child_frames_len: usize = 0,
+    doc_root_node_id: i64 = 0,
 
     pub static fn init(session: *CDPSession, frame_id: []const u8, parent_frame_id: []const u8): Frame {
         let f = Frame{
@@ -63,6 +64,7 @@ pub struct Frame {
             detached_flag: false,
             parent_frame: null,
             child_frames_len: 0,
+            doc_root_node_id: 0,
         };
         const init_url = "about:blank";
         @memcpy(f.url_buf[0..init_url.len], init_url);
@@ -124,6 +126,7 @@ pub struct Frame {
 
     pub fn goto(*_, target_url: []const u8, options: GoToOptions): void!PuppeteerError {
         if (_.isDetached()) return PuppeteerError.SessionClosed;
+        _.doc_root_node_id = 0;
         let pbuf: [1024]u8 = undefined;
         let fbuf: [1536]u8 = undefined;
         const req = PageDomain.navigate(
@@ -203,6 +206,7 @@ pub struct Frame {
 
     pub fn setContent(*_, html: []const u8): void!PuppeteerError {
         if (_.isDetached()) return PuppeteerError.SessionClosed;
+        _.doc_root_node_id = 0;
         let pbuf: [4096]u8 = undefined;
         let fbuf: [4608]u8 = undefined;
         const params = std.fmt.bufPrint(
@@ -212,6 +216,35 @@ pub struct Frame {
         ) catch return PuppeteerError.BufferTooSmall;
         const _ign_1 = _.session.send("Page.setDocumentContent", params, &fbuf)?;
         * = _ign_1;
+    }
+
+    fn resolveDocumentRootNodeId(*_, force_refresh: bool): i64!PuppeteerError {
+        if (!force_refresh && _.doc_root_node_id > 0) {
+            return _.doc_root_node_id;
+        }
+        let pbuf: [512]u8 = undefined;
+        let fbuf: [1024]u8 = undefined;
+        const doc_req = DomDomain.getDocument(
+            _.session.endpoint.allocateId(),
+            _.session.id(),
+            DomGetDocumentParams{ depth: 1, pierce: true },
+            &pbuf,
+        ) catch |e| {
+            return mapCdpError(e);
+        };
+        const doc_id = _.session.send(doc_req.method, doc_req.params_json, &fbuf)?;
+        let root_node_id: i64 = 1;
+        if (doc_resp := _.session.endpoint.takeResponse(doc_id)) {
+            if (root_json := CdpFrameScanner.extractTopLevelField(doc_resp.result_json, "root", false)) {
+                if (nid_str := CdpFrameScanner.extractTopLevelField(root_json, "nodeId", false)) {
+                    root_node_id = std.fmt.parseInt(i64, nid_str, 10) catch 1;
+                }
+            } else if (nid_str := CdpFrameScanner.extractTopLevelField(doc_resp.result_json, "nodeId", false)) {
+                root_node_id = std.fmt.parseInt(i64, nid_str, 10) catch 1;
+            }
+        }
+        _.doc_root_node_id = root_node_id;
+        return root_node_id;
     }
 
     pub fn querySelector(*_, selector: []const u8): ElementHandle!PuppeteerError {
@@ -235,40 +268,35 @@ pub struct Frame {
         let pbuf: [512]u8 = undefined;
         let fbuf: [1024]u8 = undefined;
 
-        const doc_req = DomDomain.getDocument(
-            _.session.endpoint.allocateId(),
-            _.session.id(),
-            DomGetDocumentParams{ depth: 1, pierce: true },
-            &pbuf,
-        ) catch |e| {
-            return mapCdpError(e);
-        };
-        const doc_id = _.session.send(doc_req.method, doc_req.params_json, &fbuf)?;
-        let root_node_id: i64 = 1;
-        if (doc_resp := _.session.endpoint.takeResponse(doc_id)) {
-            if (nid_str := CdpFrameScanner.extractTopLevelField(doc_resp.result_json, "nodeId", false)) {
-                root_node_id = std.fmt.parseInt(i64, nid_str, 10) catch 1;
+        let root_node_id = _.resolveDocumentRootNodeId(false)?;
+        let attempt: usize = 0;
+        while (attempt < 2) : (attempt += 1) {
+            const qs_req = DomDomain.querySelector(
+                _.session.endpoint.allocateId(),
+                _.session.id(),
+                DomQuerySelectorParams{ node_id: root_node_id, selector: selector },
+                &pbuf,
+            ) catch |e| {
+                return mapCdpError(e);
+            };
+            const qs_id = _.session.send(qs_req.method, qs_req.params_json, &fbuf)?;
+            if (qs_resp := _.session.endpoint.takeResponse(qs_id)) {
+                if (qs_resp.is_error) {
+                    if (attempt == 0) {
+                        root_node_id = _.resolveDocumentRootNodeId(true)?;
+                        continue;
+                    }
+                    return PuppeteerError.ElementNotFound;
+                }
+                if (nid_str := CdpFrameScanner.extractTopLevelField(qs_resp.result_json, "nodeId", false)) {
+                    const nid = std.fmt.parseInt(i64, nid_str, 10) catch 0;
+                    if (nid <= 0) return PuppeteerError.ElementNotFound;
+                    return ElementHandle.init(_.session, selector, nid, "");
+                }
             }
+            return ElementHandle.init(_.session, selector, root_node_id + 1, "");
         }
-
-        const qs_req = DomDomain.querySelector(
-            _.session.endpoint.allocateId(),
-            _.session.id(),
-            DomQuerySelectorParams{ node_id: root_node_id, selector: selector },
-            &pbuf,
-        ) catch |e| {
-            return mapCdpError(e);
-        };
-        const qs_id = _.session.send(qs_req.method, qs_req.params_json, &fbuf)?;
-        if (qs_resp := _.session.endpoint.takeResponse(qs_id)) {
-            if (qs_resp.is_error) return PuppeteerError.ElementNotFound;
-            if (nid_str := CdpFrameScanner.extractTopLevelField(qs_resp.result_json, "nodeId", false)) {
-                const nid = std.fmt.parseInt(i64, nid_str, 10) catch 0;
-                if (nid <= 0) return PuppeteerError.ElementNotFound;
-                return ElementHandle.init(_.session, selector, nid, "");
-            }
-        }
-        return ElementHandle.init(_.session, selector, root_node_id + 1, "");
+        return PuppeteerError.ElementNotFound;
     }
 
     pub fn querySelectorAll(
@@ -280,20 +308,42 @@ pub struct Frame {
         if (out_handles.len == 0) return 0;
         let pbuf: [512]u8 = undefined;
         let fbuf: [1024]u8 = undefined;
+
+        const root_node_id = _.resolveDocumentRootNodeId(false)?;
+
         const params = std.fmt.bufPrint(
             &pbuf,
-            "{{\"nodeId\":1,\"selector\":\"{s}\"}}",
-            .{selector},
+            "{{\"nodeId\":{d},\"selector\":\"{s}\"}}",
+            .{ root_node_id, selector },
         ) catch return PuppeteerError.BufferTooSmall;
         const req_id = _.session.send("DOM.querySelectorAll", params, &fbuf)?;
         if (resp := _.session.endpoint.takeResponse(req_id)) {
             if (resp.is_error) return 0;
-            if (CdpFrameScanner.extractTopLevelField(resp.result_json, "nodeIds", false) != null) {
-                out_handles[0] = ElementHandle.init(_.session, selector, 2, "");
-                return 1;
+            if (nids_json := CdpFrameScanner.extractTopLevelField(resp.result_json, "nodeIds", false)) {
+                let count: usize = 0;
+                let idx: usize = 0;
+                while (idx < nids_json.len && count < out_handles.len) {
+                    while (idx < nids_json.len && (nids_json[idx] < '0' || nids_json[idx] > '9') && nids_json[idx] != '-') {
+                        idx += 1;
+                    }
+                    if (idx >= nids_json.len) break;
+                    const start = idx;
+                    if (nids_json[idx] == '-') idx += 1;
+                    while (idx < nids_json.len && nids_json[idx] >= '0' && nids_json[idx] <= '9') {
+                        idx += 1;
+                    }
+                    if (idx > start) {
+                        const nid = std.fmt.parseInt(i64, nids_json[start..idx], 10) catch 0;
+                        if (nid > 0) {
+                            out_handles[count] = ElementHandle.init(_.session, selector, nid, "");
+                            count += 1;
+                        }
+                    }
+                }
+                return count;
             }
         }
-        out_handles[0] = ElementHandle.init(_.session, selector, 2, "");
+        out_handles[0] = ElementHandle.init(_.session, selector, root_node_id + 1, "");
         return 1;
     }
 

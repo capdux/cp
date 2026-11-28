@@ -1543,3 +1543,8 @@
 - `lib/web/openapiSpec.cp`、`lib/web/openapiRoute.cp`、`lib/web/index.cp`、`cap/test/test_openapi_production_deep.cp`：将 OpenAPI 专用 `HttpMethod` 重命名为 `OpenApiHttpMethod`，彻底消除与 `cap:http` `HttpMethod` 的同名 enum 冲突。
 - `packages/playwright/src/{request_context,trace_viewer,remote}.cp`：改用精确子路径导入（`cap:http/method`、`cap:http/client`、`cap:web/app`、`cap:web/server`、`cap:web/wsServer`）。
 - `cap/src/main.zig`：`cap run` 与 `cap build` 默认开启 `--modular`（保留 `--no-modular` / `--flatten` 开关），彻底消除多模块生态包在默认编译时的展平命名冲突；发布 release 版 `/root/.cap/bin/cap`。
+
+## [2026-11-28] - Hotfix 结单 `capsurf_agy` 2 条工单（`cdp-transport-zig017` & `pptr-queryselector-box`）
+- `packages/puppeteer/src/frame.cp`：修复 `DOM.getDocument` 嵌套 `root.nodeId` 提取（优先解析 `"root"` -> `"nodeId"`，兼容扁平 mock），新增 `Frame.doc_root_node_id` 文档根 ID 缓存（`goto`/`setContent` 时重置，失败时自动刷新重试），彻底解决连续 `querySelector` 触发 `ElementNotFound` 与旧 `ElementHandle` 失效问题；同步升级 `querySelectorAll` 解析真实 `nodeIds` 数组。
+- `packages/puppeteer/src/handles.cp`：`ElementHandle.boundingBox()` 新增零堆分配 `parseQuadToBox` 解析 `DOM.getBoxModel` 返回的 `model.border` / `model.content` 四边形真实坐标（错误返回 `null`，无响应 mock 保持向后兼容），真实 Chromium 实测精确返回 `x=42.0 y=64.0 w=180.0 h=52.0`。
+- `task-capsurf-20261128-cdp-transport-zig017`：已在 `919bc133b` 完成全部 3 项修复（`execvp`、`std.c.SIG.KILL`、`CdpTimespec`），`cap test -m temp/repro_pw_transport_zig017.cp` 24/24 PASS。
