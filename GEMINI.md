@@ -868,3 +868,10 @@ git status --porcelain cpc_dev/src
 1. **万行级 `.d.ts` / 协议规范优先脚本化按域分桶生成（单文件 < 1,200 行）**：吸收 2.5 万行 Chromium `protocol.d.ts` 与 1 万行 WebKit `protocol.d.ts` 时，严禁人工/智能体逐行手抄；应编写可复用生成器（如 `scripts/gen_protocol_cp.py`）自动处理跨 Domain `import`、关键字转义、非数组循环自引用转为 `(*const T)? = null` 并按域分桶输出（单文件 < 1,200 行），单轮即可产出 3,160+ 强类型且 `cpc check` / `zig ast-check` 100% 通过，节省 >95% Token。
 2. **值返回结构体严禁在构造期持久化栈内字段指针（防移动悬垂）**：当 `launch()` / `init()` 按值返回包含内嵌成员（如 `endpoint: CdpEndpoint`）的结构体时，禁止在返回前将局部 `&browser.endpoint` 持久化给外部回调上下文（返回值拷贝后原栈地址失效会触发 Segfault）；应改用堆分配或在使用入口刷新指针，且必须用真实进程 `cap run -m` + `DebugAllocator` 跑通端到端实测。
 3. **跨库吸收强制使用「去注释有效代码行数 + 公开方法数」脚本审计防遗漏**：评估吸收完整度时，先用只读 Python 脚本剔除 JSDoc/空行并统计模块级有效代码行数与公开方法数，精准定位缺失高频 API（如 `emulate*`/`waitFor*`/`grantPermissions`）后再双路并行补齐，做到差异透明、功能不漏。
+
+
+### 6.16 第 15 轮 3 小时效率与 Token 审计固化铁律（2026-11-28 17:19）
+
+1. **跨平台 OS 分叉补丁采用「编译期默认判定 + 可注入平台枚举」双轨设计（单机全平台一次验证）**：在 Linux 单机环境迁移 macOS / Linux (GTK+WPE) / Windows 平台兼容分支（如 `packages/playwright/src/webkit.cp`）时，统一提供基于 `builtin.os.tag` 的零开销编译期默认判定（`HostPlatform.current()`），同时允许选项结构体/辅助函数显式传入平台枚举；单机 1 轮 `cap test -m` 即可 100% 覆盖三平台全部分支与零泄漏校验，避免跨平台盲区与返工。
+2. **CLI 行为与远端发布状态必须「源码 + 实测」双证核查，严禁凭记忆推断**：核查包安装或发布状态时，必须同时检查源码配置、`DEVLOG.md`/发布脚本与真实 `cap add`/`curl` 实测（例如确认官方实际注册表为 `https://registry.capdux.org` 而非旧残留 `registry.capdux.dev` 或外部 `cap.org`），发现本地解析缺口（如 `cap add` 未回退 `<cap_root>/packages/`）当场修复并实测闭环。
+3. **主/子智能体严格按目录与 `cap test` 互斥分工 + 精确 `git add` 提交**：子智能体独占运行 `cap test -m` 期间，主智能体仅并行处理独立目录源码修改、`scripts/sync_cap.sh` 或只读核查，待子智能体回收后再串行跑全量门禁；提交前始终精确 `git add <files>`，彻底隔离工作区预存无关改动，实现 0 锁冲突、0 误提交。
