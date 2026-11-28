@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer & _ref/playwright CDP protocol | Synced: 2026-11-28
 // ============================================================================
 // lib/cdp/index.cp — Official CP Standard CDP & Browser Protocol Core (cap:cdp)
 // Shared Native Foundation for Puppeteer & Playwright Ecosystems
@@ -49,6 +50,18 @@ export {
     AXNodeSummary,
     AccessibilityDomain,
 } from "./domains";
+
+export {
+    TargetCreateTargetParams,
+    TargetDomain,
+    EmulationDeviceMetricsParams,
+    EmulationDomain,
+    FetchDomain,
+    StorageDomain,
+    BrowserDomain,
+    LogDomain,
+    TracingDomain,
+} from "./devtools_types";
 
 import { CdpFrameScanner } from "./protocol";
 import { CdpEndpoint, CdpSession } from "./session";

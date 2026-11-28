@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/CDPSession.ts | Synced: 2026-11-28
 // ============================================================================
 // lib/cdp/session.cp — CdpEndpoint & CdpSession Multi-Target Routing
 // Handles connection state machine, auto-increment next_id, sessionId

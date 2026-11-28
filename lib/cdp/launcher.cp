@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/browsers/src/launch.ts | Synced: 2026-11-28
 // ============================================================================
 // lib/cdp/launcher.cp — Browser Launch Options, Executable Probing &
 // DevTools WebSocket URL Parser (`DevTools listening on ws://...`)

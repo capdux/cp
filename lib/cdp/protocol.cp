@@ -1,3 +1,4 @@
+// Source: Absorbed from _ref/puppeteer/packages/puppeteer-core/src/cdp/Connection.ts | Synced: 2026-11-28
 // ============================================================================
 // lib/cdp/protocol.cp — Pure CP Chrome DevTools Protocol (JSON-RPC 2.0) Core
 // Zero-Heap Decoding + 16-Lane @Vector(16, u8) SIMD Frame Scanner & ID Parser

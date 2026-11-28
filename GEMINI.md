@@ -854,8 +854,9 @@ git status --porcelain cpc_dev/src
 
 ### 6.14 跨生态迁移、依赖分层与源码溯源规范（2026-11-28 固化）
 
-1. **文件头溯源标注规范**：所有从上游项目吸收或重写的标准库（`lib/`）与生态包（`packages/`）`.cp` 源码文件顶部，应统一保留 `// Source: Absorbed from <upstream_repo_or_path> | Synced: YYYY-MM-DD` 溯源注释，便于后续对比上游版本差异与功能完整性审计。
-2. **开发依赖（`devDependencies`）分层处理策略**：
+1. **文件头溯源标注规范**：所有从上游项目吸收或重写的标准库（`lib/`）与生态包（`packages/`）`.cp` 源码文件顶部，必须统一保留 `// Source: Absorbed from <upstream_repo_or_path> | Synced: YYYY-MM-DD` 溯源注释，便于后续对比上游版本差异与功能完整性审计。
+2. **包级 `MIGRATE.md` 与一键同步脚本规范**：每个从外部吸收或迁移的包目录（如 `packages/puppeteer/MIGRATE.md`、`packages/playwright/MIGRATE.md`、`lib/cdp/MIGRATE.md`）必须维护完整的 `MIGRATE.md`，详细记录上游仓库、版本/Commit、文件对照表、CP 架构优化（所有权借用、`SIMD`/`Arena`/`undefined`、原生 `cap:net`/`cap:web`/`cap:http` 替代）、功能边界及一键同步上游更新的命令（`python3 scripts/sync_upstream_pkg.py`）。
+3. **开发依赖（`devDependencies`）分层处理策略**：
    - `cap from -npm` 仅递归转换运行时 `dependencies`，默认跳过 `devDependencies`；
    - **严禁吸收**纯 JS 构建/Lint/类型工具类开发依赖（如 `eslint`、`prettier`、`typescript`、`@types/*`、`wireit`、`hereby`）；
    - 测试/图像/差异比对等**高价值通用工具依赖**（如 `diff`、`pixelmatch`、`jpeg-js`、`sinon`），优先检查 `cap:*` 内置库与 `packages/registry.json` 覆盖情况，确有缺口时再通过 `cap from -npm <pkg>` 按需吸收为独立裸包。

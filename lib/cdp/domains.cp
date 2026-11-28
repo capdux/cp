@@ -1,3 +1,4 @@
+// Source: Absorbed from devtools-protocol (Chrome DevTools Protocol 1.3) | Synced: 2026-11-28
 // ============================================================================
 // lib/cdp/domains.cp — Strongly-Typed Builders for High-Frequency CDP Domains
 // Page, Runtime, DOM, Input, Network, and Accessibility (AI Agent Perception)
