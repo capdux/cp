@@ -4,7 +4,7 @@ const semver = @import("semver.zig");
 const archive = @import("archive.zig");
 const native = @import("native.zig");
 
-pub const DEFAULT_REGISTRY = "https://registry.capdux.dev";
+pub const DEFAULT_REGISTRY = "https://registry.capdux.org";
 
 pub const ResolvedArtifact = struct {
     tarball: []const u8,
@@ -53,7 +53,7 @@ pub fn hasExplicitRemoteRegistry(manifest_registry: ?[]const u8) bool {
 }
 
 /// Resolves registry base URL with precedence:
-/// CAP_REGISTRY env > cap.json "registry" > DEFAULT_REGISTRY ("https://registry.capdux.dev").
+/// CAP_REGISTRY env > cap.json "registry" > DEFAULT_REGISTRY ("https://registry.capdux.org").
 pub fn resolveRegistryUrl(allocator: std.mem.Allocator, manifest_registry: ?[]const u8) ![]const u8 {
     if (main_mod.global_env.get("CAP_REGISTRY")) |env_reg| {
         if (env_reg.len > 0) {

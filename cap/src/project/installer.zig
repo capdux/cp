@@ -429,7 +429,8 @@ fn installSingleDep(
             }
         } else {
             // Local mock_registry fallback
-            const range = try semver.VersionRange.parse(spec);
+            const range_spec = if (std.mem.eql(u8, spec, "latest")) "*" else spec;
+            const range = try semver.VersionRange.parse(range_spec);
             const best_ver = try resolveBestRegistryVersion(name, range);
             const v_str = try best_ver.format(allocator);
             resolved_ver = v_str;
@@ -640,7 +641,7 @@ fn parseAddSpec(allocator: std.mem.Allocator, raw_arg: []const u8) !struct { nam
         }
         return .{
             .name = try allocator.dupe(u8, raw_arg),
-            .spec = try allocator.dupe(u8, "^0.1.0"),
+            .spec = try allocator.dupe(u8, "latest"),
         };
     }
 
@@ -652,7 +653,7 @@ fn parseAddSpec(allocator: std.mem.Allocator, raw_arg: []const u8) !struct { nam
     }
     return .{
         .name = try allocator.dupe(u8, raw_arg),
-        .spec = try allocator.dupe(u8, "^0.1.0"),
+        .spec = try allocator.dupe(u8, "latest"),
     };
 }
 

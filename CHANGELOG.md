@@ -1532,3 +1532,8 @@
   - **Windows (`Windows`)**：`rewriteProxyServerForPlatform`（`socks5://` -> `socks5h://`）、`clampViewportForPlatform` / `validateViewportForPlatform`（headful 最小视口 `250x240` 钳制）、`buildWebKitLaunchEnv`（persistent context 生成 `CURL_COOKIE_JAR_PATH`）、`--disable-accelerated-compositing` 与 `--curl-proxy` / `--curl-noproxy`。
 - `cap/test/testCapPlaywright.cp`（+275/-11）：新增 Test 24 全面验证 macOS / Linux (WPE+GTK) / Windows 三平台分支，24/24 PASS（1259ms，零泄漏）。
 - `cap/src/project/installer.zig`（+66/-2）：新增 `findLocalEcosystemPkg`（支持 `<cap_root>/packages/<name>` 及 `-`/`_` 归一化兜底），未配置显式远端 registry 时 `cap add playwright` / `cap add puppeteer` 等本地 906 个生态包一键软链接安装并写入 `cap.lock`；已发布 release 版 `cap`（`scripts/sync_cap.sh release`）。
+
+## [2026-11-28] - 正式发布 `playwright@1.0.0`、`puppeteer@25.19.0` 与全量 1,265 条映射至 `capdux.org`，打通全球远端 `cap add`
+- `cap/src/project/registry.zig` & `cap/src/project/installer.zig`：将默认远端注册表修正为 `https://registry.capdux.org`，无版本号 `cap add <pkg>` 默认解析为 `"latest"`（匹配 `dist-tags.latest`），发布 release 版 `/root/.cap/bin/cap`。
+- `capdux.org`（`/data/dev/cap`）：升级 Worker（新增 `registry.capdux.org/<pkg>` 标准 packument 端点、`handleSyncRegistry` 改为 100 条/批 `D1.batch()`）并部署至 Cloudflare（Version `1e960834`）；成功发布 `playwright@1.0.0`（1.93 MB）、`puppeteer@25.19.0`（239.3 KB）并同步全部 **1,265 / 1,265** 条 `packages/registry.json` 映射。
+- 端到端实测通过：`CAP_REGISTRY=https://registry.capdux.org cap add playwright` 与 `cap add puppeteer` 均从 `https://dl.capdux.org` 真实下载 `.cap` 归档、通过 SHA-256 校验并解压软链接至 `cap_modules/`。
