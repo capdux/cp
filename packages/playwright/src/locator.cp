@@ -392,11 +392,47 @@ pub struct Locator {
     }
 
     pub fn count(): usize!PlaywrightError {
-        const res = _.evalSelectorAction("return el ? 1 : 0;")?;
-        if (result_obj := CdpFrameScanner.extractTopLevelField(res, "result", false)) {
-            if (val := CdpFrameScanner.extractTopLevelField(result_obj, "value", false)) {
-                if (n := CdpFrameScanner.parseFastI64(val)) {
-                    if (n >= 0) return n as usize;
+        if (_.endpoint.state != CdpConnectionState.Connected) return PlaywrightError.NotConnected;
+        const sel = _.selector();
+        if (sel.len == 0) return 0;
+
+        let js_buf: [1536]u8 = undefined;
+        let expr: []const u8 = "";
+        if (std.mem.startsWith(u8, sel, "text=")) {
+            const needle = sel[5..];
+            expr = std.fmt.bufPrint(
+                &js_buf,
+                "(() => {{ let c = 0; for (const el of document.querySelectorAll('*')) {{ if ((el.innerText || '').includes('{s}')) c++; }} return c; }})()",
+                .{needle},
+            ) catch return PlaywrightError.BufferTooSmall;
+        } else {
+            expr = std.fmt.bufPrint(
+                &js_buf,
+                "(() => {{ return document.querySelectorAll('{s}').length; }})()",
+                .{sel},
+            ) catch return PlaywrightError.BufferTooSmall;
+        }
+
+        let params_buf: [2048]u8 = undefined;
+        let frame_buf: [2560]u8 = undefined;
+        const req = RuntimeDomain.evaluate(
+            _.endpoint.next_id,
+            _.session_id,
+            RuntimeEvaluateParams{
+                expression: expr,
+                return_by_value: true,
+                await_promise: true,
+            },
+            &params_buf,
+        ) catch return PlaywrightError.BufferTooSmall;
+        const cmd_id = _.endpoint.sendCommand(_.session_id, req.method, req.params_json, &frame_buf) catch return PlaywrightError.ProtocolError;
+        if (resp := _.endpoint.takeResponse(cmd_id)) {
+            if (resp.is_error) return PlaywrightError.ProtocolError;
+            if (result_obj := CdpFrameScanner.extractTopLevelField(resp.result_json, "result", false)) {
+                if (val := CdpFrameScanner.extractTopLevelField(result_obj, "value", false)) {
+                    if (n := CdpFrameScanner.parseFastI64(val)) {
+                        if (n >= 0) return n as usize;
+                    }
                 }
             }
         }

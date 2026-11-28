@@ -166,12 +166,36 @@ pub struct Frame {
         const req_id = _.session.send(req.method, req.params_json, &fbuf)?;
         if (resp := _.session.endpoint.takeResponse(req_id)) {
             if (resp.is_error) {
+                const n = if (resp.error_message.len <= out_buf.len) resp.error_message.len else out_buf.len;
+                if (n > 0) @memcpy(out_buf[0..n], resp.error_message[0..n]);
                 return EvaluateResult{
                     value_json: "null",
                     value_type: "error",
-                    exception_text: resp.error_message,
+                    exception_text: out_buf[0..n],
                     has_exception: true,
                 };
+            }
+            if (exc_details := CdpFrameScanner.extractTopLevelField(resp.result_json, "exceptionDetails", false)) {
+                if (!std.mem.eql(u8, exc_details, "null")) {
+                    let exc_msg: []const u8 = "Uncaught";
+                    if (exc_obj := CdpFrameScanner.extractTopLevelField(exc_details, "exception", false)) {
+                        if (desc := CdpFrameScanner.extractTopLevelField(exc_obj, "description", true)) {
+                            exc_msg = desc;
+                        } else if (txt := CdpFrameScanner.extractTopLevelField(exc_details, "text", true)) {
+                            exc_msg = txt;
+                        }
+                    } else if (txt := CdpFrameScanner.extractTopLevelField(exc_details, "text", true)) {
+                        exc_msg = txt;
+                    }
+                    const n = if (exc_msg.len <= out_buf.len) exc_msg.len else out_buf.len;
+                    if (n > 0) @memcpy(out_buf[0..n], exc_msg[0..n]);
+                    return EvaluateResult{
+                        value_json: "null",
+                        value_type: "error",
+                        exception_text: out_buf[0..n],
+                        has_exception: true,
+                    };
+                }
             }
             const inner_res = CdpFrameScanner.extractTopLevelField(resp.result_json, "result", false)
                 orelse resp.result_json;

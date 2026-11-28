@@ -1548,3 +1548,8 @@
 - `packages/puppeteer/src/frame.cp`：修复 `DOM.getDocument` 嵌套 `root.nodeId` 提取（优先解析 `"root"` -> `"nodeId"`，兼容扁平 mock），新增 `Frame.doc_root_node_id` 文档根 ID 缓存（`goto`/`setContent` 时重置，失败时自动刷新重试），彻底解决连续 `querySelector` 触发 `ElementNotFound` 与旧 `ElementHandle` 失效问题；同步升级 `querySelectorAll` 解析真实 `nodeIds` 数组。
 - `packages/puppeteer/src/handles.cp`：`ElementHandle.boundingBox()` 新增零堆分配 `parseQuadToBox` 解析 `DOM.getBoxModel` 返回的 `model.border` / `model.content` 四边形真实坐标（错误返回 `null`，无响应 mock 保持向后兼容），真实 Chromium 实测精确返回 `x=42.0 y=64.0 w=180.0 h=52.0`。
 - `task-capsurf-20261128-cdp-transport-zig017`：已在 `919bc133b` 完成全部 3 项修复（`execvp`、`std.c.SIG.KILL`、`CdpTimespec`），`cap test -m temp/repro_pw_transport_zig017.cp` 24/24 PASS。
+
+## [2026-11-28] - Hotfix 结单 `capsurf_agy` 5 条真机浏览器工单（`cdp` + `puppeteer` + `playwright` 全绿）
+- `lib/cdp/domains.cp`（`task-capsurf-20261128-cdp-navigate-json-escape`）：新增零堆分配 `cdpWriteJsonEscaped`，全面对 `PageDomain.navigate`、`RuntimeDomain.evaluate`、`DomDomain.querySelector` 中的双引号/反斜杠/换行/控制字符做标准 JSON 转义，彻底消除含引号 `data:` URL 导致的挂起。
+- `packages/playwright/src/{locator,page}.cp`（`task-capsurf-20261128-pw-locator-count-title-ss`）：`Locator.count()` 改用 `document.querySelectorAll(...).length` 返回真实数量；`Page.title()` 改为按需实时求值 `document.title`（`goto()` 自动清缓存）；`Page.screenshot()` 精准提取 `data` base64 负载。真机实测 `title='T' count=2 png_len=6420`，`testCapPlaywright` 24/24 PASS。
+- `packages/puppeteer/src/{frame,handles}.cp`（`pptr-eval-exc`、`pptr-el-eval`、`pptr-hover-box`）：`Frame.evaluate` 解析 `exceptionDetails`；`ElementHandle` 新增 `DOM.resolveNode` 懒解析真实 `objectId` 并通过 `Runtime.callFunctionOn` 提取结果写入 `out_buf`；`hover`/`click`/`tap` 改为先调用 `boundingBox()` 刷新实时坐标。真机实测 3 项全绿，`testCapPuppeteer` 18/18 PASS。

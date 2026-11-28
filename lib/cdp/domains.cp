@@ -7,6 +7,54 @@
 const std = @import("std");
 import { CdpError, CdpRequest, CdpFrameScanner } from "./protocol";
 
+fn cdpWriteRaw(dst: []u8, pos: usize, s: []const u8): usize!CdpError {
+    if (pos + s.len > dst.len) return CdpError.BufferTooSmall;
+    if (s.len > 0) @memcpy(dst[pos .. pos + s.len], s);
+    return pos + s.len;
+}
+
+fn cdpWriteJsonEscaped(dst: []u8, start_pos: usize, s: []const u8): usize!CdpError {
+    let pos = start_pos;
+    for (b of s) {
+        if (b == '"' || b == '\\') {
+            if (pos + 2 > dst.len) return CdpError.BufferTooSmall;
+            dst[pos] = '\\';
+            dst[pos + 1] = b;
+            pos += 2;
+        } else if (b == '\n') {
+            if (pos + 2 > dst.len) return CdpError.BufferTooSmall;
+            dst[pos] = '\\';
+            dst[pos + 1] = 'n';
+            pos += 2;
+        } else if (b == '\r') {
+            if (pos + 2 > dst.len) return CdpError.BufferTooSmall;
+            dst[pos] = '\\';
+            dst[pos + 1] = 'r';
+            pos += 2;
+        } else if (b == '\t') {
+            if (pos + 2 > dst.len) return CdpError.BufferTooSmall;
+            dst[pos] = '\\';
+            dst[pos + 1] = 't';
+            pos += 2;
+        } else if (b < 0x20) {
+            if (pos + 6 > dst.len) return CdpError.BufferTooSmall;
+            const hex = "0123456789abcdef";
+            dst[pos] = '\\';
+            dst[pos + 1] = 'u';
+            dst[pos + 2] = '0';
+            dst[pos + 3] = '0';
+            dst[pos + 4] = hex[(b >> 4) & 0x0f];
+            dst[pos + 5] = hex[b & 0x0f];
+            pos += 6;
+        } else {
+            if (pos + 1 > dst.len) return CdpError.BufferTooSmall;
+            dst[pos] = b;
+            pos += 1;
+        }
+    }
+    return pos;
+}
+
 // ----------------------------------------------------------------------------
 // Page Domain
 // ----------------------------------------------------------------------------
@@ -34,24 +82,18 @@ pub struct PagePrintToPdfParams {
 
 pub struct PageDomain {
     pub static fn navigate(id: i64, session_id: []const u8, p: PageNavigateParams, params_buf: []u8): CdpRequest!CdpError {
-        let s: []const u8 = "";
+        let pos: usize = 0;
+        pos = cdpWriteRaw(params_buf, pos, "{\"url\":\"")?;
+        pos = cdpWriteJsonEscaped(params_buf, pos, p.url)?;
         if (p.referrer.len > 0) {
-            s = std.fmt.bufPrint(
-                params_buf,
-                "{{\"url\":\"{s}\",\"referrer\":\"{s}\"}}",
-                .{ p.url, p.referrer },
-            ) catch return CdpError.BufferTooSmall;
-        } else {
-            s = std.fmt.bufPrint(
-                params_buf,
-                "{{\"url\":\"{s}\"}}",
-                .{p.url},
-            ) catch return CdpError.BufferTooSmall;
+            pos = cdpWriteRaw(params_buf, pos, "\",\"referrer\":\"")?;
+            pos = cdpWriteJsonEscaped(params_buf, pos, p.referrer)?;
         }
+        pos = cdpWriteRaw(params_buf, pos, "\"}")?;
         return CdpRequest{
             id: id,
             method: "Page.navigate",
-            params_json: s,
+            params_json: params_buf[0..pos],
             session_id: session_id,
         };
     }
@@ -104,24 +146,19 @@ pub struct RuntimeDomain {
     pub static fn evaluate(id: i64, session_id: []const u8, p: RuntimeEvaluateParams, params_buf: []u8): CdpRequest!CdpError {
         const rbv: []const u8 = if (p.return_by_value) "true" else "false";
         const ap: []const u8 = if (p.await_promise) "true" else "false";
-        let s: []const u8 = "";
-        if (p.context_id > 0) {
-            s = std.fmt.bufPrint(
-                params_buf,
-                "{{\"expression\":\"{s}\",\"returnByValue\":{s},\"awaitPromise\":{s},\"contextId\":{d}}}",
-                .{ p.expression, rbv, ap, p.context_id },
-            ) catch return CdpError.BufferTooSmall;
-        } else {
-            s = std.fmt.bufPrint(
-                params_buf,
-                "{{\"expression\":\"{s}\",\"returnByValue\":{s},\"awaitPromise\":{s}}}",
-                .{ p.expression, rbv, ap },
-            ) catch return CdpError.BufferTooSmall;
-        }
+        let pos: usize = 0;
+        pos = cdpWriteRaw(params_buf, pos, "{\"expression\":\"")?;
+        pos = cdpWriteJsonEscaped(params_buf, pos, p.expression)?;
+        let tail_buf: [128]u8 = undefined;
+        const tail = if (p.context_id > 0)
+            std.fmt.bufPrint(&tail_buf, "\",\"returnByValue\":{s},\"awaitPromise\":{s},\"contextId\":{d}}}", .{ rbv, ap, p.context_id }) catch return CdpError.BufferTooSmall
+        else
+            std.fmt.bufPrint(&tail_buf, "\",\"returnByValue\":{s},\"awaitPromise\":{s}}}", .{ rbv, ap }) catch return CdpError.BufferTooSmall;
+        pos = cdpWriteRaw(params_buf, pos, tail)?;
         return CdpRequest{
             id: id,
             method: "Runtime.evaluate",
-            params_json: s,
+            params_json: params_buf[0..pos],
             session_id: session_id,
         };
     }
@@ -158,15 +195,16 @@ pub struct DomDomain {
     }
 
     pub static fn querySelector(id: i64, session_id: []const u8, p: DomQuerySelectorParams, params_buf: []u8): CdpRequest!CdpError {
-        const s = std.fmt.bufPrint(
-            params_buf,
-            "{{\"nodeId\":{d},\"selector\":\"{s}\"}}",
-            .{ p.node_id, p.selector },
-        ) catch return CdpError.BufferTooSmall;
+        let head_buf: [64]u8 = undefined;
+        const head = std.fmt.bufPrint(&head_buf, "{{\"nodeId\":{d},\"selector\":\"", .{p.node_id}) catch return CdpError.BufferTooSmall;
+        let pos: usize = 0;
+        pos = cdpWriteRaw(params_buf, pos, head)?;
+        pos = cdpWriteJsonEscaped(params_buf, pos, p.selector)?;
+        pos = cdpWriteRaw(params_buf, pos, "\"}")?;
         return CdpRequest{
             id: id,
             method: "DOM.querySelector",
-            params_json: s,
+            params_json: params_buf[0..pos],
             session_id: session_id,
         };
     }

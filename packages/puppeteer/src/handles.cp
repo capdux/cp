@@ -31,6 +31,87 @@ import {
 import { CDPSession } from "./cdp_session";
 import { Keyboard, Mouse, Touchscreen } from "./input";
 
+fn appendRaw(buf: []u8, pos: *usize, s: []const u8): void!PuppeteerError {
+    if (pos.* + s.len > buf.len) return PuppeteerError.BufferTooSmall;
+    if (s.len > 0) {
+        @memcpy(buf[pos.* .. pos.* + s.len], s);
+        pos.* += s.len;
+    }
+}
+
+fn appendJsonEscaped(buf: []u8, pos: *usize, s: []const u8): void!PuppeteerError {
+    let i: usize = 0;
+    while (i < s.len) : (i += 1) {
+        const ch = s[i];
+        switch (ch) {
+            '"' => appendRaw(buf, pos, "\\\"")?,
+            '\\' => appendRaw(buf, pos, "\\\\")?,
+            '\n' => appendRaw(buf, pos, "\\n")?,
+            '\r' => appendRaw(buf, pos, "\\r")?,
+            '\t' => appendRaw(buf, pos, "\\t")?,
+            else => {
+                if (ch < 0x20) {
+                    let esc_buf: [6]u8 = undefined;
+                    const esc = std.fmt.bufPrint(&esc_buf, "\\u00{x:0>2}", .{ch}) catch return PuppeteerError.BufferTooSmall;
+                    appendRaw(buf, pos, esc)?;
+                } else {
+                    if (pos.* >= buf.len) return PuppeteerError.BufferTooSmall;
+                    buf[pos.*] = ch;
+                    pos.* += 1;
+                }
+            },
+        }
+    }
+}
+
+fn parseEvaluateResponse(resp: CdpResponse, out_buf: []u8): EvaluateResult {
+    if (resp.is_error) {
+        const n = if (resp.error_message.len <= out_buf.len) resp.error_message.len else out_buf.len;
+        if (n > 0) @memcpy(out_buf[0..n], resp.error_message[0..n]);
+        return EvaluateResult{
+            value_json: "null",
+            value_type: "error",
+            exception_text: out_buf[0..n],
+            has_exception: true,
+        };
+    }
+    if (exc_details := CdpFrameScanner.extractTopLevelField(resp.result_json, "exceptionDetails", false)) {
+        if (!std.mem.eql(u8, exc_details, "null")) {
+            let exc_msg: []const u8 = "Uncaught";
+            if (exc_obj := CdpFrameScanner.extractTopLevelField(exc_details, "exception", false)) {
+                if (desc := CdpFrameScanner.extractTopLevelField(exc_obj, "description", true)) {
+                    exc_msg = desc;
+                } else if (txt := CdpFrameScanner.extractTopLevelField(exc_details, "text", true)) {
+                    exc_msg = txt;
+                }
+            } else if (txt := CdpFrameScanner.extractTopLevelField(exc_details, "text", true)) {
+                exc_msg = txt;
+            }
+            const n = if (exc_msg.len <= out_buf.len) exc_msg.len else out_buf.len;
+            if (n > 0) @memcpy(out_buf[0..n], exc_msg[0..n]);
+            return EvaluateResult{
+                value_json: "null",
+                value_type: "error",
+                exception_text: out_buf[0..n],
+                has_exception: true,
+            };
+        }
+    }
+    const inner_res = CdpFrameScanner.extractTopLevelField(resp.result_json, "result", false)
+        orelse resp.result_json;
+    const val = CdpFrameScanner.extractTopLevelField(inner_res, "value", true)
+        orelse CdpFrameScanner.extractTopLevelField(inner_res, "value", false)
+        orelse inner_res;
+    const n = if (val.len <= out_buf.len) val.len else out_buf.len;
+    if (n > 0) @memcpy(out_buf[0..n], val[0..n]);
+    const vtype = CdpFrameScanner.extractTopLevelField(inner_res, "type", true) orelse "object";
+    return EvaluateResult{
+        value_json: out_buf[0..n],
+        value_type: vtype,
+        has_exception: false,
+    };
+}
+
 pub struct JSHandle {
     session: *CDPSession = undefined,
     object_id: []const u8 = "",
@@ -71,25 +152,19 @@ pub struct JSHandle {
 
     pub fn evaluate(*_, expression: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError {
         if (_.disposed) return PuppeteerError.SessionClosed;
-        let pbuf: [1024]u8 = undefined;
-        let fbuf: [1536]u8 = undefined;
-        let params: []const u8 = "";
+        let pbuf: [2048]u8 = undefined;
+        let fbuf: [2560]u8 = undefined;
         if (_.object_id.len > 0) {
-            params = std.fmt.bufPrint(
-                &pbuf,
-                "{{\"functionDeclaration\":\"{s}\",\"objectId\":\"{s}\",\"returnByValue\":true}}",
-                .{ expression, _.object_id },
-            ) catch return PuppeteerError.BufferTooSmall;
+            let pos: usize = 0;
+            appendRaw(&pbuf, &pos, "{\"objectId\":\"")?;
+            appendJsonEscaped(&pbuf, &pos, _.object_id)?;
+            appendRaw(&pbuf, &pos, "\",\"functionDeclaration\":\"")?;
+            appendJsonEscaped(&pbuf, &pos, expression)?;
+            appendRaw(&pbuf, &pos, "\",\"returnByValue\":true}")?;
+            const params = pbuf[0..pos];
             const req_id = _.session.send("Runtime.callFunctionOn", params, &fbuf)?;
-            const _ign_1 = out_buf;
-            * = _ign_1;
             if (resp := _.session.endpoint.takeResponse(req_id)) {
-                if (resp.is_error) return PuppeteerError.EvaluationFailed;
-                return EvaluateResult{
-                    value_json: resp.result_json,
-                    value_type: "object",
-                    has_exception: false,
-                };
+                return parseEvaluateResponse(resp, out_buf);
             }
             return EvaluateResult{ value_json: "null", value_type: "undefined", has_exception: false };
         } else {
@@ -102,15 +177,8 @@ pub struct JSHandle {
                 return mapCdpError(e);
             };
             const req_id = _.session.send(req.method, req.params_json, &fbuf)?;
-            const _ign_2 = out_buf;
-            * = _ign_2;
             if (resp := _.session.endpoint.takeResponse(req_id)) {
-                if (resp.is_error) return PuppeteerError.EvaluationFailed;
-                return EvaluateResult{
-                    value_json: resp.result_json,
-                    value_type: "object",
-                    has_exception: false,
-                };
+                return parseEvaluateResponse(resp, out_buf);
             }
             return EvaluateResult{ value_json: "null", value_type: "undefined", has_exception: false };
         }
@@ -159,6 +227,8 @@ pub struct ElementHandle {
     node_id: i64 = 0,
     backend_node_id: i64 = 0,
     box: BoundingBox = .{ x: 10.0, y: 10.0, width: 100.0, height: 32.0 },
+    resolved_obj_id_buf: [256]u8 = undefined,
+    resolved_obj_id_len: usize = 0,
 
     pub static fn init(
         session: *CDPSession,
@@ -172,6 +242,7 @@ pub struct ElementHandle {
             node_id: node_id,
             backend_node_id: node_id,
             box: BoundingBox{ x: 10.0, y: 10.0, width: 100.0, height: 32.0 },
+            resolved_obj_id_len: 0,
         };
     }
 
@@ -181,6 +252,41 @@ pub struct ElementHandle {
 
     pub fn isDisposed(): bool {
         return _.handle.isDisposed();
+    }
+
+    pub fn ensureObjectId(*_): []const u8 {
+        if (_.resolved_obj_id_len > 0) {
+            _.handle.object_id = _.resolved_obj_id_buf[0.._.resolved_obj_id_len];
+            return _.handle.object_id;
+        }
+        if (_.handle.object_id.len > 0) return _.handle.object_id;
+        if (_.node_id <= 0 || _.handle.isDisposed() || _.handle.session.detached()) return "";
+        let pbuf: [256]u8 = undefined;
+        let fbuf: [512]u8 = undefined;
+        const params = std.fmt.bufPrint(
+            &pbuf,
+            "{{\"nodeId\":{d}}}",
+            .{_.node_id},
+        ) catch return "";
+        const req_id = _.handle.session.send("DOM.resolveNode", params, &fbuf) catch 0;
+        if (req_id > 0) {
+            if (resp := _.handle.session.endpoint.takeResponse(req_id)) {
+                if (!resp.is_error) {
+                    if (obj_json := CdpFrameScanner.extractTopLevelField(resp.result_json, "object", false)) {
+                        if (oid := CdpFrameScanner.extractTopLevelField(obj_json, "objectId", true)) {
+                            if (oid.len > 0) {
+                                const n = if (oid.len <= 256) oid.len else 256;
+                                @memcpy(_.resolved_obj_id_buf[0..n], oid[0..n]);
+                                _.resolved_obj_id_len = n;
+                                _.handle.object_id = _.resolved_obj_id_buf[0..n];
+                                return _.handle.object_id;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     static fn parseQuadToBox(quad_json: []const u8): BoundingBox? {
@@ -296,24 +402,27 @@ pub struct ElementHandle {
 
     pub fn hover(*_): void!PuppeteerError {
         _.scrollIntoViewIfNeeded()?;
-        const cx = _.box.x + (_.box.width / 2.0);
-        const cy = _.box.y + (_.box.height / 2.0);
+        const box = _.boundingBox() orelse return PuppeteerError.ElementNotFound;
+        const cx = box.x + (box.width / 2.0);
+        const cy = box.y + (box.height / 2.0);
         let mouse = Mouse.init(_.handle.session);
         mouse.move(cx, cy)?;
     }
 
     pub fn click(*_, options: ClickOptions): void!PuppeteerError {
         _.scrollIntoViewIfNeeded()?;
-        const cx = _.box.x + (_.box.width / 2.0);
-        const cy = _.box.y + (_.box.height / 2.0);
+        const box = _.boundingBox() orelse return PuppeteerError.ElementNotFound;
+        const cx = box.x + (box.width / 2.0);
+        const cy = box.y + (box.height / 2.0);
         let mouse = Mouse.init(_.handle.session);
         mouse.click(cx, cy, options)?;
     }
 
     pub fn tap(*_): void!PuppeteerError {
         _.scrollIntoViewIfNeeded()?;
-        const cx = _.box.x + (_.box.width / 2.0);
-        const cy = _.box.y + (_.box.height / 2.0);
+        const box = _.boundingBox() orelse return PuppeteerError.ElementNotFound;
+        const cx = box.x + (box.width / 2.0);
+        const cy = box.y + (box.height / 2.0);
         let touch = Touchscreen.init(_.handle.session);
         touch.tap(cx, cy)?;
     }
@@ -380,6 +489,8 @@ pub struct ElementHandle {
     }
 
     pub fn evaluate(*_, expression: []const u8, out_buf: []u8): EvaluateResult!PuppeteerError {
+        const _oid = _.ensureObjectId();
+        * = _oid;
         return _.handle.evaluate(expression, out_buf);
     }
 

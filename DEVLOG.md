@@ -677,3 +677,10 @@
 ## 2026-11-28: 结单下游 `capsurf_agy` 工单（`task-capsurf-20261128-cdp-transport-zig017` & `task-capsurf-20261128-pptr-queryselector-box`）
 - **`cdp-transport-zig017`**：验证 `919bc133b` 修复后 `cap test -m temp/repro_pw_transport_zig017.cp` 24/24 PASS，确认 `execvp`、`std.c.SIG.KILL` 与 `CdpTimespec` 全部兼容 Zig 0.17.0。
 - **`pptr-queryselector-box`**：修复 `frame.cp` 对 `DOM.getDocument` 嵌套 `root.nodeId` 的提取并引入 `doc_root_node_id` 缓存（防止重复 `DOM.getDocument` 使既有 `nodeId` 失效）；在 `handles.cp` 中实现 `parseQuadToBox` 真实解析 `DOM.getBoxModel` 的 `model.border`/`content` 四边形坐标；真实 Chromium 158 端到端实测连续 `querySelector("#a")`/`querySelector("#b")` 与 `el1.boundingBox()`（精确命中 `42.0, 64.0, 180.0, 52.0`）100% PASS，`testCapPuppeteer` 18/18 PASS。
+
+## 2026-11-28: 双路并行结单 `capsurf_agy` 5 条真机 Chromium 深度工单
+- **并行分工**：子智能体专攻 `packages/puppeteer/src/{frame,handles}.cp`（3 条工单），主智能体同步完成 `lib/cdp/domains.cp` JSON 转义与 `packages/playwright/src/{locator,page}.cp` 修复（2 条工单），零文件冲突。
+- **端到端真机实测全绿（Chromium `158.0.8127.88`）**：
+  - Playwright：含双引号 `data:` URL 导航无挂起，`title='T'`、`count=2`、`png_len=6420`、`testCapPlaywright` 24/24 PASS；
+  - Puppeteer：JS `throw` 精确触发 `has_exception=true`（含堆栈）、`el.evaluate` 返回 `'HelloBtn'`、`hover`+`click` 精确命中按钮返回 `'1:1'`、`testCapPuppeteer` 18/18 PASS；
+  - CDP：`test_cdp_production_deep` 11/11 PASS。

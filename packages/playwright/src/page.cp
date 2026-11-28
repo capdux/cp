@@ -278,7 +278,15 @@ pub struct Page {
         return _.current_url_buf[0.._.current_url_len];
     }
 
-    pub fn title(): []const u8 {
+    pub fn title(*_): []const u8 {
+        if (_.current_title_len == 0 && !_.closed && _.endpoint.state == CdpConnectionState.Connected) {
+            const title_res = _.evaluate("document.title") catch "";
+            if (result_obj := CdpFrameScanner.extractTopLevelField(title_res, "result", false)) {
+                if (val := CdpFrameScanner.extractTopLevelField(result_obj, "value", true)) {
+                    _.setTitleInternal(val);
+                }
+            }
+        }
         return _.current_title_buf[0.._.current_title_len];
     }
 
@@ -434,6 +442,7 @@ pub struct Page {
         const nav_res = _.sendCdp(req.method, req.params_json)?;
         * = nav_res;
         _.setUrlInternal(target_url);
+        _.current_title_len = 0;
 
         const duped = _.allocator.dupe(u8, target_url) catch return PlaywrightError.OutOfMemory;
         _.history.append(_.allocator, duped) catch {
@@ -866,7 +875,11 @@ pub struct Page {
             },
             &params_buf,
         ) catch return PlaywrightError.BufferTooSmall;
-        return _.sendCdp(req.method, req.params_json);
+        const res = _.sendCdp(req.method, req.params_json)?;
+        if (b64 := CdpFrameScanner.extractTopLevelField(res, "data", true)) {
+            return b64;
+        }
+        return res;
     }
 
     pub fn pdf(*_, opts: PdfOptions): ([]const u8)!PlaywrightError {
