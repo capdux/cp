@@ -47,6 +47,29 @@ import {
     LaunchOptions,
     ConnectOverCdpOptions,
     chromium,
+    WebKitHostPlatform,
+    WK_MODIFIER_SHIFT,
+    WK_MODIFIER_CONTROL,
+    WK_MODIFIER_ALT,
+    WK_MODIFIER_META,
+    MAC_EDITING_COMMANDS,
+    macEditingCommandFor,
+    formatMacShortcut,
+    macEditingCommandsForKey,
+    wkSetCookieSeparator,
+    joinSetCookieHeaders,
+    splitSetCookieHeader,
+    shouldRecodePngToWebp,
+    resolveSnapshotWireFormat,
+    validateScreenshotDimensionForPlatform,
+    resolveLinuxMiniBrowserSubpath,
+    rewriteProxyServerForPlatform,
+    clampViewportForPlatform,
+    validateViewportForPlatform,
+    freeWebKitLaunchEnv,
+    buildWebKitLaunchEnvWithChannel,
+    buildWebKitLaunchEnv,
+    buildWebKitLaunchArgs,
     WebKitLaunchOptions,
     WkMessageKind,
     WkPageProxySession,
@@ -282,7 +305,7 @@ fn testPageNavigationContentAndCdpDomains(): !void {
         transport_ctx: unsafe { @intFromPtr(&transport) },
     })?;
 
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
     expect_eq(std.mem.eql(u8, page.url(), "about:blank"), true);
 
     const resp1 = page.goto("https://example.com/login", .{})?;
@@ -334,7 +357,7 @@ fn testLocatorSelectorsChainingAndActions(): !void {
         transport_fn: mockTransportSend,
         transport_ctx: unsafe { @intFromPtr(&transport) },
     })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
 
     // Semantic locator compilation
     const by_role = page.getByRole("button", .{ name: "Submit", exact: true });
@@ -486,7 +509,7 @@ fn testAriaSnapshotAndCdpAXTree(): !void {
         transport_fn: mockTransportSend,
         transport_ctx: unsafe { @intFromPtr(&transport) },
     })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
     let page_snap = page.ariaSnapshot(alloc)?;
     expect_eq(std.mem.eql(u8, transport.lastMethod(), "Accessibility.getFullAXTree"), true);
     page_snap.deinit();
@@ -511,7 +534,7 @@ fn testActionabilityEngineAndSimdSelectors(): !void {
         transport_fn: mockTransportSend,
         transport_ctx: unsafe { @intFromPtr(&transport) },
     })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
     const btn = page.locator("#submit-btn");
 
     // 1. Force mode bypasses CDP wait and succeeds immediately
@@ -549,7 +572,7 @@ fn testClockTimeControl(): !void {
         transport_fn: mockTransportSend,
         transport_ctx: unsafe { @intFromPtr(&transport) },
     })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
     let clk = page.clock();
 
     expect_eq(clk.mode == ClockMode.Real, true);
@@ -602,7 +625,7 @@ fn testArtifactsDownloadFileChooserConsoleAndHar(): !void {
         transport_fn: mockTransportSend,
         transport_ctx: unsafe { @intFromPtr(&transport) },
     })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
     let fc = FileChooser.init(alloc, "input[type=file]", true, &browser.endpoint, page.session_id);
     expect_eq(fc.isMultiple(), true);
     const files: [2][]const u8 = .{ "/tmp/a.txt", "/tmp/b.txt" };
@@ -756,7 +779,7 @@ fn testFrameTreeManagement(): !void {
 
     let transport = MockCdpTransport{};
     let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
 
     const mf = page.mainFrame()?;
     expect_eq(mf.parentFrame() == null, true);
@@ -833,7 +856,7 @@ fn testCoverageRecorder(): !void {
 
     let transport = MockCdpTransport{};
     let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
 
     let cov = page.coverage();
     expect_eq(cov.isJSCoverageActive(), false);
@@ -907,7 +930,7 @@ fn testWebSocketRouteAndVideoScreencast(): !void {
 
     let transport = MockCdpTransport{};
     let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
 
     let ws_state = WsRouteTestState{};
     page.routeWebSocket("wss://echo.example.com/*", testWsRouteHandler, unsafe { @intFromPtr(&ws_state) })?;
@@ -1132,7 +1155,7 @@ fn testPageFullDomEmulationAndWaits(): !void {
 
     let transport = MockCdpTransport{};
     let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
 
     // Scripts, styles, bindings
     page.addInitScript("window.__init = true;")?;
@@ -1290,7 +1313,7 @@ fn testFrameFullActionsAndSelectors(): !void {
 
     let transport = MockCdpTransport{};
     let browser = chromium.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&transport) })?;
-    const page = browser.newPage()?;
+    let page = browser.newPage()?;
     const mf = page.mainFrame()?;
 
     expect_eq(mf.isDetached(), false);
@@ -1490,6 +1513,244 @@ fn testNetworkRequestResponseRouteFullApi(): !void {
     expect_eq(gpa.deinit() == .ok, true);
 }
 
+fn testWebKitCrossPlatformPatches(): !void {
+    let gpa: std.heap.DebugAllocator(.{}) = .{};
+    const alloc = gpa.allocator();
+
+    // 1. Compile-time host platform detection
+    const cur_plat = WebKitHostPlatform.current();
+    expect_eq(
+        cur_plat == WebKitHostPlatform.Linux ||
+            cur_plat == WebKitHostPlatform.Darwin ||
+            cur_plat == WebKitHostPlatform.Windows,
+        true,
+    );
+
+    // 2. macOS Cocoa editing commands (full table, single & multi-command arrays, modifier ordering)
+    expect_eq(MAC_EDITING_COMMANDS.len, 114);
+    if (cmds := macEditingCommandFor("Meta+KeyC")) {
+        expect_eq(cmds.len, 1);
+        expect_eq(std.mem.eql(u8, cmds[0], "copy:"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    if (cmds := macEditingCommandFor("Shift+Meta+KeyZ")) {
+        expect_eq(cmds.len, 1);
+        expect_eq(std.mem.eql(u8, cmds[0], "redo:"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    if (cmds := macEditingCommandFor("Control+KeyO")) {
+        expect_eq(cmds.len, 2);
+        expect_eq(std.mem.eql(u8, cmds[0], "insertNewlineIgnoringFieldEditor:"), true);
+        expect_eq(std.mem.eql(u8, cmds[1], "moveBackward:"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    if (cmds := macEditingCommandFor("Alt+ArrowUp")) {
+        expect_eq(cmds.len, 2);
+        expect_eq(std.mem.eql(u8, cmds[0], "moveBackward:"), true);
+        expect_eq(std.mem.eql(u8, cmds[1], "moveToBeginningOfParagraph:"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    if (cmds := macEditingCommandFor("Alt+ArrowDown")) {
+        expect_eq(cmds.len, 2);
+        expect_eq(std.mem.eql(u8, cmds[0], "moveForward:"), true);
+        expect_eq(std.mem.eql(u8, cmds[1], "moveToEndOfParagraph:"), true);
+    } else {
+        expect_eq(true, false);
+    }
+    expect_eq(macEditingCommandFor("Meta+KeyUnknown") == null, true);
+
+    // Canonical modifier order: Shift+Control+Alt+Meta+code
+    let sc_buf: [64]u8 = undefined;
+    const sc = formatMacShortcut(WK_MODIFIER_SHIFT | WK_MODIFIER_CONTROL | WK_MODIFIER_ALT, "KeyB", &sc_buf);
+    expect_eq(std.mem.eql(u8, sc, "Shift+Control+Alt+KeyB"), true);
+    if (cmds := macEditingCommandsForKey(WK_MODIFIER_SHIFT | WK_MODIFIER_CONTROL | WK_MODIFIER_ALT, "KeyB")) {
+        expect_eq(cmds.len, 1);
+        expect_eq(std.mem.eql(u8, cmds[0], "moveWordBackwardAndModifySelection:"), true);
+    } else {
+        expect_eq(true, false);
+    }
+
+    // 3. Set-Cookie separator & join/split helpers across platforms
+    expect_eq(std.mem.eql(u8, wkSetCookieSeparator(WebKitHostPlatform.Darwin), ","), true);
+    expect_eq(std.mem.eql(u8, wkSetCookieSeparator(WebKitHostPlatform.Linux), "playwright-set-cookie-separator"), true);
+    expect_eq(std.mem.eql(u8, wkSetCookieSeparator(WebKitHostPlatform.Windows), "playwright-set-cookie-separator"), true);
+
+    const sample_cookies: [2][]const u8 = .{ "a=1; Path=/", "b=2; HttpOnly" };
+    const darwin_joined = joinSetCookieHeaders(alloc, WebKitHostPlatform.Darwin, &sample_cookies)?;
+    expect_eq(std.mem.eql(u8, darwin_joined, "a=1; Path=/,b=2; HttpOnly"), true);
+    const darwin_parts = splitSetCookieHeader(alloc, WebKitHostPlatform.Darwin, darwin_joined)?;
+    expect_eq(darwin_parts.len, 2);
+    expect_eq(std.mem.eql(u8, darwin_parts[0], "a=1; Path=/"), true);
+    expect_eq(std.mem.eql(u8, darwin_parts[1], "b=2; HttpOnly"), true);
+    alloc.free(darwin_parts);
+    alloc.free(darwin_joined);
+
+    const linux_joined = joinSetCookieHeaders(alloc, WebKitHostPlatform.Linux, &sample_cookies)?;
+    expect_eq(std.mem.eql(u8, linux_joined, "a=1; Path=/playwright-set-cookie-separatorb=2; HttpOnly"), true);
+    const linux_parts = splitSetCookieHeader(alloc, WebKitHostPlatform.Linux, linux_joined)?;
+    expect_eq(linux_parts.len, 2);
+    expect_eq(std.mem.eql(u8, linux_parts[0], "a=1; Path=/"), true);
+    expect_eq(std.mem.eql(u8, linux_parts[1], "b=2; HttpOnly"), true);
+    alloc.free(linux_parts);
+    alloc.free(linux_joined);
+
+    // 4. macOS webp screenshot recode flag & Cairo 32767 dimension guard
+    expect_eq(shouldRecodePngToWebp(WebKitHostPlatform.Darwin, "webp"), true);
+    expect_eq(shouldRecodePngToWebp(WebKitHostPlatform.Darwin, "png"), false);
+    expect_eq(shouldRecodePngToWebp(WebKitHostPlatform.Linux, "webp"), false);
+    expect_eq(shouldRecodePngToWebp(WebKitHostPlatform.Windows, "webp"), false);
+
+    expect_eq(std.mem.eql(u8, resolveSnapshotWireFormat(WebKitHostPlatform.Darwin, "webp"), "png"), true);
+    expect_eq(std.mem.eql(u8, resolveSnapshotWireFormat(WebKitHostPlatform.Linux, "webp"), "webp"), true);
+    expect_eq(std.mem.eql(u8, resolveSnapshotWireFormat(WebKitHostPlatform.Windows, "jpeg"), "jpeg"), true);
+
+    validateScreenshotDimensionForPlatform(WebKitHostPlatform.Darwin, 40000, 2.0, false)?;
+    let linux_dim_err = false;
+    validateScreenshotDimensionForPlatform(WebKitHostPlatform.Linux, 20000, 2.0, false) catch {
+        linux_dim_err = true;
+    };
+    expect_eq(linux_dim_err, true);
+    validateScreenshotDimensionForPlatform(WebKitHostPlatform.Linux, 20000, 2.0, true)?;
+
+    // 5. Linux headless WPE vs headful GTK MiniBrowser subpath & launch args
+    expect_eq(std.mem.eql(u8, resolveLinuxMiniBrowserSubpath(true), "minibrowser-wpe/MiniBrowser"), true);
+    expect_eq(std.mem.eql(u8, resolveLinuxMiniBrowserSubpath(false), "minibrowser-gtk/MiniBrowser"), true);
+
+    const linux_args = buildWebKitLaunchArgs(alloc, WebKitHostPlatform.Linux, WebKitLaunchOptions{
+        headless: true,
+        proxy_server: "socks5://127.0.0.1:1080",
+        proxy_bypass: "localhost,127.0.0.1",
+    })?;
+    let linux_has_proxy = false;
+    let linux_ignore_count: usize = 0;
+    let linux_has_headless = false;
+    for (a of linux_args) {
+        if (std.mem.eql(u8, a, "--headless")) linux_has_headless = true;
+        if (std.mem.eql(u8, a, "--proxy=socks5://127.0.0.1:1080")) linux_has_proxy = true;
+        if (std.mem.eql(u8, a, "--ignore-host=localhost") || std.mem.eql(u8, a, "--ignore-host=127.0.0.1")) {
+            linux_ignore_count += 1;
+        }
+    }
+    expect_eq(linux_has_headless, true);
+    expect_eq(linux_has_proxy, true);
+    expect_eq(linux_ignore_count, 2);
+    webkit.freeLaunchArgs(alloc, linux_args);
+
+    const darwin_args = buildWebKitLaunchArgs(alloc, WebKitHostPlatform.Darwin, WebKitLaunchOptions{
+        headless: false,
+        proxy_server: "http://proxy.local:8080",
+        proxy_bypass: "localhost,*.internal",
+    })?;
+    let darwin_has_bypass_list = false;
+    let darwin_has_headless = false;
+    for (a of darwin_args) {
+        if (std.mem.eql(u8, a, "--headless")) darwin_has_headless = true;
+        if (std.mem.eql(u8, a, "--proxy-bypass-list=localhost,*.internal")) darwin_has_bypass_list = true;
+    }
+    expect_eq(darwin_has_headless, false);
+    expect_eq(darwin_has_bypass_list, true);
+    webkit.freeLaunchArgs(alloc, darwin_args);
+
+    // 6. Windows socks5:// -> socks5h:// rewrite, launch args, viewport clamp (250x240), CURL_COOKIE_JAR_PATH
+    const win_socks = rewriteProxyServerForPlatform(alloc, WebKitHostPlatform.Windows, "socks5://127.0.0.1:9050")?;
+    expect_eq(std.mem.eql(u8, win_socks, "socks5h://127.0.0.1:9050"), true);
+    alloc.free(win_socks);
+
+    const linux_socks = rewriteProxyServerForPlatform(alloc, WebKitHostPlatform.Linux, "socks5://127.0.0.1:9050")?;
+    expect_eq(std.mem.eql(u8, linux_socks, "socks5://127.0.0.1:9050"), true);
+    alloc.free(linux_socks);
+
+    const win_http = rewriteProxyServerForPlatform(alloc, WebKitHostPlatform.Windows, "http://127.0.0.1:8080")?;
+    expect_eq(std.mem.eql(u8, win_http, "http://127.0.0.1:8080"), true);
+    alloc.free(win_http);
+
+    const win_args = buildWebKitLaunchArgs(alloc, WebKitHostPlatform.Windows, WebKitLaunchOptions{
+        headless: false,
+        user_data_dir: "C:\\pw\\profile",
+        proxy_server: "socks5://127.0.0.1:1080",
+        proxy_bypass: "localhost",
+    })?;
+    let win_has_dac = false;
+    let win_has_curl_proxy = false;
+    let win_has_curl_noproxy = false;
+    let win_has_blank = false;
+    for (a of win_args) {
+        if (std.mem.eql(u8, a, "--disable-accelerated-compositing")) win_has_dac = true;
+        if (std.mem.eql(u8, a, "--curl-proxy=socks5h://127.0.0.1:1080")) win_has_curl_proxy = true;
+        if (std.mem.eql(u8, a, "--curl-noproxy=localhost")) win_has_curl_noproxy = true;
+        if (std.mem.eql(u8, a, "about:blank")) win_has_blank = true;
+    }
+    expect_eq(win_has_dac, true);
+    expect_eq(win_has_curl_proxy, true);
+    expect_eq(win_has_curl_noproxy, true);
+    expect_eq(win_has_blank, true);
+    webkit.freeLaunchArgs(alloc, win_args);
+
+    // Viewport clamp & validation: Windows headful clamps to 250x240, headless does not clamp
+    const vp_win_headful = clampViewportForPlatform(WebKitHostPlatform.Windows, false, 100, 120);
+    expect_eq(vp_win_headful.width, 250);
+    expect_eq(vp_win_headful.height, 240);
+
+    const vp_win_headless = clampViewportForPlatform(WebKitHostPlatform.Windows, true, 100, 120);
+    expect_eq(vp_win_headless.width, 100);
+    expect_eq(vp_win_headless.height, 120);
+
+    const vp_linux_headful = clampViewportForPlatform(WebKitHostPlatform.Linux, false, 100, 120);
+    expect_eq(vp_linux_headful.width, 100);
+    expect_eq(vp_linux_headful.height, 120);
+
+    let win_vp_err = false;
+    validateViewportForPlatform(WebKitHostPlatform.Windows, false, 200, 300) catch {
+        win_vp_err = true;
+    };
+    expect_eq(win_vp_err, true);
+    validateViewportForPlatform(WebKitHostPlatform.Windows, true, 200, 300)?;
+
+    // CURL_COOKIE_JAR_PATH env var on Windows persistent context only (non-WSL)
+    const win_env = buildWebKitLaunchEnv(alloc, WebKitHostPlatform.Windows, "C:\\pw\\profile")?;
+    expect_eq(win_env.len, 1);
+    expect_eq(std.mem.eql(u8, win_env[0].key, "CURL_COOKIE_JAR_PATH"), true);
+    expect_eq(std.mem.eql(u8, win_env[0].value, "C:\\pw\\profile\\cookiejar.db"), true);
+    freeWebKitLaunchEnv(alloc, win_env);
+
+    const win_env_empty = buildWebKitLaunchEnv(alloc, WebKitHostPlatform.Windows, "")?;
+    expect_eq(win_env_empty.len, 0);
+    freeWebKitLaunchEnv(alloc, win_env_empty);
+
+    const win_env_wsl = buildWebKitLaunchEnvWithChannel(alloc, WebKitHostPlatform.Windows, "C:\\pw\\profile", "webkit-wsl")?;
+    expect_eq(win_env_wsl.len, 0);
+    freeWebKitLaunchEnv(alloc, win_env_wsl);
+
+    const linux_env = buildWebKitLaunchEnv(alloc, WebKitHostPlatform.Linux, "/tmp/pw-profile")?;
+    expect_eq(linux_env.len, 0);
+    freeWebKitLaunchEnv(alloc, linux_env);
+
+    // 7. Integration on WebKitPage: keyboardDown injects macCommands, screenshot routes webp->png on Darwin
+    let mock = MockCdpTransport{};
+    let browser = webkit.launchWithTransport(alloc, .{}, mockTransportSend, unsafe { @intFromPtr(&mock) })?;
+    let page = browser.newPage()?;
+    page.host_platform = WebKitHostPlatform.Darwin;
+    page.keyboardDown("KeyO", WK_MODIFIER_CONTROL)?;
+    expect_eq(std.mem.indexOf(u8, mock.lastPayload(), "\"macCommands\":[\"insertNewlineIgnoringFieldEditor:\",\"moveBackward:\"]") != null, true);
+
+    * = page.screenshot(.{ format: "webp", quality: 80 })?;
+    expect_eq(page.last_screenshot_recoded_webp, true);
+    expect_eq(std.mem.indexOf(u8, mock.lastPayload(), "\"format\":\"png\"") != null, true);
+
+    page.host_platform = WebKitHostPlatform.Windows;
+    page.headless = false;
+    page.setViewport(120, 100)?;
+    expect_eq(page.viewport_width, 250);
+    expect_eq(page.viewport_height, 240);
+
+    browser.deinit();
+    expect_eq(gpa.deinit() == .ok, true);
+}
+
 fn main() {
     test("1. Chromium Launch, Args Builder & Executable Probing", () => {
         testChromiumLaunchAndLauncherProbe() catch unreachable;
@@ -1559,5 +1820,8 @@ fn main() {
     });
     test("23. Network Request, Response & Route Full API Surface", () => {
         testNetworkRequestResponseRouteFullApi() catch unreachable;
+    });
+    test("24. WebKit Cross-Platform Patches (macOS / Linux GTK & WPE / Windows)", () => {
+        testWebKitCrossPlatformPatches() catch unreachable;
     });
 }

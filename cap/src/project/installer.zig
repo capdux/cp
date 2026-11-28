@@ -255,6 +255,46 @@ fn localRegistryHasPkg(name: []const u8) bool {
     return true;
 }
 
+/// Checks `<cap_root>/packages/<name>` (with `-`/`_` normalization fallback) for an installed local ecosystem package.
+fn findLocalEcosystemPkg(allocator: std.mem.Allocator, name: []const u8) ?[]u8 {
+    if (main_mod.cap_root.len == 0) return null;
+
+    // 1. Direct match: <cap_root>/packages/<name>
+    if (tryEcosystemPkgDir(allocator, name)) |p| return p;
+
+    // 2. Fallback: swap '-' <-> '_' for non-scoped names (or scoped leaf name)
+    if (std.mem.indexOfAny(u8, name, "-_") != null) {
+        const alt = allocator.dupe(u8, name) catch return null;
+        defer allocator.free(alt);
+        for (alt) |*ch| {
+            if (ch.* == '-') {
+                ch.* = '_';
+            } else if (ch.* == '_') {
+                ch.* = '-';
+            }
+        }
+        if (tryEcosystemPkgDir(allocator, alt)) |p| return p;
+    }
+    return null;
+}
+
+fn tryEcosystemPkgDir(allocator: std.mem.Allocator, rel_name: []const u8) ?[]u8 {
+    const candidate = std.Io.Dir.path.join(allocator, &[_][]const u8{ main_mod.cap_root, "packages", rel_name }) catch return null;
+    const mf_path = std.Io.Dir.path.join(allocator, &[_][]const u8{ candidate, "cap.json" }) catch {
+        allocator.free(candidate);
+        return null;
+    };
+    defer allocator.free(mf_path);
+
+    if (std.Io.Dir.openFileAbsolute(main_mod.global_io, mf_path, .{})) |f| {
+        f.close(main_mod.global_io);
+        return candidate;
+    } else |_| {}
+
+    allocator.free(candidate);
+    return null;
+}
+
 fn installSingleDep(
     allocator: std.mem.Allocator,
     name: []const u8,
@@ -321,8 +361,32 @@ fn installSingleDep(
             resolved_ver = try allocator.dupe(u8, "0.0.0");
         }
     } else {
-        const use_remote = registry.hasExplicitRemoteRegistry(manifest_registry) or !localRegistryHasPkg(name);
-        if (use_remote) {
+        const explicit_remote = registry.hasExplicitRemoteRegistry(manifest_registry);
+        const local_eco_dir = if (!explicit_remote and !localRegistryHasPkg(name))
+            findLocalEcosystemPkg(allocator, name)
+        else
+            null;
+
+        if (local_eco_dir) |eco_dir| {
+            resolved_dir = eco_dir;
+            owns_resolved_dir = true;
+            resolved_url = try std.fmt.allocPrint(allocator, "local-pkg:{s}", .{eco_dir});
+
+            const mf_path = try std.Io.Dir.path.join(allocator, &[_][]const u8{ eco_dir, "cap.json" });
+            defer allocator.free(mf_path);
+            if (readFileAny(allocator, mf_path)) |content| {
+                defer allocator.free(content);
+                if (manifest.Manifest.parse(allocator, content)) |pmf_val| {
+                    var pmf = pmf_val;
+                    defer pmf.deinit(allocator);
+                    resolved_ver = try allocator.dupe(u8, pmf.version);
+                } else |_| {
+                    resolved_ver = try allocator.dupe(u8, "0.1.0");
+                }
+            } else |_| {
+                resolved_ver = try allocator.dupe(u8, "0.1.0");
+            }
+        } else if (explicit_remote or !localRegistryHasPkg(name)) {
             const reg_url = try registry.resolveRegistryUrl(allocator, manifest_registry);
             defer allocator.free(reg_url);
 

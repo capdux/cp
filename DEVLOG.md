@@ -657,3 +657,8 @@
 
 ## 2026-11-28: 吸收 Playwright WebKit 协议驱动与独立二进制安装指南
 - 吸收 `_ref/playwright/packages/playwright-core/src/server/webkit/` 为纯 CP 驱动 `webkit.cp`，复用 `cap:cdp` 16-lane SIMD JSON 扫描解析 WebKit Inspector JSON-RPC 帧与 `pageProxyId` 多目标会话，并在三语 README 与 `MIGRATE.md` 给出开源 WebKit 二进制安装方式；19/19 单测零泄漏通过。
+
+## 2026-11-28: 补齐 Playwright WebKit 跨平台分叉补丁（macOS/GTK/WPE/Win32）+ 打通 `cap add` 本地生态包直装与 `capdux.org` 状态核查
+- **WebKit 跨平台零遗漏补全**：通过并行子智能体逐行核对 `_ref/playwright/packages/playwright-core/src/server/macEditingCommands.ts` 与 `webkit/{webkit,wkBrowser,wkInput,wkInterceptableRequest,wkPage}.ts`，采用 `builtin.os.tag` 编译期判定 + `WebKitHostPlatform` 枚举在 `packages/playwright/src/webkit.cp` 零开销落地全部三平台差异（114 条 macOS editing commands、Set-Cookie 分隔符、macOS webp 截图转码标记、Cairo 32767px 上限、Linux WPE/GTK 选路、Windows `socks5h://` 重写 / `250x240` 最小视口 / `CURL_COOKIE_JAR_PATH`），`cap test -m cap/test/testCapPlaywright.cp` 24/24 PASS。
+- **`cap add` 实测与修复**：实测发现原先 `cap add playwright` / `cap add puppeteer` 仅查 `mock_registry/` 后即直连失效旧域名 `https://registry.capdux.dev` 报错 `UnknownHostName`。遂在 `cap/src/project/installer.zig` 增加 `<cap_root>/packages/<name>` 本地生态包直连解析并发布 release 版 `cap`，实测 `cap add puppeteer`（`25.19.0`）与 `cap add playwright`（`1.0.0`）一键软链接至 `cap_modules/` 并生成 `cap.lock`；同时核实线上注册表 `https://registry.capdux.org` 尚未发布 `puppeteer` / `playwright`（当前环境未注入 `CAPDUX_TOKEN`，待提供 Token 后可通过 `/data/dev/cap/scripts/seed_official.ts` 一键推送上线）。
+- **门禁回归**：`check_ecosystem_health.py` 16/16 PASS，`test_cap_ai_toolchain.py` 61/61 PASS。

@@ -6,6 +6,7 @@
 // ============================================================================
 
 const std = @import("std");
+const builtin = @import("builtin");
 import {
     CdpFrameScanner,
     CdpSendTransportFn,
@@ -27,8 +28,558 @@ pub const WK_BROWSER_VERSION: []const u8 = "27.2";
 pub const WK_DEFAULT_USER_AGENT: []const u8 = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15";
 pub const WK_BROWSER_CLOSE_MESSAGE_ID: i64 = -9999;
 
+// ============================================================================
+// Cross-Platform WebKit Host Support (macOS / Linux GTK & WPE / Windows)
+// Absorbed from:
+//   - _ref/playwright/packages/playwright-core/src/server/macEditingCommands.ts
+//   - _ref/playwright/packages/playwright-core/src/server/webkit/webkit.ts
+//   - _ref/playwright/packages/playwright-core/src/server/webkit/wkBrowser.ts
+//   - _ref/playwright/packages/playwright-core/src/server/webkit/wkInput.ts
+//   - _ref/playwright/packages/playwright-core/src/server/webkit/wkInterceptableRequest.ts
+//   - _ref/playwright/packages/playwright-core/src/server/webkit/wkPage.ts
+// ============================================================================
+
+pub enum WebKitHostPlatform {
+    Darwin,
+    Linux,
+    Windows,
+
+    pub static fn current(): WebKitHostPlatform {
+        return switch (builtin.os.tag) {
+            .macos => WebKitHostPlatform.Darwin,
+            .windows => WebKitHostPlatform.Windows,
+            else => WebKitHostPlatform.Linux,
+        };
+    }
+}
+
+pub const WK_SET_COOKIE_SEP_DARWIN: []const u8 = ",";
+pub const WK_SET_COOKIE_SEP_OTHER: []const u8 = "playwright-set-cookie-separator";
+pub const WK_CAIRO_MAX_SCREENSHOT_DIM: u32 = 32767;
+pub const WK_WINDOWS_MIN_VIEWPORT_WIDTH: u32 = 250;
+pub const WK_WINDOWS_MIN_VIEWPORT_HEIGHT: u32 = 240;
+
+pub const WK_MODIFIER_SHIFT: u32 = 1;
+pub const WK_MODIFIER_CONTROL: u32 = 2;
+pub const WK_MODIFIER_ALT: u32 = 4;
+pub const WK_MODIFIER_META: u32 = 8;
+
+pub struct MacEditingCommandEntry {
+    pub shortcut: []const u8,
+    pub commands: []const []const u8,
+}
+
+/// Complete macOS Cocoa editing command table absorbed from upstream `macEditingCommands.ts`.
+pub const MAC_EDITING_COMMANDS: [114]MacEditingCommandEntry = .{
+    MacEditingCommandEntry{ shortcut: "Backspace", commands: &.{"deleteBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Enter", commands: &.{"insertNewline:"} },
+    MacEditingCommandEntry{ shortcut: "NumpadEnter", commands: &.{"insertNewline:"} },
+    MacEditingCommandEntry{ shortcut: "Escape", commands: &.{"cancelOperation:"} },
+    MacEditingCommandEntry{ shortcut: "ArrowUp", commands: &.{"moveUp:"} },
+    MacEditingCommandEntry{ shortcut: "ArrowDown", commands: &.{"moveDown:"} },
+    MacEditingCommandEntry{ shortcut: "ArrowLeft", commands: &.{"moveLeft:"} },
+    MacEditingCommandEntry{ shortcut: "ArrowRight", commands: &.{"moveRight:"} },
+    MacEditingCommandEntry{ shortcut: "F5", commands: &.{"complete:"} },
+    MacEditingCommandEntry{ shortcut: "Delete", commands: &.{"deleteForward:"} },
+    MacEditingCommandEntry{ shortcut: "Home", commands: &.{"scrollToBeginningOfDocument:"} },
+    MacEditingCommandEntry{ shortcut: "End", commands: &.{"scrollToEndOfDocument:"} },
+    MacEditingCommandEntry{ shortcut: "PageUp", commands: &.{"scrollPageUp:"} },
+    MacEditingCommandEntry{ shortcut: "PageDown", commands: &.{"scrollPageDown:"} },
+
+    MacEditingCommandEntry{ shortcut: "Shift+Backspace", commands: &.{"deleteBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Enter", commands: &.{"insertNewline:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+NumpadEnter", commands: &.{"insertNewline:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Escape", commands: &.{"cancelOperation:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+ArrowUp", commands: &.{"moveUpAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+ArrowDown", commands: &.{"moveDownAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+ArrowLeft", commands: &.{"moveLeftAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+ArrowRight", commands: &.{"moveRightAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+F5", commands: &.{"complete:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Delete", commands: &.{"deleteForward:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Home", commands: &.{"moveToBeginningOfDocumentAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+End", commands: &.{"moveToEndOfDocumentAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+PageUp", commands: &.{"pageUpAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+PageDown", commands: &.{"pageDownAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Numpad5", commands: &.{"delete:"} },
+
+    MacEditingCommandEntry{ shortcut: "Control+Tab", commands: &.{"selectNextKeyView:"} },
+    MacEditingCommandEntry{ shortcut: "Control+Enter", commands: &.{"insertLineBreak:"} },
+    MacEditingCommandEntry{ shortcut: "Control+NumpadEnter", commands: &.{"insertLineBreak:"} },
+    MacEditingCommandEntry{ shortcut: "Control+Quote", commands: &.{"insertSingleQuoteIgnoringSubstitution:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyA", commands: &.{"moveToBeginningOfParagraph:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyB", commands: &.{"moveBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyD", commands: &.{"deleteForward:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyE", commands: &.{"moveToEndOfParagraph:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyF", commands: &.{"moveForward:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyH", commands: &.{"deleteBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyK", commands: &.{"deleteToEndOfParagraph:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyL", commands: &.{"centerSelectionInVisibleArea:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyN", commands: &.{"moveDown:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyO", commands: &.{ "insertNewlineIgnoringFieldEditor:", "moveBackward:" } },
+    MacEditingCommandEntry{ shortcut: "Control+KeyP", commands: &.{"moveUp:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyT", commands: &.{"transpose:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyV", commands: &.{"pageDown:"} },
+    MacEditingCommandEntry{ shortcut: "Control+KeyY", commands: &.{"yank:"} },
+    MacEditingCommandEntry{ shortcut: "Control+Backspace", commands: &.{"deleteBackwardByDecomposingPreviousCharacter:"} },
+    MacEditingCommandEntry{ shortcut: "Control+ArrowUp", commands: &.{"scrollPageUp:"} },
+    MacEditingCommandEntry{ shortcut: "Control+ArrowDown", commands: &.{"scrollPageDown:"} },
+    MacEditingCommandEntry{ shortcut: "Control+ArrowLeft", commands: &.{"moveToLeftEndOfLine:"} },
+    MacEditingCommandEntry{ shortcut: "Control+ArrowRight", commands: &.{"moveToRightEndOfLine:"} },
+
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Enter", commands: &.{"insertLineBreak:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+NumpadEnter", commands: &.{"insertLineBreak:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Tab", commands: &.{"selectPreviousKeyView:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Quote", commands: &.{"insertDoubleQuoteIgnoringSubstitution:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyA", commands: &.{"moveToBeginningOfParagraphAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyB", commands: &.{"moveBackwardAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyE", commands: &.{"moveToEndOfParagraphAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyF", commands: &.{"moveForwardAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyN", commands: &.{"moveDownAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyP", commands: &.{"moveUpAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+KeyV", commands: &.{"pageDownAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Backspace", commands: &.{"deleteBackwardByDecomposingPreviousCharacter:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+ArrowUp", commands: &.{"scrollPageUp:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+ArrowDown", commands: &.{"scrollPageDown:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+ArrowLeft", commands: &.{"moveToLeftEndOfLineAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+ArrowRight", commands: &.{"moveToRightEndOfLineAndModifySelection:"} },
+
+    MacEditingCommandEntry{ shortcut: "Alt+Backspace", commands: &.{"deleteWordBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+Enter", commands: &.{"insertNewlineIgnoringFieldEditor:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+NumpadEnter", commands: &.{"insertNewlineIgnoringFieldEditor:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+Escape", commands: &.{"complete:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+ArrowUp", commands: &.{ "moveBackward:", "moveToBeginningOfParagraph:" } },
+    MacEditingCommandEntry{ shortcut: "Alt+ArrowDown", commands: &.{ "moveForward:", "moveToEndOfParagraph:" } },
+    MacEditingCommandEntry{ shortcut: "Alt+ArrowLeft", commands: &.{"moveWordLeft:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+ArrowRight", commands: &.{"moveWordRight:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+Delete", commands: &.{"deleteWordForward:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+PageUp", commands: &.{"pageUp:"} },
+    MacEditingCommandEntry{ shortcut: "Alt+PageDown", commands: &.{"pageDown:"} },
+
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+Backspace", commands: &.{"deleteWordBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+Enter", commands: &.{"insertNewlineIgnoringFieldEditor:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+NumpadEnter", commands: &.{"insertNewlineIgnoringFieldEditor:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+Escape", commands: &.{"complete:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+ArrowUp", commands: &.{"moveParagraphBackwardAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+ArrowDown", commands: &.{"moveParagraphForwardAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+ArrowLeft", commands: &.{"moveWordLeftAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+ArrowRight", commands: &.{"moveWordRightAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+Delete", commands: &.{"deleteWordForward:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+PageUp", commands: &.{"pageUp:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Alt+PageDown", commands: &.{"pageDown:"} },
+
+    MacEditingCommandEntry{ shortcut: "Control+Alt+KeyB", commands: &.{"moveWordBackward:"} },
+    MacEditingCommandEntry{ shortcut: "Control+Alt+KeyF", commands: &.{"moveWordForward:"} },
+    MacEditingCommandEntry{ shortcut: "Control+Alt+Backspace", commands: &.{"deleteWordBackward:"} },
+
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Alt+KeyB", commands: &.{"moveWordBackwardAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Alt+KeyF", commands: &.{"moveWordForwardAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Control+Alt+Backspace", commands: &.{"deleteWordBackward:"} },
+
+    MacEditingCommandEntry{ shortcut: "Meta+NumpadSubtract", commands: &.{"cancel:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+Backspace", commands: &.{"deleteToBeginningOfLine:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+ArrowUp", commands: &.{"moveToBeginningOfDocument:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+ArrowDown", commands: &.{"moveToEndOfDocument:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+ArrowLeft", commands: &.{"moveToLeftEndOfLine:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+ArrowRight", commands: &.{"moveToRightEndOfLine:"} },
+
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+NumpadSubtract", commands: &.{"cancel:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+Backspace", commands: &.{"deleteToBeginningOfLine:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+ArrowUp", commands: &.{"moveToBeginningOfDocumentAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+ArrowDown", commands: &.{"moveToEndOfDocumentAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+ArrowLeft", commands: &.{"moveToLeftEndOfLineAndModifySelection:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+ArrowRight", commands: &.{"moveToRightEndOfLineAndModifySelection:"} },
+
+    MacEditingCommandEntry{ shortcut: "Meta+KeyA", commands: &.{"selectAll:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+KeyC", commands: &.{"copy:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+KeyX", commands: &.{"cut:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+KeyV", commands: &.{"paste:"} },
+    MacEditingCommandEntry{ shortcut: "Meta+KeyZ", commands: &.{"undo:"} },
+    MacEditingCommandEntry{ shortcut: "Shift+Meta+KeyZ", commands: &.{"redo:"} },
+};
+
+/// Lookup macOS Cocoa editing command(s) for a normalized shortcut string (e.g. "Meta+KeyC", "Control+KeyO").
+pub fn macEditingCommandFor(shortcut: []const u8): ([]const []const u8)? {
+    for (entry of MAC_EDITING_COMMANDS) {
+        if (std.mem.eql(u8, entry.shortcut, shortcut)) {
+            return entry.commands;
+        }
+    }
+    return null;
+}
+
+/// Format a WebKit modifier bitmask (Shift=1, Control=2, Alt=4, Meta=8) + key code
+/// into the canonical shortcut order used by `MAC_EDITING_COMMANDS`: Shift+Control+Alt+Meta+code.
+pub fn formatMacShortcut(modifiers: u32, code: []const u8, out_buf: []u8): []const u8 {
+    let pos: usize = 0;
+    const mods: [4]struct { mask: u32, name: []const u8 } = .{
+        .{ .mask = WK_MODIFIER_SHIFT, .name = "Shift+" },
+        .{ .mask = WK_MODIFIER_CONTROL, .name = "Control+" },
+        .{ .mask = WK_MODIFIER_ALT, .name = "Alt+" },
+        .{ .mask = WK_MODIFIER_META, .name = "Meta+" },
+    };
+    for (m of mods) {
+        if ((modifiers & m.mask) != 0) {
+            if (pos + m.name.len <= out_buf.len) {
+                @memcpy(out_buf[pos .. pos + m.name.len], m.name);
+                pos += m.name.len;
+            }
+        }
+    }
+    const copy_len = if (pos + code.len <= out_buf.len) code.len else (out_buf.len - pos);
+    if (copy_len > 0) {
+        @memcpy(out_buf[pos .. pos + copy_len], code[0..copy_len]);
+        pos += copy_len;
+    }
+    return out_buf[0..pos];
+}
+
+/// Lookup macOS Cocoa editing commands from modifier bitmask + key code.
+pub fn macEditingCommandsForKey(modifiers: u32, code: []const u8): ([]const []const u8)? {
+    let buf: [128]u8 = undefined;
+    const shortcut = formatMacShortcut(modifiers, code, &buf);
+    return macEditingCommandFor(shortcut);
+}
+
+/// Set-Cookie header separator: macOS uses ",", Linux/Windows use "playwright-set-cookie-separator".
+pub fn wkSetCookieSeparator(platform: WebKitHostPlatform): []const u8 {
+    return switch (platform) {
+        WebKitHostPlatform.Darwin => WK_SET_COOKIE_SEP_DARWIN,
+        WebKitHostPlatform.Linux, WebKitHostPlatform.Windows => WK_SET_COOKIE_SEP_OTHER,
+    };
+}
+
+/// Join multiple Set-Cookie header values using the platform-specific WebKit separator.
+pub fn joinSetCookieHeaders(
+    alloc: std.mem.Allocator,
+    platform: WebKitHostPlatform,
+    cookies: []const []const u8,
+): ([]u8)!PlaywrightError {
+    if (cookies.len == 0) {
+        return alloc.dupe(u8, "") catch return PlaywrightError.OutOfMemory;
+    }
+    const sep = wkSetCookieSeparator(platform);
+    let total: usize = 0;
+    let i: usize = 0;
+    while (i < cookies.len) {
+        if (i > 0) total += sep.len;
+        total += cookies[i].len;
+        i += 1;
+    }
+    let out = alloc.alloc(u8, total) catch return PlaywrightError.OutOfMemory;
+    let pos: usize = 0;
+    i = 0;
+    while (i < cookies.len) {
+        if (i > 0) {
+            @memcpy(out[pos .. pos + sep.len], sep);
+            pos += sep.len;
+        }
+        @memcpy(out[pos .. pos + cookies[i].len], cookies[i]);
+        pos += cookies[i].len;
+        i += 1;
+    }
+    return out;
+}
+
+/// Split a combined WebKit Set-Cookie header string using the platform-specific separator.
+/// Returned slices borrow from `header_value`; caller must free only the outer slice.
+pub fn splitSetCookieHeader(
+    alloc: std.mem.Allocator,
+    platform: WebKitHostPlatform,
+    header_value: []const u8,
+): ([]([]const u8))!PlaywrightError {
+    let out: std.ArrayList([]const u8) = .empty;
+    errdefer out.deinit(alloc);
+    if (header_value.len == 0) {
+        return out.toOwnedSlice(alloc) catch return PlaywrightError.OutOfMemory;
+    }
+    const sep = wkSetCookieSeparator(platform);
+    let start: usize = 0;
+    while (start <= header_value.len) {
+        if (rel := std.mem.indexOf(u8, header_value[start..], sep)) {
+            const part = std.mem.trim(u8, header_value[start .. start + rel], " \t");
+            out.append(alloc, part) catch return PlaywrightError.OutOfMemory;
+            start = start + rel + sep.len;
+        } else {
+            const part = std.mem.trim(u8, header_value[start..], " \t");
+            out.append(alloc, part) catch return PlaywrightError.OutOfMemory;
+            break;
+        }
+    }
+    return out.toOwnedSlice(alloc) catch return PlaywrightError.OutOfMemory;
+}
+
+/// WebKit on macOS has no built-in WebP encoder, so capture PNG and re-encode to WebP.
+pub fn shouldRecodePngToWebp(platform: WebKitHostPlatform, format: []const u8): bool {
+    return platform == WebKitHostPlatform.Darwin && std.mem.eql(u8, format, "webp");
+}
+
+/// Resolve the wire format sent to `Page.snapshotRect` (macOS webp -> png for post-recode).
+pub fn resolveSnapshotWireFormat(platform: WebKitHostPlatform, format: []const u8): []const u8 {
+    if (format.len == 0) return "png";
+    if (shouldRecodePngToWebp(platform, format)) return "png";
+    return format;
+}
+
+/// Cairo-based implementations (Linux and Windows) have a 32767px hard limit per dimension.
+pub fn validateScreenshotDimensionForPlatform(
+    platform: WebKitHostPlatform,
+    side: u32,
+    device_scale_factor: f64,
+    omit_device_scale_factor: bool,
+): void!PlaywrightError {
+    if (platform == WebKitHostPlatform.Darwin) return;
+    let effective: f64 = @floatFromInt(side);
+    if (!omit_device_scale_factor && device_scale_factor > 0.0) {
+        effective = @ceil(effective * device_scale_factor);
+    }
+    if (effective > @as(f64, @floatFromInt(WK_CAIRO_MAX_SCREENSHOT_DIM))) {
+        return PlaywrightError.ProtocolError;
+    }
+}
+
+/// Linux WebKit MiniBrowser subpath: WPE for headless, GTK for headful.
+pub fn resolveLinuxMiniBrowserSubpath(headless: bool): []const u8 {
+    return if (headless) "minibrowser-wpe/MiniBrowser" else "minibrowser-gtk/MiniBrowser";
+}
+
+/// Enable socks5 hostname resolution on Windows (`socks5://` -> `socks5h://`).
+/// See https://github.com/microsoft/playwright/issues/20451
+pub fn rewriteProxyServerForPlatform(
+    alloc: std.mem.Allocator,
+    platform: WebKitHostPlatform,
+    server: []const u8,
+): ([]u8)!PlaywrightError {
+    if (platform == WebKitHostPlatform.Windows && std.mem.startsWith(u8, server, "socks5://")) {
+        return std.fmt.allocPrint(alloc, "socks5h://{s}", .{server[9..]}) catch return PlaywrightError.OutOfMemory;
+    }
+    return alloc.dupe(u8, server) catch return PlaywrightError.OutOfMemory;
+}
+
+pub struct WebKitViewportSize {
+    pub width: u32,
+    pub height: u32,
+}
+
+/// Clamp viewport to Windows headful WebKit minimum (250x240); headless or other platforms pass through unchanged.
+pub fn clampViewportForPlatform(
+    platform: WebKitHostPlatform,
+    headless: bool,
+    w: u32,
+    h: u32,
+): WebKitViewportSize {
+    if (platform == WebKitHostPlatform.Windows && !headless) {
+        return WebKitViewportSize{
+            width: if (w < WK_WINDOWS_MIN_VIEWPORT_WIDTH) WK_WINDOWS_MIN_VIEWPORT_WIDTH else w,
+            height: if (h < WK_WINDOWS_MIN_VIEWPORT_HEIGHT) WK_WINDOWS_MIN_VIEWPORT_HEIGHT else h,
+        };
+    }
+    return WebKitViewportSize{ width: w, height: h };
+}
+
+/// Validate emulated viewport size against Windows headful WebKit minimum (250x240).
+pub fn validateViewportForPlatform(
+    platform: WebKitHostPlatform,
+    headless: bool,
+    w: u32,
+    h: u32,
+): void!PlaywrightError {
+    if (platform == WebKitHostPlatform.Windows && !headless) {
+        if (w < WK_WINDOWS_MIN_VIEWPORT_WIDTH || h < WK_WINDOWS_MIN_VIEWPORT_HEIGHT) {
+            return PlaywrightError.ProtocolError;
+        }
+    }
+}
+
+pub struct WebKitEnvVar {
+    pub key: []const u8,
+    pub value: []u8,
+}
+
+pub fn freeWebKitLaunchEnv(alloc: std.mem.Allocator, env_vars: []WebKitEnvVar) {
+    for (ev of env_vars) {
+        alloc.free(ev.value);
+    }
+    if (env_vars.len > 0) {
+        alloc.free(env_vars);
+    }
+}
+
+/// Build platform-specific WebKit launch environment variables.
+/// On Windows persistent contexts (non-WSL), sets `CURL_COOKIE_JAR_PATH` to `<userDataDir>/cookiejar.db`.
+pub fn buildWebKitLaunchEnvWithChannel(
+    alloc: std.mem.Allocator,
+    platform: WebKitHostPlatform,
+    user_data_dir: []const u8,
+    channel: []const u8,
+): ([]WebKitEnvVar)!PlaywrightError {
+    if (platform != WebKitHostPlatform.Windows || user_data_dir.len == 0 || std.mem.eql(u8, channel, "webkit-wsl")) {
+        return &.{};
+    }
+    const uses_backslash = std.mem.indexOfScalar(u8, user_data_dir, '\\') != null;
+    const ends_with_sep = user_data_dir[user_data_dir.len - 1] == '/' || user_data_dir[user_data_dir.len - 1] == '\\';
+    const sep: []const u8 = if (ends_with_sep) "" else if (uses_backslash) "\\" else "/";
+    const cookie_jar_path = std.fmt.allocPrint(alloc, "{s}{s}cookiejar.db", .{ user_data_dir, sep }) catch return PlaywrightError.OutOfMemory;
+    errdefer alloc.free(cookie_jar_path);
+
+    let out = alloc.alloc(WebKitEnvVar, 1) catch return PlaywrightError.OutOfMemory;
+    out[0] = WebKitEnvVar{
+        key: "CURL_COOKIE_JAR_PATH",
+        value: cookie_jar_path,
+    };
+    return out;
+}
+
+/// Build platform-specific WebKit launch environment variables (default non-WSL channel).
+pub fn buildWebKitLaunchEnv(
+    alloc: std.mem.Allocator,
+    platform: WebKitHostPlatform,
+    user_data_dir: []const u8,
+): ([]WebKitEnvVar)!PlaywrightError {
+    return buildWebKitLaunchEnvWithChannel(alloc, platform, user_data_dir, "");
+}
+
+/// Build platform-specific WebKit CLI launch arguments (macOS / Linux / Windows / WSL).
+pub fn buildWebKitLaunchArgs(
+    alloc: std.mem.Allocator,
+    platform: WebKitHostPlatform,
+    opts: WebKitLaunchOptions,
+): ([]([]u8))!PlaywrightError {
+    let out: std.ArrayList([]u8) = .empty;
+    errdefer {
+        for (item of out.items) alloc.free(item);
+        out.deinit(alloc);
+    }
+
+    for (extra of opts.args) {
+        if (extra.len == 0) continue;
+        if (std.mem.startsWith(u8, extra, "--user-data-dir")) {
+            return PlaywrightError.InvalidUrl;
+        }
+        if (extra[0] != '-') {
+            return PlaywrightError.InvalidUrl;
+        }
+    }
+
+    const is_wsl = std.mem.eql(u8, opts.channel, "webkit-wsl");
+    const first_arg_str: []const u8 = if (is_wsl) "--remote-debugging-port=0" else "--inspector-pipe";
+    const pipe_arg = alloc.dupe(u8, first_arg_str) catch return PlaywrightError.OutOfMemory;
+    out.append(alloc, pipe_arg) catch {
+        alloc.free(pipe_arg);
+        return PlaywrightError.OutOfMemory;
+    };
+
+    if (platform == WebKitHostPlatform.Windows && !is_wsl) {
+        const dac = alloc.dupe(u8, "--disable-accelerated-compositing") catch return PlaywrightError.OutOfMemory;
+        out.append(alloc, dac) catch {
+            alloc.free(dac);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    if (opts.headless) {
+        const h_arg = alloc.dupe(u8, "--headless") catch return PlaywrightError.OutOfMemory;
+        out.append(alloc, h_arg) catch {
+            alloc.free(h_arg);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    if (opts.user_data_dir.len > 0) {
+        const udd = std.fmt.allocPrint(alloc, "--user-data-dir={s}", .{opts.user_data_dir}) catch return PlaywrightError.OutOfMemory;
+        out.append(alloc, udd) catch {
+            alloc.free(udd);
+            return PlaywrightError.OutOfMemory;
+        };
+    } else {
+        const nsw = alloc.dupe(u8, "--no-startup-window") catch return PlaywrightError.OutOfMemory;
+        out.append(alloc, nsw) catch {
+            alloc.free(nsw);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    if (opts.proxy_server.len > 0) {
+        if (platform == WebKitHostPlatform.Darwin) {
+            const px = std.fmt.allocPrint(alloc, "--proxy={s}", .{opts.proxy_server}) catch return PlaywrightError.OutOfMemory;
+            out.append(alloc, px) catch {
+                alloc.free(px);
+                return PlaywrightError.OutOfMemory;
+            };
+            if (opts.proxy_bypass.len > 0) {
+                const bp = std.fmt.allocPrint(alloc, "--proxy-bypass-list={s}", .{opts.proxy_bypass}) catch return PlaywrightError.OutOfMemory;
+                out.append(alloc, bp) catch {
+                    alloc.free(bp);
+                    return PlaywrightError.OutOfMemory;
+                };
+            }
+        } else if (platform == WebKitHostPlatform.Linux || is_wsl) {
+            const px = std.fmt.allocPrint(alloc, "--proxy={s}", .{opts.proxy_server}) catch return PlaywrightError.OutOfMemory;
+            out.append(alloc, px) catch {
+                alloc.free(px);
+                return PlaywrightError.OutOfMemory;
+            };
+            if (opts.proxy_bypass.len > 0) {
+                let start: usize = 0;
+                while (start <= opts.proxy_bypass.len) {
+                    const rel_opt = std.mem.indexOfScalar(u8, opts.proxy_bypass[start..], ',');
+                    let end: usize = opts.proxy_bypass.len;
+                    if (rel := rel_opt) {
+                        end = start + rel;
+                    }
+                    const token = std.mem.trim(u8, opts.proxy_bypass[start..end], " \t");
+                    if (token.len > 0) {
+                        const ig = std.fmt.allocPrint(alloc, "--ignore-host={s}", .{token}) catch return PlaywrightError.OutOfMemory;
+                        out.append(alloc, ig) catch {
+                            alloc.free(ig);
+                            return PlaywrightError.OutOfMemory;
+                        };
+                    }
+                    if (rel_opt == null) break;
+                    start = end + 1;
+                }
+            }
+        } else {
+            const rewritten = rewriteProxyServerForPlatform(alloc, platform, opts.proxy_server)?;
+            defer alloc.free(rewritten);
+            const px = std.fmt.allocPrint(alloc, "--curl-proxy={s}", .{rewritten}) catch return PlaywrightError.OutOfMemory;
+            out.append(alloc, px) catch {
+                alloc.free(px);
+                return PlaywrightError.OutOfMemory;
+            };
+            if (opts.proxy_bypass.len > 0) {
+                const np = std.fmt.allocPrint(alloc, "--curl-noproxy={s}", .{opts.proxy_bypass}) catch return PlaywrightError.OutOfMemory;
+                out.append(alloc, np) catch {
+                    alloc.free(np);
+                    return PlaywrightError.OutOfMemory;
+                };
+            }
+        }
+    }
+
+    for (extra of opts.args) {
+        if (extra.len == 0) continue;
+        const duped = alloc.dupe(u8, extra) catch return PlaywrightError.OutOfMemory;
+        out.append(alloc, duped) catch {
+            alloc.free(duped);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    if (opts.user_data_dir.len > 0) {
+        const blank = alloc.dupe(u8, "about:blank") catch return PlaywrightError.OutOfMemory;
+        out.append(alloc, blank) catch {
+            alloc.free(blank);
+            return PlaywrightError.OutOfMemory;
+        };
+    }
+
+    return out.toOwnedSlice(alloc) catch return PlaywrightError.OutOfMemory;
+}
+
 pub struct WebKitLaunchOptions {
     headless: bool = true,
+    channel: []const u8 = "",
+    host_platform: WebKitHostPlatform? = null,
     executable_path: []const u8 = "",
     user_data_dir: []const u8 = "",
     args: []const []const u8 = &.{},
@@ -454,6 +1005,9 @@ pub struct WebKitPage {
     allocator: std.mem.Allocator = undefined,
     pub session: *WkPageProxySession = undefined,
     pub closed: bool = false,
+    pub host_platform: WebKitHostPlatform = WebKitHostPlatform.current(),
+    pub headless: bool = true,
+    pub last_screenshot_recoded_webp: bool = false,
     pub viewport_width: u32 = 1280,
     pub viewport_height: u32 = 720,
 
@@ -472,6 +1026,9 @@ pub struct WebKitPage {
             allocator: alloc,
             session: sess,
             closed: false,
+            host_platform: WebKitHostPlatform.current(),
+            headless: true,
+            last_screenshot_recoded_webp: false,
             viewport_width: 1280,
             viewport_height: 720,
             current_url_len: 0,
@@ -598,13 +1155,14 @@ pub struct WebKitPage {
 
     pub fn setViewport(*_, width: u32, height: u32): void!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
-        _.viewport_width = width;
-        _.viewport_height = height;
+        const clamped = clampViewportForPlatform(_.host_platform, _.headless, width, height);
+        _.viewport_width = clamped.width;
+        _.viewport_height = clamped.height;
         let params_buf: [256]u8 = undefined;
         const params = std.fmt.bufPrint(
             &params_buf,
             "{{\"width\":{d},\"height\":{d}}}",
-            .{ width, height },
+            .{ clamped.width, clamped.height },
         ) catch return PlaywrightError.BufferTooSmall;
         const vp_id = _.session.send("Page.setScreenSizeOverride", params)?;
         * = vp_id;
@@ -612,15 +1170,27 @@ pub struct WebKitPage {
 
     pub fn screenshot(*_, opts: ScreenshotOptions): ([]const u8)!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
-        * = opts.format;
-        * = opts.quality;
         * = opts.full_page;
-        let params_buf: [256]u8 = undefined;
-        const params = std.fmt.bufPrint(
-            &params_buf,
-            "{{\"x\":0,\"y\":0,\"width\":{d},\"height\":{d},\"coordinateSystem\":\"Viewport\",\"omitBackground\":false}}",
-            .{ _.viewport_width, _.viewport_height },
-        ) catch return PlaywrightError.BufferTooSmall;
+        validateScreenshotDimensionForPlatform(_.host_platform, _.viewport_width, 1.0, false)?;
+        validateScreenshotDimensionForPlatform(_.host_platform, _.viewport_height, 1.0, false)?;
+
+        const recode = shouldRecodePngToWebp(_.host_platform, opts.format);
+        _.last_screenshot_recoded_webp = recode;
+        const wire_fmt = resolveSnapshotWireFormat(_.host_platform, opts.format);
+
+        let params_buf: [320]u8 = undefined;
+        const params = if (!recode && opts.quality > 0)
+            (std.fmt.bufPrint(
+                &params_buf,
+                "{{\"x\":0,\"y\":0,\"width\":{d},\"height\":{d},\"coordinateSystem\":\"Viewport\",\"omitBackground\":false,\"format\":\"{s}\",\"quality\":{d}}}",
+                .{ _.viewport_width, _.viewport_height, wire_fmt, opts.quality },
+            ) catch return PlaywrightError.BufferTooSmall)
+        else
+            (std.fmt.bufPrint(
+                &params_buf,
+                "{{\"x\":0,\"y\":0,\"width\":{d},\"height\":{d},\"coordinateSystem\":\"Viewport\",\"omitBackground\":false,\"format\":\"{s}\"}}",
+                .{ _.viewport_width, _.viewport_height, wire_fmt },
+            ) catch return PlaywrightError.BufferTooSmall);
         const snap_id = _.session.send("Page.snapshotRect", params)?;
         * = snap_id;
         return _.session.last_result_json;
@@ -630,12 +1200,37 @@ pub struct WebKitPage {
 
     pub fn keyboardDown(*_, key: []const u8, modifiers: u32): void!PlaywrightError {
         if (_.closed) return PlaywrightError.PageClosed;
-        let params_buf: [256]u8 = undefined;
-        const params = std.fmt.bufPrint(
-            &params_buf,
-            "{{\"type\":\"keyDown\",\"modifiers\":{d},\"key\":\"{s}\",\"code\":\"{s}\"}}",
-            .{ modifiers, key, key },
-        ) catch return PlaywrightError.BufferTooSmall;
+        let params_buf: [512]u8 = undefined;
+        let params: []const u8 = "";
+        if (cmds := macEditingCommandsForKey(modifiers, key)) {
+            let cmd_buf: [256]u8 = undefined;
+            let cpos: usize = 0;
+            let ci: usize = 0;
+            while (ci < cmds.len) {
+                const prefix: []const u8 = if (ci == 0) "\"" else ",\"";
+                if (cpos + prefix.len + cmds[ci].len + 1 > cmd_buf.len) {
+                    return PlaywrightError.BufferTooSmall;
+                }
+                @memcpy(cmd_buf[cpos .. cpos + prefix.len], prefix);
+                cpos += prefix.len;
+                @memcpy(cmd_buf[cpos .. cpos + cmds[ci].len], cmds[ci]);
+                cpos += cmds[ci].len;
+                cmd_buf[cpos] = '"';
+                cpos += 1;
+                ci += 1;
+            }
+            params = std.fmt.bufPrint(
+                &params_buf,
+                "{{\"type\":\"keyDown\",\"modifiers\":{d},\"key\":\"{s}\",\"code\":\"{s}\",\"macCommands\":[{s}]}}",
+                .{ modifiers, key, key, cmd_buf[0..cpos] },
+            ) catch return PlaywrightError.BufferTooSmall;
+        } else {
+            params = std.fmt.bufPrint(
+                &params_buf,
+                "{{\"type\":\"keyDown\",\"modifiers\":{d},\"key\":\"{s}\",\"code\":\"{s}\"}}",
+                .{ modifiers, key, key },
+            ) catch return PlaywrightError.BufferTooSmall;
+        }
         const kd_id = _.session.send("Input.dispatchKeyEvent", params)?;
         * = kd_id;
     }
@@ -1012,7 +1607,7 @@ pub struct WebKitBrowserType {
         return std.c.access(zptr, 1) == 0;
     }
 
-    static fn probePlaywrightCacheDir(alloc: std.mem.Allocator, cache_dir: []const u8): ([]u8)? {
+    static fn probePlaywrightCacheDirForMode(alloc: std.mem.Allocator, cache_dir: []const u8, headless: bool): ([]u8)? {
         if (cache_dir.len == 0 || cache_dir.len >= 4096) return null;
         let zbuf: [4097]u8 = undefined;
         @memcpy(zbuf[0..cache_dir.len], cache_dir);
@@ -1021,6 +1616,9 @@ pub struct WebKitBrowserType {
         const dir = std.c.opendir(c_dir_path);
         if (dir == null) return null;
         defer * = std.c.closedir(dir.?);
+
+        const primary_linux_bin = resolveLinuxMiniBrowserSubpath(headless);
+        const fallback_linux_bin = resolveLinuxMiniBrowserSubpath(!headless);
 
         while (entry := std.c.readdir(dir.?)) {
             let name_len: usize = 0;
@@ -1032,8 +1630,8 @@ pub struct WebKitBrowserType {
             if (std.mem.startsWith(u8, entry_name, "webkit-")) {
                 const rels: [3][]const u8 = .{
                     "pw_run.sh",
-                    "minibrowser-wpe/MiniBrowser",
-                    "minibrowser-gtk/MiniBrowser",
+                    primary_linux_bin,
+                    fallback_linux_bin,
                 };
                 for (rel of rels) {
                     const candidate = std.fmt.allocPrint(alloc, "{s}/{s}/{s}", .{ cache_dir, entry_name, rel }) catch continue;
@@ -1045,6 +1643,10 @@ pub struct WebKitBrowserType {
             }
         }
         return null;
+    }
+
+    static fn probePlaywrightCacheDir(alloc: std.mem.Allocator, cache_dir: []const u8): ([]u8)? {
+        return WebKitBrowserType.probePlaywrightCacheDirForMode(alloc, cache_dir, true);
     }
 
     /// Probe Playwright WebKit executable from `preferred`, `PLAYWRIGHT_WEBKIT_EXECUTABLE_PATH`,
@@ -1107,76 +1709,8 @@ pub struct WebKitBrowserType {
 
     /// Build WebKit MiniBrowser / pw_run.sh CLI launch flags (`--inspector-pipe`, `--headless`, etc.).
     pub static fn buildLaunchArgs(alloc: std.mem.Allocator, opts: WebKitLaunchOptions): ([]([]u8))!PlaywrightError {
-        let out: std.ArrayList([]u8) = .empty;
-        errdefer {
-            for (item of out.items) alloc.free(item);
-            out.deinit(alloc);
-        }
-
-        const pipe_arg = alloc.dupe(u8, "--inspector-pipe") catch return PlaywrightError.OutOfMemory;
-        out.append(alloc, pipe_arg) catch {
-            alloc.free(pipe_arg);
-            return PlaywrightError.OutOfMemory;
-        };
-
-        if (opts.headless) {
-            const h_arg = alloc.dupe(u8, "--headless") catch return PlaywrightError.OutOfMemory;
-            out.append(alloc, h_arg) catch {
-                alloc.free(h_arg);
-                return PlaywrightError.OutOfMemory;
-            };
-        }
-
-        if (opts.user_data_dir.len > 0) {
-            const udd = std.fmt.allocPrint(alloc, "--user-data-dir={s}", .{opts.user_data_dir}) catch return PlaywrightError.OutOfMemory;
-            out.append(alloc, udd) catch {
-                alloc.free(udd);
-                return PlaywrightError.OutOfMemory;
-            };
-        } else {
-            const nsw = alloc.dupe(u8, "--no-startup-window") catch return PlaywrightError.OutOfMemory;
-            out.append(alloc, nsw) catch {
-                alloc.free(nsw);
-                return PlaywrightError.OutOfMemory;
-            };
-        }
-
-        if (opts.proxy_server.len > 0) {
-            const px = std.fmt.allocPrint(alloc, "--proxy={s}", .{opts.proxy_server}) catch return PlaywrightError.OutOfMemory;
-            out.append(alloc, px) catch {
-                alloc.free(px);
-                return PlaywrightError.OutOfMemory;
-            };
-            if (opts.proxy_bypass.len > 0) {
-                const ig = std.fmt.allocPrint(alloc, "--ignore-host={s}", .{opts.proxy_bypass}) catch return PlaywrightError.OutOfMemory;
-                out.append(alloc, ig) catch {
-                    alloc.free(ig);
-                    return PlaywrightError.OutOfMemory;
-                };
-            }
-        }
-
-        for (extra of opts.args) {
-            if (extra.len == 0) continue;
-            if (std.mem.startsWith(u8, extra, "--user-data-dir")) {
-                return PlaywrightError.InvalidUrl;
-            }
-            const duped = alloc.dupe(u8, extra) catch return PlaywrightError.OutOfMemory;
-            out.append(alloc, duped) catch {
-                alloc.free(duped);
-                return PlaywrightError.OutOfMemory;
-            };
-        }
-
-        if (opts.user_data_dir.len > 0) {
-            const blank = alloc.dupe(u8, "about:blank") catch return PlaywrightError.OutOfMemory;
-            out.append(alloc, blank) catch {
-                alloc.free(blank);
-                return PlaywrightError.OutOfMemory;
-            };
-        }
-
-        return out.toOwnedSlice(alloc) catch return PlaywrightError.OutOfMemory;
+        const platform = opts.host_platform orelse WebKitHostPlatform.current();
+        return buildWebKitLaunchArgs(alloc, platform, opts);
     }
 
     pub static fn launch(alloc: std.mem.Allocator, opts: WebKitLaunchOptions): WebKitBrowser!PlaywrightError {

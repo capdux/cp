@@ -1524,3 +1524,11 @@
 ## [2026-11-28] - 补齐 Puppeteer 5 大核心内部状态机 & Playwright 4 大底层引擎状态机（全量零泄漏绿灯）
 - **Puppeteer 5 大状态机**：新增 `network_manager.cp`、`frame_manager.cp`（含 `ExecutionContext`/`IsolatedWorld`）、`target_manager.cp`（含 `AccessibilityTreeBuilder` 递归折叠树）与 `cap/test/testCapPuppeteerManagers.cp`（**5/5 PASS, 840ms**）。
 - **Playwright 4 大引擎**：新增 `frame_manager.cp`（导航生命周期与 `DomActionabilityLoop`）、`cr_network_manager.cp`（Chromium Fetch/Network 事件路由与 Base64 响应体篡改）、`snapshotter.cp`（`SNAPSHOTTER_INJECTED_SCRIPT` + SHA-1 去重 + HAR 1.2 `HarTracer`）、升级 `request_context.cp`（自动重定向链 + `MultipartFormData` + `ProxySettings`）与 `cap/test/testCapPlaywrightEngines.cp`（**4/4 PASS, 930ms**）。
+
+## [2026-11-28] - 补全 Playwright WebKit 三平台分叉补丁 & 打通 `cap add` 本地生态包直装
+- `packages/playwright/src/webkit.cp`（+624/-90，现 1,777 行）& `packages/playwright/src/index.cp`（+31 行）：完整吸收上游 Playwright WebKit 跨平台分支（编译期零开销 `WebKitHostPlatform.current()` + 测试可注入平台枚举）：
+  - **macOS (`Darwin`)**：全量 114 条 `MAC_EDITING_COMMANDS` Cocoa 编辑快捷键映射表（含双命令数组）并集成至 `WebKitPage.keyboardDown`（自动注入 `"macCommands"`）、`wkSetCookieSeparator`（`","` vs `"playwright-set-cookie-separator"`）与拼接/拆分辅助、`shouldRecodePngToWebp` 与截图 wire format 路由、`--proxy-bypass-list`；
+  - **Linux (`GTK` vs `WPE`)**：`resolveLinuxMiniBrowserSubpath`（headless 优先 `minibrowser-wpe/MiniBrowser`，headful 优先 `minibrowser-gtk/MiniBrowser`）、逗号拆分多个 `--ignore-host` 与 Cairo 32767px 尺寸校验；
+  - **Windows (`Windows`)**：`rewriteProxyServerForPlatform`（`socks5://` -> `socks5h://`）、`clampViewportForPlatform` / `validateViewportForPlatform`（headful 最小视口 `250x240` 钳制）、`buildWebKitLaunchEnv`（persistent context 生成 `CURL_COOKIE_JAR_PATH`）、`--disable-accelerated-compositing` 与 `--curl-proxy` / `--curl-noproxy`。
+- `cap/test/testCapPlaywright.cp`（+275/-11）：新增 Test 24 全面验证 macOS / Linux (WPE+GTK) / Windows 三平台分支，24/24 PASS（1259ms，零泄漏）。
+- `cap/src/project/installer.zig`（+66/-2）：新增 `findLocalEcosystemPkg`（支持 `<cap_root>/packages/<name>` 及 `-`/`_` 归一化兜底），未配置显式远端 registry 时 `cap add playwright` / `cap add puppeteer` 等本地 906 个生态包一键软链接安装并写入 `cap.lock`；已发布 release 版 `cap`（`scripts/sync_cap.sh release`）。
