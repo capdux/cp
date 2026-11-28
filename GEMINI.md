@@ -875,3 +875,10 @@ git status --porcelain cpc_dev/src
 1. **跨平台 OS 分叉补丁采用「编译期默认判定 + 可注入平台枚举」双轨设计（单机全平台一次验证）**：在 Linux 单机环境迁移 macOS / Linux (GTK+WPE) / Windows 平台兼容分支（如 `packages/playwright/src/webkit.cp`）时，统一提供基于 `builtin.os.tag` 的零开销编译期默认判定（`HostPlatform.current()`），同时允许选项结构体/辅助函数显式传入平台枚举；单机 1 轮 `cap test -m` 即可 100% 覆盖三平台全部分支与零泄漏校验，避免跨平台盲区与返工。
 2. **CLI 行为与远端发布状态必须「源码 + 实测」双证核查，严禁凭记忆推断**：核查包安装或发布状态时，必须同时检查源码配置、`DEVLOG.md`/发布脚本与真实 `cap add`/`curl` 实测（例如确认官方实际注册表为 `https://registry.capdux.org` 而非旧残留 `registry.capdux.dev` 或外部 `cap.org`），发现本地解析缺口（如 `cap add` 未回退 `<cap_root>/packages/`）当场修复并实测闭环。
 3. **主/子智能体严格按目录与 `cap test` 互斥分工 + 精确 `git add` 提交**：子智能体独占运行 `cap test -m` 期间，主智能体仅并行处理独立目录源码修改、`scripts/sync_cap.sh` 或只读核查，待子智能体回收后再串行跑全量门禁；提交前始终精确 `git add <files>`，彻底隔离工作区预存无关改动，实现 0 锁冲突、0 误提交。
+
+
+### 6.17 第 16 轮 3 小时效率与 Token 审计固化铁律（2026-11-28 20:19）
+
+1. **零顶层 `@c` 高频符号污染 + 精确子路径导入铁律**：标准库底层 POSIX 调用统一使用 Zig `std.c.*`（含 `std.c.SIG.KILL`、`std.c.nanosleep`），严禁将 `socket`/`connect`/`send`/`recv`/`close`/`kill` 等高频名暴露到顶层 `@c` 块导致 `--flatten` 撞名；引用大型聚合门面（`cap:http`、`cap:web`）时优先使用精确子路径（`cap:http/method`、`cap:http/client`、`cap:web/app`、`cap:web/server`、`cap:web/wsServer`）并保持 `cap run`/`cap build` 默认 `--modular`。
+2. **真实 Chromium CDP 协议稳定性三铁律**：① 所有拼入 CDP JSON 的 URL、JS 表达式、选择器与注入脚本必须经零堆分配 `cdpWriteJsonEscaped` 转义；② `Frame` 必须缓存 `DOM.getDocument` 嵌套 `root.nodeId`（仅在导航重置或查询报错时刷新），严禁每次 `querySelector` 重复 `DOM.getDocument` 使旧 `ElementHandle.nodeId` 失效；③ `Runtime.callFunctionOn` 同时传 `objectId` 与 `arguments:[{"objectId":...}]` 兼容 `el => ...` 与 `this` 写法，`Page.captureScreenshot` 遇首帧未合成 `ProtocolError` 自动等两帧 `requestAnimationFrame` 重试，`evaluateOnNewDocument` 先 `Page.enable` 再注入。
+3. **Cloudflare Worker D1 批处理与临时发布凭据零落盘闭环**：对超过 100 条的 D1 同步（如 1,265 条 `registry.json`）一律改用 `env.DB.batch()` 分块（100 条/批）规避 1,000 次 subrequest 上限；线上发布使用 `trap` 退出自动从 D1 撤销的一次性临时 token，严禁任何 API Token 写入文件或 Git 历史。
